@@ -22,9 +22,16 @@ class TimeframeView:
     def __init__(self, tf: str, df: pd.DataFrame):
         self.tf = tf
         self._df = df
-        self._close_times = (df.index + parse_timeframe(tf)).values
+        # A renko series has no fixed duration - a brick can span minutes or
+        # days - so it carries an explicit close_time saying when the brick
+        # became KNOWN. Fixed timeframes derive it from the bar duration.
+        if "close_time" in df.columns:
+            self._close_times = pd.DatetimeIndex(df["close_time"]).values
+        else:
+            self._close_times = (df.index + parse_timeframe(tf)).values
         self._arrays = {c: df[c].to_numpy(dtype=float) for c in
-                        ("open", "high", "low", "close", "volume") if c in df}
+                        ("open", "high", "low", "close", "volume", "direction")
+                        if c in df}
         self._n = 0  # number of bars closed as of "now"
 
     def _sync(self, now: np.datetime64) -> None:

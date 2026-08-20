@@ -71,6 +71,7 @@ def load(
     base_timeframe: str = "15m",
     market: str = "futures",
     path: str | Path | None = None,
+    renko: dict | None = None,
 ) -> Dataset:
     """Load a Dataset from the raw parquet store.
 
@@ -100,12 +101,22 @@ def load(
 
     higher: dict[str, pd.DataFrame] = {}
     for tf in higher_timeframes:
+        if tf == "renko":
+            continue          # built below; it is not a fixed timeframe
         if not is_multiple_of(tf, primary_timeframe):
             raise ValueError(
                 f"Higher timeframe {tf} is not an exact multiple of primary "
                 f"{primary_timeframe}; alignment would be ambiguous."
             )
         higher[tf] = resample(raw, tf)
+
+    if renko or "renko" in higher_timeframes:
+        renko = renko or {}
+        from .renko import atr_brick_size, build
+        size = renko.get("brick_size")
+        if size in (None, "atr"):
+            size = atr_brick_size(primary, renko.get("atr_len", 14))
+        higher["renko"] = build(primary, float(size), renko.get("reversal", 2))
 
     return Dataset(symbol, primary_timeframe, primary, higher,
                    integrity=check_integrity(primary, primary_timeframe))

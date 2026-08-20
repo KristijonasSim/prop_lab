@@ -31,6 +31,7 @@ def backtest(
     data: loader.Dataset | None = None,
     run_checks: bool = True,
     base_timeframe: str = "15m",
+    renko: dict | None = None,
 ) -> BacktestResult:
     higher = tuple(getattr(strategy_cls, "higher_timeframes", ()))
     cfg = config or BacktestConfig()
@@ -39,7 +40,7 @@ def backtest(
 
     if data is None:
         data = loader.load(symbol, timeframe, higher, start, end,
-                           base_timeframe=base_timeframe)
+                           base_timeframe=base_timeframe, renko=renko)
 
     strategy = strategy_cls(**(params or {}))
     result = engine.run(strategy, data, cfg)

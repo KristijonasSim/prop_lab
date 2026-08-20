@@ -84,10 +84,21 @@ def scramble_test(strategy_cls, data: Dataset, config, cutoff_frac: float = 0.6,
     for col in ("open", "high", "low", "close"):
         df.iloc[k:, df.columns.get_loc(col)] = tail[col].to_numpy() * scale
 
-    scrambled = Dataset(
-        data.symbol, data.primary_timeframe, df,
-        {tf: resample(df, tf) for tf in data.higher}, data.integrity,
-    )
+    # Higher series must be REBUILT from the scrambled bars, not carried over,
+    # or the test silently compares against unscrambled context. Renko is not a
+    # resample: bricks are rebuilt at the original brick size, which is also the
+    # only way this check covers renko strategies at all - and renko is exactly
+    # where lookahead hides, since a brick's completion time is easy to get wrong.
+    higher = {}
+    for tf, hdf in data.higher.items():
+        if tf == "renko":
+            from ..data.renko import build as build_renko
+            size = float(abs(hdf["close"].iloc[0] - hdf["open"].iloc[0]))
+            higher[tf] = build_renko(df, size)
+        else:
+            higher[tf] = resample(df, tf)
+    scrambled = Dataset(data.symbol, data.primary_timeframe, df, higher,
+                        data.integrity)
     alt = engine.run(strategy_cls(**params), scrambled, config)
 
     def pre(res):
