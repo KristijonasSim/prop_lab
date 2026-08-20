@@ -130,3 +130,26 @@ def test_profit_target_not_reached_is_not_a_pass():
     assert not p["checks"]["profit_target"]["passed"]
     assert not p["passed"]
     assert p["hard_rules_passed"]          # nothing was breached, just not enough
+
+
+def test_configured_defaults_match_the_targets_kris_set():
+    """4% daily loss, 8% max loss (both static and trailing), 8% target.
+    If these drift, every logged pass/fail becomes incomparable."""
+    d = PropFirmRules()
+    assert d.daily_loss_limit_pct == 4.0
+    assert d.max_drawdown_pct == 8.0
+    assert d.trailing_drawdown_pct == 8.0
+    assert d.profit_target_pct == 8.0
+
+
+def test_eight_percent_loss_is_enforced_both_ways():
+    """A curve that never breaches static 8% but does breach trailing 8% must
+    still fail, because "max loss" was not specified as one or the other."""
+    rules = PropFirmRules()
+    up = list(np.linspace(100_000, 107_000, 120))
+    down = list(np.linspace(107_000, 98_600, 120))   # -7.85% from peak
+    r = result_from(up + down, trades=fake_trades(6))
+    p = prop_rules.check(r, rules)
+    assert p["checks"]["max_drawdown_static"]["passed"]
+    assert not p["checks"]["trailing_drawdown"]["passed"]
+    assert not p["passed"]

@@ -97,3 +97,34 @@ def test_integrity_flags_bad_ohlc():
     df = random_walk(50, "15m", seed=6)
     df.iloc[10, df.columns.get_loc("high")] = df["low"].iloc[10] - 1
     assert check_integrity(df, "15m")["bad_ohlc_bars"] >= 1
+
+
+def test_daily_bars_are_epoch_anchored_not_calendar():
+    """'1d' must resample as 24h from the epoch (00:00 UTC), with no pandas
+    origin warning - calendar 'D' would silently re-anchor the boundaries."""
+    import warnings
+
+    from proplab.data.timeframes import timeframe_rule
+
+    assert timeframe_rule("1d") == "24h"
+    df = random_walk(24 * 7, "1h", seed=3)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        d1 = resample(df, "1d")
+    assert len(d1) == 7
+    assert all(ts.hour == 0 and ts.minute == 0 for ts in d1.index)
+
+
+def test_daily_aggregates_match_the_hours_inside_them():
+    df = random_walk(24 * 3, "1h", seed=8)
+    d1 = resample(df, "1d")
+    day0 = df.iloc[:24]
+    assert d1["open"].iloc[0] == pytest.approx(day0["open"].iloc[0])
+    assert d1["close"].iloc[0] == pytest.approx(day0["close"].iloc[-1])
+    assert d1["high"].iloc[0] == pytest.approx(day0["high"].max())
+    assert d1["low"].iloc[0] == pytest.approx(day0["low"].min())
+
+
+def test_1d_is_a_valid_higher_timeframe_for_all_primaries():
+    for primary in ("15m", "1h", "4h"):
+        assert is_multiple_of("1d", primary)

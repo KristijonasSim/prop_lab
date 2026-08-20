@@ -42,12 +42,15 @@ Statuses: `queued, researching, ready_to_code, coding, testing, tested, rejected
 ## Commands
 
 ```bash
-# data (downloads one base timeframe; 1h/4h are resampled from it)
+# data (downloads one base timeframe; 1h/4h/1d are resampled from it)
 python -m proplab.cli fetch --symbol BTCUSDT --timeframe 15m --start 2020-01-01
 
 # strategies
 python -m proplab.cli list
 python -m proplab.cli run --strategy <slug> --timeframe 1h --log --variation <var-slug>
+
+# same run, also reported at 2x and 3x assumed costs
+python -m proplab.cli run --strategy <slug> --timeframe 4h --cost-sweep
 
 # the run that actually counts: tuned on IS, judged on OOS
 python -m proplab.cli oos --strategy <slug> --split-at 2024-01-01 --log
@@ -89,8 +92,33 @@ that point the equity curve is reported as fiction. Qualification rules (profit
 target, minimum trading days, consistency, no martingale sizing) can still be
 met later.
 
-Defaults are in `proplab/config.py::PropFirmRules`. **Change them to match the
-actual firm before trusting any pass/fail.**
+Current targets (`proplab/config.py::PropFirmRules`), set before a firm was
+chosen:
+
+| rule | value |
+|---|---|
+| daily loss limit | 4% |
+| max loss, static (from start) | 8% |
+| max loss, trailing (from peak) | 8% |
+| profit target | 8% |
+| minimum trading days | 5 *(not specified — placeholder)* |
+| consistency, max single-day share of profit | 40% *(not specified — placeholder)* |
+
+"Max loss" was not specified as static or trailing, so **both** are enforced at
+8%. That is the stricter reading: anything surviving it passes either style of
+firm. Once a firm is picked, relax whichever rule does not apply and re-run —
+results can only improve.
+
+## Costs
+
+The venue is undecided (Binance vs a prop platform on MT4 / Match-Trader /
+cTrader, and FX rather than crypto would change the data source entirely).
+Defaults model Binance USDT-M perps: 4.5bps taker, 2bps slippage, 5bps stop
+slippage, 8-hourly funding.
+
+Because that is an assumption rather than a fact, `--cost-sweep` re-runs any
+strategy at 2x and 3x costs. A strategy that only works at 1x is a bet on a fee
+schedule, not an edge.
 
 ## Guarding against false positives
 
@@ -103,6 +131,13 @@ Every run is logged, pass or fail. That count is the denominator:
 - Bonferroni-adjusted t-tests on per-trade R multiples.
 
 A single good backtest is a "maybe", never a "found it".
+
+## Timeframes
+
+15m is downloaded; 1h, 4h and 1d are resampled from it, so all four agree
+bar-for-bar. Days are anchored to 00:00 UTC as exactly 24h from the epoch —
+crypto has no calendar close, and calendar-day resampling would silently move
+the boundaries.
 
 ## Layout
 

@@ -98,3 +98,20 @@ def test_variation_requires_existing_hypothesis(conn):
 def test_run_requires_existing_variation(conn, result):
     with pytest.raises(KeyError):
         store.insert_run(conn, result, variation_slug="ghost")
+
+
+def test_cost_sensitivity_reports_every_multiplier():
+    """Venue is undecided, so results must be shown at 2x and 3x costs too."""
+    from proplab.data.loader import Dataset, check_integrity
+    from proplab.data.synthetic import random_walk
+
+    p = random_walk(3000, "15m", seed=4)
+    ds = Dataset("SYNTH", "15m", p, {}, check_integrity(p, "15m"))
+    table, results = runner.cost_sensitivity(
+        InfraSmoke, multipliers=(1.0, 2.0, 3.0), symbol="SYNTH",
+        timeframe="15m", data=ds,
+        config=BacktestConfig(symbol="SYNTH", costs=CostModel(apply_funding=False)))
+    assert list(table["cost_x"]) == [1.0, 2.0, 3.0]
+    # higher assumed costs can only make a strategy worse, never better
+    assert table["return_pct"].is_monotonic_decreasing
+    assert table["taker_bps"].iloc[2] == pytest.approx(3 * table["taker_bps"].iloc[0])

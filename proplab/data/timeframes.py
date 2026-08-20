@@ -38,12 +38,22 @@ def parse_timeframe(tf: str) -> pd.Timedelta:
     return pd.Timedelta(n, unit=_PANDAS_UNIT[unit])
 
 
+# Days/weeks are expressed in hours so every rule is "Tick-like". Calendar
+# units (D, W) ignore origin="epoch" and anchor to the index instead, which
+# would silently move bar boundaries. Crypto trades 24/7, so a day here means
+# exactly 24h from the epoch - i.e. 00:00 UTC - not a calendar day.
+_AS_HOURS = {"d": 24, "w": 168}
+
+
 def timeframe_rule(tf: str) -> str:
     """Pandas resample rule string for a timeframe."""
     m = _TF_RE.match(tf.strip().lower())
     if not m:
         raise ValueError(f"Unsupported timeframe {tf!r}")
-    return f"{int(m.group(1))}{_PANDAS_UNIT[m.group(2)]}"
+    n, unit = int(m.group(1)), m.group(2)
+    if unit in _AS_HOURS:
+        return f"{n * _AS_HOURS[unit]}h"
+    return f"{n}{_PANDAS_UNIT[unit]}"
 
 
 def is_multiple_of(higher: str, lower: str) -> bool:

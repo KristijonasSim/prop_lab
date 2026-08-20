@@ -118,6 +118,18 @@ def cmd_run(a):
     conn = store.connect()
     try:
         _print_result(res, conn)
+        if a.cost_sweep:
+            table, _ = runner.cost_sensitivity(
+                cls, symbol=a.symbol, timeframe=a.timeframe, start=a.start,
+                end=a.end, config=_config(a), params=params, split=a.split,
+                base_timeframe=a.base_timeframe)
+            print("COST SENSITIVITY (venue not yet chosen - costs are an assumption)")
+            print(table.to_string(index=False))
+            survives = table[table["cost_x"] >= 2.0]["return_pct"]
+            if len(survives) and (survives <= 0).any():
+                print("  -> dies at 2x costs: treat any 1x result as a fee-schedule bet\n")
+            else:
+                print()
         if a.log:
             uid = store.insert_run(conn, res, variation_slug=a.variation,
                                    split=a.split, notes=a.notes or "")
@@ -126,6 +138,10 @@ def cmd_run(a):
             print("NOT logged (pass --log to record this run in the database)")
     finally:
         conn.close()
+
+
+def _no_sweep(a):
+    return getattr(a, "cost_sweep", False)
 
 
 def cmd_oos(a):
@@ -303,10 +319,10 @@ def build_parser():
         r.add_argument("--notes", default=None)
         r.add_argument("--log", action="store_true")
         r.add_argument("--balance", type=float, default=100_000.0)
-        r.add_argument("--daily-loss-pct", type=float, default=5.0)
-        r.add_argument("--max-dd-pct", type=float, default=10.0)
-        r.add_argument("--trailing-dd-pct", type=float, default=10.0)
-        r.add_argument("--profit-target-pct", type=float, default=10.0)
+        r.add_argument("--daily-loss-pct", type=float, default=4.0)
+        r.add_argument("--max-dd-pct", type=float, default=8.0)
+        r.add_argument("--trailing-dd-pct", type=float, default=8.0)
+        r.add_argument("--profit-target-pct", type=float, default=8.0)
         r.add_argument("--min-days", type=int, default=5)
         r.add_argument("--fee-bps", type=float, default=4.5)
         r.add_argument("--slippage-bps", type=float, default=2.0)
@@ -315,6 +331,8 @@ def build_parser():
         if name == "run":
             r.add_argument("--split", default="full", choices=["full", "is", "oos"])
             r.add_argument("--skip-checks", action="store_true")
+            r.add_argument("--cost-sweep", action="store_true",
+                           help="also report results at 2x and 3x assumed costs")
         else:
             r.add_argument("--split-at", required=True)
         r.set_defaults(func=fn)

@@ -28,20 +28,28 @@ class CostModel:
 class PropFirmRules:
     """Evaluation-account constraints. Checked *inside* every backtest.
 
-    Defaults model a typical 1-step crypto/futures evaluation. Change these to
-    match the specific firm before trusting a pass/fail.
+    Targets set by Kris (2026-08-20), firm not yet chosen: 4% daily loss,
+    8% max loss, 8% profit target.
+
+    NOTE on the 8%: "max loss" was not specified as static or trailing, so BOTH
+    are enforced at 8%. That is the stricter reading - a strategy that survives
+    it would pass either style of firm. If the chosen firm only uses one, relax
+    the other and re-run; results will improve, never worsen.
+
+    min_trading_days and max_single_day_profit_share were not specified and keep
+    common evaluation values. Revisit once a firm is picked.
     """
 
     starting_balance: float = 100_000.0
 
     # Hard breach rules
-    daily_loss_limit_pct: float = 5.0      # max loss in one calendar day (UTC)
-    max_drawdown_pct: float = 10.0         # from starting balance (static)
-    trailing_drawdown_pct: float = 10.0    # from equity high-water mark
+    daily_loss_limit_pct: float = 4.0      # max loss in one calendar day (UTC)
+    max_drawdown_pct: float = 8.0          # from starting balance (static)
+    trailing_drawdown_pct: float = 8.0     # from equity high-water mark
     trailing_locks_at_start: bool = True   # trailing DD stops trailing once above start+target
 
     # Soft / qualification rules
-    profit_target_pct: float = 10.0
+    profit_target_pct: float = 8.0
     min_trading_days: int = 5
     max_single_day_profit_share: float = 0.40  # no day > 40% of total profit
 

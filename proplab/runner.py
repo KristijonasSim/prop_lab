@@ -84,6 +84,42 @@ def in_sample_out_of_sample(
     return out
 
 
+def cost_sensitivity(strategy_cls, *, multipliers=(1.0, 2.0, 3.0), **kwargs):
+    """Re-run the same strategy at multiples of the assumed trading costs.
+
+    The venue is not decided yet (Binance vs a prop platform on MT4 /
+    Match-Trader / cTrader), and platform costs differ by more than most
+    strategy parameters do. A strategy that only works at 1x assumed costs is
+    not an edge, it is a fee-schedule bet.
+    """
+    import pandas as pd
+
+    base = kwargs.pop("config", None) or BacktestConfig()
+    rows, results = [], {}
+    for m in multipliers:
+        c = base.costs
+        scaled = replace(c, taker_fee_bps=c.taker_fee_bps * m,
+                         maker_fee_bps=c.maker_fee_bps * m,
+                         slippage_bps=c.slippage_bps * m,
+                         stop_slippage_bps=c.stop_slippage_bps * m)
+        res = backtest(strategy_cls, config=replace(base, costs=scaled),
+                       run_checks=False, **kwargs)
+        results[m] = res
+        mt = res.metrics
+        rows.append({
+            "cost_x": m,
+            "taker_bps": round(scaled.taker_fee_bps, 2),
+            "trades": mt.get("n_trades"),
+            "return_pct": mt.get("total_return_pct"),
+            "sharpe": mt.get("sharpe"),
+            "profit_factor": mt.get("profit_factor"),
+            "expectancy_r": mt.get("expectancy_r"),
+            "max_dd_pct": mt.get("max_drawdown_pct"),
+            "prop_pass": res.prop.get("passed"),
+        })
+    return pd.DataFrame(rows), results
+
+
 def log(result: BacktestResult, variation_slug: str | None = None,
         notes: str = "", db_path=None) -> str:
     conn = store.connect(db_path)
