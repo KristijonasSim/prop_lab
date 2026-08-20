@@ -88,13 +88,24 @@ def _print_result(res, conn=None) -> None:
     if conn is not None and m.get("n_trades", 0) > 0 and res.meta.get("split") == "oos":
         n_trials = store.trial_count(conn)["runs_all_hypotheses"] + 1
         card = acceptance.score(res, n_trials=n_trials)
-        print(f"\nACCEPTANCE SCORECARD  ({card['n_gates'] - card['n_failed']}"
-              f"/{card['n_gates']} gates)")
-        for g in card["gates"]:
-            arrow = ">=" if g["direction"] == "min" else "<="
-            print(f"  [{'ok ' if g['passed'] else 'FAIL'}] {g['gate']:24} "
-                  f"{str(g['value']):>10}  {arrow} {g['threshold']}")
-        print(f"  -> {card['verdict']}")
+        print("\nACCEPTANCE SCORECARD")
+        print(f"  profile: {card['profile']}")
+        titles = {1: "TIER 1 - validity (is the result real?)",
+                  2: "TIER 2 - viability (can it clear an evaluation?)",
+                  3: "TIER 3 - robustness (advisory; does not block)"}
+        for tier in (1, 2, 3):
+            print(f"\n  {titles[tier]}")
+            for g in [x for x in card["gates"] if x["tier"] == tier]:
+                arrow = ">=" if g["direction"] == "min" else "<="
+                mark = "ok  " if g["passed"] else ("FLAG" if tier == 3 else "FAIL")
+                print(f"    [{mark}] {g['gate']:24} {str(g['value']):>10}  "
+                      f"{arrow} {g['threshold']}")
+        d = card["diagnostics"]
+        print("\n  diagnostics (no thresholds - these trade off against each other)")
+        print(f"    PF {d.get('profit_factor')} · avg R {d.get('avg_r')} · "
+              f"win {d.get('win_rate_pct')}% · {d.get('trades_per_day')}/day · "
+              f"hold {d.get('avg_hold_hours')}h · CAGR {d.get('cagr_pct')}%")
+        print(f"\n  -> {card['verdict']}")
 
     if conn is not None and m.get("n_trades", 0) > 0:
         tc = store.trial_count(conn)

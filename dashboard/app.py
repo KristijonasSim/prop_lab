@@ -478,17 +478,30 @@ elif page == "variation_detail":
                     st.success(card["verdict"])
                 else:
                     st.error(card["verdict"])
-                grid = pd.DataFrame([{
-                    "": "✅" if g["passed"] else "❌",
-                    "Gate": g["gate"],
-                    "This run": g["value"],
-                    "Needs": ("≥ " if g["direction"] == "min" else "≤ ")
-                             + str(g["threshold"]),
-                    "Why it matters": g["why"],
-                } for g in card["gates"]])
-                st.dataframe(grid, width="stretch", hide_index=True,
-                             column_config={"Why it matters":
-                                            st.column_config.TextColumn(width="large")})
+                st.caption(f"**Shape:** {card['profile']}")
+                titles = {
+                    1: "Tier 1 — validity (is the result real?)  ·  binary",
+                    2: "Tier 2 — viability (can it clear an evaluation?)  ·  "
+                       "gated on the joint outcome, so shapes trade off here",
+                    3: "Tier 3 — robustness  ·  advisory, does not block",
+                }
+                for tier in (1, 2, 3):
+                    st.markdown(f"**{titles[tier]}**")
+                    grid = pd.DataFrame([{
+                        "": ("✅" if g["passed"] else ("⚠️" if tier == 3 else "❌")),
+                        "Gate": g["gate"],
+                        "This run": g["value"],
+                        "Needs": ("≥ " if g["direction"] == "min" else "≤ ")
+                                 + str(g["threshold"]),
+                        "Why it matters": g["why"],
+                    } for g in card["gates"] if g["tier"] == tier])
+                    st.dataframe(grid, width="stretch", hide_index=True,
+                                 column_config={"Why it matters":
+                                                st.column_config.TextColumn(width="large")})
+                d = card["diagnostics"]
+                st.markdown("**Diagnostics** — no thresholds; these trade off "
+                            "against each other")
+                st.dataframe(pd.DataFrame([d]), width="stretch", hide_index=True)
                 st.caption(
                     f"Scored against {n_trials} logged trials. The t-stat bar "
                     "rises with that count: the best of many worthless "
