@@ -86,3 +86,51 @@ print(summary(res)); export_trades(res, 'crosscheck/orb_v2_proplab_trades.csv')"
 Send me the TradingView trade list. The first divergent trade tells us where to
 look, and a difference of one bar in an entry is a different bug from a missing
 trade entirely.
+
+---
+
+# Trading it by hand — the indicator
+
+`orb_v2_ny_rvol_indicator.pine` is the **indicator** version: it plots what the
+rules see and marks where they *would* fire, without taking anything. Window and
+RVOL logic are identical to the strategy version, so any difference you see on
+the chart is your discretion, not a different calculation.
+
+It draws:
+- the 09:30-10:00 opening range, extended across the trade window
+- shading for the opening-range / trade / flatten windows
+- triangles where the mechanical rules would enter, an X where they would flatten
+- a state table: range, range width, live RVOL, whether the filter passes,
+  today's signal, and how many weeks of RVOL history exist
+
+Signals are marked on the bar whose **close** triggers them; the mechanical fill
+is the **next bar's open**.
+
+## The actual experiment
+
+You are profitable on this setup and the mechanical version is not. That gap is
+the useful thing here — it is somewhere in **which setups you skip**, **when you
+enter**, or **when you get out**.
+
+1. Add the indicator, use bar replay, and trade the setups as you normally would.
+2. Log every trade in `manual_trades_template.csv` — `entry_time, exit_time,
+   side` are the minimum; prices and a note on *why* are more valuable.
+3. Send it back. `proplab/manual_diff.py` splits the result three ways:
+
+   - **SKIPPED** — signals you declined. If those lose on average, your filter
+     *is* the edge, and identifying what you are filtering is the prize.
+   - **EXTRA** — trades you took with no mechanical signal. The rules are
+     blind to a setup you can see.
+   - **MATCHED** — same setup, different execution. Entry and exit timing are
+     compared trade by trade, in minutes.
+
+Whatever it finds becomes a new variation with a mechanical rule attached, which
+then goes through the normal in-sample / one-look-out-of-sample pipeline.
+
+## One caveat worth stating plainly
+
+Trades marked after the fact are chosen with hindsight, and hindsight makes
+anyone profitable. This is only worth trusting on trades recorded **forward**,
+with bar replay and no peeking ahead. That is not a reason to skip the exercise
+— it is the reason to do it properly, because a discretionary filter that
+survives an honest forward log is exactly the kind of edge worth mechanising.

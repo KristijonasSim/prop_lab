@@ -1,0 +1,2 @@
+entry_time,exit_time,side,entry_price,exit_price,net_pnl,note
+2026-06-02 10:15,2026-06-02 11:30,short,68556.1,68100.0,,skipped the 11:15 one, range too wide

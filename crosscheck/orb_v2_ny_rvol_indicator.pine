@@ -1,0 +1,186 @@
+//@version=6
+// ORB NY RVOL — INDICATOR (not a strategy)
+//
+// Plots exactly what proplab's orb_v2_ny_rvol sees, and marks where the
+// mechanical rules WOULD fire, without taking the trades. Use it with bar
+// replay to trade the setups by hand, then send the trade list back so we can
+// diff your decisions against the mechanical ones.
+//
+// The whole point: you are profitable trading this and the mechanical version
+// is not. The difference is information - it is in which setups you skip,
+// when you enter, or when you get out. This makes both visible on one chart.
+//
+// Window and RVOL logic are byte-for-byte the same as the strategy version, so
+// any difference you see is your discretion, not a different calculation.
+
+indicator("ORB NY RVOL — indicator", overlay = true, max_lines_count = 500,
+          max_labels_count = 500, max_boxes_count = 500)
+
+// ---------------------------------------------------------------- inputs
+tz            = input.string("America/New_York", "Session timezone",  group="Session")
+openStartStr  = input.string("0930", "Opening range start (HHMM)",    group="Session")
+openEndStr    = input.string("1000", "Opening range end (HHMM)",      group="Session")
+tradeStartStr = input.string("1000", "Trade window start (HHMM)",     group="Session")
+tradeEndStr   = input.string("1200", "Trade window end (HHMM)",       group="Session")
+flatStartStr  = input.string("1550", "Flatten start (HHMM)",          group="Session")
+flatEndStr    = input.string("1555", "Flatten end (HHMM)",            group="Session")
+
+rvolLength    = input.int(3,   "RVOL: completed weeks to average",    group="Filter", minval=1)
+rvolThreshold = input.float(1.0,"RVOL threshold (strictly greater)",  group="Filter")
+useRvol       = input.bool(true,"Apply the RVOL filter",              group="Filter")
+allowShorts   = input.bool(true,"Show short signals",                 group="Filter")
+
+showZones     = input.bool(true, "Shade the session windows",         group="Display")
+showRange     = input.bool(true, "Draw the opening range",            group="Display")
+showSignals   = input.bool(true, "Mark mechanical signals",           group="Display")
+showTable     = input.bool(true, "Show the state table",              group="Display")
+
+toMin(s) =>
+    int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
+
+// -------------------------------------- window overlap (matches proplab exactly)
+// proplab counts a bar as inside a window when the bar OVERLAPS it. Pine's
+// built-in session test matches on the bar's open only, which on 15m never
+// matches the 15:45 bar and so would miss the flatten entirely.
+tfMin    = timeframe.in_seconds(timeframe.period) / 60
+openMin  = hour(time, tz) * 60 + minute(time, tz)
+closeMin = openMin + tfMin
+inWin(sMin, eMin) => openMin < eMin and closeMin > sMin
+
+inOpenRange = inWin(toMin(openStartStr), toMin(openEndStr))
+inTradeWin  = inWin(toMin(tradeStartStr), toMin(tradeEndStr))
+inFlatten   = inWin(toMin(flatStartStr),  toMin(flatEndStr))
+
+// -------------------------------------------- relative volume (matches proplab)
+// Cumulative volume since the start of the UTC week, against the same bar
+// offset in the last N completed weeks. This is NOT ta.relativeVolume().
+weekIdx = math.floor((time / 1000 + 3 * 86400) / (7 * 86400))
+maxOff  = math.round(7 * 24 * 60 / tfMin) + 5
+
+var array<float> curCum = array.new_float(maxOff, na)
+var array<float> prev1  = array.new_float(maxOff, na)
+var array<float> prev2  = array.new_float(maxOff, na)
+var array<float> prev3  = array.new_float(maxOff, na)
+var int   offset   = -1
+var float cumVol   = 0.0
+var int   lastWeek = na
+
+if na(lastWeek) or weekIdx != lastWeek
+    if not na(lastWeek)
+        prev3 := prev2.copy()
+        prev2 := prev1.copy()
+        prev1 := curCum.copy()
+    curCum   := array.new_float(maxOff, na)
+    lastWeek := weekIdx
+    offset   := 0
+    cumVol   := 0.0
+else
+    offset += 1
+
+cumVol += volume
+if offset < maxOff
+    curCum.set(offset, cumVol)
+
+sumPast = 0.0
+nPast   = 0
+if offset < maxOff
+    for i = 0 to math.min(rvolLength, 3) - 1
+        v = i == 0 ? prev1.get(offset) : i == 1 ? prev2.get(offset) : prev3.get(offset)
+        if not na(v)
+            sumPast += v
+            nPast   += 1
+rvol   = nPast > 0 and sumPast > 0 ? cumVol / (sumPast / nPast) : na
+rvolOk = not useRvol or (not na(rvol) and rvol > rvolThreshold)
+
+// ------------------------------------------------------------ opening range
+var float orbHigh    = na
+var float orbLow     = na
+var string tradeSide = na
+var int   lastDate   = na
+var line  hiLine     = na
+var line  loLine     = na
+
+curDate = year(time, tz) * 10000 + month(time, tz) * 100 + dayofmonth(time, tz)
+newDay  = na(lastDate) or curDate != lastDate
+if newDay
+    lastDate  := curDate
+    orbHigh   := na
+    orbLow    := na
+    tradeSide := na
+    hiLine    := na
+    loLine    := na
+
+if inOpenRange
+    orbHigh := na(orbHigh) ? high : math.max(orbHigh, high)
+    orbLow  := na(orbLow)  ? low  : math.min(orbLow,  low)
+    if showRange
+        if na(hiLine)
+            hiLine := line.new(bar_index, orbHigh, bar_index, orbHigh,
+                               color=color.new(color.teal, 0), width=2)
+            loLine := line.new(bar_index, orbLow,  bar_index, orbLow,
+                               color=color.new(color.red, 0), width=2)
+        line.set_xy2(hiLine, bar_index, orbHigh)
+        line.set_y1(hiLine, orbHigh)
+        line.set_xy2(loLine, bar_index, orbLow)
+        line.set_y1(loLine, orbLow)
+
+// extend the range across the trade window so breaks are readable
+if showRange and not na(hiLine) and (inTradeWin or inFlatten)
+    line.set_xy2(hiLine, bar_index, orbHigh)
+    line.set_xy2(loLine, bar_index, orbLow)
+
+// ----------------------------------------------------------------- signals
+rangeReady = not na(orbHigh) and not na(orbLow)
+longSignal  = showSignals and inTradeWin and rvolOk and rangeReady and
+              close > orbHigh and tradeSide != "short" and na(tradeSide)
+shortSignal = showSignals and allowShorts and inTradeWin and rvolOk and rangeReady and
+              close < orbLow and tradeSide != "long" and na(tradeSide)
+
+if longSignal
+    tradeSide := "long"
+if shortSignal
+    tradeSide := "short"
+
+// A signal is ACTED ON at the next bar's open, which is where proplab fills it.
+plotshape(longSignal,  "Mechanical long",  shape.triangleup,   location.belowbar,
+          color.new(color.teal, 0), size=size.small)
+plotshape(shortSignal, "Mechanical short", shape.triangledown, location.abovebar,
+          color.new(color.red, 0),  size=size.small)
+plotshape(showSignals and inFlatten and not na(tradeSide[1]), "Mechanical flat",
+          shape.xcross, location.absolute, color.new(color.gray, 0), size=size.tiny)
+
+bgcolor(showZones and inOpenRange ? color.new(color.blue,  92) : na, title="Opening range")
+bgcolor(showZones and inTradeWin  ? color.new(color.green, 95) : na, title="Trade window")
+bgcolor(showZones and inFlatten   ? color.new(color.gray,  90) : na, title="Flatten")
+
+// ------------------------------------------------------------- state table
+if showTable and barstate.islast
+    var table t = table.new(position.top_right, 2, 8,
+                            border_width=1, frame_width=1,
+                            frame_color=color.new(color.gray, 60))
+    put(r, k, v, c) =>
+        table.cell(t, 0, r, k, text_color=color.new(color.gray, 20),
+                   text_size=size.small, text_halign=text.align_left)
+        table.cell(t, 1, r, v, text_color=c, text_size=size.small,
+                   text_halign=text.align_right)
+    rangeTxt = rangeReady ? str.tostring(orbLow, format.mintick) + "  ..  " +
+               str.tostring(orbHigh, format.mintick) : "not formed"
+    widthTxt = rangeReady ? str.tostring(100 * (orbHigh - orbLow) / close, "#.##") + "%" : "—"
+    put(0, "session",   inOpenRange ? "opening range" : inTradeWin ? "TRADE WINDOW" :
+                        inFlatten ? "flatten" : "outside",
+        inTradeWin ? color.new(color.teal, 0) : color.new(color.gray, 20))
+    put(1, "ORB range", rangeTxt, color.new(color.gray, 10))
+    put(2, "range width", widthTxt, color.new(color.gray, 10))
+    put(3, "RVOL",      na(rvol) ? "warming up" : str.tostring(rvol, "#.##"),
+        na(rvol) ? color.new(color.gray, 40) :
+        rvol > rvolThreshold ? color.new(color.teal, 0) : color.new(color.red, 0))
+    put(4, "RVOL filter", not useRvol ? "off" : rvolOk ? "PASS" : "blocked",
+        rvolOk ? color.new(color.teal, 0) : color.new(color.red, 0))
+    put(5, "today's signal", na(tradeSide) ? "none yet" : tradeSide,
+        na(tradeSide) ? color.new(color.gray, 40) : color.new(color.orange, 0))
+    put(6, "weeks of RVOL history", str.tostring(nPast), color.new(color.gray, 10))
+    put(7, "timeframe", timeframe.period + "  (" + str.tostring(tfMin, "#") + "m bars)",
+        color.new(color.gray, 10))
+
+alertcondition(longSignal,  "ORB long signal",  "ORB NY RVOL: mechanical LONG signal")
+alertcondition(shortSignal, "ORB short signal", "ORB NY RVOL: mechanical SHORT signal")
