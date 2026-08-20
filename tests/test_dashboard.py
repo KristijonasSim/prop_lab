@@ -72,7 +72,7 @@ def _fresh(monkeypatch, tmp_path, name="empty.db"):
 def test_page_renders_with_data(page, seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
     assert not at.exception, at.exception
-    at.sidebar.radio[0].set_value(page).run()
+    _nav(at, page)
     assert not at.exception, at.exception
 
 
@@ -82,11 +82,17 @@ def test_page_renders_on_empty_db(page, tmp_path, monkeypatch):
     try:
         at = AppTest.from_file(APP, default_timeout=90).run()
         assert not at.exception, at.exception
-        at.sidebar.radio[0].set_value(page).run()
+        _nav(at, page)
         assert not at.exception, at.exception
     finally:
         st.cache_resource.clear()
         st.cache_data.clear()
+
+
+def _nav(at, section):
+    """Click a sidebar section."""
+    [b for b in at.sidebar.button if b.key == f"nav_{section}"][0].click()
+    return at.run()
 
 
 def _rows(at):
@@ -174,7 +180,7 @@ def test_sidebar_nav_leaves_a_drill_down(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
     _open(at, "trend_swing")
     assert at.session_state["page"] == "hypothesis_detail"
-    at.sidebar.radio[0].set_value("Overview").run()
+    _nav(at, "Overview")
     assert at.session_state["page"] == "Overview"
     assert not at.exception, at.exception
 
@@ -334,10 +340,10 @@ def test_bookmarked_url_opens_a_hypothesis_once(many):
     at.query_params["hyp"] = "h05"
     at.run()
     assert at.session_state["page"] == "hypothesis_detail"
-    at.sidebar.radio[0].set_value("Overview").run()
+    _nav(at, "Overview")
     assert at.session_state["page"] == "Overview"
     at.run()
-    assert at.session_state["page"] == "Overview"
+    assert at.session_state["page"] == "Overview"   # the stale param must not pull us back
 
 
 def test_only_out_of_sample_prop_passes_are_counted(tmp_path, monkeypatch, seeded_runs=None):
@@ -380,3 +386,23 @@ def test_variation_table_reports_the_mandated_fields(seeded):
     for expected in ("PF", "Win %", "Avg R", "Trades/day", "Trades/wk",
                      "Hold (h)", "Days to resolve", "P(target first)"):
         assert expected in cols, f"{expected} missing from {cols}"
+
+
+def test_sidebar_escapes_a_drill_down(seeded):
+    """Regression: the sidebar was a radio, which only fires when its value
+    CHANGES. From a hypothesis opened out of the Hypotheses section, clicking
+    Hypotheses left the value unchanged, no event fired, and the user was
+    stuck on the detail page with only the in-page back button."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    assert at.session_state["page"] == "hypothesis_detail"
+    _nav(at, "Hypotheses")
+    assert at.session_state["page"] == "Hypotheses"
+    assert _rows(at), "library rows should be back"
+
+
+def test_sidebar_highlights_the_section_of_a_drill_down(seeded):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    active = [b.key for b in at.sidebar.button if b.proto.type == "primary"]
+    assert active == ["nav_Hypotheses"]

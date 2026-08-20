@@ -86,21 +86,22 @@ if _qp_hyp and st.session_state.get("_seen_qp_hyp") != _qp_hyp:
 
 NAV = ["Hypotheses", "Overview", "All runs", "Failed ideas"]
 NAV_STATUSES = list(STATUS_ICON)
-st.session_state.setdefault("nav", "Hypotheses")
-st.session_state.setdefault("_prev_nav", st.session_state["nav"])
+DETAIL_PAGES = {"hypothesis_detail": "Hypotheses", "variation_detail": "Hypotheses"}
 
 st.sidebar.title("prop_lab")
 
-# No on_change callback here, deliberately. Callbacks run BEFORE the script
-# body, so a callback that reads a widget's own key crashes with KeyError
-# whenever that key is not yet registered - after a browser reconnect, a
-# stale session, or a rerun that did not reach the widget. Comparing against
-# the previous value in the script body cannot fail that way.
-nav = st.sidebar.radio("View", NAV, key="nav")
-if nav != st.session_state["_prev_nav"]:
-    st.session_state["page"] = nav          # picking a section leaves a drill-down
-st.session_state["_prev_nav"] = nav
+# Buttons, not a radio. A radio only fires when its value CHANGES, so from a
+# drill-down (reached from Hypotheses, with the radio still reading
+# "Hypotheses") clicking Hypotheses did nothing at all and the sidebar became
+# a dead end. A button fires on every click.
+_section = DETAIL_PAGES.get(st.session_state["page"], st.session_state["page"])
+for _label in NAV:
+    st.sidebar.button(
+        _label, key=f"nav_{_label}", width="stretch",
+        type="primary" if _label == _section else "tertiary",
+        on_click=go_to, args=(_label,))
 
+st.sidebar.divider()
 st.sidebar.button("Refresh", on_click=refresh, width="stretch")
 
 page = st.session_state["page"]
