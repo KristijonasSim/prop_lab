@@ -63,9 +63,10 @@ def static_scan(source: str) -> CheckResult:
 
 
 def scramble_test(strategy_cls, data: Dataset, config, cutoff_frac: float = 0.6,
-                  seed: int = 11) -> CheckResult:
+                  seed: int = 11, params: dict | None = None) -> CheckResult:
     """Re-run with the post-cutoff future randomised; pre-cutoff must not move."""
-    base = engine.run(strategy_cls(), data, config)
+    params = params or {}
+    base = engine.run(strategy_cls(**params), data, config)
 
     k = int(len(data.primary) * cutoff_frac)
     cutoff_time = data.primary.index[k]
@@ -87,7 +88,7 @@ def scramble_test(strategy_cls, data: Dataset, config, cutoff_frac: float = 0.6,
         data.symbol, data.primary_timeframe, df,
         {tf: resample(df, tf) for tf in data.higher}, data.integrity,
     )
-    alt = engine.run(strategy_cls(), scrambled, config)
+    alt = engine.run(strategy_cls(**params), scrambled, config)
 
     def pre(res):
         return [

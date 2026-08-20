@@ -287,55 +287,47 @@ strategy gets exactly one OOS look, ever - a second look would be tuning.
                  "The variation's identifier"),
                 ("status", "status", None,
                  "Where this sits in the pipeline"),
+                ("stats_from", "stats from", None,
+                 "Which run the numbers below come from. 'OOS' is evidence. "
+                 "'IS (tuning only)' means the strategy was never tested out of "
+                 "sample, so these numbers are what tuning produced and prove "
+                 "nothing on their own."),
                 ("n_is_runs", "Runs (IS)", None,
-                 "In-sample backtests run while tuning parameters. Unlimited by "
-                 "design - a grid of 17 parameter settings is 17 runs, not 17 "
-                 "attempts to pass. These do not count as evidence."),
+                 "In-sample backtests run while tuning. A grid of 17 parameter "
+                 "settings is 17 runs, not 17 attempts to pass."),
                 ("n_oos_runs", "Runs (OOS)", None,
-                 "Out-of-sample looks spent. Capped at one per strategy: a "
-                 "second look would be tuning on the only honest data left."),
-                ("is_sharpe", "Sharpe (IS)", "%.2f",
-                 "In-sample Sharpe. Flattering by construction - the parameters "
-                 "were chosen because they looked good on this exact data."),
-                ("oos_sharpe", "Sharpe (OOS)", "%.2f",
-                 "Out-of-sample Sharpe: return per unit of volatility, "
-                 "annualised, on data the strategy never saw while being built."),
-                ("oos_return", "Return % (OOS)", "%.2f",
-                 "Total account return over the whole out-of-sample period - "
-                 "not per year."),
-                ("oos_profit_factor", "Profit factor", "%.2f",
-                 "Gross winnings divided by gross losses on the single "
-                 "out-of-sample run. 1.0 is break-even. NOT an average across "
-                 "runs."),
-                ("oos_win_rate", "Win %", "%.1f",
-                 "Share of out-of-sample trades that made money. A low win rate "
-                 "is normal for trend strategies, which rely on rare big wins."),
-                ("oos_expectancy_r", "Avg R", "%.3f",
-                 "Average profit per trade as a multiple of the amount risked. "
-                 "0.10 means each trade earns a tenth of what it risks."),
-                ("oos_trades", "Trades", None,
-                 "Number of out-of-sample trades. Small counts mean the result "
-                 "could easily be luck."),
-                ("oos_trades_per_day", "Trades/day", "%.2f",
-                 "Trading frequency - decides whether an evaluation can be "
-                 "resolved quickly."),
-                ("oos_trades_per_week", "Trades/wk", "%.2f",
-                 "Trades per week out of sample."),
-                ("oos_hold_hours", "Hold (h)", "%.1f",
+                 "Out-of-sample looks spent. Capped at one per strategy."),
+                ("stat_sharpe", "Sharpe", "%.2f",
+                 "Return per unit of volatility, annualised."),
+                ("stat_return", "Return %", "%.2f",
+                 "Total account return over the test period, not per year."),
+                ("stat_profit_factor", "Profit factor", "%.2f",
+                 "Gross winnings / gross losses. 1.0 is break-even."),
+                ("stat_win_rate", "Win %", "%.1f",
+                 "Share of trades that made money. A low rate is fine if the "
+                 "winners are large."),
+                ("stat_expectancy_r", "Avg R", "%.3f",
+                 "Average profit per trade as a multiple of what was risked. "
+                 "Blank means the strategy has no stop, so risk per trade is "
+                 "undefined."),
+                ("stat_trades", "Trades", None,
+                 "Number of trades in the run."),
+                ("stat_trades_per_day", "Trades/day", "%.2f",
+                 "Trading frequency."),
+                ("stat_trades_per_week", "Trades/wk", "%.2f",
+                 "Trades per week."),
+                ("stat_hold_hours", "Hold (h)", "%.1f",
                  "Average hours a position is held."),
-                ("oos_max_dd", "Max DD %", "%.2f",
-                 "Worst peak-to-trough fall in account equity out of sample."),
-                ("oos_days_to_resolve", "Days to resolve", "%.0f",
-                 "Estimated trading days until the account either hits the "
-                 "profit target or breaches the drawdown limit, from this run's "
-                 "daily P&L."),
-                ("oos_p_target_first", "P(target first)", "%.2f",
-                 "Probability of reaching the profit target before breaching "
-                 "the drawdown limit."),
+                ("stat_max_dd", "Max DD %", "%.2f",
+                 "Worst peak-to-trough fall in account equity."),
+                ("stat_days_to_resolve", "Days to resolve", "%.0f",
+                 "Estimated trading days until the account hits the profit "
+                 "target or breaches the drawdown limit."),
+                ("stat_p_target_first", "P(target first)", "%.2f",
+                 "Probability of reaching the target before the drawdown limit."),
                 ("oos_prop_pass", "Prop (OOS)", None,
-                 "Did the out-of-sample run pass every prop-firm rule? This is "
-                 "the verdict that matters. In-sample passes are not counted "
-                 "here - tuning can satisfy the rules trivially."),
+                 "Did the out-of-sample run pass every prop-firm rule? In-sample "
+                 "passes are not counted - tuning satisfies them trivially."),
             ]
             present = [c for c in COLUMNS if c[0] in vs.columns]
             missing = [c[1] for c in COLUMNS if c[0] not in vs.columns]
@@ -358,9 +350,10 @@ strategy gets exactly one OOS look, ever - a second look would be tuning.
                     "process is running older code than the database — restart "
                     "it with `./runs/stop_dashboard.sh && ./runs/start_dashboard.sh`.")
             st.caption(
-                "Hover any column header for its definition. Every stat is from "
-                "the single out-of-sample run except the one marked (IS). "
-                "**Runs (IS)** counts tuning backtests, not attempts to pass.")
+                "Hover any column header for its definition. The **stats from** "
+                "column says where the numbers come from: `OOS` is evidence; "
+                "`IS (tuning only)` means the strategy was never tested out of "
+                "sample, so those numbers are only what tuning produced.")
 
             for _, v in vs.iterrows():
                 icon = STATUS_ICON.get(v["status"], "")

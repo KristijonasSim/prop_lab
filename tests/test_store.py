@@ -115,3 +115,14 @@ def test_cost_sensitivity_reports_every_multiplier():
     # higher assumed costs can only make a strategy worse, never better
     assert table["return_pct"].is_monotonic_decreasing
     assert table["taker_bps"].iloc[2] == pytest.approx(3 * table["taker_bps"].iloc[0])
+
+
+def test_cli_print_result_does_not_shadow_the_result(conn, result, capsys):
+    """Regression: printing the resolution block reused the name `res` for a
+    dict, then the multiple-testing block tried to read `res.meta` and crashed
+    before the run could be logged."""
+    from proplab.cli import _print_result
+
+    _print_result(result, conn)
+    out = capsys.readouterr().out
+    assert "MULTIPLE TESTING" in out

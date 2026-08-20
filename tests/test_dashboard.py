@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 pytest.importorskip("streamlit")
@@ -383,8 +384,9 @@ def test_variation_table_reports_the_mandated_fields(seeded):
     _open(at, "trend_swing")
     assert not at.exception, at.exception
     cols = list(at.dataframe[0].value.columns)
-    for expected in ("Profit factor", "Win %", "Avg R", "Trades/day", "Trades/wk",
-                     "Hold (h)", "Days to resolve", "P(target first)"):
+    for expected in ("stats from", "Profit factor", "Win %", "Avg R",
+                     "Trades/day", "Trades/wk", "Hold (h)", "Days to resolve",
+                     "P(target first)"):
         assert expected in cols, f"{expected} missing from {cols}"
 
 
@@ -418,9 +420,9 @@ def test_variation_table_survives_an_older_store(seeded, monkeypatch):
     def older(conn, slug):
         df = real(conn, slug)
         return df.drop(columns=[c for c in df.columns
-                                if c in ("oos_profit_factor", "oos_win_rate",
-                                         "oos_trades_per_day", "oos_hold_hours",
-                                         "oos_days_to_resolve")])
+                                if c in ("stat_profit_factor", "stat_win_rate",
+                                         "stat_trades_per_day", "stat_hold_hours",
+                                         "stat_days_to_resolve")])
 
     monkeypatch.setattr(store, "variations_for", older)
     at = AppTest.from_file(APP, default_timeout=90).run()
@@ -429,7 +431,7 @@ def test_variation_table_survives_an_older_store(seeded, monkeypatch):
     assert at.warning, "should warn that the process is running older code"
     assert "restart" in at.warning[0].value.lower()
     cols = list(at.dataframe[0].value.columns)
-    assert "Sharpe (OOS)" in cols and "Profit factor" not in cols
+    assert "Sharpe" in cols and "Profit factor" not in cols
 
 
 def test_prop_verdict_column_reports_the_oos_run_not_any_run(seeded):
@@ -479,3 +481,48 @@ def test_acceptance_tab_grades_an_oos_run(seeded):
     body = " ".join(m.value for m in at.markdown) + " ".join(
         e.value for e in list(at.error) + list(at.success) + list(at.info))
     assert "ACCEPTED" in body or "split=" in body
+
+
+def test_a_strategy_with_only_in_sample_runs_still_shows_its_stats(seeded):
+    """Reported from the ORB work: every stat column read OOS-only, so a
+    strategy tested but never taken out of sample showed a row of None - the
+    table was useless for exactly the strategies being worked on."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    t = at.dataframe[0].value.set_index("strategy")
+    row = t.loc["trend_swing_v1"]
+    assert row["stats from"] in ("OOS", "full", "IS (tuning only)")
+    assert pd.notna(row["Win %"]), "win rate must be shown even without an OOS run"
+    assert pd.notna(row["Profit factor"])
+
+
+def test_stats_from_flags_tuning_only_numbers_as_such(seeded, tmp_path, monkeypatch):
+    """Numbers that came from tuning must be labelled, so they are never
+    mistaken for evidence."""
+    _fresh(monkeypatch, tmp_path, "isonly.db")
+    from proplab.config import BacktestConfig, CostModel
+    from proplab.data.loader import Dataset, check_integrity
+    from proplab.data.synthetic import random_walk
+    from proplab.strategy.library._infra_smoke import InfraSmoke
+    from proplab import runner
+
+    c = store.connect(store.DB_PATH)
+    store.upsert_hypothesis(c, "h", "H", "d", "m")
+    store.upsert_variation(c, "h", "v", "V")
+    p = random_walk(1500, "15m", seed=3)
+    ds = Dataset("X", "15m", p, {}, check_integrity(p, "15m"))
+    res = runner.backtest(InfraSmoke, symbol="X", timeframe="15m", data=ds,
+                          config=BacktestConfig(costs=CostModel(apply_funding=False)),
+                          run_checks=False)
+    store.insert_run(c, res, variation_slug="v", split="is")
+    c.close()
+    try:
+        at = AppTest.from_file(APP, default_timeout=90).run()
+        _open(at, "h")
+        row = at.dataframe[0].value.iloc[0]
+        assert row["stats from"] == "IS (tuning only)"
+        assert row["Prop (OOS)"] == "not run"
+        assert pd.notna(row["Win %"])
+    finally:
+        st.cache_resource.clear()
+        st.cache_data.clear()

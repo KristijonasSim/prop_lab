@@ -22,7 +22,8 @@ EXECUTION MODEL (deliberately pessimistic - assume you get the worse fill):
      not provably so - worth remembering when a strategy lives or dies on
      target fills.
   5. Position size is computed at FILL time from the actual fill price, so
-     the risked amount is exact rather than estimated.
+     the price-distance risk to the stop is exact rather than estimated. Fees,
+     slippage and gaps are still charged on top.
 
 Anything that would need to know the future is unreachable: the strategy is
 handed a Context that can only slice backwards.

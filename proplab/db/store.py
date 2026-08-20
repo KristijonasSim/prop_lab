@@ -245,7 +245,8 @@ def overview(conn) -> pd.DataFrame:
                   COUNT(r.id) AS runs,
                   MAX(r.created_at) AS last_run,
                   MAX(r.sharpe) AS best_sharpe,
-                  SUM(r.prop_passed) AS prop_passes
+                  COALESCE(SUM(CASE WHEN r.split='oos' THEN r.prop_passed END), 0)
+                                      AS prop_passes
            FROM hypotheses h
            LEFT JOIN variations v ON v.hypothesis_id = h.id
            LEFT JOIN runs r ON r.variation_id = v.id
@@ -334,9 +335,11 @@ def hypotheses_list(conn) -> pd.DataFrame:
 def variations_for(conn, hypothesis_slug: str) -> pd.DataFrame:
     """Every strategy built under one hypothesis, with its headline stats.
 
-    Stats are taken from the LATEST run of each split, so a variation shows
-    its in-sample and out-of-sample numbers side by side. Variations that were
-    never run still appear - "coded but never tested" is information too.
+    Stats come from the LATEST run of each split. The `stat_*` columns prefer
+    out-of-sample and fall back to full, then in-sample, so a strategy that has
+    only been tuned still shows its win rate, profit factor and drawdown
+    instead of a row of nulls - with `stats_from` saying which split they came
+    from, so nobody mistakes tuning numbers for evidence.
     """
     return pd.read_sql_query(
         """
@@ -345,45 +348,82 @@ def variations_for(conn, hypothesis_slug: str) -> pd.DataFrame:
                        PARTITION BY r.variation_id, r.split
                        ORDER BY r.created_at DESC) AS rn
             FROM runs r
-        )
-        SELECT v.id, v.slug, v.title, v.status, v.rationale, v.details,
-               v.verdict_note, v.params_json, v.code_path, v.strategy_name,
-               v.updated_at,
-               COUNT(k.id)                                            AS n_runs,
+        ), agg AS (
+            SELECT v.id, v.slug, v.title, v.status, v.rationale, v.details,
+                   v.verdict_note, v.params_json, v.code_path, v.strategy_name,
+                   v.updated_at,
+                   COUNT(k.id)                                  AS n_runs,
+                   COUNT(CASE WHEN k.split='is'  THEN k.id END) AS n_is_runs,
+                   COUNT(CASE WHEN k.split='oos' THEN k.id END) AS n_oos_runs,
+                   COUNT(CASE WHEN k.split='full' THEN k.id END) AS n_full_runs,
+                   COALESCE(MAX(k.prop_passed), 0)              AS any_prop_pass,
+                   MIN(COALESCE(k.checks_passed, 1))            AS all_checks_passed,
+                   MAX(k.created_at)                            AS last_run,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.sharpe END) AS oos_sharpe,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.sharpe END) AS is_sharpe,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.sharpe END) AS full_sharpe,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.total_return_pct END) AS oos_return,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.total_return_pct END) AS is_return,
                MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.total_return_pct END) AS full_return,
-               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.sharpe END)           AS full_sharpe,
-               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.n_trades END)         AS full_trades,
-               MAX(CASE WHEN k.split='is'  AND k.rn=1 THEN k.sharpe END)            AS is_sharpe,
-               MAX(CASE WHEN k.split='is'  AND k.rn=1 THEN k.total_return_pct END)  AS is_return,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.sharpe END)            AS oos_sharpe,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.total_return_pct END)  AS oos_return,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.expectancy_r END)      AS oos_expectancy_r,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.n_trades END)          AS oos_trades,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.max_dd_pct END)        AS oos_max_dd,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.profit_factor END)     AS oos_profit_factor,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.win_rate_pct END)      AS oos_win_rate,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_day END)    AS oos_trades_per_day,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_week END)   AS oos_trades_per_week,
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.avg_hold_hours END)    AS oos_hold_hours,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.profit_factor END) AS oos_profit_factor,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.profit_factor END) AS is_profit_factor,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.profit_factor END) AS full_profit_factor,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.win_rate_pct END) AS oos_win_rate,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.win_rate_pct END) AS is_win_rate,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.win_rate_pct END) AS full_win_rate,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.expectancy_r END) AS oos_expectancy_r,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.expectancy_r END) AS is_expectancy_r,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.expectancy_r END) AS full_expectancy_r,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.n_trades END) AS oos_trades,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.n_trades END) AS is_trades,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.n_trades END) AS full_trades,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_day END) AS oos_trades_per_day,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.trades_per_day END) AS is_trades_per_day,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.trades_per_day END) AS full_trades_per_day,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_week END) AS oos_trades_per_week,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.trades_per_week END) AS is_trades_per_week,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.trades_per_week END) AS full_trades_per_week,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.avg_hold_hours END) AS oos_hold_hours,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.avg_hold_hours END) AS is_hold_hours,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.avg_hold_hours END) AS full_hold_hours,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.max_dd_pct END) AS oos_max_dd,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.max_dd_pct END) AS is_max_dd,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.max_dd_pct END) AS full_max_dd,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.est_days_to_resolution END) AS oos_days_to_resolve,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.est_days_to_resolution END) AS is_days_to_resolve,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.est_days_to_resolution END) AS full_days_to_resolve,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.p_target_before_breach END) AS oos_p_target_first,
-               -- The verdict that counts: did the single out-of-sample run
-               -- pass? MAX over all splits answers "did anything ever pass",
-               -- which in-sample tuning runs satisfy trivially and which reads
-               -- like a count when displayed.
-               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.prop_passed END)
-                                                                      AS oos_prop_pass,
-               COALESCE(MAX(k.prop_passed), 0)                        AS any_prop_pass,
-               COUNT(CASE WHEN k.split='is'  THEN k.id END)           AS n_is_runs,
-               COUNT(CASE WHEN k.split='oos' THEN k.id END)           AS n_oos_runs,
-               MIN(COALESCE(k.checks_passed, 1))                      AS all_checks_passed,
-               MAX(k.created_at)                                      AS last_run
-        FROM variations v
-        JOIN hypotheses h ON h.id = v.hypothesis_id
-        LEFT JOIN ranked k ON k.variation_id = v.id
-        WHERE h.slug = ?
-        GROUP BY v.id
-        ORDER BY v.created_at
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.p_target_before_breach END) AS is_p_target_first,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.p_target_before_breach END) AS full_p_target_first,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.prop_passed END) AS oos_prop_pass,
+               MAX(CASE WHEN k.split='is' AND k.rn=1 THEN k.prop_passed END) AS is_prop_pass,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.prop_passed END) AS full_prop_pass
+            FROM variations v
+            JOIN hypotheses h ON h.id = v.hypothesis_id
+            LEFT JOIN ranked k ON k.variation_id = v.id
+            WHERE h.slug = ?
+            GROUP BY v.id
+        )
+        SELECT *,
+               CASE WHEN n_oos_runs > 0 THEN 'OOS'
+                    WHEN n_full_runs > 0 THEN 'full'
+                    WHEN n_is_runs  > 0 THEN 'IS (tuning only)'
+                    ELSE 'not run' END AS stats_from,
+               oos_prop_pass AS oos_prop_pass_verdict,
+       COALESCE(oos_sharpe, full_sharpe, is_sharpe) AS stat_sharpe,
+       COALESCE(oos_return, full_return, is_return) AS stat_return,
+       COALESCE(oos_profit_factor, full_profit_factor, is_profit_factor) AS stat_profit_factor,
+       COALESCE(oos_win_rate, full_win_rate, is_win_rate) AS stat_win_rate,
+       COALESCE(oos_expectancy_r, full_expectancy_r, is_expectancy_r) AS stat_expectancy_r,
+       COALESCE(oos_trades, full_trades, is_trades) AS stat_trades,
+       COALESCE(oos_trades_per_day, full_trades_per_day, is_trades_per_day) AS stat_trades_per_day,
+       COALESCE(oos_trades_per_week, full_trades_per_week, is_trades_per_week) AS stat_trades_per_week,
+       COALESCE(oos_hold_hours, full_hold_hours, is_hold_hours) AS stat_hold_hours,
+       COALESCE(oos_max_dd, full_max_dd, is_max_dd) AS stat_max_dd,
+       COALESCE(oos_days_to_resolve, full_days_to_resolve, is_days_to_resolve) AS stat_days_to_resolve,
+       COALESCE(oos_p_target_first, full_p_target_first, is_p_target_first) AS stat_p_target_first,
+       COALESCE(oos_prop_pass, full_prop_pass, is_prop_pass) AS stat_prop_pass
+        FROM agg ORDER BY slug
         """,
         conn, params=(hypothesis_slug,),
     )

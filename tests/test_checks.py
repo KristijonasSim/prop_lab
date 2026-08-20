@@ -52,6 +52,28 @@ class Cheater(Strategy):
                     max_bars=ctx.params["ahead"], tag="cheat")
 
 
+class ParamCheater(Strategy):
+    """Only cheats when enabled by an override. The scramble test must use the
+    exact params of the run being validated, not the class defaults."""
+    name = "_t_param_cheater"
+    hypothesis = "test"
+    mechanism = "test"
+    params = {"cheat": False, "ahead": 4}
+
+    def on_bar(self, ctx):
+        if ctx.position is not None:
+            return
+        if not ctx.params["cheat"]:
+            if ctx.i % 200 == 0:
+                ctx.buy(stop=ctx.close * 0.99, risk_pct=0.005, max_bars=10, tag="honest")
+            return
+        future_i = ctx.i + ctx.params["ahead"]
+        closes = ctx._cols["close"]
+        if future_i < len(closes) and closes[future_i] > ctx.close:
+            ctx.buy(stop=ctx.close * 0.99, risk_pct=0.005,
+                    max_bars=ctx.params["ahead"], tag="cheat")
+
+
 def test_scramble_test_passes_an_honest_strategy():
     r = lookahead.scramble_test(Honest, make_ds(), CFG)
     assert r.passed, r.detail
@@ -61,6 +83,12 @@ def test_scramble_test_catches_a_cheater():
     r = lookahead.scramble_test(Cheater, make_ds(), CFG)
     assert not r.passed
     assert "lookahead" in r.detail
+
+
+def test_scramble_test_uses_runtime_params():
+    r = lookahead.scramble_test(ParamCheater, make_ds(), CFG,
+                                params={"cheat": True, "ahead": 4})
+    assert not r.passed
 
 
 def test_cheater_would_have_looked_profitable():

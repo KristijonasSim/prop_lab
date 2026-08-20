@@ -105,9 +105,11 @@ def score(oos_result, *, n_trials: int, is_result=None,
     rows = []
 
     # ---------------- Tier 1: is the result real? ----------------
+    checks_ok = bool(checks) and all(x["passed"] for x in checks)
+    checks_pass = checks_ok or not c.require_checks_pass
     rows.append(_row(1, "automated checks",
-                     "pass" if all(x["passed"] for x in checks) else "FAIL", "pass",
-                     not checks or all(x["passed"] for x in checks),
+                     "pass" if checks_ok else ("not run" if not checks else "FAIL"),
+                     "pass", checks_pass,
                      "Lookahead or a template violation invalidates everything."))
     rows.append(_row(1, "prop rules (OOS)", "PASS" if prop.get("passed") else "FAIL",
                      "PASS", prop.get("passed") or not c.require_prop_pass,

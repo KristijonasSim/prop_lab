@@ -51,17 +51,17 @@ def _print_result(res, conn=None) -> None:
           f"(per week {m.get('trades_per_week')})")
     print(f"  average hold time    {hold_s}   "
           f"(median {m.get('median_hold_hours')}h, max {m.get('max_hold_days')}d)")
-    res = m.get("resolution") or {}
-    if res:
+    resolution = m.get("resolution") or {}
+    if resolution:
         print("\n  TIME TO RESOLVE (target vs drawdown, from this run's daily P&L)")
-        print(f"    daily P&L          mean {res.get('daily_pnl_mean')} "
-              f"sd {res.get('daily_pnl_std')}")
-        print(f"    days to target     {res.get('days_to_target_at_current_rate')} "
+        print(f"    daily P&L          mean {resolution.get('daily_pnl_mean')} "
+              f"sd {resolution.get('daily_pnl_std')}")
+        print(f"    days to target     {resolution.get('days_to_target_at_current_rate')} "
               f"(at the observed rate)")
-        print(f"    days to breach     {res.get('days_to_breach_at_current_rate')}")
-        print(f"    P(target first)    {res.get('p_target_before_breach')}")
-        print(f"    expected days      {res.get('expected_days_to_resolution')}")
-        print(f"    -> {res.get('verdict')}")
+        print(f"    days to breach     {resolution.get('days_to_breach_at_current_rate')}")
+        print(f"    P(target first)    {resolution.get('p_target_before_breach')}")
+        print(f"    expected days      {resolution.get('expected_days_to_resolution')}")
+        print(f"    -> {resolution.get('verdict')}")
 
     print("\nPERFORMANCE (raw)")
     for k in ("n_trades", "win_rate_pct", "profit_factor", "expectancy_r", "t_stat",

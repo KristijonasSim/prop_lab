@@ -69,7 +69,8 @@ python -m proplab.cli dashboard
 - If one bar contains both the stop and the target, the **stop** is assumed first.
 - Fees, slippage and 8-hourly perp funding are charged on every position.
 - Position size is computed at fill time from the real fill price, so `risk_pct`
-  is exact rather than approximate.
+  is exact to the stop before fees and stop slippage. Actual realised loss can
+  be worse when costs or gaps apply.
 
 ## How lookahead is prevented
 

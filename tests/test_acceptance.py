@@ -55,6 +55,13 @@ def test_lookahead_blocks_acceptance_whatever_the_profit():
     assert "not established" in card["verdict"]
 
 
+def test_missing_automated_checks_block_acceptance():
+    card = score(Fake(meta={"checks": []}), n_trials=10)
+    assert not card["accepted"]
+    assert gate(card, "automated checks")["value"] == "not run"
+    assert "automated checks" in card["failed_validity"]
+
+
 def test_breaking_prop_rules_blocks_acceptance():
     assert "prop rules (OOS)" in score(Fake(prop={"passed": False}),
                                        n_trials=10)["failed_validity"]

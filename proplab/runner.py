@@ -61,7 +61,7 @@ def backtest(
             compliance.template_compliance(strategy_cls).to_dict(),
             lookahead.static_scan(source).to_dict(),
             lookahead.order_of_execution_test(result).to_dict(),
-            lookahead.scramble_test(strategy_cls, data, cfg).to_dict(),
+            lookahead.scramble_test(strategy_cls, data, cfg, params=params).to_dict(),
         ]
         result.meta["checks"] = checks
     return result
@@ -81,7 +81,7 @@ def in_sample_out_of_sample(
     out = {}
     for label, ds in (("is", is_data), ("oos", oos_data)):
         out[label] = backtest(strategy_cls, data=ds, split=label,
-                              run_checks=(label == "is"), **kwargs)
+                              run_checks=True, **kwargs)
     return out
 
 
