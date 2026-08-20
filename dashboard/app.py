@@ -75,6 +75,15 @@ st.session_state.setdefault("page", "Hypotheses")
 st.session_state.setdefault("hyp", None)
 st.session_state.setdefault("var", None)
 
+# A row in the library is a real link (?hyp=<slug>), which is how the table
+# avoids Streamlit's row-selection checkbox gutter. Honour the link once per
+# distinct slug: re-acting on every rerun would trap the user on the detail
+# page, and clearing the query param outright would fight the browser's URL.
+_qp_hyp = st.query_params.get("hyp")
+if _qp_hyp and st.session_state.get("_seen_qp_hyp") != _qp_hyp:
+    st.session_state["_seen_qp_hyp"] = _qp_hyp
+    go_to("hypothesis_detail", _qp_hyp)
+
 NAV = ["Hypotheses", "Overview", "All runs", "Failed ideas"]
 NAV_STATUSES = list(STATUS_ICON)
 st.session_state.setdefault("nav", "Hypotheses")
@@ -154,7 +163,8 @@ if page == "Hypotheses":
         else:
             table = pd.DataFrame({
                 "": [STATUS_ICON.get(s_, "") for s_ in view["status"]],
-                "Hypothesis": view["title"].map(txt),
+                "Hypothesis": [f"?hyp={sl}&t={txt(ti)}"
+                               for sl, ti in zip(view["slug"], view["title"])],
                 "Status": view["status"],
                 "Symbol": view["symbol"].map(txt),
                 "Strategies": view["n_variations"].astype(int),
@@ -167,31 +177,21 @@ if page == "Hypotheses":
                 "Idea": [txt(d).split("\n")[0] for d in view["description"]],
                 "slug": view["slug"],
             })
-            event = st.dataframe(
-                table, width="stretch", hide_index=True, height=min(60 + 35 * len(table), 520),
-                on_select="rerun", selection_mode="single-row",
+            st.dataframe(
+                table, width="stretch", hide_index=True,
+                height=min(60 + 35 * len(table), 520),
                 column_config={
                     "": st.column_config.TextColumn(width="small"),
+                    "Hypothesis": st.column_config.LinkColumn(
+                        "Hypothesis", display_text=r"&t=(.*)$", width="medium",
+                        help="Click to open this hypothesis"),
                     "Idea": st.column_config.TextColumn(width="medium"),
                     "Best OOS Sharpe": st.column_config.NumberColumn(format="%.2f"),
                     "Best OOS ret %": st.column_config.NumberColumn(format="%.1f"),
                     "slug": st.column_config.TextColumn(width="small"),
                 })
-            picked = (event.selection.rows if hasattr(event, "selection") else []) or []
-            if picked:
-                go_to("hypothesis_detail", str(table.iloc[picked[0]]["slug"]))
-                st.rerun()
-
-            o1, o2 = st.columns([3, 1])
-            choice = o1.selectbox(
-                "Open hypothesis", options=list(view["slug"]),
-                format_func=lambda sl: txt(
-                    view.loc[view["slug"] == sl, "title"].iloc[0]),
-                label_visibility="collapsed")
-            o2.button("Open →", width="stretch", on_click=go_to,
-                      args=("hypothesis_detail", choice))
-            st.caption(f"{len(view)} of {len(hyps)} hypotheses · click a row, or use "
-                       "the selector")
+            st.caption(f"{len(view)} of {len(hyps)} hypotheses · click a "
+                       "hypothesis name to open it")
 
 # ========================================================== HYPOTHESIS DETAIL
 elif page == "hypothesis_detail":

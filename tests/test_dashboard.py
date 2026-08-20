@@ -94,9 +94,33 @@ def _library(at):
     return at.dataframe[0].value
 
 
+def _titles(at):
+    """Titles shown in the library.
+
+    The Hypothesis column holds '?hyp=<slug>&t=<title>' links - that is how the
+    table gets clickable rows without Streamlit's selection checkbox gutter -
+    so the visible text has to be parsed back out.
+    """
+    return [str(v).split("&t=", 1)[-1] for v in _library(at)["Hypothesis"]]
+
+
+def _open(at, slug):
+    """Click a hypothesis row, i.e. follow its link."""
+    at.query_params["hyp"] = slug
+    return at.run()
+
+
 def test_hypothesis_library_lists_the_hypothesis(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    assert "Trend following swing trading" in list(_library(at)["Hypothesis"])
+    assert "Trend following swing trading" in _titles(at)
+
+
+def test_library_rows_link_without_a_selection_checkbox(seeded):
+    """Regression: selection_mode='single-row' added a checkbox gutter. Rows are
+    plain links now, so no selection state should exist at all."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    assert all(str(v).startswith("?hyp=") for v in _library(at)["Hypothesis"])
+    assert not [b for b in at.button if b.label.startswith("Open")]
 
 
 def test_library_table_carries_the_summary_columns(seeded):
@@ -109,12 +133,10 @@ def test_library_table_carries_the_summary_columns(seeded):
     assert row["Strategies"] == 2 and row["Rejected"] == 1
 
 
-def test_clicking_open_drills_into_the_hypothesis(seeded):
+def test_clicking_a_row_drills_into_the_hypothesis(seeded):
     """The whole point: press a hypothesis, see the strategies under it."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    opens = [b for b in at.button if b.label.startswith("Open")]
-    assert opens, "no Open button rendered for the hypothesis"
-    opens[0].click().run()
+    _open(at, "trend_swing")
     assert not at.exception, at.exception
     assert at.session_state["page"] == "hypothesis_detail"
     assert at.session_state["hyp"] == "trend_swing"
@@ -128,7 +150,7 @@ def test_clicking_open_drills_into_the_hypothesis(seeded):
 
 def test_drilling_into_a_variation_shows_its_runs(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "trend_swing")
     see_runs = [b for b in at.button if "See all runs" in b.label]
     assert see_runs, "variation with runs had no drill-down button"
     see_runs[0].click().run()
@@ -140,7 +162,7 @@ def test_drilling_into_a_variation_shows_its_runs(seeded):
 
 def test_back_button_returns_to_the_library(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "trend_swing")
     back = [b for b in at.button if "All hypotheses" in b.label]
     assert back
     back[0].click().run()
@@ -150,7 +172,7 @@ def test_back_button_returns_to_the_library(seeded):
 
 def test_sidebar_nav_leaves_a_drill_down(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "trend_swing")
     assert at.session_state["page"] == "hypothesis_detail"
     at.sidebar.radio[0].set_value("Overview").run()
     assert at.session_state["page"] == "Overview"
@@ -212,9 +234,8 @@ def test_hypothesis_with_no_runs_renders(tmp_path, monkeypatch):
     try:
         at = AppTest.from_file(APP, default_timeout=90).run()
         assert not at.exception, at.exception
-        table = at.dataframe[0].value
-        assert "Never run idea" in list(table["Hypothesis"])
-        assert table.iloc[0]["Last run"] == "—"
+        assert "Never run idea" in _titles(at)
+        assert at.dataframe[0].value.iloc[0]["Last run"] == "—"
     finally:
         st.cache_resource.clear()
         st.cache_data.clear()
@@ -222,7 +243,7 @@ def test_hypothesis_with_no_runs_renders(tmp_path, monkeypatch):
 
 def test_refresh_from_a_drill_down_stays_put(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "trend_swing")
     assert at.session_state["page"] == "hypothesis_detail"
     [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
     assert not at.exception, at.exception
@@ -233,7 +254,7 @@ def test_refresh_picks_up_new_rows(seeded):
     """Refresh exists to clear the 5s data cache - it must actually show a
     hypothesis added after the page was loaded."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    assert "Overnight gap fade" not in list(at.dataframe[0].value["Hypothesis"])
+    assert "Overnight gap fade" not in _titles(at)
 
     c = store.connect(store.DB_PATH)
     store.upsert_hypothesis(c, "gap_fade", "Overnight gap fade",
@@ -242,7 +263,7 @@ def test_refresh_picks_up_new_rows(seeded):
 
     [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
     assert not at.exception, at.exception
-    assert "Overnight gap fade" in list(at.dataframe[0].value["Hypothesis"])
+    assert "Overnight gap fade" in _titles(at)
 
 
 # --------------------------------------------------- hypothesis library grid
@@ -294,14 +315,26 @@ def test_filtering_to_nothing_is_handled(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.text_input[0].set_value("zzzz-no-such-thing").run()
     assert not at.exception, at.exception
-    assert not [b for b in at.button if b.label.startswith("Open")]
+    assert not at.dataframe
 
 
 def test_open_still_works_from_the_table(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "h05")
     assert at.session_state["page"] == "hypothesis_detail"
+    assert at.session_state["hyp"] == "h05"
     assert not at.exception, at.exception
+
+
+def test_leaving_a_row_link_does_not_trap_the_user(many):
+    """The ?hyp= param stays in the URL after navigating. It must be honoured
+    once, not re-applied on every rerun, or the sidebar would never escape."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "h05")
+    at.sidebar.radio[0].set_value("Overview").run()
+    assert at.session_state["page"] == "Overview"
+    at.run()
+    assert at.session_state["page"] == "Overview"
 
 
 def test_only_out_of_sample_prop_passes_are_counted(tmp_path, monkeypatch, seeded_runs=None):
@@ -338,8 +371,7 @@ def test_variation_table_reports_the_mandated_fields(seeded):
     """Profit factor, trade frequency, hold time, win rate, average R and the
     days-to-resolution estimate must all be visible per strategy."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    at.selectbox[-1].set_value("trend_swing").run()
-    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    _open(at, "trend_swing")
     assert not at.exception, at.exception
     cols = list(at.dataframe[0].value.columns)
     for expected in ("PF", "Win %", "Avg R", "Trades/day", "Trades/wk",
