@@ -406,3 +406,27 @@ def test_sidebar_highlights_the_section_of_a_drill_down(seeded):
     _open(at, "trend_swing")
     active = [b.key for b in at.sidebar.button if b.proto.type == "primary"]
     assert active == ["nav_Hypotheses"]
+
+
+def test_variation_table_survives_an_older_store(seeded, monkeypatch):
+    """Regression: a dashboard process keeps the modules it imported at start,
+    so after a proplab change it can run an older store.py than the database.
+    Hard column lookups turned that into a full-page KeyError. Missing columns
+    must degrade to a thinner table plus a restart hint."""
+    real = store.variations_for
+
+    def older(conn, slug):
+        df = real(conn, slug)
+        return df.drop(columns=[c for c in df.columns
+                                if c in ("oos_profit_factor", "oos_win_rate",
+                                         "oos_trades_per_day", "oos_hold_hours",
+                                         "oos_days_to_resolve")])
+
+    monkeypatch.setattr(store, "variations_for", older)
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    assert not at.exception, at.exception
+    assert at.warning, "should warn that the process is running older code"
+    assert "restart" in at.warning[0].value.lower()
+    cols = list(at.dataframe[0].value.columns)
+    assert "OOS Sharpe" in cols and "PF" not in cols

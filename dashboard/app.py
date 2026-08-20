@@ -235,30 +235,44 @@ elif page == "hypothesis_detail":
         if vs.empty:
             st.info("No variations coded yet.")
         else:
-            table = vs[["slug", "status", "n_runs", "is_sharpe", "oos_sharpe",
-                        "oos_return", "oos_profit_factor", "oos_win_rate",
-                        "oos_expectancy_r", "oos_trades", "oos_trades_per_day",
-                        "oos_trades_per_week", "oos_hold_hours", "oos_max_dd",
-                        "oos_days_to_resolve", "oos_p_target_first",
-                        "any_prop_pass"]].copy()
-            table.columns = ["variation", "status", "runs", "IS Sharpe", "OOS Sharpe",
-                             "OOS ret %", "PF", "Win %", "Avg R", "Trades",
-                             "Trades/day", "Trades/wk", "Hold (h)", "Max DD %",
-                             "Days to resolve", "P(target first)", "prop pass"]
+            # Only render columns the query actually returned. A dashboard
+            # process holds imported modules from when it started, so after
+            # proplab changes it can be running an older store.py than the
+            # database - and a hard column lookup turns that into a crash
+            # instead of a slightly thinner table.
+            COLUMNS = [
+                ("slug", "variation", None),
+                ("status", "status", None),
+                ("n_runs", "runs", None),
+                ("is_sharpe", "IS Sharpe", "%.2f"),
+                ("oos_sharpe", "OOS Sharpe", "%.2f"),
+                ("oos_return", "OOS ret %", "%.2f"),
+                ("oos_profit_factor", "PF", "%.2f"),
+                ("oos_win_rate", "Win %", "%.1f"),
+                ("oos_expectancy_r", "Avg R", "%.3f"),
+                ("oos_trades", "Trades", None),
+                ("oos_trades_per_day", "Trades/day", "%.2f"),
+                ("oos_trades_per_week", "Trades/wk", "%.2f"),
+                ("oos_hold_hours", "Hold (h)", "%.1f"),
+                ("oos_max_dd", "Max DD %", "%.2f"),
+                ("oos_days_to_resolve", "Days to resolve", "%.0f"),
+                ("oos_p_target_first", "P(target first)", "%.2f"),
+                ("any_prop_pass", "prop pass", None),
+            ]
+            present = [(c, label, f) for c, label, f in COLUMNS if c in vs.columns]
+            missing = [label for c, label, _ in COLUMNS if c not in vs.columns]
+
+            table = vs[[c for c, _, _ in present]].copy()
+            table.columns = [label for _, label, _ in present]
             st.dataframe(
                 table, width="stretch", hide_index=True,
-                column_config={
-                    "IS Sharpe": st.column_config.NumberColumn(format="%.2f"),
-                    "OOS Sharpe": st.column_config.NumberColumn(format="%.2f"),
-                    "OOS ret %": st.column_config.NumberColumn(format="%.2f"),
-                    "PF": st.column_config.NumberColumn(format="%.2f"),
-                    "Win %": st.column_config.NumberColumn(format="%.1f"),
-                    "Avg R": st.column_config.NumberColumn(format="%.3f"),
-                    "Trades/day": st.column_config.NumberColumn(format="%.2f"),
-                    "Hold (h)": st.column_config.NumberColumn(format="%.1f"),
-                    "Days to resolve": st.column_config.NumberColumn(format="%.0f"),
-                    "P(target first)": st.column_config.NumberColumn(format="%.2f"),
-                })
+                column_config={label: st.column_config.NumberColumn(format=f)
+                               for _, label, f in present if f})
+            if missing:
+                st.warning(
+                    "Not showing " + ", ".join(missing) + ". The dashboard "
+                    "process is running older code than the database — restart "
+                    "it with `./runs/stop_dashboard.sh && ./runs/start_dashboard.sh`.")
             st.caption(
                 "Stats are the most recent run of each split; out-of-sample is the "
                 "only column that counts as evidence. **Days to resolve** estimates "
