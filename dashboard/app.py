@@ -235,51 +235,119 @@ elif page == "hypothesis_detail":
         if vs.empty:
             st.info("No variations coded yet.")
         else:
+            with st.expander("What these columns mean"):
+                st.markdown("""
+**In-sample (IS)** is the period the strategy's settings were chosen on
+(2020-2022 for this hypothesis). Results there are flattering by construction:
+the parameters were picked *because* they looked good on exactly that data.
+IS numbers show what tuning achieved, not what the strategy is worth.
+
+**Out-of-sample (OOS)** is data the strategy never saw while being built
+(2023-today). **This is the only column that counts as evidence.** Each
+strategy gets exactly one OOS look, ever - a second look would be tuning.
+
+| column | meaning |
+|---|---|
+| **Runs (IS)** | in-sample backtests run while tuning. Unlimited by design - a parameter grid of 17 settings is 17 runs, not 17 attempts to pass |
+| **Runs (OOS)** | out-of-sample looks spent. Capped at one per strategy |
+| **Sharpe** | return per unit of volatility, annualised. Above ~1 is good, but see the trial count on Overview before believing it |
+| **Return %** | total account return over the whole test period, not per year |
+| **Profit factor** | gross winnings / gross losses. 1.0 = break-even. Measured on the single OOS run, not averaged over runs |
+| **Win %** | share of trades that made money. Low is normal for trend strategies |
+| **Avg R** | average profit per trade as a multiple of the amount risked. This is the edge per trade |
+| **Trades** | number of trades in the OOS period |
+| **Trades/day, /wk** | how often it trades - decides whether it can resolve an evaluation quickly |
+| **Hold (h)** | average hours a position is held |
+| **Max DD %** | worst peak-to-trough equity fall |
+| **Days to resolve** | estimated trading days until the account hits the profit target or breaches the drawdown limit |
+| **P(target first)** | probability of reaching the profit target before breaching the drawdown limit |
+| **Prop (OOS)** | did the out-of-sample run pass every prop-firm rule |
+""")
+
             # Only render columns the query actually returned. A dashboard
             # process holds imported modules from when it started, so after
             # proplab changes it can be running an older store.py than the
             # database - and a hard column lookup turns that into a crash
             # instead of a slightly thinner table.
             COLUMNS = [
-                ("slug", "variation", None),
-                ("status", "status", None),
-                ("n_runs", "runs", None),
-                ("is_sharpe", "IS Sharpe", "%.2f"),
-                ("oos_sharpe", "OOS Sharpe", "%.2f"),
-                ("oos_return", "OOS ret %", "%.2f"),
-                ("oos_profit_factor", "PF", "%.2f"),
-                ("oos_win_rate", "Win %", "%.1f"),
-                ("oos_expectancy_r", "Avg R", "%.3f"),
-                ("oos_trades", "Trades", None),
-                ("oos_trades_per_day", "Trades/day", "%.2f"),
-                ("oos_trades_per_week", "Trades/wk", "%.2f"),
-                ("oos_hold_hours", "Hold (h)", "%.1f"),
-                ("oos_max_dd", "Max DD %", "%.2f"),
-                ("oos_days_to_resolve", "Days to resolve", "%.0f"),
-                ("oos_p_target_first", "P(target first)", "%.2f"),
-                ("any_prop_pass", "prop pass", None),
+                ("slug", "strategy", None,
+                 "The variation's identifier"),
+                ("status", "status", None,
+                 "Where this sits in the pipeline"),
+                ("n_is_runs", "Runs (IS)", None,
+                 "In-sample backtests run while tuning parameters. Unlimited by "
+                 "design - a grid of 17 parameter settings is 17 runs, not 17 "
+                 "attempts to pass. These do not count as evidence."),
+                ("n_oos_runs", "Runs (OOS)", None,
+                 "Out-of-sample looks spent. Capped at one per strategy: a "
+                 "second look would be tuning on the only honest data left."),
+                ("is_sharpe", "Sharpe (IS)", "%.2f",
+                 "In-sample Sharpe. Flattering by construction - the parameters "
+                 "were chosen because they looked good on this exact data."),
+                ("oos_sharpe", "Sharpe (OOS)", "%.2f",
+                 "Out-of-sample Sharpe: return per unit of volatility, "
+                 "annualised, on data the strategy never saw while being built."),
+                ("oos_return", "Return % (OOS)", "%.2f",
+                 "Total account return over the whole out-of-sample period - "
+                 "not per year."),
+                ("oos_profit_factor", "Profit factor", "%.2f",
+                 "Gross winnings divided by gross losses on the single "
+                 "out-of-sample run. 1.0 is break-even. NOT an average across "
+                 "runs."),
+                ("oos_win_rate", "Win %", "%.1f",
+                 "Share of out-of-sample trades that made money. A low win rate "
+                 "is normal for trend strategies, which rely on rare big wins."),
+                ("oos_expectancy_r", "Avg R", "%.3f",
+                 "Average profit per trade as a multiple of the amount risked. "
+                 "0.10 means each trade earns a tenth of what it risks."),
+                ("oos_trades", "Trades", None,
+                 "Number of out-of-sample trades. Small counts mean the result "
+                 "could easily be luck."),
+                ("oos_trades_per_day", "Trades/day", "%.2f",
+                 "Trading frequency - decides whether an evaluation can be "
+                 "resolved quickly."),
+                ("oos_trades_per_week", "Trades/wk", "%.2f",
+                 "Trades per week out of sample."),
+                ("oos_hold_hours", "Hold (h)", "%.1f",
+                 "Average hours a position is held."),
+                ("oos_max_dd", "Max DD %", "%.2f",
+                 "Worst peak-to-trough fall in account equity out of sample."),
+                ("oos_days_to_resolve", "Days to resolve", "%.0f",
+                 "Estimated trading days until the account either hits the "
+                 "profit target or breaches the drawdown limit, from this run's "
+                 "daily P&L."),
+                ("oos_p_target_first", "P(target first)", "%.2f",
+                 "Probability of reaching the profit target before breaching "
+                 "the drawdown limit."),
+                ("oos_prop_pass", "Prop (OOS)", None,
+                 "Did the out-of-sample run pass every prop-firm rule? This is "
+                 "the verdict that matters. In-sample passes are not counted "
+                 "here - tuning can satisfy the rules trivially."),
             ]
-            present = [(c, label, f) for c, label, f in COLUMNS if c in vs.columns]
-            missing = [label for c, label, _ in COLUMNS if c not in vs.columns]
+            present = [c for c in COLUMNS if c[0] in vs.columns]
+            missing = [c[1] for c in COLUMNS if c[0] not in vs.columns]
 
-            table = vs[[c for c, _, _ in present]].copy()
-            table.columns = [label for _, label, _ in present]
+            table = vs[[c[0] for c in present]].copy()
+            table.columns = [c[1] for c in present]
+            if "Prop (OOS)" in table:
+                table["Prop (OOS)"] = ["not run" if pd.isna(x)
+                                       else ("PASS" if x else "FAIL")
+                                       for x in table["Prop (OOS)"]]
             st.dataframe(
                 table, width="stretch", hide_index=True,
-                column_config={label: st.column_config.NumberColumn(format=f)
-                               for _, label, f in present if f})
+                column_config={
+                    label: (st.column_config.NumberColumn(label, format=fmt_, help=hlp)
+                            if fmt_ else st.column_config.Column(label, help=hlp))
+                    for _, label, fmt_, hlp in present})
             if missing:
                 st.warning(
                     "Not showing " + ", ".join(missing) + ". The dashboard "
                     "process is running older code than the database — restart "
                     "it with `./runs/stop_dashboard.sh && ./runs/start_dashboard.sh`.")
             st.caption(
-                "Stats are the most recent run of each split; out-of-sample is the "
-                "only column that counts as evidence. **Days to resolve** estimates "
-                "the trading days until the account hits the profit target or "
-                "breaches the drawdown limit, from that run's daily P&L — the "
-                "figure that decides whether a strategy can clear an evaluation "
-                "in a reasonable time.")
+                "Hover any column header for its definition. Every stat is from "
+                "the single out-of-sample run except the one marked (IS). "
+                "**Runs (IS)** counts tuning backtests, not attempts to pass.")
 
             for _, v in vs.iterrows():
                 icon = STATUS_ICON.get(v["status"], "")

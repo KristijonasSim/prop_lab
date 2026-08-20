@@ -383,7 +383,7 @@ def test_variation_table_reports_the_mandated_fields(seeded):
     _open(at, "trend_swing")
     assert not at.exception, at.exception
     cols = list(at.dataframe[0].value.columns)
-    for expected in ("PF", "Win %", "Avg R", "Trades/day", "Trades/wk",
+    for expected in ("Profit factor", "Win %", "Avg R", "Trades/day", "Trades/wk",
                      "Hold (h)", "Days to resolve", "P(target first)"):
         assert expected in cols, f"{expected} missing from {cols}"
 
@@ -429,4 +429,39 @@ def test_variation_table_survives_an_older_store(seeded, monkeypatch):
     assert at.warning, "should warn that the process is running older code"
     assert "restart" in at.warning[0].value.lower()
     cols = list(at.dataframe[0].value.columns)
-    assert "OOS Sharpe" in cols and "PF" not in cols
+    assert "Sharpe (OOS)" in cols and "Profit factor" not in cols
+
+
+def test_prop_verdict_column_reports_the_oos_run_not_any_run(seeded):
+    """Regression: the column showed MAX(prop_passed) over every split, so an
+    in-sample tuning pass displayed as a 1 - which also read like a count of
+    passes. It must report the single out-of-sample run's verdict."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    table = at.dataframe[0].value
+    assert set(table["Prop (OOS)"]) <= {"PASS", "FAIL", "not run"}
+    # the seeded variation has is+oos runs whose prop verdict is a failure
+    assert table.iloc[0]["Prop (OOS)"] in ("FAIL", "PASS")
+    assert table.iloc[1]["Prop (OOS)"] == "not run"     # variation never run
+
+
+def test_tuning_runs_are_separated_from_the_oos_look(seeded):
+    """'runs 18' next to 'prop pass 1' read as 1 pass out of 18 attempts. The
+    two counts are now explicit and distinct."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    cols = list(at.dataframe[0].value.columns)
+    assert "Runs (IS)" in cols and "Runs (OOS)" in cols
+
+
+def test_every_column_has_hover_help(seeded):
+    """The table is unreadable without definitions; each header must carry one."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    cfg = at.dataframe[0].proto.columns
+    assert cfg, "no column config attached"
+    import json
+    for label, spec in json.loads(cfg).items():
+        if label == "_index" or spec.get("hidden"):
+            continue                      # Streamlit's own hidden index entry
+        assert spec.get("help"), f"column {label} has no help text"

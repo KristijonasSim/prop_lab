@@ -367,7 +367,15 @@ def variations_for(conn, hypothesis_slug: str) -> pd.DataFrame:
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.avg_hold_hours END)    AS oos_hold_hours,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.est_days_to_resolution END) AS oos_days_to_resolve,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.p_target_before_breach END) AS oos_p_target_first,
+               -- The verdict that counts: did the single out-of-sample run
+               -- pass? MAX over all splits answers "did anything ever pass",
+               -- which in-sample tuning runs satisfy trivially and which reads
+               -- like a count when displayed.
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.prop_passed END)
+                                                                      AS oos_prop_pass,
                COALESCE(MAX(k.prop_passed), 0)                        AS any_prop_pass,
+               COUNT(CASE WHEN k.split='is'  THEN k.id END)           AS n_is_runs,
+               COUNT(CASE WHEN k.split='oos' THEN k.id END)           AS n_oos_runs,
                MIN(COALESCE(k.checks_passed, 1))                      AS all_checks_passed,
                MAX(k.created_at)                                      AS last_run
         FROM variations v
