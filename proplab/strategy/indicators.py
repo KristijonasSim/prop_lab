@@ -70,3 +70,29 @@ def realised_vol(closes: np.ndarray, n: int, periods_per_year: float) -> float:
     rets = np.diff(np.log(closes[-(n + 1):]))
     sd = float(np.std(rets, ddof=1))
     return sd * np.sqrt(periods_per_year)
+
+
+def alma(values: np.ndarray, n: int, offset: float = 0.85, sigma: float = 6.0) -> float:
+    """Arnaud Legoux moving average of the last n values."""
+    if len(values) < n:
+        return float("nan")
+    w = values[-n:]
+    m = offset * (n - 1)
+    s = n / sigma
+    k = np.exp(-((np.arange(n) - m) ** 2) / (2 * s * s))
+    return float(np.dot(w, k) / k.sum())
+
+
+def delta_pressure(high: np.ndarray, low: np.ndarray, close: np.ndarray,
+                   volume: np.ndarray, n: int, mintick: float = 0.1) -> float:
+    """Cumulative order-flow proxy over the last n bars.
+
+    Splits each bar's volume by where it closed inside its range: closing near
+    the high counts as buying pressure. It is a proxy, not real order flow -
+    it cannot see the actual aggressor side, only the shape of the bar.
+    """
+    if len(close) < n:
+        return float("nan")
+    h, l, c, v = high[-n:], low[-n:], close[-n:], volume[-n:]
+    rng = np.maximum(h - l, mintick)
+    return float(np.sum(v * (c - l) / rng - v * (h - c) / rng))
