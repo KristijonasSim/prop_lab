@@ -76,6 +76,7 @@ st.session_state.setdefault("hyp", None)
 st.session_state.setdefault("var", None)
 
 NAV = ["Hypotheses", "Overview", "All runs", "Failed ideas"]
+NAV_STATUSES = list(STATUS_ICON)
 st.session_state.setdefault("nav", "Hypotheses")
 st.session_state.setdefault("_prev_nav", st.session_state["nav"])
 
@@ -123,29 +124,67 @@ if page == "Hypotheses":
                 "`python -m proplab.cli hypothesis --slug trend_swing "
                 "--title \"Trend following swing trading\" --status researching`")
     else:
-        for _, h in hyps.iterrows():
-            with st.container(border=True):
-                left, right = st.columns([4, 1])
-                with left:
-                    st.markdown(
-                        f"### {STATUS_ICON.get(h['status'], '')} {h['title']}")
-                    last = txt(h["last_run"])
-                    st.caption(f"`{h['slug']}` · {h['status']} · "
-                               f"{txt(h['symbol']) or txt(h['asset_class']) or '—'}"
-                               + (f" · last run {last[:10]}" if last else " · never run"))
-                    if txt(h["description"]):
-                        st.write(txt(h["description"]))
-                with right:
-                    st.button("Open →", key=f"open_{h['slug']}", width="stretch",
-                              on_click=go_to,
-                              args=("hypothesis_detail", h["slug"]))
+        # --- filters: this list is meant to grow to hundreds of rows ---------
+        f1, f2, f3 = st.columns([2, 2, 1])
+        query = f1.text_input("Search", placeholder="title, slug or idea…",
+                              label_visibility="collapsed")
+        statuses = f2.multiselect("Status", NAV_STATUSES, default=[],
+                                  placeholder="any status",
+                                  label_visibility="collapsed")
+        sort_by = f3.selectbox("Sort", ["Recent", "Best OOS Sharpe", "Most runs", "Name"],
+                               label_visibility="collapsed")
 
-                m = st.columns(5)
-                m[0].metric("Strategies", int(h["n_variations"]))
-                m[1].metric("Runs", int(h["n_runs"]))
-                m[2].metric("Rejected", int(h["n_rejected"]))
-                m[3].metric("Best OOS Sharpe", fmt(h["best_oos_sharpe"]))
-                m[4].metric("Prop passes", int(h["n_prop_passes"]))
+        view = hyps
+        if query:
+            q = query.lower()
+            view = view[view.apply(
+                lambda r: q in f"{txt(r['title'])} {txt(r['slug'])} "
+                             f"{txt(r['description'])}".lower(), axis=1)]
+        if statuses:
+            view = view[view["status"].isin(statuses)]
+        view = {
+            "Recent": view.sort_values("last_run", ascending=False, na_position="last"),
+            "Best OOS Sharpe": view.sort_values("best_oos_sharpe", ascending=False,
+                                                na_position="last"),
+            "Most runs": view.sort_values("n_runs", ascending=False),
+            "Name": view.sort_values("title"),
+        }[sort_by]
+
+        if view.empty:
+            st.info("Nothing matches that filter.")
+        st.caption(f"{len(view)} of {len(hyps)} hypotheses")
+
+        # --- compact grid: three per row, stats on one line -----------------
+        PER_ROW = 3
+        records = list(view.to_dict("records"))
+        for i in range(0, len(records), PER_ROW):
+            cols = st.columns(PER_ROW, gap="small")
+            for col, h in zip(cols, records[i:i + PER_ROW]):
+                with col, st.container(border=True):
+                    st.markdown(f"**{STATUS_ICON.get(h['status'], '')} "
+                                f"{txt(h['title'])}**")
+                    last = txt(h["last_run"])
+                    st.caption(
+                        f"`{h['slug']}` · {h['status']}"
+                        + (f" · {txt(h['symbol'])}" if txt(h["symbol"]) else "")
+                        + (f" · {last[:10]}" if last else " · never run"))
+
+                    desc = txt(h["description"]).split("\n")[0]
+                    st.caption(desc[:110] + ("…" if len(desc) > 110 else "") or "—")
+
+                    sharpe = fmt(h["best_oos_sharpe"])
+                    st.markdown(
+                        f"<div style='font-size:0.82rem;line-height:1.5'>"
+                        f"<b>{int(h['n_variations'])}</b> strategies · "
+                        f"<b>{int(h['n_runs'])}</b> runs · "
+                        f"<b>{int(h['n_rejected'])}</b> rejected<br>"
+                        f"best OOS Sharpe <b>{sharpe}</b> · "
+                        f"<b>{int(h['n_prop_passes'])}</b> OOS prop passes"
+                        f"</div>",
+                        unsafe_allow_html=True)
+
+                    st.button("Open →", key=f"open_{h['slug']}", width="stretch",
+                              on_click=go_to, args=("hypothesis_detail", h["slug"]))
 
 # ========================================================== HYPOTHESIS DETAIL
 elif page == "hypothesis_detail":

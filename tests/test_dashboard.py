@@ -229,3 +229,93 @@ def test_refresh_picks_up_new_rows(seeded):
     [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
     assert not at.exception, at.exception
     assert "Overnight gap fade" in " ".join(m.value for m in at.markdown)
+
+
+# --------------------------------------------------- hypothesis library grid
+@pytest.fixture
+def many(tmp_path, monkeypatch):
+    """Twelve hypotheses - the list is meant to grow, so it must stay usable."""
+    _fresh(monkeypatch, tmp_path, "many.db")
+    c = store.connect(store.DB_PATH)
+    for i in range(12):
+        store.upsert_hypothesis(
+            c, f"h{i:02}", f"Idea number {i:02}", description=f"desc {i}",
+            mechanism="m", symbol="BTCUSDT",
+            status="rejected" if i % 3 == 0 else "queued")
+    c.close()
+    yield
+    st.cache_resource.clear()
+    st.cache_data.clear()
+
+
+def test_all_hypotheses_render_in_the_grid(many):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    assert not at.exception, at.exception
+    opens = [b for b in at.button if b.label.startswith("Open")]
+    assert len(opens) == 12
+
+
+def test_search_filters_the_library(many):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    at.text_input[0].set_value("number 07").run()
+    assert not at.exception, at.exception
+    assert len([b for b in at.button if b.label.startswith("Open")]) == 1
+
+
+def test_status_filter_narrows_the_library(many):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    at.multiselect[0].set_value(["rejected"]).run()
+    assert not at.exception, at.exception
+    assert len([b for b in at.button if b.label.startswith("Open")]) == 4  # i%3==0
+
+
+def test_sorting_does_not_break_with_never_run_hypotheses(many):
+    """Every hypothesis here has last_run = NaN; sorting must survive that."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    for option in ["Best OOS Sharpe", "Most runs", "Name"]:
+        at.selectbox[0].set_value(option).run()
+        assert not at.exception, at.exception
+
+
+def test_filtering_to_nothing_is_handled(many):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    at.text_input[0].set_value("zzzz-no-such-thing").run()
+    assert not at.exception, at.exception
+    assert not [b for b in at.button if b.label.startswith("Open")]
+
+
+def test_open_still_works_from_the_grid(many):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    assert at.session_state["page"] == "hypothesis_detail"
+    assert not at.exception, at.exception
+
+
+def test_only_out_of_sample_prop_passes_are_counted(tmp_path, monkeypatch, seeded_runs=None):
+    """Regression: the card summed prop_passed across ALL splits, so in-sample
+    tuning passes were displayed as if strategies had succeeded."""
+    from proplab.config import BacktestConfig, CostModel
+    from proplab.data.loader import Dataset, check_integrity
+    from proplab.data.synthetic import random_walk
+    from proplab.strategy.library._infra_smoke import InfraSmoke
+    from proplab import runner
+
+    _fresh(monkeypatch, tmp_path, "splits.db")
+    c = store.connect(store.DB_PATH)
+    store.upsert_hypothesis(c, "h", "H", "d", "m")
+    store.upsert_variation(c, "h", "v", "V")
+    p = random_walk(1500, "15m", seed=2)
+    ds = Dataset("X", "15m", p, {}, check_integrity(p, "15m"))
+    res = runner.backtest(InfraSmoke, symbol="X", timeframe="15m", data=ds,
+                          config=BacktestConfig(costs=CostModel(apply_funding=False)),
+                          run_checks=False)
+    res.prop["passed"] = True                    # pretend the rules were met
+    for split in ("is", "is", "full"):
+        store.insert_run(c, res, variation_slug="v", split=split)
+    row = store.hypotheses_list(c).iloc[0]
+    c.close()
+    st.cache_resource.clear()
+    st.cache_data.clear()
+
+    assert row["n_prop_passes"] == 0             # none of them were OOS
+    assert row["n_prop_passes_any_split"] == 3

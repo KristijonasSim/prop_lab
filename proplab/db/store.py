@@ -302,7 +302,12 @@ def hypotheses_list(conn) -> pd.DataFrame:
                COUNT(DISTINCT CASE WHEN v.status='rejected' THEN v.id END) AS n_rejected,
                COUNT(DISTINCT CASE WHEN v.status='passed'   THEN v.id END) AS n_passed,
                COUNT(r.id)                                            AS n_runs,
-               COALESCE(SUM(r.prop_passed), 0)                        AS n_prop_passes,
+               -- Only OOS passes count. An in-sample prop pass is a property of
+               -- the tuning, not evidence, and showing it on the card made a
+               -- hypothesis with nothing surviving look like 8 successes.
+               COALESCE(SUM(CASE WHEN r.split='oos' THEN r.prop_passed END), 0)
+                                                                      AS n_prop_passes,
+               COALESCE(SUM(r.prop_passed), 0)                        AS n_prop_passes_any_split,
                MAX(CASE WHEN r.split='oos' THEN r.sharpe END)         AS best_oos_sharpe,
                MAX(CASE WHEN r.split='oos' THEN r.total_return_pct END) AS best_oos_return,
                MAX(r.sharpe)                                          AS best_sharpe,
