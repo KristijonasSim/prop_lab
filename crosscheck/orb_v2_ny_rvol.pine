@@ -1,0 +1,146 @@
+//@version=6
+// prop_lab parity script — mirror of proplab/strategy/library/orb_v2_ny_rvol.py
+//
+// PURPOSE: an independent reimplementation, so the two engines can be compared
+// on the same symbol and period. If they disagree, one of them is wrong and we
+// want to know which before trusting either.
+//
+// SETTINGS THAT MUST MATCH (they are set here, do not change them):
+//   symbol            BINANCE:BTCUSDT.P     (USDT-M perp, same feed proplab downloads)
+//   timeframe         15m
+//   initial capital   100000
+//   order size        10% of equity         (= notional_pct 0.10)
+//   commission        0.045% per side       (Binance USDT-M taker)
+//   slippage          0 ticks               (proplab parity run sets slippage to 0)
+//   fill timing       next bar open         (process_orders_on_close = false)
+//
+// THREE PLACES THE PLATFORMS SILENTLY DISAGREE, HANDLED EXPLICITLY BELOW:
+//   1. Session windows. Pine's time(period, "0930-1000", tz) matches on the bar
+//      OPEN only. proplab treats a bar as inside a window if the bar OVERLAPS
+//      it. On 15m these agree for 09:30-10:00 but NOT for 15:50-15:55: the
+//      15:45 bar overlaps that window and so flattens in proplab, while Pine's
+//      session test would skip it entirely. The overlap test is reimplemented
+//      here by hand.
+//   2. Relative volume. ta.relativeVolume() is a different calculation from
+//      proplab's. proplab compares cumulative volume since the start of the
+//      UTC week against the same bar-offset in the last N completed weeks, so
+//      that is reimplemented here rather than substituting a built-in.
+//   3. Funding. proplab charges perp funding at 00/08/16 UTC; Pine cannot model
+//      it. The proplab parity run disables funding so the two agree.
+
+strategy("prop_lab parity — ORB NY RVOL",
+     overlay              = true,
+     initial_capital      = 100000,
+     default_qty_type     = strategy.percent_of_equity,
+     default_qty_value    = 10,
+     commission_type      = strategy.commission.percent,
+     commission_value     = 0.045,
+     slippage             = 0,
+     pyramiding           = 0,
+     process_orders_on_close = false,
+     calc_on_every_tick   = false)
+
+// ---------------------------------------------------------------- inputs
+tz            = input.string("America/New_York", "Session timezone")
+openStartStr  = input.string("0930", "Opening range start (HHMM)")
+openEndStr    = input.string("1000", "Opening range end (HHMM)")
+tradeStartStr = input.string("1000", "Trade window start (HHMM)")
+tradeEndStr   = input.string("1200", "Trade window end (HHMM)")
+flatStartStr  = input.string("1550", "Flatten start (HHMM)")
+flatEndStr    = input.string("1555", "Flatten end (HHMM)")
+rvolLength    = input.int(3, "RVOL: completed weeks to average", minval=1)
+rvolThreshold = input.float(1.0, "RVOL threshold (strictly greater than)")
+useRvol       = input.bool(true, "Apply the RVOL filter")
+allowShorts   = input.bool(true, "Allow shorts")
+
+toMin(s) =>
+    int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
+
+// ------------------------------------------------- window overlap (see note 1)
+tfMin    = timeframe.in_seconds(timeframe.period) / 60
+openMin  = hour(time, tz) * 60 + minute(time, tz)
+closeMin = openMin + tfMin
+inWin(sMin, eMin) => openMin < eMin and closeMin > sMin
+
+inOpenRange = inWin(toMin(openStartStr), toMin(openEndStr))
+inTradeWin  = inWin(toMin(tradeStartStr), toMin(tradeEndStr))
+inFlatten   = inWin(toMin(flatStartStr),  toMin(flatEndStr))
+
+// ------------------------------------------------ relative volume (see note 2)
+// Weeks are epoch-aligned to Monday 00:00 UTC, which is what pandas' isocalendar
+// gives proplab. 1970-01-01 was a Thursday, hence the 3-day shift.
+weekIdx = math.floor((time / 1000 + 3 * 86400) / (7 * 86400))
+maxOff  = math.round(7 * 24 * 60 / tfMin) + 5
+
+var array<float> curCum = array.new_float(maxOff, na)
+var array<float> prev1  = array.new_float(maxOff, na)
+var array<float> prev2  = array.new_float(maxOff, na)
+var array<float> prev3  = array.new_float(maxOff, na)
+var int   offset  = -1
+var float cumVol  = 0.0
+var int   lastWeek = na
+
+newWeek = na(lastWeek) or weekIdx != lastWeek
+if newWeek
+    if not na(lastWeek)
+        prev3 := prev2.copy()
+        prev2 := prev1.copy()
+        prev1 := curCum.copy()
+    curCum := array.new_float(maxOff, na)
+    lastWeek := weekIdx
+    offset   := 0
+    cumVol   := 0.0
+else
+    offset += 1
+
+cumVol += volume
+if offset < maxOff
+    curCum.set(offset, cumVol)
+
+// average of the same offset across the last `rvolLength` completed weeks,
+// over however many of them exist (matching proplab's deque behaviour)
+sumPast = 0.0
+nPast   = 0
+if offset < maxOff
+    for i = 0 to math.min(rvolLength, 3) - 1
+        v = i == 0 ? prev1.get(offset) : i == 1 ? prev2.get(offset) : prev3.get(offset)
+        if not na(v)
+            sumPast += v
+            nPast   += 1
+rvol = nPast > 0 and sumPast > 0 ? cumVol / (sumPast / nPast) : na
+rvolOk = not useRvol or (not na(rvol) and rvol > rvolThreshold)
+
+// ------------------------------------------------------------ opening range
+var float orbHigh   = na
+var float orbLow    = na
+var string tradeSide = na
+var int   lastDate  = na
+
+curDate = year(time, tz) * 10000 + month(time, tz) * 100 + dayofmonth(time, tz)
+if na(lastDate) or curDate != lastDate
+    lastDate  := curDate
+    orbHigh   := na
+    orbLow    := na
+    tradeSide := na
+
+if inOpenRange
+    orbHigh := na(orbHigh) ? high : math.max(orbHigh, high)
+    orbLow  := na(orbLow)  ? low  : math.min(orbLow,  low)
+
+// ------------------------------------------------------------------ trading
+// Order mirrors proplab.on_bar exactly: flatten first and return; then skip if
+// already in a position; then require the trade window and the RVOL filter.
+if inFlatten
+    tradeSide := na
+    if strategy.position_size != 0
+        strategy.close_all(comment="end_session")
+else if strategy.position_size == 0 and inTradeWin and rvolOk and not na(orbHigh) and not na(orbLow)
+    if close > orbHigh and tradeSide != "short"
+        tradeSide := "long"
+        strategy.entry("long", strategy.long)
+    else if allowShorts and close < orbLow and tradeSide != "long"
+        tradeSide := "short"
+        strategy.entry("short", strategy.short)
+
+plot(orbHigh, "ORB high", color.new(color.teal, 0), style=plot.style_linebr)
+plot(orbLow,  "ORB low",  color.new(color.red, 0),  style=plot.style_linebr)
