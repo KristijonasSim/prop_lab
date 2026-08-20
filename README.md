@@ -134,6 +134,37 @@ Three levels of drill-down:
    floor and breach marker, per-rule prop-firm results, automated checks, full
    metrics and the trade list.
 
+## Current research phase
+
+Only hypotheses that can **resolve within roughly 1-2 weeks of active trading**
+are being built right now: high trade frequency, short holds (intraday to a few
+days) - ORB, VWAP mean reversion, breakout-retest and similar.
+
+This is a phase constraint, not a permanent one. Longer-holding ideas (trend
+following, carry) are still researched and logged as future candidates; they are
+just not built as a priority. The trend-following hypothesis was rejected partly
+on this basis - its estimated time to resolve was ~2,374 trading days.
+
+## Reported on every backtest
+
+Beyond the usual return/Sharpe/drawdown:
+
+| field | why |
+|---|---|
+| profit factor | gross win / gross loss |
+| trades per day and per week | does it generate enough opportunities |
+| average hold time | intraday, days, or weeks |
+| win rate | with average R, describes the shape of the edge |
+| average R multiple | expectancy per unit risked |
+| **estimated days to resolution** | trading days until the profit target is hit or the drawdown limit is breached |
+
+The last one (`metrics.resolution`) models daily P&L as a random walk with drift
+between two barriers - the profit target above, the drawdown limit below - and
+reports the probability of reaching the target first plus the expected days to
+either. Total return says nothing about how long an evaluation takes; a strategy
+needing two years to clear 8% is useless however good its Sharpe. Validated
+against a brute-force Monte Carlo simulation in `tests/test_resolution.py`.
+
 ## The one-look rule on out-of-sample data
 
 Out-of-sample data is a one-shot resource: look at it twice and the second look

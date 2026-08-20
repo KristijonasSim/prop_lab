@@ -5,6 +5,8 @@ Crypto is 24/7, so annualisation uses 365 days.
 """
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -18,7 +20,85 @@ def bars_per_year(timeframe: str) -> float:
     return SECONDS_PER_YEAR / parse_timeframe(timeframe).total_seconds()
 
 
-def compute(result: BacktestResult, timeframe: str, starting_balance: float) -> dict:
+def resolution_estimate(equity: pd.Series, rules, timeframe: str) -> dict:
+    """How many trading days until this account resolves - target or breach.
+
+    An evaluation is a race between two barriers: +profit_target and
+    -max_drawdown. Total return says nothing about how long that race takes,
+    and a strategy that needs two years to clear 8% is useless for an
+    evaluation however good its Sharpe is.
+
+    Models daily P&L as a random walk with drift and applies the classic
+    two-barrier first-passage result, then reports both the drift-only
+    estimate and the probability of reaching the target first. Assumes daily
+    P&L is i.i.d., which it is not - treat these as order-of-magnitude
+    figures, not promises.
+    """
+    daily = equity.resample("1D").last().dropna().diff().dropna()
+    start = rules.starting_balance
+    up = start * rules.profit_target_pct / 100          # distance to target
+    down = start * rules.max_drawdown_pct / 100         # distance to breach
+
+    out = {
+        "target_amount": round(up, 2),
+        "breach_amount": round(down, 2),
+        "daily_pnl_mean": round(float(daily.mean()), 2) if len(daily) else None,
+        "daily_pnl_std": round(float(daily.std(ddof=1)), 2) if len(daily) > 1 else None,
+        "observed_trading_days": int(len(daily)),
+    }
+    if len(daily) < 5:
+        out["verdict"] = "not enough daily observations to estimate"
+        return out
+
+    mu = float(daily.mean())
+    sigma2 = float(daily.var(ddof=1))
+
+    out["days_to_target_at_current_rate"] = round(up / mu, 1) if mu > 0 else None
+    out["days_to_breach_at_current_rate"] = round(down / -mu, 1) if mu < 0 else None
+
+    # Zero variance is deterministic, not unknowable - it is only "no
+    # information" when the account also has no drift.
+    if sigma2 == 0:
+        if abs(mu) < 1e-12:
+            out["p_target_before_breach"] = None
+            out["expected_days_to_resolution"] = None
+            out["verdict"] = "equity never moves - never resolves"
+            return out
+        p_up = 1.0 if mu > 0 else 0.0
+        expected_days = (up / mu) if mu > 0 else (down / -mu)
+    # Two-barrier first passage for a drifting random walk.
+    elif abs(mu) < 1e-9:
+        p_up = down / (up + down)                       # driftless: distance ratio
+        expected_days = (up * down) / sigma2
+    else:
+        theta = 2 * mu / sigma2
+        # guard the exponentials: large |theta*barrier| saturates to 0/1
+        ea, eb = -theta * up, theta * down
+        if ea > 700 or eb > 700:
+            p_up = 1.0 if mu > 0 else 0.0
+        else:
+            p_up = (math.exp(eb) - 1) / (math.exp(eb) - math.exp(ea))
+        p_up = min(max(p_up, 0.0), 1.0)
+        expected_days = (p_up * up - (1 - p_up) * down) / mu
+
+    out["p_target_before_breach"] = round(p_up, 3)
+    out["expected_days_to_resolution"] = (round(expected_days, 1)
+                                          if expected_days == expected_days
+                                          and expected_days > 0 else None)
+    days = out["expected_days_to_resolution"]
+    if days is None:
+        out["verdict"] = "no finite estimate"
+    elif days <= 14:
+        out["verdict"] = f"resolves in ~{days:.0f} trading days (fits a 1-2 week phase)"
+    elif days <= 60:
+        out["verdict"] = f"~{days:.0f} trading days - too slow for a 1-2 week phase"
+    else:
+        out["verdict"] = f"~{days:.0f} trading days - far too slow to be practical"
+    return out
+
+
+def compute(result: BacktestResult, timeframe: str, starting_balance: float,
+            rules=None) -> dict:
     eq = result.equity
     trades = result.trades_df()
     out: dict = {}
@@ -63,9 +143,12 @@ def compute(result: BacktestResult, timeframe: str, starting_balance: float) -> 
         out.update({
             "n_trades": 0, "win_rate_pct": float("nan"), "profit_factor": float("nan"),
             "expectancy_r": float("nan"), "avg_r": float("nan"), "t_stat": float("nan"),
-            "trades_per_week": 0.0, "exposure_pct": 0.0, "total_fees": 0.0,
+            "trades_per_week": 0.0, "trades_per_day": 0.0, "exposure_pct": 0.0,
+            "avg_hold_hours": None, "avg_hold_days": None, "total_fees": 0.0,
             "total_funding": 0.0, "gross_profit": 0.0,
         })
+        if rules is not None:
+            out["resolution"] = resolution_estimate(eq, rules, timeframe)
         return out
 
     pnl = trades["net_pnl"]
@@ -115,8 +198,14 @@ def compute(result: BacktestResult, timeframe: str, starting_balance: float) -> 
         out["top3_trades_pct_of_profit"] = None
         out["net_profit_excluding_best"] = None
 
+    bar_hours = parse_timeframe(timeframe).total_seconds() / 3600
     out["avg_bars_held"] = round(float(trades["bars_held"].mean()), 2)
+    out["avg_hold_hours"] = round(float(trades["bars_held"].mean()) * bar_hours, 2)
+    out["avg_hold_days"] = round(out["avg_hold_hours"] / 24, 2)
+    out["median_hold_hours"] = round(float(trades["bars_held"].median()) * bar_hours, 2)
+    out["max_hold_days"] = round(float(trades["bars_held"].max()) * bar_hours / 24, 2)
     out["exposure_pct"] = round(100 * float(trades["bars_held"].sum()) / len(eq), 2)
+    out["trades_per_day"] = round(len(trades) / days, 3)
     out["trades_per_week"] = round(len(trades) / (days / 7), 2)
     out["exit_reasons"] = trades["exit_reason"].value_counts().to_dict()
 
@@ -124,6 +213,9 @@ def compute(result: BacktestResult, timeframe: str, starting_balance: float) -> 
     out["max_consecutive_losses"] = _max_streak(pnl.to_numpy() <= 0)
     out["max_consecutive_wins"] = _max_streak(pnl.to_numpy() > 0)
     out["final_from_trades_check"] = round(float(eq_after[-1]), 2)
+
+    if rules is not None:
+        out["resolution"] = resolution_estimate(eq, rules, timeframe)
     return out
 
 

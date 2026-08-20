@@ -89,10 +89,24 @@ def test_page_renders_on_empty_db(page, tmp_path, monkeypatch):
         st.cache_data.clear()
 
 
+def _library(at):
+    """The hypothesis table on the library page."""
+    return at.dataframe[0].value
+
+
 def test_hypothesis_library_lists_the_hypothesis(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    text = " ".join(m.value for m in at.markdown)
-    assert "Trend following swing trading" in text
+    assert "Trend following swing trading" in list(_library(at)["Hypothesis"])
+
+
+def test_library_table_carries_the_summary_columns(seeded):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    cols = list(_library(at).columns)
+    for expected in ("Hypothesis", "Status", "Strategies", "Runs", "Rejected",
+                     "Best OOS Sharpe", "OOS passes", "Last run", "Idea"):
+        assert expected in cols
+    row = _library(at).iloc[0]
+    assert row["Strategies"] == 2 and row["Rejected"] == 1
 
 
 def test_clicking_open_drills_into_the_hypothesis(seeded):
@@ -198,9 +212,9 @@ def test_hypothesis_with_no_runs_renders(tmp_path, monkeypatch):
     try:
         at = AppTest.from_file(APP, default_timeout=90).run()
         assert not at.exception, at.exception
-        body = " ".join(m.value for m in at.markdown)
-        assert "Never run idea" in body
-        assert "never run" in " ".join(cap.value for cap in at.caption)
+        table = at.dataframe[0].value
+        assert "Never run idea" in list(table["Hypothesis"])
+        assert table.iloc[0]["Last run"] == "—"
     finally:
         st.cache_resource.clear()
         st.cache_data.clear()
@@ -219,7 +233,7 @@ def test_refresh_picks_up_new_rows(seeded):
     """Refresh exists to clear the 5s data cache - it must actually show a
     hypothesis added after the page was loaded."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    assert "Overnight gap fade" not in " ".join(m.value for m in at.markdown)
+    assert "Overnight gap fade" not in list(at.dataframe[0].value["Hypothesis"])
 
     c = store.connect(store.DB_PATH)
     store.upsert_hypothesis(c, "gap_fade", "Overnight gap fade",
@@ -228,7 +242,7 @@ def test_refresh_picks_up_new_rows(seeded):
 
     [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
     assert not at.exception, at.exception
-    assert "Overnight gap fade" in " ".join(m.value for m in at.markdown)
+    assert "Overnight gap fade" in list(at.dataframe[0].value["Hypothesis"])
 
 
 # --------------------------------------------------- hypothesis library grid
@@ -248,25 +262,24 @@ def many(tmp_path, monkeypatch):
     st.cache_data.clear()
 
 
-def test_all_hypotheses_render_in_the_grid(many):
+def test_all_hypotheses_appear_as_table_rows(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     assert not at.exception, at.exception
-    opens = [b for b in at.button if b.label.startswith("Open")]
-    assert len(opens) == 12
+    assert len(at.dataframe[0].value) == 12
 
 
 def test_search_filters_the_library(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.text_input[0].set_value("number 07").run()
     assert not at.exception, at.exception
-    assert len([b for b in at.button if b.label.startswith("Open")]) == 1
+    assert len(at.dataframe[0].value) == 1
 
 
 def test_status_filter_narrows_the_library(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.multiselect[0].set_value(["rejected"]).run()
     assert not at.exception, at.exception
-    assert len([b for b in at.button if b.label.startswith("Open")]) == 4  # i%3==0
+    assert len(at.dataframe[0].value) == 4          # i % 3 == 0
 
 
 def test_sorting_does_not_break_with_never_run_hypotheses(many):
@@ -284,7 +297,7 @@ def test_filtering_to_nothing_is_handled(many):
     assert not [b for b in at.button if b.label.startswith("Open")]
 
 
-def test_open_still_works_from_the_grid(many):
+def test_open_still_works_from_the_table(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     [b for b in at.button if b.label.startswith("Open")][0].click().run()
     assert at.session_state["page"] == "hypothesis_detail"
@@ -319,3 +332,16 @@ def test_only_out_of_sample_prop_passes_are_counted(tmp_path, monkeypatch, seede
 
     assert row["n_prop_passes"] == 0             # none of them were OOS
     assert row["n_prop_passes_any_split"] == 3
+
+
+def test_variation_table_reports_the_mandated_fields(seeded):
+    """Profit factor, trade frequency, hold time, win rate, average R and the
+    days-to-resolution estimate must all be visible per strategy."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    at.selectbox[-1].set_value("trend_swing").run()
+    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    assert not at.exception, at.exception
+    cols = list(at.dataframe[0].value.columns)
+    for expected in ("PF", "Win %", "Avg R", "Trades/day", "Trades/wk",
+                     "Hold (h)", "Days to resolve", "P(target first)"):
+        assert expected in cols, f"{expected} missing from {cols}"

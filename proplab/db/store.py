@@ -37,7 +37,12 @@ def _migrate(conn) -> None:
     have = {r["name"] for r in conn.execute("PRAGMA table_info(trades)")}
     if "initial_risk" not in have:
         conn.execute("ALTER TABLE trades ADD COLUMN initial_risk REAL")
-        conn.commit()
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(runs)")}
+    for col in ("trades_per_day", "avg_hold_hours", "est_days_to_resolution",
+                "p_target_before_breach"):
+        if col not in have:
+            conn.execute(f"ALTER TABLE runs ADD COLUMN {col} REAL")
+    conn.commit()
 
 
 # ---------------------------------------------------------------- hypotheses
@@ -142,8 +147,9 @@ def insert_run(conn, result, variation_slug: str | None = None,
            core_hash,config_json,params_json,metrics_json,prop_json,checks_json,
            checks_passed,prop_passed,net_profit,total_return_pct,cagr_pct,sharpe,
            sortino,max_dd_pct,n_trades,win_rate_pct,profit_factor,expectancy_r,
-           t_stat,trades_per_week,exposure_pct,first_breach_rule,notes,created_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           t_stat,trades_per_week,exposure_pct,first_breach_rule,notes,created_at,
+           trades_per_day,avg_hold_hours,est_days_to_resolution,p_target_before_breach)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             run_uuid, vid, meta.get("strategy", ""), meta.get("symbol", ""),
             meta.get("timeframe", ""), json.dumps(meta.get("higher_timeframes", [])),
@@ -162,6 +168,9 @@ def insert_run(conn, result, variation_slug: str | None = None,
             metrics.get("expectancy_r"), metrics.get("t_stat"),
             metrics.get("trades_per_week"), metrics.get("exposure_pct"),
             prop.get("first_breach_rule"), notes, now(),
+            metrics.get("trades_per_day"), metrics.get("avg_hold_hours"),
+            (metrics.get("resolution") or {}).get("expected_days_to_resolution"),
+            (metrics.get("resolution") or {}).get("p_target_before_breach"),
         ),
     )
     run_id = cur.lastrowid
@@ -351,6 +360,13 @@ def variations_for(conn, hypothesis_slug: str) -> pd.DataFrame:
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.expectancy_r END)      AS oos_expectancy_r,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.n_trades END)          AS oos_trades,
                MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.max_dd_pct END)        AS oos_max_dd,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.profit_factor END)     AS oos_profit_factor,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.win_rate_pct END)      AS oos_win_rate,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_day END)    AS oos_trades_per_day,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.trades_per_week END)   AS oos_trades_per_week,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.avg_hold_hours END)    AS oos_hold_hours,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.est_days_to_resolution END) AS oos_days_to_resolve,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.p_target_before_breach END) AS oos_p_target_first,
                COALESCE(MAX(k.prop_passed), 0)                        AS any_prop_pass,
                MIN(COALESCE(k.checks_passed, 1))                      AS all_checks_passed,
                MAX(k.created_at)                                      AS last_run

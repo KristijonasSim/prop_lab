@@ -41,6 +41,28 @@ def _print_result(res, conn=None) -> None:
             for f in (c.get("findings") or [])[:3]:
                 print(f"         - {f}")
 
+    print("\nHEADLINE")
+    hold = m.get("avg_hold_hours")
+    hold_s = (f"{hold:.1f}h ({hold/24:.1f}d)" if hold else "-")
+    print(f"  profit factor        {m.get('profit_factor')}")
+    print(f"  win rate             {m.get('win_rate_pct')}%")
+    print(f"  average R multiple   {m.get('avg_r')}")
+    print(f"  trades/day           {m.get('trades_per_day')}   "
+          f"(per week {m.get('trades_per_week')})")
+    print(f"  average hold time    {hold_s}   "
+          f"(median {m.get('median_hold_hours')}h, max {m.get('max_hold_days')}d)")
+    res = m.get("resolution") or {}
+    if res:
+        print("\n  TIME TO RESOLVE (target vs drawdown, from this run's daily P&L)")
+        print(f"    daily P&L          mean {res.get('daily_pnl_mean')} "
+              f"sd {res.get('daily_pnl_std')}")
+        print(f"    days to target     {res.get('days_to_target_at_current_rate')} "
+              f"(at the observed rate)")
+        print(f"    days to breach     {res.get('days_to_breach_at_current_rate')}")
+        print(f"    P(target first)    {res.get('p_target_before_breach')}")
+        print(f"    expected days      {res.get('expected_days_to_resolution')}")
+        print(f"    -> {res.get('verdict')}")
+
     print("\nPERFORMANCE (raw)")
     for k in ("n_trades", "win_rate_pct", "profit_factor", "expectancy_r", "t_stat",
               "total_return_pct", "cagr_pct", "sharpe", "sortino", "max_drawdown_pct",

@@ -116,15 +116,14 @@ def txt(v) -> str:
 # ============================================================ HYPOTHESIS LIST
 if page == "Hypotheses":
     st.header("Hypothesis library")
-    st.caption("Everything we have ever tried. Open one to see the strategies "
-               "built under it and how each performed.")
+    st.caption("Everything we have ever tried. Select a row to open it and see "
+               "the strategies built under it.")
 
     if hyps.empty:
         st.info("No hypotheses yet. Create one:\n\n"
-                "`python -m proplab.cli hypothesis --slug trend_swing "
-                "--title \"Trend following swing trading\" --status researching`")
+                "`python -m proplab.cli hypothesis --slug orb "
+                "--title \"Opening range breakout\" --status researching`")
     else:
-        # --- filters: this list is meant to grow to hundreds of rows ---------
         f1, f2, f3 = st.columns([2, 2, 1])
         query = f1.text_input("Search", placeholder="title, slug or idea…",
                               label_visibility="collapsed")
@@ -152,39 +151,47 @@ if page == "Hypotheses":
 
         if view.empty:
             st.info("Nothing matches that filter.")
-        st.caption(f"{len(view)} of {len(hyps)} hypotheses")
+        else:
+            table = pd.DataFrame({
+                "": [STATUS_ICON.get(s_, "") for s_ in view["status"]],
+                "Hypothesis": view["title"].map(txt),
+                "Status": view["status"],
+                "Symbol": view["symbol"].map(txt),
+                "Strategies": view["n_variations"].astype(int),
+                "Runs": view["n_runs"].astype(int),
+                "Rejected": view["n_rejected"].astype(int),
+                "Best OOS Sharpe": view["best_oos_sharpe"],
+                "Best OOS ret %": view["best_oos_return"],
+                "OOS passes": view["n_prop_passes"].astype(int),
+                "Last run": [txt(x)[:10] or "—" for x in view["last_run"]],
+                "Idea": [txt(d).split("\n")[0] for d in view["description"]],
+                "slug": view["slug"],
+            })
+            event = st.dataframe(
+                table, width="stretch", hide_index=True, height=min(60 + 35 * len(table), 520),
+                on_select="rerun", selection_mode="single-row",
+                column_config={
+                    "": st.column_config.TextColumn(width="small"),
+                    "Idea": st.column_config.TextColumn(width="medium"),
+                    "Best OOS Sharpe": st.column_config.NumberColumn(format="%.2f"),
+                    "Best OOS ret %": st.column_config.NumberColumn(format="%.1f"),
+                    "slug": st.column_config.TextColumn(width="small"),
+                })
+            picked = (event.selection.rows if hasattr(event, "selection") else []) or []
+            if picked:
+                go_to("hypothesis_detail", str(table.iloc[picked[0]]["slug"]))
+                st.rerun()
 
-        # --- compact grid: three per row, stats on one line -----------------
-        PER_ROW = 3
-        records = list(view.to_dict("records"))
-        for i in range(0, len(records), PER_ROW):
-            cols = st.columns(PER_ROW, gap="small")
-            for col, h in zip(cols, records[i:i + PER_ROW]):
-                with col, st.container(border=True):
-                    st.markdown(f"**{STATUS_ICON.get(h['status'], '')} "
-                                f"{txt(h['title'])}**")
-                    last = txt(h["last_run"])
-                    st.caption(
-                        f"`{h['slug']}` · {h['status']}"
-                        + (f" · {txt(h['symbol'])}" if txt(h["symbol"]) else "")
-                        + (f" · {last[:10]}" if last else " · never run"))
-
-                    desc = txt(h["description"]).split("\n")[0]
-                    st.caption(desc[:110] + ("…" if len(desc) > 110 else "") or "—")
-
-                    sharpe = fmt(h["best_oos_sharpe"])
-                    st.markdown(
-                        f"<div style='font-size:0.82rem;line-height:1.5'>"
-                        f"<b>{int(h['n_variations'])}</b> strategies · "
-                        f"<b>{int(h['n_runs'])}</b> runs · "
-                        f"<b>{int(h['n_rejected'])}</b> rejected<br>"
-                        f"best OOS Sharpe <b>{sharpe}</b> · "
-                        f"<b>{int(h['n_prop_passes'])}</b> OOS prop passes"
-                        f"</div>",
-                        unsafe_allow_html=True)
-
-                    st.button("Open →", key=f"open_{h['slug']}", width="stretch",
-                              on_click=go_to, args=("hypothesis_detail", h["slug"]))
+            o1, o2 = st.columns([3, 1])
+            choice = o1.selectbox(
+                "Open hypothesis", options=list(view["slug"]),
+                format_func=lambda sl: txt(
+                    view.loc[view["slug"] == sl, "title"].iloc[0]),
+                label_visibility="collapsed")
+            o2.button("Open →", width="stretch", on_click=go_to,
+                      args=("hypothesis_detail", choice))
+            st.caption(f"{len(view)} of {len(hyps)} hypotheses · click a row, or use "
+                       "the selector")
 
 # ========================================================== HYPOTHESIS DETAIL
 elif page == "hypothesis_detail":
@@ -213,15 +220,37 @@ elif page == "hypothesis_detail":
         if vs.empty:
             st.info("No variations coded yet.")
         else:
-            table = vs[["slug", "title", "status", "n_runs", "is_sharpe",
-                        "oos_sharpe", "oos_return", "oos_expectancy_r",
-                        "oos_trades", "oos_max_dd", "any_prop_pass"]].copy()
-            table.columns = ["variation", "title", "status", "runs", "IS Sharpe",
-                             "OOS Sharpe", "OOS return %", "OOS expectancy R",
-                             "OOS trades", "OOS max DD %", "prop pass"]
-            st.dataframe(table, width="stretch", hide_index=True)
-            st.caption("Stats come from the most recent run of each split. "
-                       "Out-of-sample is the only column that counts as evidence.")
+            table = vs[["slug", "status", "n_runs", "is_sharpe", "oos_sharpe",
+                        "oos_return", "oos_profit_factor", "oos_win_rate",
+                        "oos_expectancy_r", "oos_trades", "oos_trades_per_day",
+                        "oos_trades_per_week", "oos_hold_hours", "oos_max_dd",
+                        "oos_days_to_resolve", "oos_p_target_first",
+                        "any_prop_pass"]].copy()
+            table.columns = ["variation", "status", "runs", "IS Sharpe", "OOS Sharpe",
+                             "OOS ret %", "PF", "Win %", "Avg R", "Trades",
+                             "Trades/day", "Trades/wk", "Hold (h)", "Max DD %",
+                             "Days to resolve", "P(target first)", "prop pass"]
+            st.dataframe(
+                table, width="stretch", hide_index=True,
+                column_config={
+                    "IS Sharpe": st.column_config.NumberColumn(format="%.2f"),
+                    "OOS Sharpe": st.column_config.NumberColumn(format="%.2f"),
+                    "OOS ret %": st.column_config.NumberColumn(format="%.2f"),
+                    "PF": st.column_config.NumberColumn(format="%.2f"),
+                    "Win %": st.column_config.NumberColumn(format="%.1f"),
+                    "Avg R": st.column_config.NumberColumn(format="%.3f"),
+                    "Trades/day": st.column_config.NumberColumn(format="%.2f"),
+                    "Hold (h)": st.column_config.NumberColumn(format="%.1f"),
+                    "Days to resolve": st.column_config.NumberColumn(format="%.0f"),
+                    "P(target first)": st.column_config.NumberColumn(format="%.2f"),
+                })
+            st.caption(
+                "Stats are the most recent run of each split; out-of-sample is the "
+                "only column that counts as evidence. **Days to resolve** estimates "
+                "the trading days until the account hits the profit target or "
+                "breaches the drawdown limit, from that run's daily P&L — the "
+                "figure that decides whether a strategy can clear an evaluation "
+                "in a reasonable time.")
 
             for _, v in vs.iterrows():
                 icon = STATUS_ICON.get(v["status"], "")

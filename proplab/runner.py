@@ -44,7 +44,8 @@ def backtest(
     strategy = strategy_cls(**(params or {}))
     result = engine.run(strategy, data, cfg)
 
-    result.metrics = metrics_mod.compute(result, timeframe, cfg.rules.starting_balance)
+    result.metrics = metrics_mod.compute(result, timeframe, cfg.rules.starting_balance,
+                                        rules=cfg.rules)
     result.prop = prop_rules.check(result, cfg.rules)
 
     source = inspect.getsource(inspect.getmodule(strategy_cls))
