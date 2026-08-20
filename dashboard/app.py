@@ -1,4 +1,7 @@
-"""Streamlit dashboard: what has been tested, what survived, what failed.
+"""Streamlit dashboard: the research record.
+
+Three levels of drill-down:
+    Hypotheses  ->  one hypothesis  ->  one variation's runs
 
     python -m proplab.cli dashboard      (or: streamlit run dashboard/app.py)
 """
@@ -14,12 +17,12 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from proplab.db import store            # noqa: E402
-from proplab.research import multiple_testing  # noqa: E402
+from proplab.db import store                      # noqa: E402
+from proplab.research import multiple_testing     # noqa: E402
 
 st.set_page_config(page_title="prop_lab", layout="wide")
 
-STATUS_COLOR = {
+STATUS_ICON = {
     "queued": "⚪", "researching": "🔵", "ready_to_code": "🟣", "coding": "🟠",
     "testing": "🟡", "tested": "🟤", "rejected": "🔴", "passed": "🟢",
 }
@@ -35,56 +38,298 @@ def refresh():
 
 
 @st.cache_data(ttl=5)
-def load_runs(only_passed: bool = False) -> pd.DataFrame:
-    return store.runs_table(conn(), only_passed=only_passed)
+def hypotheses():
+    return store.hypotheses_list(conn())
 
 
 @st.cache_data(ttl=5)
-def load_overview() -> pd.DataFrame:
-    return store.overview(conn())
+def variations(slug: str):
+    return store.variations_for(conn(), slug)
 
 
 @st.cache_data(ttl=5)
-def load_failed() -> pd.DataFrame:
+def runs_of(slug: str):
+    return store.runs_for_variation(conn(), slug)
+
+
+@st.cache_data(ttl=5)
+def all_runs():
+    return store.runs_table(conn())
+
+
+@st.cache_data(ttl=5)
+def failed():
     return store.failed_ideas(conn())
 
 
-runs = load_runs()
-overview = load_overview()
+# ---------------------------------------------------------------- navigation
+def go_to(page: str, hyp: str | None = None, var: str | None = None):
+    st.session_state["page"] = page
+    if hyp is not None:
+        st.session_state["hyp"] = hyp
+    if var is not None:
+        st.session_state["var"] = var
+
+
+st.session_state.setdefault("page", "Hypotheses")
+st.session_state.setdefault("hyp", None)
+st.session_state.setdefault("var", None)
+
+NAV = ["Hypotheses", "Overview", "All runs", "Failed ideas"]
+
+
+def _on_nav():
+    """Sidebar owns its own key, so picking a section leaves any drill-down."""
+    st.session_state["page"] = st.session_state["nav"]
+
 
 st.sidebar.title("prop_lab")
-page = st.sidebar.radio("View", ["Overview", "Hypotheses", "Runs", "Run detail",
-                                 "Failed ideas"])
-st.sidebar.button("Refresh", on_click=refresh)
-st.sidebar.caption(f"{len(runs)} runs logged")
+st.sidebar.radio("View", NAV, key="nav", on_change=_on_nav)
+st.sidebar.button("Refresh", on_click=refresh, width="stretch")
 
-# --------------------------------------------------------------- Overview
-if page == "Overview":
-    st.header("Research pipeline")
-    if runs.empty:
-        st.info("No runs logged yet. Run:  python -m proplab.cli run --strategy … --log")
+page = st.session_state["page"]
+hyps = hypotheses()
+st.sidebar.caption(f"{len(hyps)} hypotheses · {len(all_runs())} runs logged")
+
+
+def fmt(v, suffix="", dash="—"):
+    return dash if v is None or (isinstance(v, float) and pd.isna(v)) else f"{v}{suffix}"
+
+
+# ============================================================ HYPOTHESIS LIST
+if page == "Hypotheses":
+    st.header("Hypothesis library")
+    st.caption("Everything we have ever tried. Open one to see the strategies "
+               "built under it and how each performed.")
+
+    if hyps.empty:
+        st.info("No hypotheses yet. Create one:\n\n"
+                "`python -m proplab.cli hypothesis --slug trend_swing "
+                "--title \"Trend following swing trading\" --status researching`")
     else:
+        for _, h in hyps.iterrows():
+            with st.container(border=True):
+                left, right = st.columns([4, 1])
+                with left:
+                    st.markdown(
+                        f"### {STATUS_ICON.get(h['status'], '')} {h['title']}")
+                    st.caption(f"`{h['slug']}` · {h['status']} · "
+                               f"{h['symbol'] or h['asset_class'] or '—'}"
+                               + (f" · last run {h['last_run'][:10]}"
+                                  if h["last_run"] else " · never run"))
+                    if h["description"]:
+                        st.write(h["description"])
+                with right:
+                    st.button("Open →", key=f"open_{h['slug']}", width="stretch",
+                              on_click=go_to,
+                              args=("hypothesis_detail", h["slug"]))
+
+                m = st.columns(5)
+                m[0].metric("Strategies", int(h["n_variations"]))
+                m[1].metric("Runs", int(h["n_runs"]))
+                m[2].metric("Rejected", int(h["n_rejected"]))
+                m[3].metric("Best OOS Sharpe", fmt(h["best_oos_sharpe"]))
+                m[4].metric("Prop passes", int(h["n_prop_passes"]))
+
+# ========================================================== HYPOTHESIS DETAIL
+elif page == "hypothesis_detail":
+    slug = st.session_state["hyp"]
+    detail = store.hypothesis_detail(conn(), slug) if slug else None
+    if not detail:
+        st.warning("Hypothesis not found.")
+        st.button("← Back", on_click=go_to, args=("Hypotheses",))
+    else:
+        st.button("← All hypotheses", on_click=go_to, args=("Hypotheses",))
+        st.header(f"{STATUS_ICON.get(detail['status'], '')} {detail['title']}")
+        st.caption(f"`{slug}` · status **{detail['status']}** · "
+                   f"{detail['symbol'] or detail['asset_class'] or '—'}")
+
+        st.subheader("The idea")
+        st.write(detail["description"] or "—")
+        st.subheader("Mechanism — why this should work")
+        st.write(detail["mechanism"] or "—")
+        if detail["research"]:
+            with st.expander("Research notes: how this is normally traded"):
+                st.markdown(detail["research"])
+
+        st.divider()
+        vs = variations(slug)
+        st.subheader(f"Strategies built from this hypothesis ({len(vs)})")
+        if vs.empty:
+            st.info("No variations coded yet.")
+        else:
+            table = vs[["slug", "title", "status", "n_runs", "is_sharpe",
+                        "oos_sharpe", "oos_return", "oos_expectancy_r",
+                        "oos_trades", "oos_max_dd", "any_prop_pass"]].copy()
+            table.columns = ["variation", "title", "status", "runs", "IS Sharpe",
+                             "OOS Sharpe", "OOS return %", "OOS expectancy R",
+                             "OOS trades", "OOS max DD %", "prop pass"]
+            st.dataframe(table, width="stretch", hide_index=True)
+            st.caption("Stats come from the most recent run of each split. "
+                       "Out-of-sample is the only column that counts as evidence.")
+
+            for _, v in vs.iterrows():
+                icon = STATUS_ICON.get(v["status"], "")
+                with st.expander(f"{icon} {v['title']}  ·  `{v['slug']}`  ·  "
+                                 f"{v['status']}"):
+                    if v["rationale"]:
+                        st.write(f"**Why test this variation:** {v['rationale']}")
+                    if v["details"]:
+                        st.write(f"**Rules:** {v['details']}")
+                    if v["verdict_note"]:
+                        st.info(f"**Verdict:** {v['verdict_note']}")
+
+                    c = st.columns(6)
+                    c[0].metric("Runs", int(v["n_runs"]))
+                    c[1].metric("IS Sharpe", fmt(v["is_sharpe"]))
+                    c[2].metric("OOS Sharpe", fmt(v["oos_sharpe"]))
+                    c[3].metric("OOS return", fmt(v["oos_return"], "%"))
+                    c[4].metric("OOS trades", fmt(v["oos_trades"]))
+                    c[5].metric("Prop", "PASS" if v["any_prop_pass"] else "FAIL")
+
+                    if v["is_sharpe"] and v["oos_sharpe"] is not None \
+                            and not pd.isna(v["is_sharpe"]):
+                        if v["is_sharpe"] > 0:
+                            decay = 1 - (v["oos_sharpe"] / v["is_sharpe"])
+                            st.caption(f"Sharpe decay IS→OOS: {decay:.0%}"
+                                       + ("  ⚠️ likely overfit" if decay > 0.5 else ""))
+                        else:
+                            st.caption("Sharpe decay: n/a — in-sample Sharpe was "
+                                       "not positive")
+
+                    if v["params_json"]:
+                        st.write("**Params**")
+                        st.json(json.loads(v["params_json"]), expanded=False)
+
+                    if int(v["n_runs"]):
+                        st.button("See all runs →", key=f"runs_{v['slug']}",
+                                  on_click=go_to,
+                                  args=("variation_detail", slug, v["slug"]))
+                    else:
+                        st.caption("Coded but never run.")
+
+                    if v["code_path"] and Path(v["code_path"]).exists():
+                        with st.expander("Strategy code"):
+                            st.code(Path(v["code_path"]).read_text(), language="python")
+
+# =========================================================== VARIATION DETAIL
+elif page == "variation_detail":
+    vslug = st.session_state["var"]
+    hslug = st.session_state["hyp"]
+    st.button("← Back to hypothesis", on_click=go_to,
+              args=("hypothesis_detail", hslug))
+    rows = runs_of(vslug) if vslug else pd.DataFrame()
+    st.header(f"Runs · `{vslug}`")
+
+    if rows.empty:
+        st.info("No runs for this variation.")
+    else:
+        summary = rows[["created_at", "split", "symbol", "timeframe", "period_start",
+                        "period_end", "n_trades", "total_return_pct", "sharpe",
+                        "max_dd_pct", "profit_factor", "expectancy_r",
+                        "prop_passed", "first_breach_rule"]]
+        st.dataframe(summary, width="stretch", hide_index=True)
+
+        pick = st.selectbox(
+            "Inspect run", options=list(rows["run_uuid"]),
+            format_func=lambda u: (
+                f"{rows.loc[rows['run_uuid'] == u, 'created_at'].iloc[0][:16]} · "
+                f"{rows.loc[rows['run_uuid'] == u, 'split'].iloc[0]} · "
+                f"{rows.loc[rows['run_uuid'] == u, 'timeframe'].iloc[0]} · "
+                f"ret {rows.loc[rows['run_uuid'] == u, 'total_return_pct'].iloc[0]}%"))
+        r = rows[rows["run_uuid"] == pick].iloc[0]
+
+        c = st.columns(6)
+        c[0].metric("Return", fmt(r["total_return_pct"], "%"))
+        c[1].metric("Sharpe", fmt(r["sharpe"]))
+        c[2].metric("Max DD", fmt(r["max_dd_pct"], "%"))
+        c[3].metric("Trades", fmt(r["n_trades"]))
+        c[4].metric("Expectancy", fmt(r["expectancy_r"], " R"))
+        c[5].metric("Prop firm", "PASS" if r["prop_passed"] else "FAIL")
+
+        eq = pd.read_sql_query(
+            "SELECT ts, equity, equity_low FROM equity_curve WHERE run_id=? ORDER BY ts",
+            conn(), params=(int(r["id"]),))
+        prop = json.loads(r["prop_json"] or "{}")
+        if len(eq):
+            eq["ts"] = pd.to_datetime(eq["ts"])
+            start = json.loads(r["config_json"] or "{}").get("rules", {}).get(
+                "starting_balance", eq["equity"].iloc[0])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=eq["ts"], y=eq["equity"], name="equity"))
+            fig.add_trace(go.Scatter(x=eq["ts"], y=eq["equity_low"],
+                                     name="intraday low", line=dict(dash="dot")))
+            checks = prop.get("checks", {})
+            if "max_drawdown_static" in checks:
+                fig.add_hline(y=checks["max_drawdown_static"]["floor"],
+                              line_dash="dash", annotation_text="max DD floor")
+            fig.add_hline(y=start, line_dash="dot", annotation_text="start")
+            if prop.get("first_breach_time"):
+                fig.add_vline(x=pd.Timestamp(prop["first_breach_time"]),
+                              line_color="red",
+                              annotation_text=f"breach: {prop['first_breach_rule']}")
+            fig.update_layout(height=380, margin=dict(t=20, b=20))
+            st.plotly_chart(fig, width="stretch")
+
+        t1, t2, t3, t4 = st.tabs(["Prop rules", "Checks", "Metrics", "Trades"])
+        with t1:
+            for name, ch in prop.get("checks", {}).items():
+                st.write(f"{'✅' if ch['passed'] else '❌'} **{name}** "
+                         f"({'HARD' if ch['hard'] else 'qualification'})")
+                if not ch["passed"] and ch.get("note"):
+                    st.caption(ch["note"])
+                st.json(ch, expanded=False)
+            if prop.get("first_breach_rule"):
+                st.error(f"Account would have been closed at "
+                         f"{prop['first_breach_time']} "
+                         f"({prop['first_breach_rule']}). Everything after that "
+                         f"point is fiction.")
+        with t2:
+            for ch in json.loads(r["checks_json"] or "[]"):
+                st.write(f"{'✅' if ch['passed'] else '❌'} **{ch['name']}** — "
+                         f"{ch['detail']}")
+                if ch.get("findings"):
+                    st.json(ch["findings"], expanded=False)
+        with t3:
+            st.json(json.loads(r["metrics_json"] or "{}"))
+        with t4:
+            tr = pd.read_sql_query(
+                "SELECT * FROM trades WHERE run_id=? ORDER BY seq", conn(),
+                params=(int(r["id"]),))
+            if len(tr):
+                st.dataframe(tr.drop(columns=["id", "run_id"]), width="stretch",
+                             hide_index=True)
+                st.bar_chart(tr["r_multiple"].dropna())
+            else:
+                st.write("no trades")
+
+# ==================================================================== OVERVIEW
+elif page == "Overview":
+    st.header("Pipeline overview")
+    runs = all_runs()
+    if runs.empty:
+        st.info("No runs logged yet. "
+                "Run: `python -m proplab.cli run --strategy … --log`")
+    else:
+        real = runs[~runs["strategy_name"].str.startswith("_")]
+        best = real["sharpe"].max() if len(real) else float("nan")
         c = st.columns(5)
-        c[0].metric("Runs logged", len(runs))
-        c[1].metric("Variations", int(runs["variation_id"].nunique()))
-        c[2].metric("Prop-firm passes", int(runs["prop_passed"].fillna(0).sum()))
-        c[3].metric("Check failures", int((runs["checks_passed"] == 0).sum()))
-        best = runs[~runs["strategy_name"].str.startswith("_")]["sharpe"].max()
-        c[4].metric("Best Sharpe", f"{best:.2f}" if pd.notna(best) else "-")
+        c[0].metric("Hypotheses", len(hyps))
+        c[1].metric("Runs logged", len(runs))
+        c[2].metric("Research trials", len(real))
+        c[3].metric("Prop-firm passes", int(runs["prop_passed"].fillna(0).sum()))
+        c[4].metric("Best Sharpe", f"{best:.2f}" if pd.notna(best) else "—")
 
         st.subheader("Multiple-testing reality check")
-        real = runs[~runs["strategy_name"].str.startswith("_")]
         n_trials = max(len(real), 1)
         years = st.slider("Typical test length (years)", 0.5, 8.0, 3.0, 0.5)
         bar = multiple_testing.expected_max_sharpe(n_trials, years)
         if len(real) < len(runs):
-            st.caption(f"{len(runs) - len(real)} infrastructure run(s) excluded from "
-                       "the trial count.")
-        st.write(
-            f"With **{n_trials}** logged research trials over ~{years} years, pure noise is "
-            f"expected to produce a best Sharpe of about **{bar:.2f}**. "
-            "A result below that line is not evidence of anything."
-        )
+            st.caption(f"{len(runs) - len(real)} infrastructure run(s) excluded "
+                       "from the trial count.")
+        st.write(f"With **{n_trials}** logged research trials over ~{years} years, "
+                 f"pure noise is expected to produce a best Sharpe of about "
+                 f"**{bar:.2f}**. A result below that line is not evidence.")
         if pd.notna(best):
             if best > 0:
                 st.progress(max(0.0, min(float(best) / max(bar * 2, 0.01), 1.0)))
@@ -96,34 +341,12 @@ if page == "Overview":
                            f"to compare against the noise benchmark of {bar:.2f}")
 
         st.subheader("Status board")
-        st.dataframe(overview, width="stretch")
+        st.dataframe(store.overview(conn()), width="stretch", hide_index=True)
 
-# ------------------------------------------------------------- Hypotheses
-elif page == "Hypotheses":
-    st.header("Hypotheses and variations")
-    if overview.empty:
-        st.info("Nothing recorded yet.")
-    else:
-        for hyp, grp in overview.groupby("hypothesis", dropna=False):
-            row = grp.iloc[0]
-            st.markdown(f"### {STATUS_COLOR.get(row['hyp_status'], '')} {row['title']}  "
-                        f"`{hyp}`")
-            det = pd.read_sql_query(
-                "SELECT description, mechanism, research, symbol, asset_class "
-                "FROM hypotheses WHERE slug=?", conn(), params=(hyp,))
-            if len(det):
-                d = det.iloc[0]
-                st.write(f"**Idea:** {d['description'] or '-'}")
-                st.write(f"**Mechanism:** {d['mechanism'] or '-'}")
-                with st.expander("Research notes"):
-                    st.write(d["research"] or "-")
-            show = grp[["variation", "var_title", "var_status", "runs",
-                        "best_sharpe", "prop_passes", "last_run"]]
-            st.dataframe(show, width="stretch", hide_index=True)
-
-# ------------------------------------------------------------------- Runs
-elif page == "Runs":
+# ==================================================================== ALL RUNS
+elif page == "All runs":
     st.header("All runs")
+    runs = all_runs()
     if runs.empty:
         st.info("Nothing logged yet.")
     else:
@@ -142,110 +365,21 @@ elif page == "Runs":
             f = f[f["split"] == split]
         f = f[f["n_trades"].fillna(0) >= min_trades]
 
-        cols = ["created_at", "strategy_name", "variation_slug", "symbol", "timeframe",
-                "split", "n_trades", "total_return_pct", "sharpe", "max_dd_pct",
-                "profit_factor", "expectancy_r", "t_stat", "prop_passed",
-                "first_breach_rule", "run_uuid"]
+        cols = ["created_at", "hypothesis_slug", "variation_slug", "strategy_name",
+                "symbol", "timeframe", "split", "n_trades", "total_return_pct",
+                "sharpe", "max_dd_pct", "profit_factor", "expectancy_r",
+                "prop_passed", "first_breach_rule", "run_uuid"]
         st.dataframe(f[cols].sort_values("created_at", ascending=False),
                      width="stretch", hide_index=True)
-        st.caption("Sort by any column. `prop_passed=0` with a good return means "
-                   "profitable but not tradeable on an evaluation account.")
+        st.caption("`prop_passed=0` with a good return means profitable but not "
+                   "tradeable on an evaluation account.")
 
-# ------------------------------------------------------------- Run detail
-elif page == "Run detail":
-    st.header("Run detail")
-    if runs.empty:
-        st.info("Nothing logged yet.")
-    else:
-        label = runs.apply(
-            lambda r: f"{r['created_at'][:16]} · {r['strategy_name']} · {r['split']} "
-                      f"· ret {r['total_return_pct']}% · {r['run_uuid'][:8]}", axis=1)
-        pick = st.selectbox("Run", options=list(runs["run_uuid"]),
-                            format_func=lambda u: label[runs["run_uuid"] == u].iloc[0])
-        r = runs[runs["run_uuid"] == pick].iloc[0]
-
-        c = st.columns(6)
-        c[0].metric("Return", f"{r['total_return_pct']}%")
-        c[1].metric("Sharpe", r["sharpe"])
-        c[2].metric("Max DD", f"{r['max_dd_pct']}%")
-        c[3].metric("Trades", r["n_trades"])
-        c[4].metric("Expectancy", f"{r['expectancy_r']} R" if pd.notna(r["expectancy_r"]) else "-")
-        c[5].metric("Prop firm", "PASS" if r["prop_passed"] else "FAIL")
-
-        eq = pd.read_sql_query(
-            "SELECT ts, equity, equity_low FROM equity_curve WHERE run_id=? ORDER BY ts",
-            conn(), params=(int(r["id"]),))
-        if len(eq):
-            eq["ts"] = pd.to_datetime(eq["ts"])
-            prop = json.loads(r["prop_json"] or "{}")
-            start = json.loads(r["config_json"] or "{}").get("rules", {}).get(
-                "starting_balance", eq["equity"].iloc[0])
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=eq["ts"], y=eq["equity"], name="equity"))
-            fig.add_trace(go.Scatter(x=eq["ts"], y=eq["equity_low"], name="intraday low",
-                                     line=dict(dash="dot")))
-            checks = prop.get("checks", {})
-            if "max_drawdown_static" in checks:
-                fig.add_hline(y=checks["max_drawdown_static"]["floor"],
-                              line_dash="dash", annotation_text="max DD floor")
-            fig.add_hline(y=start, line_dash="dot", annotation_text="start")
-            if prop.get("first_breach_time"):
-                fig.add_vline(x=pd.Timestamp(prop["first_breach_time"]),
-                              line_color="red",
-                              annotation_text=f"breach: {prop['first_breach_rule']}")
-            fig.update_layout(height=380, margin=dict(t=20, b=20))
-            st.plotly_chart(fig, width="stretch")
-
-        t1, t2, t3, t4, t5 = st.tabs(["Prop rules", "Checks", "Metrics", "Trades", "Code"])
-        with t1:
-            prop = json.loads(r["prop_json"] or "{}")
-            for name, ch in prop.get("checks", {}).items():
-                icon = "✅" if ch["passed"] else "❌"
-                kind = "HARD" if ch["hard"] else "qualification"
-                st.write(f"{icon} **{name}** ({kind})")
-                st.json(ch, expanded=False)
-            if prop.get("first_breach_rule"):
-                st.error(f"Account would have been closed at {prop['first_breach_time']} "
-                         f"({prop['first_breach_rule']}). Everything after that is fiction.")
-        with t2:
-            for ch in json.loads(r["checks_json"] or "[]"):
-                st.write(f"{'✅' if ch['passed'] else '❌'} **{ch['name']}** — {ch['detail']}")
-                if ch.get("findings"):
-                    st.json(ch["findings"], expanded=False)
-        with t3:
-            st.json(json.loads(r["metrics_json"] or "{}"))
-            st.write("**Params**")
-            st.json(json.loads(r["params_json"] or "{}"))
-        with t4:
-            tr = pd.read_sql_query(
-                "SELECT * FROM trades WHERE run_id=? ORDER BY seq", conn(),
-                params=(int(r["id"]),))
-            if len(tr):
-                st.dataframe(tr.drop(columns=["id", "run_id"]), width="stretch",
-                             hide_index=True)
-                st.bar_chart(tr["r_multiple"].dropna())
-            else:
-                st.write("no trades")
-        with t5:
-            var = pd.read_sql_query(
-                "SELECT code_path, details, rationale FROM variations WHERE id=?",
-                conn(), params=(int(r["variation_id"]),)) if pd.notna(r["variation_id"]) \
-                else pd.DataFrame()
-            if len(var):
-                st.write(f"**Rationale:** {var.iloc[0]['rationale']}")
-                st.write(f"**Rules:** {var.iloc[0]['details']}")
-                p = Path(var.iloc[0]["code_path"] or "")
-                if p.exists():
-                    st.code(p.read_text(), language="python")
-            else:
-                st.info("Run was not logged against a variation.")
-
-# ------------------------------------------------------------ Failed ideas
+# ================================================================ FAILED IDEAS
 elif page == "Failed ideas":
     st.header("Rejected — do not re-test these")
-    failed = load_failed()
-    if failed.empty:
+    f = failed()
+    if f.empty:
         st.info("Nothing rejected yet.")
     else:
-        st.dataframe(failed, width="stretch", hide_index=True)
+        st.dataframe(f, width="stretch", hide_index=True)
         st.caption("Every row here is part of the multiple-testing denominator.")

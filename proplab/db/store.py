@@ -196,6 +196,13 @@ def insert_run(conn, result, variation_slug: str | None = None,
 _REAL_RUNS = r"strategy_name NOT LIKE '\_%' ESCAPE '\'"
 
 
+def _real_runs(alias: str = "") -> str:
+    """The same predicate, table-qualified. `variations` also has a
+    strategy_name column, so joins must say which one they mean."""
+    prefix = f"{alias}." if alias else ""
+    return _REAL_RUNS.replace("strategy_name", f"{prefix}strategy_name", 1)
+
+
 def trial_count(conn, hypothesis_slug: str | None = None) -> dict:
     """How many genuine research tests have been run. Feeds the multiple-testing
     correction - a Sharpe of 1.5 means much less as the 40th try than the 1st."""
@@ -266,3 +273,91 @@ def _finite(x):
         return None if x is None or not pd.notna(x) or x in (float("inf"), float("-inf")) else float(x)
     except (TypeError, ValueError):
         return None
+
+
+# ------------------------------------------------- drill-down queries
+def hypotheses_list(conn) -> pd.DataFrame:
+    """One row per hypothesis, with aggregate results across all its variations.
+
+    This is the top level of the dashboard: what have we ever tried, and did
+    anything come of it. Counts everything, including infrastructure runs -
+    display should be a complete record. Only `trial_count`, which feeds the
+    multiple-testing correction, filters those out.
+    """
+    return pd.read_sql_query(
+        """
+        SELECT h.id, h.slug, h.title, h.status, h.description, h.mechanism,
+               h.research, h.symbol, h.asset_class, h.created_at, h.updated_at,
+               COUNT(DISTINCT v.id)                                   AS n_variations,
+               COUNT(DISTINCT CASE WHEN v.status='rejected' THEN v.id END) AS n_rejected,
+               COUNT(DISTINCT CASE WHEN v.status='passed'   THEN v.id END) AS n_passed,
+               COUNT(r.id)                                            AS n_runs,
+               COALESCE(SUM(r.prop_passed), 0)                        AS n_prop_passes,
+               MAX(CASE WHEN r.split='oos' THEN r.sharpe END)         AS best_oos_sharpe,
+               MAX(CASE WHEN r.split='oos' THEN r.total_return_pct END) AS best_oos_return,
+               MAX(r.sharpe)                                          AS best_sharpe,
+               MAX(r.created_at)                                      AS last_run
+        FROM hypotheses h
+        LEFT JOIN variations v ON v.hypothesis_id = h.id
+        LEFT JOIN runs r ON r.variation_id = v.id
+        GROUP BY h.id
+        ORDER BY COALESCE(MAX(r.created_at), h.updated_at) DESC
+        """,
+        conn,
+    )
+
+
+def variations_for(conn, hypothesis_slug: str) -> pd.DataFrame:
+    """Every strategy built under one hypothesis, with its headline stats.
+
+    Stats are taken from the LATEST run of each split, so a variation shows
+    its in-sample and out-of-sample numbers side by side. Variations that were
+    never run still appear - "coded but never tested" is information too.
+    """
+    return pd.read_sql_query(
+        """
+        WITH ranked AS (
+            SELECT r.*, ROW_NUMBER() OVER (
+                       PARTITION BY r.variation_id, r.split
+                       ORDER BY r.created_at DESC) AS rn
+            FROM runs r
+        )
+        SELECT v.id, v.slug, v.title, v.status, v.rationale, v.details,
+               v.verdict_note, v.params_json, v.code_path, v.strategy_name,
+               v.updated_at,
+               COUNT(k.id)                                            AS n_runs,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.total_return_pct END) AS full_return,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.sharpe END)           AS full_sharpe,
+               MAX(CASE WHEN k.split='full' AND k.rn=1 THEN k.n_trades END)         AS full_trades,
+               MAX(CASE WHEN k.split='is'  AND k.rn=1 THEN k.sharpe END)            AS is_sharpe,
+               MAX(CASE WHEN k.split='is'  AND k.rn=1 THEN k.total_return_pct END)  AS is_return,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.sharpe END)            AS oos_sharpe,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.total_return_pct END)  AS oos_return,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.expectancy_r END)      AS oos_expectancy_r,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.n_trades END)          AS oos_trades,
+               MAX(CASE WHEN k.split='oos' AND k.rn=1 THEN k.max_dd_pct END)        AS oos_max_dd,
+               COALESCE(MAX(k.prop_passed), 0)                        AS any_prop_pass,
+               MIN(COALESCE(k.checks_passed, 1))                      AS all_checks_passed,
+               MAX(k.created_at)                                      AS last_run
+        FROM variations v
+        JOIN hypotheses h ON h.id = v.hypothesis_id
+        LEFT JOIN ranked k ON k.variation_id = v.id
+        WHERE h.slug = ?
+        GROUP BY v.id
+        ORDER BY v.created_at
+        """,
+        conn, params=(hypothesis_slug,),
+    )
+
+
+def runs_for_variation(conn, variation_slug: str) -> pd.DataFrame:
+    return pd.read_sql_query(
+        """SELECT r.* FROM runs r JOIN variations v ON v.id = r.variation_id
+           WHERE v.slug = ? ORDER BY r.created_at DESC""",
+        conn, params=(variation_slug,),
+    )
+
+
+def hypothesis_detail(conn, slug: str) -> dict | None:
+    row = conn.execute("SELECT * FROM hypotheses WHERE slug=?", (slug,)).fetchone()
+    return dict(row) if row else None

@@ -120,6 +120,20 @@ Because that is an assumption rather than a fact, `--cost-sweep` re-runs any
 strategy at 2x and 3x costs. A strategy that only works at 1x is a bet on a fee
 schedule, not an edge.
 
+## Dashboard
+
+Three levels of drill-down:
+
+1. **Hypothesis library** — every idea ever tried, with how many strategies came
+   out of it, how many were rejected, best out-of-sample Sharpe, prop passes.
+2. **Open a hypothesis** — the idea, the mechanism, the research notes, then
+   every strategy built from it side by side (IS vs OOS Sharpe, OOS return,
+   expectancy, trades, max DD, prop pass/fail), each expandable for its
+   rationale, exact rules, params, verdict and code.
+3. **Open a variation** — all its runs, with equity curve against the drawdown
+   floor and breach marker, per-rule prop-firm results, automated checks, full
+   metrics and the trade list.
+
 ## Guarding against false positives
 
 Every run is logged, pass or fail. That count is the denominator:
@@ -155,7 +169,7 @@ proplab/
   checks/            lookahead + template compliance
   db/                schema.sql, store.py
   research/          multiple-testing corrections
-dashboard/app.py     Streamlit
+dashboard/app.py     Streamlit (hypothesis library -> hypothesis -> variation runs)
 tests/               engine arithmetic, prop rules, lookahead detectors
 proplab.db           the permanent record
 ```
