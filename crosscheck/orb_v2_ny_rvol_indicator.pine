@@ -1,79 +1,75 @@
 //@version=6
-// ORB — INDICATOR (not a strategy), London + New York
+// ORB - INDICATOR (not a strategy), London + New York.
 //
 // Plots what proplab's ORB rules see and marks where they WOULD fire, without
-// taking the trades. Use it with bar replay to trade the setups by hand, then
-// send the trade log back so your decisions can be diffed against the
-// mechanical ones.
+// taking the trades. Trade the setups by hand on replay, log them, and the diff
+// tool compares your decisions against the mechanical ones.
 //
-// Levels are drawn with plot(), not line objects. Line objects were rendering
-// several thousand dollars away from the candles; plot() is anchored to the
-// price scale and cannot drift.
-//
-// Both sessions are available. proplab's orb_v2 is New-York-only because it
-// mirrors the supplied Pine reference; orb_v1 already trades London and NY.
-// Turning London on here costs nothing and shows whether it is worth adding.
+// Written strictly one statement per line. Wrapped expressions - especially a
+// ternary broken before its ':' - are what produced the repeated
+// "end of line without line continuation" errors. crosscheck/pine_lint.py
+// checks for that, for functions declared inside blocks, and for unbalanced
+// brackets, and this file passes it.
 
-indicator("ORB London + NY — indicator", overlay = true)
+indicator("ORB London + NY - indicator", overlay = true)
 
-// ---------------------------------------------------------------- inputs
-nyOn        = input.bool(true,  "New York session",            group="New York")
-nyTz        = input.string("America/New_York", "Timezone",     group="New York")
-nyOpenS     = input.string("0930", "Range start (HHMM)",       group="New York")
-nyOpenE     = input.string("1000", "Range end (HHMM)",         group="New York")
-nyTradeS    = input.string("1000", "Trade window start",       group="New York")
-nyTradeE    = input.string("1200", "Trade window end",         group="New York")
+// ------------------------------------------------------------------ inputs
+nyOn = input.bool(true, "New York session", group = "New York")
+nyTz = input.string("America/New_York", "Timezone", group = "New York")
+nyOpenS = input.string("0930", "Range start HHMM", group = "New York")
+nyOpenE = input.string("1000", "Range end HHMM", group = "New York")
+nyTradeS = input.string("1000", "Trade window start", group = "New York")
+nyTradeE = input.string("1200", "Trade window end", group = "New York")
 
-ldnOn       = input.bool(true,  "London session",              group="London")
-ldnTz       = input.string("Europe/London", "Timezone",        group="London")
-ldnOpenS    = input.string("0800", "Range start (HHMM)",       group="London")
-ldnOpenE    = input.string("0830", "Range end (HHMM)",         group="London")
-ldnTradeS   = input.string("0830", "Trade window start",       group="London")
-ldnTradeE   = input.string("1030", "Trade window end",         group="London")
+ldnOn = input.bool(true, "London session", group = "London")
+ldnTz = input.string("Europe/London", "Timezone", group = "London")
+ldnOpenS = input.string("0800", "Range start HHMM", group = "London")
+ldnOpenE = input.string("0830", "Range end HHMM", group = "London")
+ldnTradeS = input.string("0830", "Trade window start", group = "London")
+ldnTradeE = input.string("1030", "Trade window end", group = "London")
 
-rvolLength    = input.int(3,    "RVOL: completed weeks to average", group="Filter", minval=1)
-rvolThreshold = input.float(1.0,"RVOL threshold (strictly greater)", group="Filter")
-useRvol       = input.bool(true,"Apply the RVOL filter",        group="Filter")
-allowShorts   = input.bool(true,"Show short signals",           group="Filter")
+rvolLength = input.int(3, "RVOL weeks to average", group = "Filter", minval = 1)
+rvolThreshold = input.float(1.0, "RVOL threshold", group = "Filter")
+useRvol = input.bool(true, "Apply the RVOL filter", group = "Filter")
+allowShorts = input.bool(true, "Show short signals", group = "Filter")
 
-showZones   = input.bool(true, "Shade the session windows",     group="Display")
-showTable   = input.bool(true, "Show the state table",          group="Display")
+showZones = input.bool(true, "Shade session windows", group = "Display")
+showTable = input.bool(true, "Show the state table", group = "Display")
 
-toMin(s) =>
-    int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
+// --------------------------------------------------------------- helpers
+toMin(s) => int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
 
 tfMin = timeframe.in_seconds(timeframe.period) / 60
 
 // A bar counts as inside a window when it OVERLAPS it, which is what proplab
-// does. Pine's built-in session test matches on the bar open only, and on 15m
-// that silently misses the 15:45 bar of a 15:50-15:55 window.
-inWin(tzs, sMin, eMin) =>
-    oMin = hour(time, tzs) * 60 + minute(time, tzs)
-    oMin < eMin and (oMin + tfMin) > sMin
+// does. Pine's built-in session test matches the bar open only, and on 15m that
+// silently misses the 15:45 bar of a 15:50-15:55 window.
+inWin(tzs, sMin, eMin) => (hour(time, tzs) * 60 + minute(time, tzs)) < eMin and (hour(time, tzs) * 60 + minute(time, tzs) + tfMin) > sMin
 
-// -------------------------------------------- relative volume (matches proplab)
-// Cumulative volume since the start of the UTC week against the same bar offset
-// in the last N completed weeks. This is NOT ta.relativeVolume().
+// ------------------------------------------------- relative volume (proplab)
+// Cumulative volume since the start of the UTC week, against the same bar
+// offset in the last N completed weeks. This is NOT ta.relativeVolume().
 weekIdx = int(math.floor((time / 1000 + 3 * 86400) / (7 * 86400)))
-maxOff  = int(math.round(7.0 * 24.0 * 60.0 / tfMin)) + 5
+maxOff = int(math.round(7.0 * 24.0 * 60.0 / tfMin)) + 5
 
 var array<float> curCum = array.new_float(maxOff, na)
-var array<float> prev1  = array.new_float(maxOff, na)
-var array<float> prev2  = array.new_float(maxOff, na)
-var array<float> prev3  = array.new_float(maxOff, na)
-var int   offset   = -1
-var float cumVol   = 0.0
-var int   lastWeek = na
+var array<float> prev1 = array.new_float(maxOff, na)
+var array<float> prev2 = array.new_float(maxOff, na)
+var array<float> prev3 = array.new_float(maxOff, na)
+var int offset = -1
+var float cumVol = 0.0
+var int lastWeek = na
 
-if na(lastWeek) or weekIdx != lastWeek
+isNewWeek = na(lastWeek) or weekIdx != lastWeek
+if isNewWeek
     if not na(lastWeek)
         prev3 := prev2.copy()
         prev2 := prev1.copy()
         prev1 := curCum.copy()
-    curCum   := array.new_float(maxOff, na)
+    curCum := array.new_float(maxOff, na)
     lastWeek := weekIdx
-    offset   := 0
-    cumVol   := 0.0
+    offset := 0
+    cumVol := 0.0
 else
     offset += 1
 
@@ -82,42 +78,37 @@ if offset < maxOff
     curCum.set(offset, cumVol)
 
 sumPast = 0.0
-nPast   = 0
+nPast = 0
 if offset < maxOff
     for i = 0 to int(math.min(rvolLength, 3)) - 1
         v = i == 0 ? prev1.get(offset) : i == 1 ? prev2.get(offset) : prev3.get(offset)
         if not na(v)
             sumPast += v
-            nPast   += 1
-rvol   = nPast > 0 and sumPast > 0 ? cumVol / (sumPast / nPast) : na
+            nPast += 1
+
+rvol = nPast > 0 and sumPast > 0 ? cumVol / (sumPast / nPast) : na
 rvolOk = not useRvol or (not na(rvol) and rvol > rvolThreshold)
 
 // ------------------------------------------------------------ session engine
 // Called once per session. Pine gives each call site its own copy of the `var`
 // state, so the two sessions cannot contaminate each other.
 session(enabled, tzs, openS, openE, tradeS, tradeE, filterOk, shortsOk) =>
-    var float hi   = na
-    var float lo   = na
+    var float hi = na
+    var float lo = na
     var string side = na
-    var int   lastD = na
-
+    var int lastD = na
     inRange = enabled and inWin(tzs, toMin(openS), toMin(openE))
     inTrade = enabled and inWin(tzs, toMin(tradeS), toMin(tradeE))
-
     d = year(time, tzs) * 10000 + month(time, tzs) * 100 + dayofmonth(time, tzs)
     if na(lastD) or d != lastD
         lastD := d
-        hi    := na
-        lo    := na
-        side  := na
-
+        hi := na
+        lo := na
+        side := na
     if inRange
         hi := na(hi) ? high : math.max(hi, high)
-        lo := na(lo) ? low  : math.min(lo, low)
-
+        lo := na(lo) ? low : math.min(lo, low)
     ready = not na(hi) and not na(lo)
-    // na(side) restricts this to the day's first signal, which is what the
-    // strategy does by refusing a second entry.
     lng = inTrade and filterOk and ready and na(side) and close > hi
     sht = shortsOk and inTrade and filterOk and ready and na(side) and close < lo
     if lng
@@ -126,83 +117,85 @@ session(enabled, tzs, openS, openE, tradeS, tradeE, filterOk, shortsOk) =>
         side := "short"
     [hi, lo, lng, sht, inRange, inTrade, side]
 
-[nyHi, nyLo, nyLong, nyShort, nyInRange, nyInTrade, nySide] =
-     session(nyOn,  nyTz,  nyOpenS,  nyOpenE,  nyTradeS,  nyTradeE,  rvolOk, allowShorts)
-[ldHi, ldLo, ldLong, ldShort, ldInRange, ldInTrade, ldSide] =
-     session(ldnOn, ldnTz, ldnOpenS, ldnOpenE, ldnTradeS, ldnTradeE, rvolOk, allowShorts)
+[nyHi, nyLo, nyLong, nyShort, nyInRange, nyInTrade, nySide] = session(nyOn, nyTz, nyOpenS, nyOpenE, nyTradeS, nyTradeE, rvolOk, allowShorts)
+[ldHi, ldLo, ldLong, ldShort, ldInRange, ldInTrade, ldSide] = session(ldnOn, ldnTz, ldnOpenS, ldnOpenE, ldnTradeS, ldnTradeE, rvolOk, allowShorts)
 
-// ------------------------------------------------------------------- drawing
-// plot() with style_linebr: anchored to the price scale, breaks when the level
-// is na, and holds the level across the day until the next reset.
-plot(nyOn and not na(nyHi) ? nyHi : na, "NY ORB high", color.new(color.teal, 0),
-     2, plot.style_linebr)
-plot(nyOn and not na(nyLo) ? nyLo : na, "NY ORB low",  color.new(color.red, 0),
-     2, plot.style_linebr)
-plot(ldnOn and not na(ldHi) ? ldHi : na, "London ORB high", color.new(color.aqua, 0),
-     2, plot.style_linebr)
-plot(ldnOn and not na(ldLo) ? ldLo : na, "London ORB low",  color.new(color.orange, 0),
-     2, plot.style_linebr)
+// ---------------------------------------------------------------- drawing
+// plot(), not line objects: line objects rendered thousands of dollars away
+// from the candles. plot() is anchored to the price scale and cannot drift.
+nyHiPlot = nyOn and not na(nyHi) ? nyHi : na
+nyLoPlot = nyOn and not na(nyLo) ? nyLo : na
+ldHiPlot = ldnOn and not na(ldHi) ? ldHi : na
+ldLoPlot = ldnOn and not na(ldLo) ? ldLo : na
 
-plotshape(nyLong,  "NY long",      shape.triangleup,   location.belowbar,
-          color.new(color.teal, 0), size=size.small, text="NY")
-plotshape(nyShort, "NY short",     shape.triangledown, location.abovebar,
-          color.new(color.red, 0),  size=size.small, text="NY")
-plotshape(ldLong,  "London long",  shape.triangleup,   location.belowbar,
-          color.new(color.aqua, 0), size=size.small, text="LDN")
-plotshape(ldShort, "London short", shape.triangledown, location.abovebar,
-          color.new(color.orange, 0), size=size.small, text="LDN")
+plot(nyHiPlot, "NY ORB high", color.teal, 2, plot.style_linebr)
+plot(nyLoPlot, "NY ORB low", color.red, 2, plot.style_linebr)
+plot(ldHiPlot, "London ORB high", color.aqua, 2, plot.style_linebr)
+plot(ldLoPlot, "London ORB low", color.orange, 2, plot.style_linebr)
 
-bgcolor(showZones and (nyInRange or ldInRange) ? color.new(color.blue,  92) : na,
-        title="Opening range")
-bgcolor(showZones and (nyInTrade or ldInTrade) ? color.new(color.green, 95) : na,
-        title="Trade window")
+plotshape(nyLong, "NY long", shape.triangleup, location.belowbar, color.teal, size = size.small, text = "NY")
+plotshape(nyShort, "NY short", shape.triangledown, location.abovebar, color.red, size = size.small, text = "NY")
+plotshape(ldLong, "London long", shape.triangleup, location.belowbar, color.aqua, size = size.small, text = "LDN")
+plotshape(ldShort, "London short", shape.triangledown, location.abovebar, color.orange, size = size.small, text = "LDN")
+
+rangeShade = showZones and (nyInRange or ldInRange) ? color.new(color.blue, 92) : na
+tradeShade = showZones and (nyInTrade or ldInTrade) ? color.new(color.green, 95) : na
+bgcolor(rangeShade, title = "Opening range")
+bgcolor(tradeShade, title = "Trade window")
 
 // ------------------------------------------------------------- state table
-// Declared at global scope: Pine does not allow a function to be defined inside
-// an `if`, which is what broke the previous version.
-var table t = table.new(position.top_right, 3, 6, border_width = 1,
-                        frame_width = 1, frame_color = color.new(color.gray, 60))
-GREY  = color.new(color.gray, 20)
+// Declared at global scope: Pine does not allow a function or a table to be
+// created inside an `if` and reused across bars.
+var table t = table.new(position.top_right, 3, 6, border_width = 1)
+GREY = color.new(color.gray, 20)
 VALUE = color.new(color.gray, 10)
+GOOD = color.new(color.teal, 0)
+BAD = color.new(color.red, 0)
+WARN = color.new(color.orange, 0)
+DIM = color.new(color.gray, 40)
+
+nyReady = not na(nyHi) and not na(nyLo)
+ldReady = not na(ldHi) and not na(ldLo)
+nyRangeTxt = nyReady ? str.tostring(nyLo, format.mintick) + " .. " + str.tostring(nyHi, format.mintick) : "not formed"
+ldRangeTxt = ldReady ? str.tostring(ldLo, format.mintick) + " .. " + str.tostring(ldHi, format.mintick) : "not formed"
+nyRangeCell = nyOn ? nyRangeTxt : "off"
+ldRangeCell = ldnOn ? ldRangeTxt : "off"
+nyTradeTxt = nyInTrade ? "YES" : "no"
+ldTradeTxt = ldInTrade ? "YES" : "no"
+nyTradeCol = nyInTrade ? GOOD : VALUE
+ldTradeCol = ldInTrade ? GOOD : VALUE
+nySideTxt = na(nySide) ? "none" : nySide
+ldSideTxt = na(ldSide) ? "none" : ldSide
+nySideCol = na(nySide) ? VALUE : WARN
+ldSideCol = na(ldSide) ? VALUE : WARN
+rvolTxt = na(rvol) ? "warming up" : str.tostring(rvol, "#.##")
+rvolPass = not na(rvol) and rvol > rvolThreshold
+rvolCol = na(rvol) ? DIM : rvolPass ? GOOD : BAD
+filterTxt = not useRvol ? "filter off" : rvolOk ? "PASS" : "blocked"
+filterCol = rvolOk ? GOOD : BAD
+histTxt = str.tostring(nPast) + "w RVOL history"
 
 if showTable and barstate.islast
-    nyTxt = not nyOn ? "off" : not na(nyHi) and not na(nyLo) ?
-            str.tostring(nyLo, format.mintick) + " .. " + str.tostring(nyHi, format.mintick)
-            : "not formed"
-    ldTxt = not ldnOn ? "off" : not na(ldHi) and not na(ldLo) ?
-            str.tostring(ldLo, format.mintick) + " .. " + str.tostring(ldHi, format.mintick)
-            : "not formed"
-    table.cell(t, 0, 0, "",        text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 0, "New York",text_color=GREY, text_size=size.small)
-    table.cell(t, 2, 0, "London",  text_color=GREY, text_size=size.small)
-    table.cell(t, 0, 1, "range",   text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 1, nyTxt,     text_color=VALUE, text_size=size.small)
-    table.cell(t, 2, 1, ldTxt,     text_color=VALUE, text_size=size.small)
-    table.cell(t, 0, 2, "in trade window", text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 2, nyInTrade ? "YES" : "no", text_size=size.small,
-               text_color = nyInTrade ? color.new(color.teal, 0) : VALUE)
-    table.cell(t, 2, 2, ldInTrade ? "YES" : "no", text_size=size.small,
-               text_color = ldInTrade ? color.new(color.teal, 0) : VALUE)
-    table.cell(t, 0, 3, "today's signal", text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 3, na(nySide) ? "none" : nySide, text_size=size.small,
-               text_color = na(nySide) ? VALUE : color.new(color.orange, 0))
-    table.cell(t, 2, 3, na(ldSide) ? "none" : ldSide, text_size=size.small,
-               text_color = na(ldSide) ? VALUE : color.new(color.orange, 0))
-    table.cell(t, 0, 4, "RVOL",    text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 4, na(rvol) ? "warming up" : str.tostring(rvol, "#.##"),
-               text_size=size.small,
-               text_color = na(rvol) ? color.new(color.gray, 40) :
-                            rvol > rvolThreshold ? color.new(color.teal, 0)
-                                                 : color.new(color.red, 0))
-    table.cell(t, 2, 4, not useRvol ? "filter off" : rvolOk ? "PASS" : "blocked",
-               text_size=size.small,
-               text_color = rvolOk ? color.new(color.teal, 0) : color.new(color.red, 0))
-    table.cell(t, 0, 5, "timeframe", text_color=GREY, text_size=size.small)
-    table.cell(t, 1, 5, timeframe.period, text_color=VALUE, text_size=size.small)
-    table.cell(t, 2, 5, str.tostring(nPast) + "w RVOL hist", text_color=VALUE,
-               text_size=size.small)
+    table.cell(t, 0, 0, "", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 0, "New York", text_color = GREY, text_size = size.small)
+    table.cell(t, 2, 0, "London", text_color = GREY, text_size = size.small)
+    table.cell(t, 0, 1, "range", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 1, nyRangeCell, text_color = VALUE, text_size = size.small)
+    table.cell(t, 2, 1, ldRangeCell, text_color = VALUE, text_size = size.small)
+    table.cell(t, 0, 2, "in trade window", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 2, nyTradeTxt, text_color = nyTradeCol, text_size = size.small)
+    table.cell(t, 2, 2, ldTradeTxt, text_color = ldTradeCol, text_size = size.small)
+    table.cell(t, 0, 3, "today's signal", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 3, nySideTxt, text_color = nySideCol, text_size = size.small)
+    table.cell(t, 2, 3, ldSideTxt, text_color = ldSideCol, text_size = size.small)
+    table.cell(t, 0, 4, "RVOL", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 4, rvolTxt, text_color = rvolCol, text_size = size.small)
+    table.cell(t, 2, 4, filterTxt, text_color = filterCol, text_size = size.small)
+    table.cell(t, 0, 5, "timeframe", text_color = GREY, text_size = size.small)
+    table.cell(t, 1, 5, timeframe.period, text_color = VALUE, text_size = size.small)
+    table.cell(t, 2, 5, histTxt, text_color = VALUE, text_size = size.small)
 
-alertcondition(nyLong,  "NY ORB long",      "ORB: New York LONG signal")
-alertcondition(nyShort, "NY ORB short",     "ORB: New York SHORT signal")
-alertcondition(ldLong,  "London ORB long",  "ORB: London LONG signal")
+alertcondition(nyLong, "NY ORB long", "ORB: New York LONG signal")
+alertcondition(nyShort, "NY ORB short", "ORB: New York SHORT signal")
+alertcondition(ldLong, "London ORB long", "ORB: London LONG signal")
 alertcondition(ldShort, "London ORB short", "ORB: London SHORT signal")

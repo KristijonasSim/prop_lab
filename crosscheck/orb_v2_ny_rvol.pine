@@ -28,17 +28,7 @@
 //   3. Funding. proplab charges perp funding at 00/08/16 UTC; Pine cannot model
 //      it. The proplab parity run disables funding so the two agree.
 
-strategy("prop_lab parity — ORB NY RVOL",
-     overlay              = true,
-     initial_capital      = 100000,
-     default_qty_type     = strategy.percent_of_equity,
-     default_qty_value    = 10,
-     commission_type      = strategy.commission.percent,
-     commission_value     = 0.045,
-     slippage             = 0,
-     pyramiding           = 0,
-     process_orders_on_close = false,
-     calc_on_every_tick   = false)
+strategy("prop_lab parity - ORB NY RVOL", overlay = true, initial_capital = 100000, default_qty_type = strategy.percent_of_equity, default_qty_value = 10, commission_type = strategy.commission.percent, commission_value = 0.045, slippage = 0, pyramiding = 0, process_orders_on_close = false, calc_on_every_tick = false)
 
 // ---------------------------------------------------------------- inputs
 tz            = input.string("America/New_York", "Session timezone")
@@ -53,8 +43,7 @@ rvolThreshold = input.float(1.0, "RVOL threshold (strictly greater than)")
 useRvol       = input.bool(true, "Apply the RVOL filter")
 allowShorts   = input.bool(true, "Allow shorts")
 
-toMin(s) =>
-    int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
+toMin(s) => int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 2, 4)))
 
 // ------------------------------------------------- window overlap (see note 1)
 tfMin    = timeframe.in_seconds(timeframe.period) / 60
@@ -127,6 +116,8 @@ if inOpenRange
     orbHigh := na(orbHigh) ? high : math.max(orbHigh, high)
     orbLow  := na(orbLow)  ? low  : math.min(orbLow,  low)
 
+rangeReady = not na(orbHigh) and not na(orbLow)
+
 // ------------------------------------------------------------------ trading
 // Order mirrors proplab.on_bar exactly: flatten first and return; then skip if
 // already in a position; then require the trade window and the RVOL filter.
@@ -134,7 +125,7 @@ if inFlatten
     tradeSide := na
     if strategy.position_size != 0
         strategy.close_all(comment="end_session")
-else if strategy.position_size == 0 and inTradeWin and rvolOk and not na(orbHigh) and not na(orbLow)
+else if strategy.position_size == 0 and inTradeWin and rvolOk and rangeReady
     if close > orbHigh and tradeSide != "short"
         tradeSide := "long"
         strategy.entry("long", strategy.long)
@@ -142,5 +133,5 @@ else if strategy.position_size == 0 and inTradeWin and rvolOk and not na(orbHigh
         tradeSide := "short"
         strategy.entry("short", strategy.short)
 
-plot(orbHigh, "ORB high", color.new(color.teal, 0), style=plot.style_linebr)
-plot(orbLow,  "ORB low",  color.new(color.red, 0),  style=plot.style_linebr)
+plot(orbHigh, "ORB high", color.teal, 2, plot.style_linebr)
+plot(orbLow, "ORB low", color.red, 2, plot.style_linebr)

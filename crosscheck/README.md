@@ -144,3 +144,27 @@ anyone profitable. This is only worth trusting on trades recorded **forward**,
 with bar replay and no peeking ahead. That is not a reason to skip the exercise
 — it is the reason to do it properly, because a discretionary filter that
 survives an honest forward log is exactly the kind of edge worth mechanising.
+
+---
+
+# Editing the Pine files
+
+Pine cannot be compiled locally, so `crosscheck/pine_lint.py` checks the
+mistakes that kept reaching the editor:
+
+```bash
+python crosscheck/pine_lint.py
+```
+
+It rejects three things, each of which produced a real compile error here:
+
+1. **A function defined inside an `if` block** → `Syntax error at input "=>"`.
+   Pine requires function declarations at global scope.
+2. **A statement wrapped onto the next line**, especially a ternary broken
+   before its `:` → `end of line without line continuation`. Every statement in
+   these files is on one line, however long.
+3. **Unbalanced brackets on a line** — the same failure from the other side.
+
+Rule 2 is stricter than Pine strictly requires, but one statement per line costs
+nothing and removes the whole class of error. Run the linter before pasting
+anything into TradingView.
