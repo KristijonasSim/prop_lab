@@ -184,7 +184,8 @@ every gate.
 | Sharpe decay IS→OOS | ≤ 50% | large decay means the IS result was tuning |
 | days to resolve | ≤ 15 | must clear an evaluation in a usable time |
 | P(target first) | ≥ 0.80 | target before drawdown limit |
-| trades/day | ≥ 2 | too few chances cannot compound to a target |
+| trades/day | ≥ 0.5 | a deliberately low floor |
+| trades per evaluation | ≥ 10 | trades/day × days to resolve — the outcome must not be decided by a handful of trades |
 | max drawdown | ≤ 5% | margin against the 8% limit, not a near miss |
 | worst day | ≤ 2.5% | margin against the 4% limit |
 | profit factor @2x costs | ≥ 1.0 | the venue is still an assumption |
@@ -194,6 +195,13 @@ equity`. Reaching 8% in 10-15 trading days needs roughly 0.5-0.8% per day —
 about 3 trades/day at 0.5R, or 10 trades/day at 0.2R, but **not** 1 trade/day
 at 0.2R, which needs 80 days. Sizing is then capped by the 4% daily limit
 needing to sit ~4.5 daily standard deviations away.
+
+Frequency is deliberately a weak gate. What matters is **trades per
+evaluation**, not per day: a slow strategy with a large edge per trade fills
+the window just as well as a fast one with a thin edge. At 0.5 trades/day and
+0.5% risk you need ~2.1R average per trade to reach 8% in 15 days; at 10
+trades/day you only need 0.11R. Both are legitimate. What is not legitimate is
+an evaluation settled by five trades, where luck outweighs the edge.
 
 The t-stat bar rises with the trial count, which is the main defence against
 testing many strategies. Change the bar in one place:

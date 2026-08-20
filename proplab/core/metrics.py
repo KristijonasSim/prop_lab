@@ -216,6 +216,13 @@ def compute(result: BacktestResult, timeframe: str, starting_balance: float,
 
     if rules is not None:
         out["resolution"] = resolution_estimate(eq, rules, timeframe)
+        # How many trades actually decide the evaluation. Frequency alone does
+        # not matter - what matters is that the outcome is not settled by a
+        # handful of trades, whatever the frequency is.
+        days = out["resolution"].get("expected_days_to_resolution")
+        if days and out.get("trades_per_day"):
+            out["resolution"]["expected_trades_to_resolution"] = round(
+                days * out["trades_per_day"], 1)
     return out
 
 

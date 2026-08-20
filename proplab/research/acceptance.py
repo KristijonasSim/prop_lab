@@ -51,7 +51,8 @@ class AcceptanceCriteria:
     # --- can it actually clear an evaluation, and quickly ---
     max_days_to_resolve: float = 15.0
     min_p_target_first: float = 0.80
-    min_trades_per_day: float = 2.0
+    min_trades_per_day: float = 0.5
+    min_expected_trades_to_resolution: float = 10.0
 
     # --- margin against the hard limits, not just survival ---
     max_oos_drawdown_pct: float = 5.0       # against an 8% limit
@@ -144,7 +145,17 @@ def score(oos_result, *, n_trials: int, is_result=None,
     tpd = m.get("trades_per_day")
     gates.append(_gate("trades/day", tpd, c.min_trades_per_day,
                        tpd is not None and tpd >= c.min_trades_per_day,
-                       "Too few opportunities cannot compound into a target."))
+                       "A floor on frequency, kept low deliberately: what "
+                       "matters is trades per EVALUATION, not per day."))
+
+    n_win = res.get("expected_trades_to_resolution")
+    gates.append(_gate("trades per evaluation", n_win,
+                       c.min_expected_trades_to_resolution,
+                       n_win is not None and n_win >= c.min_expected_trades_to_resolution,
+                       "trades/day x days to resolve. Low frequency is fine if "
+                       "the edge per trade is large enough to still fill the "
+                       "window; what is not fine is an evaluation decided by a "
+                       "handful of trades, where luck outweighs the edge."))
 
     dd = m.get("max_drawdown_pct")
     gates.append(_gate("max drawdown %", dd, c.max_oos_drawdown_pct,

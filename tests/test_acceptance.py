@@ -18,7 +18,8 @@ class Fake(BacktestResult):
             "sharpe": 3.2, "days_tested": 700, "trades_per_day": 4.0,
             "max_drawdown_pct": 3.0, "starting_balance": 100_000.0,
             "resolution": {"expected_days_to_resolution": 9.0,
-                           "p_target_before_breach": 0.9},
+                           "p_target_before_breach": 0.9,
+                           "expected_trades_to_resolution": 36.0},
         }
         self.metrics.update(over.pop("metrics", {}))
         self.prop = {"passed": True,
@@ -49,7 +50,8 @@ def test_breaking_prop_rules_blocks_acceptance():
 def test_slow_strategies_are_rejected_however_profitable():
     """The current phase needs an evaluation resolved in ~1-2 weeks."""
     card = score(Fake(metrics={"resolution": {"expected_days_to_resolution": 400.0,
-                                              "p_target_before_breach": 0.99}}),
+                                              "p_target_before_breach": 0.99,
+                                              "expected_trades_to_resolution": 1600.0}}),
                  n_trials=10)
     assert "days to resolve" in card["failed_gates"]
     assert not card["accepted"]
@@ -102,10 +104,44 @@ def test_cost_gate_applies_only_when_supplied():
 
 def test_criteria_are_adjustable_in_one_place():
     loose = AcceptanceCriteria(min_oos_trades=10, max_days_to_resolve=1000.0,
-                               min_trades_per_day=0.0)
+                               min_trades_per_day=0.0,
+                               min_expected_trades_to_resolution=0.0)
     slow = Fake(metrics={"n_trades": 20,
                          "resolution": {"expected_days_to_resolution": 400.0,
-                                        "p_target_before_breach": 0.9},
+                                        "p_target_before_breach": 0.9,
+                                        "expected_trades_to_resolution": 40.0},
                          "trades_per_day": 0.1})
     assert not score(slow, n_trials=10)["accepted"]
     assert score(slow, n_trials=10, criteria=loose)["accepted"]
+
+
+def test_low_frequency_is_allowed_if_the_edge_per_trade_is_big_enough():
+    """0.5 trades/day is fine - what matters is trades per EVALUATION. A slow
+    strategy with a large edge still fills the window."""
+    slow_but_strong = Fake(metrics={
+        "trades_per_day": 0.6, "avg_r": 1.2, "profit_factor": 2.4,
+        "resolution": {"expected_days_to_resolution": 14.0,
+                       "p_target_before_breach": 0.85,
+                       "expected_trades_to_resolution": 8.4}})
+    card = score(slow_but_strong, n_trials=10)
+    assert "trades/day" not in card["failed_gates"]          # 0.6 >= 0.5
+    assert "trades per evaluation" in card["failed_gates"]   # 8.4 < 10
+
+
+def test_an_evaluation_decided_by_a_handful_of_trades_is_rejected():
+    coin_flip = Fake(metrics={
+        "trades_per_day": 0.5, "avg_r": 3.0,
+        "resolution": {"expected_days_to_resolution": 8.0,
+                       "p_target_before_breach": 0.9,
+                       "expected_trades_to_resolution": 4.0}})
+    assert "trades per evaluation" in score(coin_flip, n_trials=10)["failed_gates"]
+
+
+def test_low_frequency_with_enough_trades_in_the_window_is_accepted():
+    ok = Fake(metrics={
+        "trades_per_day": 0.9, "avg_r": 0.9, "profit_factor": 2.1,
+        "resolution": {"expected_days_to_resolution": 14.0,
+                       "p_target_before_breach": 0.86,
+                       "expected_trades_to_resolution": 12.6}})
+    card = score(ok, n_trials=10)
+    assert card["accepted"], card["failed_gates"]
