@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/*.parquet
+data/cache/
+proplab.db
+proplab.db-wal
+proplab.db-shm
+runs/
+.pytest_cache/
