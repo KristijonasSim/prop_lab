@@ -165,6 +165,40 @@ either. Total return says nothing about how long an evaluation takes; a strategy
 needing two years to clear 8% is useless however good its Sharpe. Validated
 against a brute-force Monte Carlo simulation in `tests/test_resolution.py`.
 
+## The acceptance bar — what "passed" means
+
+`proplab/research/acceptance.py` grades every out-of-sample run against fixed
+gates, so "is this good?" is a computation rather than a judgement made while
+looking at an encouraging number. A strategy is **accepted** only if it clears
+every gate.
+
+| gate | bar | why |
+|---|---|---|
+| automated checks | pass | lookahead invalidates everything else |
+| prop rules (OOS) | PASS | profitable but rule-breaking is not tradeable |
+| OOS trades | ≥ 100 | few trades means luck |
+| profit factor | ≥ 1.25 | after costs |
+| avg R | ≥ 0.10 | edge per trade |
+| t-stat | ≥ Bonferroni(N trials) | ~3.2 at 40 trials, not 1.96 |
+| deflated Sharpe | ≥ 0.95 | beats the best-of-N noise benchmark |
+| Sharpe decay IS→OOS | ≤ 50% | large decay means the IS result was tuning |
+| days to resolve | ≤ 15 | must clear an evaluation in a usable time |
+| P(target first) | ≥ 0.80 | target before drawdown limit |
+| trades/day | ≥ 2 | too few chances cannot compound to a target |
+| max drawdown | ≤ 5% | margin against the 8% limit, not a near miss |
+| worst day | ≤ 2.5% | margin against the 4% limit |
+| profit factor @2x costs | ≥ 1.0 | the venue is still an assumption |
+
+Where the numbers come from: daily P&L = `trades/day × avg R × risk/trade ×
+equity`. Reaching 8% in 10-15 trading days needs roughly 0.5-0.8% per day —
+about 3 trades/day at 0.5R, or 10 trades/day at 0.2R, but **not** 1 trade/day
+at 0.2R, which needs 80 days. Sizing is then capped by the 4% daily limit
+needing to sit ~4.5 daily standard deviations away.
+
+The t-stat bar rises with the trial count, which is the main defence against
+testing many strategies. Change the bar in one place:
+`AcceptanceCriteria`.
+
 ## The one-look rule on out-of-sample data
 
 Out-of-sample data is a one-shot resource: look at it twice and the second look

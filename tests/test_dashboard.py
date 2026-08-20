@@ -465,3 +465,17 @@ def test_every_column_has_hover_help(seeded):
         if label == "_index" or spec.get("hidden"):
             continue                      # Streamlit's own hidden index entry
         assert spec.get("help"), f"column {label} has no help text"
+
+
+def test_acceptance_tab_grades_an_oos_run(seeded):
+    """The dashboard must answer "is this good enough?" with the same gates the
+    CLI uses, applied to logged history rather than only fresh runs."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    _open(at, "trend_swing")
+    [b for b in at.button if "See all runs" in b.label][0].click().run()
+    assert not at.exception, at.exception
+    labels = [t.label for t in at.tabs]
+    assert "Acceptance" in labels
+    body = " ".join(m.value for m in at.markdown) + " ".join(
+        e.value for e in list(at.error) + list(at.success) + list(at.info))
+    assert "ACCEPTED" in body or "split=" in body

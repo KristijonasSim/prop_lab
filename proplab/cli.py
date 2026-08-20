@@ -21,7 +21,7 @@ import pandas as pd
 from . import runner
 from .config import BacktestConfig, CostModel, PropFirmRules
 from .db import store
-from .research import multiple_testing
+from .research import acceptance, multiple_testing
 from .strategy import registry
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -84,6 +84,17 @@ def _print_result(res, conn=None) -> None:
     if p.get("first_breach_rule"):
         print(f"  !! account dead at {p['first_breach_time']} via {p['first_breach_rule']}"
               f" (survived {p['days_survived_before_breach']} days)")
+
+    if conn is not None and m.get("n_trades", 0) > 0 and res.meta.get("split") == "oos":
+        n_trials = store.trial_count(conn)["runs_all_hypotheses"] + 1
+        card = acceptance.score(res, n_trials=n_trials)
+        print(f"\nACCEPTANCE SCORECARD  ({card['n_gates'] - card['n_failed']}"
+              f"/{card['n_gates']} gates)")
+        for g in card["gates"]:
+            arrow = ">=" if g["direction"] == "min" else "<="
+            print(f"  [{'ok ' if g['passed'] else 'FAIL'}] {g['gate']:24} "
+                  f"{str(g['value']):>10}  {arrow} {g['threshold']}")
+        print(f"  -> {card['verdict']}")
 
     if conn is not None and m.get("n_trades", 0) > 0:
         tc = store.trial_count(conn)

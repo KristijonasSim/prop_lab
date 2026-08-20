@@ -18,7 +18,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from proplab.db import store                      # noqa: E402
-from proplab.research import multiple_testing     # noqa: E402
+from proplab.research import acceptance, multiple_testing   # noqa: E402
 
 st.set_page_config(page_title="prop_lab", layout="wide")
 
@@ -107,6 +107,19 @@ st.sidebar.button("Refresh", on_click=refresh, width="stretch")
 page = st.session_state["page"]
 hyps = hypotheses()
 st.sidebar.caption(f"{len(hyps)} hypotheses · {len(all_runs())} runs logged")
+
+
+def _result_view(row):
+    """Rebuild just enough of a BacktestResult for the acceptance scorer from a
+    stored run, so the bar is applied to logged history, not only fresh runs."""
+    from proplab.core.types import BacktestResult
+
+    res = BacktestResult()
+    res.metrics = json.loads(row["metrics_json"] or "{}")
+    res.prop = json.loads(row["prop_json"] or "{}")
+    res.meta = {"bars": row["n_bars"], "checks": json.loads(row["checks_json"] or "[]"),
+                "split": row["split"]}
+    return res
 
 
 def fmt(v, suffix="", dash="—"):
@@ -452,7 +465,35 @@ elif page == "variation_detail":
             fig.update_layout(height=380, margin=dict(t=20, b=20))
             st.plotly_chart(fig, width="stretch")
 
-        t1, t2, t3, t4 = st.tabs(["Prop rules", "Checks", "Metrics", "Trades"])
+        t0, t1, t2, t3, t4 = st.tabs(["Acceptance", "Prop rules", "Checks",
+                                      "Metrics", "Trades"])
+        with t0:
+            if r["split"] != "oos":
+                st.info("The acceptance bar is only meaningful out of sample. "
+                        "This run is split=" + str(r["split"]) + ".")
+            else:
+                n_trials = store.trial_count(conn())["runs_all_hypotheses"]
+                card = acceptance.score(_result_view(r), n_trials=max(n_trials, 1))
+                if card["accepted"]:
+                    st.success(card["verdict"])
+                else:
+                    st.error(card["verdict"])
+                grid = pd.DataFrame([{
+                    "": "✅" if g["passed"] else "❌",
+                    "Gate": g["gate"],
+                    "This run": g["value"],
+                    "Needs": ("≥ " if g["direction"] == "min" else "≤ ")
+                             + str(g["threshold"]),
+                    "Why it matters": g["why"],
+                } for g in card["gates"]])
+                st.dataframe(grid, width="stretch", hide_index=True,
+                             column_config={"Why it matters":
+                                            st.column_config.TextColumn(width="large")})
+                st.caption(
+                    f"Scored against {n_trials} logged trials. The t-stat bar "
+                    "rises with that count: the best of many worthless "
+                    "strategies clears 1.96 routinely, so the more we test, the "
+                    "stronger a result has to be to mean anything.")
         with t1:
             for name, ch in prop.get("checks", {}).items():
                 st.write(f"{'✅' if ch['passed'] else '❌'} **{name}** "
