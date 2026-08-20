@@ -69,8 +69,8 @@ inFlatten   = inWin(toMin(flatStartStr),  toMin(flatEndStr))
 // ------------------------------------------------ relative volume (see note 2)
 // Weeks are epoch-aligned to Monday 00:00 UTC, which is what pandas' isocalendar
 // gives proplab. 1970-01-01 was a Thursday, hence the 3-day shift.
-weekIdx = math.floor((time / 1000 + 3 * 86400) / (7 * 86400))
-maxOff  = math.round(7 * 24 * 60 / tfMin) + 5
+weekIdx = int(math.floor((time / 1000 + 3 * 86400) / (7 * 86400)))
+maxOff  = int(math.round(7.0 * 24.0 * 60.0 / tfMin)) + 5
 
 var array<float> curCum = array.new_float(maxOff, na)
 var array<float> prev1  = array.new_float(maxOff, na)
@@ -102,7 +102,7 @@ if offset < maxOff
 sumPast = 0.0
 nPast   = 0
 if offset < maxOff
-    for i = 0 to math.min(rvolLength, 3) - 1
+    for i = 0 to int(math.min(rvolLength, 3)) - 1
         v = i == 0 ? prev1.get(offset) : i == 1 ? prev2.get(offset) : prev3.get(offset)
         if not na(v)
             sumPast += v
