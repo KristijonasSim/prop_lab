@@ -102,6 +102,19 @@ def compute(result: BacktestResult, timeframe: str, starting_balance: float) -> 
     else:
         out["avg_r"] = out["expectancy_r"] = out["r_std"] = out["t_stat"] = float("nan")
 
+    # Concentration: trend-following results are routinely one trade wide.
+    # If the best trade IS the edge, the effective sample size is ~1.
+    ranked = pnl.sort_values(ascending=False)
+    total = float(pnl.sum())
+    if total > 0:
+        out["best_trade_pct_of_profit"] = round(100 * float(ranked.iloc[0]) / total, 1)
+        out["top3_trades_pct_of_profit"] = round(100 * float(ranked.head(3).sum()) / total, 1)
+        out["net_profit_excluding_best"] = round(total - float(ranked.iloc[0]), 2)
+    else:
+        out["best_trade_pct_of_profit"] = None
+        out["top3_trades_pct_of_profit"] = None
+        out["net_profit_excluding_best"] = None
+
     out["avg_bars_held"] = round(float(trades["bars_held"].mean()), 2)
     out["exposure_pct"] = round(100 * float(trades["bars_held"].sum()) / len(eq), 2)
     out["trades_per_week"] = round(len(trades) / (days / 7), 2)

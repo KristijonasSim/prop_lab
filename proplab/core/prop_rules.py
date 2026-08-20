@@ -163,28 +163,48 @@ def check(result: BacktestResult, rules: PropFirmRules) -> dict:
 
 
 def _martingale_check(trades: pd.DataFrame, rules: PropFirmRules) -> dict:
-    """Flag size-ups after losses (bet-doubling), which firms ban outright."""
+    """Flag risk being INCREASED after a loss (bet-doubling), which firms ban.
+
+    Measured on risk, not notional. Constant-fractional sizing
+    (qty = risk / stop_distance) produces a larger notional whenever the next
+    setup has a tighter stop - that is correct behaviour, not martingale, and
+    comparing notionals flags it as a breach. What actually defines martingale
+    is the fraction of the account put at risk going UP after a loss.
+
+    Falls back to notional only when trades carry no stop, where risk is
+    undefined and notional is the best proxy available.
+    """
     if trades.empty or len(trades) < 3:
         return {"hard": False, "passed": True, "n_size_ups_after_loss": 0,
-                "max_size_ratio_after_loss": None, "note": "too few trades to judge"}
+                "max_risk_ratio_after_loss": None, "basis": "n/a",
+                "note": "too few trades to judge"}
 
-    notional = (trades["qty"] * trades["entry_price"]).to_numpy(float)
+    equity = trades["equity_before"].to_numpy(float)
+    if "initial_risk" in trades and (trades["initial_risk"] > 0).all():
+        basis = "risk fraction of equity"
+        measure = trades["initial_risk"].to_numpy(float) / np.where(equity > 0, equity, np.nan)
+    else:
+        basis = "notional fraction of equity (no stops: risk undefined)"
+        measure = (trades["qty"] * trades["entry_price"]).to_numpy(float) / \
+            np.where(equity > 0, equity, np.nan)
+
     prev_pnl = trades["net_pnl"].shift(1).to_numpy(float)
-    ratio = np.divide(notional[1:], notional[:-1],
-                      out=np.ones(len(notional) - 1), where=notional[:-1] > 0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = np.divide(measure[1:], measure[:-1],
+                          out=np.ones(len(measure) - 1), where=measure[:-1] > 0)
     after_loss = prev_pnl[1:] <= 0
     flagged = (ratio > rules.martingale_size_ratio) & after_loss
     n_flag = int(flagged.sum())
     n_after_loss = int(after_loss.sum())
-    # Occasional size-ups happen when stop distance shrinks; a systematic
-    # pattern is what matters.
     share = n_flag / n_after_loss if n_after_loss else 0.0
     return {
         "hard": False,
+        "basis": basis,
         "n_size_ups_after_loss": n_flag,
         "share_of_post_loss_trades": round(share, 3),
-        "max_size_ratio_after_loss": round(float(ratio[after_loss].max()), 3) if n_after_loss else None,
+        "max_risk_ratio_after_loss": round(float(np.nanmax(ratio[after_loss])), 3)
+            if n_after_loss else None,
         "passed": bool(not rules.forbid_martingale or share < 0.20),
-        "note": "flags trades sized >%.1fx the previous trade after a loss"
+        "note": "flags RISK sized >%.1fx the previous trade after a loss"
                 % rules.martingale_size_ratio,
     }

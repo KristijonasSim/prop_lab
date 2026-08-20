@@ -134,6 +134,22 @@ Three levels of drill-down:
    floor and breach marker, per-rule prop-firm results, automated checks, full
    metrics and the trade list.
 
+## The one-look rule on out-of-sample data
+
+Out-of-sample data is a one-shot resource: look at it twice and the second look
+is tuning, whether or not it feels like it. This is enforced by the tooling, not
+by memory.
+
+- `run --split oos` refuses to run if that variation already has a logged OOS
+  run, and names the run that spent it.
+- An OOS run is always logged. An unrecorded look is a free peek.
+- Changed the strategy? Make it a **new variation slug** — that is what
+  variations are for, and it keeps the trial count honest.
+- `--burn-oos "<reason>"` overrides, and records the reason permanently.
+- `python -m proplab.cli oos-ledger` shows who has spent their look.
+
+In-sample tuning stays unlimited; that is what in-sample is for.
+
 ## Guarding against false positives
 
 Every run is logged, pass or fail. That count is the denominator:

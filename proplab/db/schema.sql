@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS trades (
     qty REAL, entry_price REAL, exit_price REAL,
     gross_pnl REAL, fees REAL, funding REAL, net_pnl REAL,
     r_multiple REAL, bars_held INTEGER, exit_reason TEXT, tag TEXT,
-    mae REAL, mfe REAL, equity_after REAL
+    mae REAL, mfe REAL, equity_after REAL, initial_risk REAL
 );
 
 CREATE TABLE IF NOT EXISTS equity_curve (

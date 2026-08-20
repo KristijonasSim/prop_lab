@@ -81,6 +81,7 @@ class Trade:
     mfe: float
     equity_before: float
     equity_after: float
+    initial_risk: float = 0.0   # |entry - stop| * qty, the amount actually risked
 
     def to_row(self) -> dict[str, Any]:
         d = self.__dict__.copy()

@@ -166,3 +166,23 @@ def test_funding_charged_only_at_settlement_hours():
     t = r.trades[0]
     # entered at 01:00, held to 23:00 -> settlements at 08:00 and 16:00 only
     assert t.funding == pytest.approx(2 * 0.001 * t.qty * 100)
+
+
+def test_profit_concentration_is_reported():
+    """One huge winner is the normal shape of a trend result. The metrics must
+    say so out loud, because it means the effective sample size is ~1."""
+    from proplab.core import metrics
+
+    df = from_closes([100, 100, 100, 100, 100, 100])
+    r = engine.run(EnterOnBar(at=0, notional_pct=1.0), ds(df), cfg())
+    m = metrics.compute(r, "1h", 100_000)
+    assert "best_trade_pct_of_profit" in m
+    assert "net_profit_excluding_best" in m
+
+
+def test_trades_carry_the_risk_they_were_sized_to():
+    df = from_closes([100, 100, 100, 90, 90])
+    r = engine.run(EnterOnBar(at=1, stop=95.0, risk_pct=0.01, notional_pct=None),
+                   ds(df), cfg())
+    t = r.trades[0]
+    assert t.initial_risk == pytest.approx(1000.0)   # 1% of 100k

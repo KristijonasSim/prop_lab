@@ -256,6 +256,7 @@ def _close(pos: Position, price: float, ts, bar_i: int, cash: float, fee_rate: f
         r_multiple=r, bars_held=bar_i - pos.entry_bar, exit_reason=reason,
         tag=pos.tag, mae=pos.mae, mfe=pos.mfe,
         equity_before=equity_before, equity_after=cash,
+        initial_risk=pos.initial_risk,
     )
     return cash, trade
 

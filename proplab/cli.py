@@ -112,6 +112,26 @@ def _config(a) -> BacktestConfig:
 def cmd_run(a):
     cls = registry.get(a.strategy)
     params = json.loads(a.params) if a.params else None
+
+    # ---- out-of-sample is a one-shot resource -------------------------------
+    if a.split == "oos":
+        if not a.variation:
+            raise SystemExit(
+                "An out-of-sample run must name --variation: the one-look rule "
+                "is tracked per variation, and an untracked look is exactly the "
+                "thing it exists to prevent.")
+        guard = store.connect()
+        try:
+            store.assert_oos_available(guard, a.variation, a.burn_oos or "")
+        except store.OOSAlreadyUsed as e:
+            raise SystemExit(f"\nREFUSED: {e}\n") from None
+        finally:
+            guard.close()
+        if not a.log:
+            a.log = True
+            print("note: forcing --log. An out-of-sample look that is not "
+                  "recorded is a free peek, which defeats the rule.\n")
+
     res = runner.backtest(cls, symbol=a.symbol, timeframe=a.timeframe, start=a.start,
                           end=a.end, config=_config(a), params=params, split=a.split,
                           base_timeframe=a.base_timeframe, run_checks=not a.skip_checks)
@@ -146,6 +166,14 @@ def _no_sweep(a):
 
 def cmd_oos(a):
     cls = registry.get(a.strategy)
+    if a.variation:
+        guard = store.connect()
+        try:
+            store.assert_oos_available(guard, a.variation, a.burn_oos or "")
+        except store.OOSAlreadyUsed as e:
+            raise SystemExit(f"\nREFUSED: {e}\n") from None
+        finally:
+            guard.close()
     out = runner.in_sample_out_of_sample(
         cls, split_at=a.split_at, symbol=a.symbol, timeframe=a.timeframe,
         start=a.start, end=a.end, config=_config(a), base_timeframe=a.base_timeframe)
@@ -253,6 +281,17 @@ def cmd_failed(a):
         conn.close()
 
 
+def cmd_oos_ledger(a):
+    conn = store.connect()
+    try:
+        df = store.oos_ledger(conn)
+        print(df.to_string(index=False) if len(df) else "nothing recorded yet")
+        spent = int((df["oos_looks"] > 0).sum()) if len(df) else 0
+        print(f"\n{spent} variation(s) have spent their out-of-sample look.")
+    finally:
+        conn.close()
+
+
 def cmd_dashboard(a):
     subprocess.run([sys.executable, "-m", "streamlit", "run",
                     str(ROOT / "dashboard" / "app.py")], check=False)
@@ -304,6 +343,7 @@ def build_parser():
     sub.add_parser("list", help="list registered strategies").set_defaults(func=cmd_list)
     sub.add_parser("status", help="hypothesis/variation overview").set_defaults(func=cmd_status)
     sub.add_parser("failed", help="rejected variations, so we don't repeat them").set_defaults(func=cmd_failed)
+    sub.add_parser("oos-ledger", help="which variations have spent their out-of-sample look").set_defaults(func=cmd_oos_ledger)
     sub.add_parser("dashboard", help="launch the Streamlit dashboard").set_defaults(func=cmd_dashboard)
 
     for name, fn in (("run", cmd_run), ("oos", cmd_oos)):
@@ -330,11 +370,16 @@ def build_parser():
         r.add_argument("--no-shorts", action="store_true")
         if name == "run":
             r.add_argument("--split", default="full", choices=["full", "is", "oos"])
+            r.add_argument("--burn-oos", default=None, metavar="REASON",
+                           help="deliberately spend a second out-of-sample look; "
+                                "the reason is recorded permanently")
             r.add_argument("--skip-checks", action="store_true")
             r.add_argument("--cost-sweep", action="store_true",
                            help="also report results at 2x and 3x assumed costs")
         else:
             r.add_argument("--split-at", required=True)
+            r.add_argument("--burn-oos", default=None, metavar="REASON",
+                           help="deliberately spend a second out-of-sample look")
         r.set_defaults(func=fn)
     return ap
 

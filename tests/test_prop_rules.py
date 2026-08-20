@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from proplab.config import PropFirmRules
 from proplab.core import prop_rules
@@ -153,3 +154,51 @@ def test_eight_percent_loss_is_enforced_both_ways():
     assert p["checks"]["max_drawdown_static"]["passed"]
     assert not p["checks"]["trailing_drawdown"]["passed"]
     assert not p["passed"]
+
+
+def _trade(day, pnl, qty, price, risk, equity=100_000.0):
+    ts = pd.Timestamp("2024-01-01", tz="UTC") + pd.Timedelta(days=day)
+    return Trade(ts, ts + pd.Timedelta(hours=1), 1, qty, price, price + 1,
+                 pnl, 0.0, 0.0, pnl, 1.0, 1, "stop", "t", 0.0, 0.0,
+                 equity, equity + pnl, initial_risk=risk)
+
+
+def test_constant_risk_sizing_is_not_martingale():
+    """Regression: the detector compared NOTIONAL, so constant-risk sizing with
+    a tighter stop on the next trade (bigger notional, same risk) was flagged as
+    bet-doubling. Real martingale raises the RISK after a loss."""
+    trades, qty = [], 1.0
+    for i in range(12):
+        pnl = -250.0 if i % 2 == 0 else 400.0
+        # risk is a constant 250; notional swings wildly as the stop distance moves
+        stop_distance = 5.0 if i % 3 else 1.0
+        qty = 250.0 / stop_distance
+        trades.append(_trade(i, pnl, qty, 100.0, risk=250.0))
+    r = result_from([100_000] * 48, trades=trades)
+    check = prop_rules.check(r, RULES)["checks"]["no_martingale"]
+    assert check["passed"], check
+    assert check["basis"].startswith("risk")
+    assert check["max_risk_ratio_after_loss"] == pytest.approx(1.0)
+
+
+def test_real_martingale_is_still_caught():
+    """Doubling the RISK after each loss must still fail."""
+    trades, risk = [], 250.0
+    for i in range(12):
+        pnl = -risk if i % 2 == 0 else risk
+        trades.append(_trade(i, pnl, risk / 5.0, 100.0, risk=risk))
+        risk = risk * 2 if pnl < 0 else 250.0
+    r = result_from([100_000] * 48, trades=trades)
+    assert not prop_rules.check(r, RULES)["checks"]["no_martingale"]["passed"]
+
+
+def test_falls_back_to_notional_when_there_are_no_stops():
+    trades, qty = [], 1.0
+    for i in range(12):
+        pnl = -100.0 if i % 2 == 0 else 50.0
+        trades.append(_trade(i, pnl, qty, 100.0, risk=0.0))
+        qty = qty * 2 if pnl < 0 else 1.0        # double the notional after a loss
+    r = result_from([100_000] * 48, trades=trades)
+    check = prop_rules.check(r, RULES)["checks"]["no_martingale"]
+    assert check["basis"].startswith("notional")
+    assert not check["passed"]           # notional doubling after losses

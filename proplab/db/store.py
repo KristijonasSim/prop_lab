@@ -28,7 +28,16 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection:
     conn = sqlite3.connect(str(path or DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA.read_text())
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn) -> None:
+    """Additive column migrations, so an existing database keeps working."""
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(trades)")}
+    if "initial_risk" not in have:
+        conn.execute("ALTER TABLE trades ADD COLUMN initial_risk REAL")
+        conn.commit()
 
 
 # ---------------------------------------------------------------- hypotheses
@@ -161,14 +170,15 @@ def insert_run(conn, result, variation_slug: str | None = None,
         conn.executemany(
             """INSERT INTO trades (run_id,seq,entry_time,exit_time,side,qty,entry_price,
                exit_price,gross_pnl,fees,funding,net_pnl,r_multiple,bars_held,
-               exit_reason,tag,mae,mfe,equity_after)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               exit_reason,tag,mae,mfe,equity_after,initial_risk)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             [
                 (run_id, i, str(t.entry_time), str(t.exit_time),
                  "long" if t.direction == 1 else "short", t.qty, t.entry_price,
                  t.exit_price, t.gross_pnl, t.fees, t.funding, t.net_pnl,
                  None if pd.isna(t.r_multiple) else t.r_multiple, t.bars_held,
-                 t.exit_reason, t.tag, t.mae, t.mfe, t.equity_after)
+                 t.exit_reason, t.tag, t.mae, t.mfe, t.equity_after,
+                 getattr(t, "initial_risk", 0.0))
                 for i, t in enumerate(result.trades)
             ],
         )
@@ -361,3 +371,64 @@ def runs_for_variation(conn, variation_slug: str) -> pd.DataFrame:
 def hypothesis_detail(conn, slug: str) -> dict | None:
     row = conn.execute("SELECT * FROM hypotheses WHERE slug=?", (slug,)).fetchone()
     return dict(row) if row else None
+
+
+# ---------------------------------------------- out-of-sample look tracking
+class OOSAlreadyUsed(RuntimeError):
+    """Raised when a second out-of-sample look is attempted on a variation."""
+
+
+def oos_looks(conn, variation_slug: str) -> pd.DataFrame:
+    """Every out-of-sample run ever recorded for a variation.
+
+    Out-of-sample data is a one-shot resource. Look at it twice and it stops
+    being out-of-sample: the second look is tuning, whether or not it feels
+    like it. This is the ledger that makes that rule enforceable.
+    """
+    return pd.read_sql_query(
+        """SELECT r.run_uuid, r.created_at, r.period_start, r.period_end,
+                  r.params_json, r.sharpe, r.total_return_pct, r.n_trades,
+                  r.prop_passed, r.notes
+           FROM runs r JOIN variations v ON v.id = r.variation_id
+           WHERE v.slug = ? AND r.split = 'oos'
+           ORDER BY r.created_at""",
+        conn, params=(variation_slug,),
+    )
+
+
+def assert_oos_available(conn, variation_slug: str, burn_reason: str = "") -> None:
+    """Refuse a second out-of-sample look unless it is deliberately burned."""
+    prior = oos_looks(conn, variation_slug)
+    if prior.empty:
+        return
+    first = prior.iloc[0]
+    if not burn_reason:
+        raise OOSAlreadyUsed(
+            f"'{variation_slug}' already used its out-of-sample look on "
+            f"{first['created_at'][:16]} (run {first['run_uuid'][:8]}, "
+            f"sharpe {first['sharpe']}, {int(first['n_trades'] or 0)} trades).\n"
+            f"Running it again is tuning on out-of-sample data, which destroys "
+            f"the only honest evidence this variation has.\n"
+            f"If the strategy changed, make it a NEW variation slug - that is "
+            f"what variations are for, and it keeps the trial count honest.\n"
+            f"To override anyway: --burn-oos \"<reason>\" (recorded permanently)."
+        )
+    row = conn.execute("SELECT id FROM variations WHERE slug=?",
+                       (variation_slug,)).fetchone()
+    _event(conn, "variation", row["id"], "oos_burned",
+           f"look #{len(prior) + 1}: {burn_reason}")
+    conn.commit()
+
+
+def oos_ledger(conn) -> pd.DataFrame:
+    """Every variation's out-of-sample usage, for the dashboard."""
+    return pd.read_sql_query(
+        """SELECT v.slug AS variation, v.title, h.slug AS hypothesis,
+                  COUNT(r.id) AS oos_looks, MIN(r.created_at) AS first_look,
+                  MAX(r.created_at) AS last_look
+           FROM variations v
+           JOIN hypotheses h ON h.id = v.hypothesis_id
+           LEFT JOIN runs r ON r.variation_id = v.id AND r.split = 'oos'
+           GROUP BY v.id ORDER BY oos_looks DESC, v.created_at""",
+        conn,
+    )
