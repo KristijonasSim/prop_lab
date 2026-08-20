@@ -115,18 +115,24 @@ session(enabled, tzs, openS, openE, tradeS, tradeE, filterOk, shortsOk) =>
         side := "long"
     if sht
         side := "short"
-    [hi, lo, lng, sht, inRange, inTrade, side]
+    done = not inRange and ready
+    [hi, lo, lng, sht, inRange, inTrade, side, done]
 
-[nyHi, nyLo, nyLong, nyShort, nyInRange, nyInTrade, nySide] = session(nyOn, nyTz, nyOpenS, nyOpenE, nyTradeS, nyTradeE, rvolOk, allowShorts)
-[ldHi, ldLo, ldLong, ldShort, ldInRange, ldInTrade, ldSide] = session(ldnOn, ldnTz, ldnOpenS, ldnOpenE, ldnTradeS, ldnTradeE, rvolOk, allowShorts)
+[nyHi, nyLo, nyLong, nyShort, nyInRange, nyInTrade, nySide, nyDone] = session(nyOn, nyTz, nyOpenS, nyOpenE, nyTradeS, nyTradeE, rvolOk, allowShorts)
+[ldHi, ldLo, ldLong, ldShort, ldInRange, ldInTrade, ldSide, ldDone] = session(ldnOn, ldnTz, ldnOpenS, ldnOpenE, ldnTradeS, ldnTradeE, rvolOk, allowShorts)
 
 // ---------------------------------------------------------------- drawing
 // plot(), not line objects: line objects rendered thousands of dollars away
 // from the candles. plot() is anchored to the price scale and cannot drift.
-nyHiPlot = nyOn and not na(nyHi) ? nyHi : na
-nyLoPlot = nyOn and not na(nyLo) ? nyLo : na
-ldHiPlot = ldnOn and not na(ldHi) ? ldHi : na
-ldLoPlot = ldnOn and not na(ldLo) ? ldLo : na
+// Only draw a range once it is FINISHED. While it is still forming, the level
+// is provisional - on the first candle it is that candle's own high, then it
+// steps to the final level on the second - which makes the flat line look like
+// it starts on the second candle. Drawing only the completed range removes the
+// ambiguity: the line that appears IS the range that will be traded.
+nyHiPlot = nyOn and nyDone ? nyHi : na
+nyLoPlot = nyOn and nyDone ? nyLo : na
+ldHiPlot = ldnOn and ldDone ? ldHi : na
+ldLoPlot = ldnOn and ldDone ? ldLo : na
 
 plot(nyHiPlot, "NY ORB high", color.teal, 2, plot.style_linebr)
 plot(nyLoPlot, "NY ORB low", color.red, 2, plot.style_linebr)
