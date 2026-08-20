@@ -75,10 +75,10 @@ st.session_state.setdefault("page", "Hypotheses")
 st.session_state.setdefault("hyp", None)
 st.session_state.setdefault("var", None)
 
-# A row in the library is a real link (?hyp=<slug>), which is how the table
-# avoids Streamlit's row-selection checkbox gutter. Honour the link once per
-# distinct slug: re-acting on every rerun would trap the user on the detail
-# page, and clearing the query param outright would fight the browser's URL.
+# ?hyp=<slug> still opens a hypothesis directly, so a link to one can be
+# shared or bookmarked. Honoured once per distinct slug: re-applying it on
+# every rerun would pin the user to the detail page and make the sidebar
+# unusable.
 _qp_hyp = st.query_params.get("hyp")
 if _qp_hyp and st.session_state.get("_seen_qp_hyp") != _qp_hyp:
     st.session_state["_seen_qp_hyp"] = _qp_hyp
@@ -161,35 +161,49 @@ if page == "Hypotheses":
         if view.empty:
             st.info("Nothing matches that filter.")
         else:
-            table = pd.DataFrame({
-                "": [STATUS_ICON.get(s_, "") for s_ in view["status"]],
-                "Hypothesis": [f"?hyp={sl}&t={txt(ti)}"
-                               for sl, ti in zip(view["slug"], view["title"])],
-                "Status": view["status"],
-                "Symbol": view["symbol"].map(txt),
-                "Strategies": view["n_variations"].astype(int),
-                "Runs": view["n_runs"].astype(int),
-                "Rejected": view["n_rejected"].astype(int),
-                "Best OOS Sharpe": view["best_oos_sharpe"],
-                "Best OOS ret %": view["best_oos_return"],
-                "OOS passes": view["n_prop_passes"].astype(int),
-                "Last run": [txt(x)[:10] or "—" for x in view["last_run"]],
-                "Idea": [txt(d).split("\n")[0] for d in view["description"]],
-                "slug": view["slug"],
-            })
-            st.dataframe(
-                table, width="stretch", hide_index=True,
-                height=min(60 + 35 * len(table), 520),
-                column_config={
-                    "": st.column_config.TextColumn(width="small"),
-                    "Hypothesis": st.column_config.LinkColumn(
-                        "Hypothesis", display_text=r"&t=(.*)$", width="medium",
-                        help="Click to open this hypothesis"),
-                    "Idea": st.column_config.TextColumn(width="medium"),
-                    "Best OOS Sharpe": st.column_config.NumberColumn(format="%.2f"),
-                    "Best OOS ret %": st.column_config.NumberColumn(format="%.1f"),
-                    "slug": st.column_config.TextColumn(width="small"),
-                })
+            # Laid out as columns with a borderless button in the name cell,
+            # rather than st.dataframe. Row selection there forces a checkbox
+            # gutter that cannot be disabled, and a LinkColumn always opens in
+            # a new tab. A button is a callback, so it navigates in place.
+            widths = [0.3, 3.2, 1.1, 1.0, 0.9, 0.8, 0.9, 1.1, 1.0, 0.9, 1.1]
+            head = st.columns(widths, vertical_alignment="bottom")
+            for col, label in zip(head, [
+                    "", "Hypothesis", "Status", "Symbol", "Strats", "Runs",
+                    "Rejected", "OOS Sharpe", "OOS ret %", "OOS pass", "Last run"]):
+                col.markdown(
+                    f"<div style='font-size:0.72rem;opacity:0.6;"
+                    f"text-transform:uppercase;letter-spacing:0.03em'>{label}</div>",
+                    unsafe_allow_html=True)
+            st.markdown("<hr style='margin:0.1rem 0 0 0;opacity:0.25'>",
+                        unsafe_allow_html=True)
+
+            def cell(col, value, dim=False):
+                col.markdown(
+                    f"<div style='font-size:0.85rem;padding-top:0.45rem;"
+                    f"{'opacity:0.65;' if dim else ''}'>{value}</div>",
+                    unsafe_allow_html=True)
+
+            for h in view.to_dict("records"):
+                c = st.columns(widths, vertical_alignment="center")
+                cell(c[0], STATUS_ICON.get(h["status"], ""))
+                c[1].button(txt(h["title"]), key=f"open_{h['slug']}",
+                            type="tertiary", width="stretch",
+                            help=txt(h["description"])[:300] or None,
+                            on_click=go_to, args=("hypothesis_detail", h["slug"]))
+                cell(c[2], h["status"], dim=True)
+                cell(c[3], txt(h["symbol"]) or "—", dim=True)
+                cell(c[4], int(h["n_variations"]))
+                cell(c[5], int(h["n_runs"]))
+                cell(c[6], int(h["n_rejected"]))
+                cell(c[7], fmt(round(h["best_oos_sharpe"], 2)
+                               if pd.notna(h["best_oos_sharpe"]) else None))
+                cell(c[8], fmt(round(h["best_oos_return"], 1)
+                               if pd.notna(h["best_oos_return"]) else None))
+                cell(c[9], int(h["n_prop_passes"]))
+                cell(c[10], txt(h["last_run"])[:10] or "never", dim=True)
+                st.markdown("<hr style='margin:0;opacity:0.15'>",
+                            unsafe_allow_html=True)
+
             st.caption(f"{len(view)} of {len(hyps)} hypotheses · click a "
                        "hypothesis name to open it")
 

@@ -89,24 +89,23 @@ def test_page_renders_on_empty_db(page, tmp_path, monkeypatch):
         st.cache_data.clear()
 
 
-def _library(at):
-    """The hypothesis table on the library page."""
-    return at.dataframe[0].value
+def _rows(at):
+    """The clickable name cells of the library, one per hypothesis.
+
+    The library is columns + borderless buttons rather than st.dataframe:
+    dataframe row-selection forces a checkbox gutter, and a LinkColumn always
+    opens in a new tab. A button is a callback, so it navigates in place.
+    """
+    return [b for b in at.button if (b.key or "").startswith("open_")]
 
 
 def _titles(at):
-    """Titles shown in the library.
-
-    The Hypothesis column holds '?hyp=<slug>&t=<title>' links - that is how the
-    table gets clickable rows without Streamlit's selection checkbox gutter -
-    so the visible text has to be parsed back out.
-    """
-    return [str(v).split("&t=", 1)[-1] for v in _library(at)["Hypothesis"]]
+    return [b.label for b in _rows(at)]
 
 
 def _open(at, slug):
-    """Click a hypothesis row, i.e. follow its link."""
-    at.query_params["hyp"] = slug
+    """Click a hypothesis row."""
+    [b for b in at.button if b.key == f"open_{slug}"][0].click()
     return at.run()
 
 
@@ -115,22 +114,23 @@ def test_hypothesis_library_lists_the_hypothesis(seeded):
     assert "Trend following swing trading" in _titles(at)
 
 
-def test_library_rows_link_without_a_selection_checkbox(seeded):
-    """Regression: selection_mode='single-row' added a checkbox gutter. Rows are
-    plain links now, so no selection state should exist at all."""
+def test_library_has_no_selection_checkbox_and_no_new_tab_links(seeded):
+    """Regression, twice over: st.dataframe row-selection added a checkbox
+    gutter, and replacing it with a LinkColumn opened every row in a new tab.
+    Rows must be in-place buttons with no dataframe on the page at all."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    assert all(str(v).startswith("?hyp=") for v in _library(at)["Hypothesis"])
-    assert not [b for b in at.button if b.label.startswith("Open")]
+    assert not at.dataframe, "library should not use st.dataframe"
+    assert _rows(at), "no clickable hypothesis rows"
+    # borderless, so the row reads as a table cell rather than a widget
+    assert all(b.proto.type == "tertiary" for b in _rows(at))
 
 
-def test_library_table_carries_the_summary_columns(seeded):
+def test_library_carries_the_summary_columns(seeded):
     at = AppTest.from_file(APP, default_timeout=90).run()
-    cols = list(_library(at).columns)
-    for expected in ("Hypothesis", "Status", "Strategies", "Runs", "Rejected",
-                     "Best OOS Sharpe", "OOS passes", "Last run", "Idea"):
-        assert expected in cols
-    row = _library(at).iloc[0]
-    assert row["Strategies"] == 2 and row["Rejected"] == 1
+    body = " ".join(m.value for m in at.markdown)
+    for expected in ("Hypothesis", "Status", "Symbol", "Strats", "Runs",
+                     "Rejected", "OOS Sharpe", "OOS ret %", "OOS pass", "Last run"):
+        assert expected in body, f"{expected} missing from the header row"
 
 
 def test_clicking_a_row_drills_into_the_hypothesis(seeded):
@@ -235,7 +235,7 @@ def test_hypothesis_with_no_runs_renders(tmp_path, monkeypatch):
         at = AppTest.from_file(APP, default_timeout=90).run()
         assert not at.exception, at.exception
         assert "Never run idea" in _titles(at)
-        assert at.dataframe[0].value.iloc[0]["Last run"] == "—"
+        assert "never" in " ".join(m.value for m in at.markdown)
     finally:
         st.cache_resource.clear()
         st.cache_data.clear()
@@ -286,21 +286,21 @@ def many(tmp_path, monkeypatch):
 def test_all_hypotheses_appear_as_table_rows(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     assert not at.exception, at.exception
-    assert len(at.dataframe[0].value) == 12
+    assert len(_rows(at)) == 12
 
 
 def test_search_filters_the_library(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.text_input[0].set_value("number 07").run()
     assert not at.exception, at.exception
-    assert len(at.dataframe[0].value) == 1
+    assert len(_rows(at)) == 1
 
 
 def test_status_filter_narrows_the_library(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.multiselect[0].set_value(["rejected"]).run()
     assert not at.exception, at.exception
-    assert len(at.dataframe[0].value) == 4          # i % 3 == 0
+    assert len(_rows(at)) == 4                      # i % 3 == 0
 
 
 def test_sorting_does_not_break_with_never_run_hypotheses(many):
@@ -315,7 +315,7 @@ def test_filtering_to_nothing_is_handled(many):
     at = AppTest.from_file(APP, default_timeout=90).run()
     at.text_input[0].set_value("zzzz-no-such-thing").run()
     assert not at.exception, at.exception
-    assert not at.dataframe
+    assert not _rows(at)
 
 
 def test_open_still_works_from_the_table(many):
@@ -326,11 +326,14 @@ def test_open_still_works_from_the_table(many):
     assert not at.exception, at.exception
 
 
-def test_leaving_a_row_link_does_not_trap_the_user(many):
-    """The ?hyp= param stays in the URL after navigating. It must be honoured
-    once, not re-applied on every rerun, or the sidebar would never escape."""
+def test_bookmarked_url_opens_a_hypothesis_once(many):
+    """?hyp=<slug> still opens a hypothesis so a link can be shared, but must
+    be honoured once, not re-applied on every rerun, or the sidebar would
+    never escape the detail page."""
     at = AppTest.from_file(APP, default_timeout=90).run()
-    _open(at, "h05")
+    at.query_params["hyp"] = "h05"
+    at.run()
+    assert at.session_state["page"] == "hypothesis_detail"
     at.sidebar.radio[0].set_value("Overview").run()
     assert at.session_state["page"] == "Overview"
     at.run()
