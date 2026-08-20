@@ -6,5 +6,6 @@ data/cache/
 proplab.db
 proplab.db-wal
 proplab.db-shm
-runs/
+runs/*.log
+runs/*.pid
 .pytest_cache/

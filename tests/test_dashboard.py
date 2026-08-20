@@ -141,3 +141,91 @@ def test_sidebar_nav_leaves_a_drill_down(seeded):
     at.sidebar.radio[0].set_value("Overview").run()
     assert at.session_state["page"] == "Overview"
     assert not at.exception, at.exception
+
+
+# ----------------------------------------------------------- refresh / nav
+def test_refresh_does_not_crash(seeded):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
+    assert not at.exception, at.exception
+
+
+def test_no_widget_callback_reads_widget_state():
+    """Regression: the sidebar used an on_change callback that READ
+    st.session_state["nav"]. Callbacks run before the script body, so after a
+    browser reconnect - or any rerun that never reached the widget - that key
+    is absent and every interaction dies with KeyError. It reproduced in the
+    browser but not in AppTest, so this is enforced statically instead:
+    callbacks may write session state, never read a widget key from it."""
+    import ast
+
+    src = Path(APP).read_text()
+    tree = ast.parse(src)
+
+    callbacks = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for kw in node.keywords:
+                if kw.arg in ("on_click", "on_change") and isinstance(kw.value, ast.Name):
+                    callbacks.add(kw.value.id)
+
+    funcs = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    offenders = []
+    for name in callbacks:
+        fn = funcs.get(name)
+        if fn is None:
+            continue
+        for node in ast.walk(fn):
+            # a read looks like  x = st.session_state[...]  (Load context)
+            if (isinstance(node, ast.Subscript)
+                    and isinstance(node.ctx, ast.Load)
+                    and ast.unparse(node.value).endswith("session_state")):
+                offenders.append(f"{name}: {ast.unparse(node)}")
+    assert not offenders, (
+        "widget callbacks must not read session state: " + "; ".join(offenders))
+
+
+def test_hypothesis_with_no_runs_renders(tmp_path, monkeypatch):
+    """Regression: `last_run` is NaN for a hypothesis that was never run, and
+    NaN is TRUTHY in Python - so the guard passed and slicing it crashed the
+    whole library page. Mixing run and never-run hypotheses must be fine."""
+    _fresh(monkeypatch, tmp_path, "mixed.db")
+    c = store.connect(store.DB_PATH)
+    store.upsert_hypothesis(c, "never_run", "Never run idea",
+                            description="queued, no runs yet", mechanism="m",
+                            status="queued")
+    c.close()
+    try:
+        at = AppTest.from_file(APP, default_timeout=90).run()
+        assert not at.exception, at.exception
+        body = " ".join(m.value for m in at.markdown)
+        assert "Never run idea" in body
+        assert "never run" in " ".join(cap.value for cap in at.caption)
+    finally:
+        st.cache_resource.clear()
+        st.cache_data.clear()
+
+
+def test_refresh_from_a_drill_down_stays_put(seeded):
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    [b for b in at.button if b.label.startswith("Open")][0].click().run()
+    assert at.session_state["page"] == "hypothesis_detail"
+    [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
+    assert not at.exception, at.exception
+    assert at.session_state["page"] == "hypothesis_detail"
+
+
+def test_refresh_picks_up_new_rows(seeded):
+    """Refresh exists to clear the 5s data cache - it must actually show a
+    hypothesis added after the page was loaded."""
+    at = AppTest.from_file(APP, default_timeout=90).run()
+    assert "Overnight gap fade" not in " ".join(m.value for m in at.markdown)
+
+    c = store.connect(store.DB_PATH)
+    store.upsert_hypothesis(c, "gap_fade", "Overnight gap fade",
+                            description="x", mechanism="y", status="queued")
+    c.close()
+
+    [b for b in at.sidebar.button if b.label == "Refresh"][0].click().run()
+    assert not at.exception, at.exception
+    assert "Overnight gap fade" in " ".join(m.value for m in at.markdown)

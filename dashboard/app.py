@@ -76,15 +76,21 @@ st.session_state.setdefault("hyp", None)
 st.session_state.setdefault("var", None)
 
 NAV = ["Hypotheses", "Overview", "All runs", "Failed ideas"]
-
-
-def _on_nav():
-    """Sidebar owns its own key, so picking a section leaves any drill-down."""
-    st.session_state["page"] = st.session_state["nav"]
-
+st.session_state.setdefault("nav", "Hypotheses")
+st.session_state.setdefault("_prev_nav", st.session_state["nav"])
 
 st.sidebar.title("prop_lab")
-st.sidebar.radio("View", NAV, key="nav", on_change=_on_nav)
+
+# No on_change callback here, deliberately. Callbacks run BEFORE the script
+# body, so a callback that reads a widget's own key crashes with KeyError
+# whenever that key is not yet registered - after a browser reconnect, a
+# stale session, or a rerun that did not reach the widget. Comparing against
+# the previous value in the script body cannot fail that way.
+nav = st.sidebar.radio("View", NAV, key="nav")
+if nav != st.session_state["_prev_nav"]:
+    st.session_state["page"] = nav          # picking a section leaves a drill-down
+st.session_state["_prev_nav"] = nav
+
 st.sidebar.button("Refresh", on_click=refresh, width="stretch")
 
 page = st.session_state["page"]
@@ -94,6 +100,16 @@ st.sidebar.caption(f"{len(hyps)} hypotheses · {len(all_runs())} runs logged")
 
 def fmt(v, suffix="", dash="—"):
     return dash if v is None or (isinstance(v, float) and pd.isna(v)) else f"{v}{suffix}"
+
+
+def txt(v) -> str:
+    """Empty string for None/NaN.
+
+    Necessary because pandas turns a missing text column into float NaN, and
+    `if nan:` is TRUE in Python - so a bare truthiness check happily falls
+    through and then crashes on string operations.
+    """
+    return "" if v is None or (isinstance(v, float) and pd.isna(v)) else str(v)
 
 
 # ============================================================ HYPOTHESIS LIST
@@ -113,12 +129,12 @@ if page == "Hypotheses":
                 with left:
                     st.markdown(
                         f"### {STATUS_ICON.get(h['status'], '')} {h['title']}")
+                    last = txt(h["last_run"])
                     st.caption(f"`{h['slug']}` · {h['status']} · "
-                               f"{h['symbol'] or h['asset_class'] or '—'}"
-                               + (f" · last run {h['last_run'][:10]}"
-                                  if h["last_run"] else " · never run"))
-                    if h["description"]:
-                        st.write(h["description"])
+                               f"{txt(h['symbol']) or txt(h['asset_class']) or '—'}"
+                               + (f" · last run {last[:10]}" if last else " · never run"))
+                    if txt(h["description"]):
+                        st.write(txt(h["description"]))
                 with right:
                     st.button("Open →", key=f"open_{h['slug']}", width="stretch",
                               on_click=go_to,
@@ -145,12 +161,12 @@ elif page == "hypothesis_detail":
                    f"{detail['symbol'] or detail['asset_class'] or '—'}")
 
         st.subheader("The idea")
-        st.write(detail["description"] or "—")
+        st.write(txt(detail["description"]) or "—")
         st.subheader("Mechanism — why this should work")
-        st.write(detail["mechanism"] or "—")
-        if detail["research"]:
+        st.write(txt(detail["mechanism"]) or "—")
+        if txt(detail["research"]):
             with st.expander("Research notes: how this is normally traded"):
-                st.markdown(detail["research"])
+                st.markdown(txt(detail["research"]))
 
         st.divider()
         vs = variations(slug)
@@ -172,12 +188,12 @@ elif page == "hypothesis_detail":
                 icon = STATUS_ICON.get(v["status"], "")
                 with st.expander(f"{icon} {v['title']}  ·  `{v['slug']}`  ·  "
                                  f"{v['status']}"):
-                    if v["rationale"]:
-                        st.write(f"**Why test this variation:** {v['rationale']}")
-                    if v["details"]:
-                        st.write(f"**Rules:** {v['details']}")
-                    if v["verdict_note"]:
-                        st.info(f"**Verdict:** {v['verdict_note']}")
+                    if txt(v["rationale"]):
+                        st.write(f"**Why test this variation:** {txt(v['rationale'])}")
+                    if txt(v["details"]):
+                        st.write(f"**Rules:** {txt(v['details'])}")
+                    if txt(v["verdict_note"]):
+                        st.info(f"**Verdict:** {txt(v['verdict_note'])}")
 
                     c = st.columns(6)
                     c[0].metric("Runs", int(v["n_runs"]))
@@ -187,8 +203,7 @@ elif page == "hypothesis_detail":
                     c[4].metric("OOS trades", fmt(v["oos_trades"]))
                     c[5].metric("Prop", "PASS" if v["any_prop_pass"] else "FAIL")
 
-                    if v["is_sharpe"] and v["oos_sharpe"] is not None \
-                            and not pd.isna(v["is_sharpe"]):
+                    if pd.notna(v["is_sharpe"]) and pd.notna(v["oos_sharpe"]):
                         if v["is_sharpe"] > 0:
                             decay = 1 - (v["oos_sharpe"] / v["is_sharpe"])
                             st.caption(f"Sharpe decay IS→OOS: {decay:.0%}"
@@ -197,20 +212,21 @@ elif page == "hypothesis_detail":
                             st.caption("Sharpe decay: n/a — in-sample Sharpe was "
                                        "not positive")
 
-                    if v["params_json"]:
+                    if txt(v["params_json"]):
                         st.write("**Params**")
-                        st.json(json.loads(v["params_json"]), expanded=False)
+                        st.json(json.loads(txt(v["params_json"])), expanded=False)
 
-                    if int(v["n_runs"]):
+                    if int(v["n_runs"] or 0):
                         st.button("See all runs →", key=f"runs_{v['slug']}",
                                   on_click=go_to,
                                   args=("variation_detail", slug, v["slug"]))
                     else:
                         st.caption("Coded but never run.")
 
-                    if v["code_path"] and Path(v["code_path"]).exists():
+                    code_path = txt(v["code_path"])
+                    if code_path and Path(code_path).exists():
                         with st.expander("Strategy code"):
-                            st.code(Path(v["code_path"]).read_text(), language="python")
+                            st.code(Path(code_path).read_text(), language="python")
 
 # =========================================================== VARIATION DETAIL
 elif page == "variation_detail":
