@@ -96,6 +96,16 @@ rules see and marks where they *would* fire, without taking anything. Window and
 RVOL logic are identical to the strategy version, so any difference you see on
 the chart is your discretion, not a different calculation.
 
+It covers **London and New York**, both on by default. proplab's `orb_v2` is
+New-York-only because it mirrors the supplied Pine reference; `orb_v1` already
+trades both. Whether London is worth adding to v2 is an open question, and this
+is the cheapest way to look at it — London signals are marked `LDN`, New York
+`NY`.
+
+Levels are drawn with `plot()`, not line objects: line objects were rendering
+thousands of dollars away from the candles, while `plot()` is anchored to the
+price scale and cannot drift.
+
 It draws:
 - the 09:30-10:00 opening range, extended across the trade window
 - shading for the opening-range / trade / flatten windows
