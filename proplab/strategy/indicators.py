@@ -96,3 +96,39 @@ def delta_pressure(high: np.ndarray, low: np.ndarray, close: np.ndarray,
     h, l, c, v = high[-n:], low[-n:], close[-n:], volume[-n:]
     rng = np.maximum(h - l, mintick)
     return float(np.sum(v * (c - l) / rng - v * (h - c) / rng))
+
+
+def pivot_high(high: np.ndarray, left: int, right: int) -> float:
+    """Confirmed swing high, or nan.
+
+    Pine's `ta.pivothigh(high, left, right)` reports a pivot only once `right`
+    further bars have printed, and reports it as of the CURRENT bar - the pivot
+    itself sits `right` bars back. That delay is not a flaw to be optimised
+    away: it is the reason a pivot is knowable at all. Anything faster would be
+    reading a high that is not yet final.
+    """
+    need = left + right + 1
+    if len(high) < need:
+        return float("nan")
+    w = high[-need:]
+    c = w[left]
+    if np.max(w) != c:
+        return float("nan")
+    # ties: Pine takes the pivot only if no other bar in the window equals it
+    if int(np.sum(w == c)) > 1:
+        return float("nan")
+    return float(c)
+
+
+def pivot_low(low: np.ndarray, left: int, right: int) -> float:
+    """Confirmed swing low, or nan. See pivot_high for the confirmation delay."""
+    need = left + right + 1
+    if len(low) < need:
+        return float("nan")
+    w = low[-need:]
+    c = w[left]
+    if np.min(w) != c:
+        return float("nan")
+    if int(np.sum(w == c)) > 1:
+        return float("nan")
+    return float(c)
