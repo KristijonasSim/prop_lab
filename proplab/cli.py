@@ -156,6 +156,7 @@ def _config(a) -> BacktestConfig:
 def cmd_run(a):
     cls = registry.get(a.strategy)
     params = json.loads(a.params) if a.params else None
+    renko = _renko(a)
 
     # ---- out-of-sample is a one-shot resource -------------------------------
     if a.split == "oos":
@@ -178,7 +179,8 @@ def cmd_run(a):
 
     res = runner.backtest(cls, symbol=a.symbol, timeframe=a.timeframe, start=a.start,
                           end=a.end, config=_config(a), params=params, split=a.split,
-                          base_timeframe=a.base_timeframe, run_checks=not a.skip_checks)
+                          base_timeframe=a.base_timeframe, run_checks=not a.skip_checks,
+                          renko=renko)
     conn = store.connect()
     try:
         _print_result(res, conn)
@@ -186,7 +188,7 @@ def cmd_run(a):
             table, _ = runner.cost_sensitivity(
                 cls, symbol=a.symbol, timeframe=a.timeframe, start=a.start,
                 end=a.end, config=_config(a), params=params, split=a.split,
-                base_timeframe=a.base_timeframe)
+                base_timeframe=a.base_timeframe, renko=renko)
             print("COST SENSITIVITY (venue not yet chosen - costs are an assumption)")
             print(table.to_string(index=False))
             survives = table[table["cost_x"] >= 2.0]["return_pct"]
@@ -202,6 +204,18 @@ def cmd_run(a):
             print("NOT logged (pass --log to record this run in the database)")
     finally:
         conn.close()
+
+
+def _renko(a):
+    """Brick settings for renko strategies, so a renko run is reproducible from
+    the command line instead of an ad-hoc script. Omitting it leaves the loader
+    on its ATR-sized default, which is a different dataset - hence the echo."""
+    raw = getattr(a, "renko", None)
+    if not raw:
+        return None
+    cfg = json.loads(raw)
+    print(f"renko bricks: {cfg}")
+    return cfg
 
 
 def _no_sweep(a):
@@ -220,7 +234,8 @@ def cmd_oos(a):
             guard.close()
     out = runner.in_sample_out_of_sample(
         cls, split_at=a.split_at, symbol=a.symbol, timeframe=a.timeframe,
-        start=a.start, end=a.end, config=_config(a), base_timeframe=a.base_timeframe)
+        start=a.start, end=a.end, config=_config(a), base_timeframe=a.base_timeframe,
+        renko=_renko(a))
     conn = store.connect()
     try:
         for label in ("is", "oos"):
@@ -412,6 +427,9 @@ def build_parser():
         r.add_argument("--slippage-bps", type=float, default=2.0)
         r.add_argument("--max-leverage", type=float, default=3.0)
         r.add_argument("--no-shorts", action="store_true")
+        r.add_argument("--renko", default=None, metavar="JSON",
+                       help='brick settings for renko strategies, e.g. '
+                            '\'{"brick_size": 250}\' or \'{"atr_len": 14}\'')
         if name == "run":
             r.add_argument("--split", default="full", choices=["full", "is", "oos"])
             r.add_argument("--burn-oos", default=None, metavar="REASON",

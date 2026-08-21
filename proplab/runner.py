@@ -76,8 +76,11 @@ def in_sample_out_of_sample(
     symbol = kwargs.get("symbol", "BTCUSDT")
     timeframe = kwargs.get("timeframe", "15m")
     higher = tuple(getattr(strategy_cls, "higher_timeframes", ()))
+    # popped, not passed through: the data is built once here, so leaving renko
+    # in kwargs would hand backtest() a setting it silently ignores.
     full = loader.load(symbol, timeframe, higher, kwargs.get("start"),
-                       kwargs.get("end"), base_timeframe=kwargs.pop("base_timeframe", "15m"))
+                       kwargs.get("end"), base_timeframe=kwargs.pop("base_timeframe", "15m"),
+                       renko=kwargs.pop("renko", None))
     is_data, oos_data = full.split(split_at)
     out = {}
     for label, ds in (("is", is_data), ("oos", oos_data)):

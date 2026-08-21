@@ -20,10 +20,17 @@ def discover() -> dict[str, type[Strategy]]:
     for mod in pkgutil.iter_modules(lib.__path__):
         module = importlib.import_module(f"{lib.__name__}.{mod.name}")
         for _, obj in inspect.getmembers(module, inspect.isclass):
-            if issubclass(obj, Strategy) and obj is not Strategy and obj.__module__ == module.__name__:
-                if obj.name in found and found[obj.name] is not obj:
-                    raise ValueError(f"Duplicate strategy name {obj.name!r}")
-                found[obj.name] = obj
+            if not (issubclass(obj, Strategy) and obj is not Strategy
+                    and obj.__module__ == module.__name__):
+                continue
+            # A shared base class that never declares a name is scaffolding,
+            # not a strategy - registering it would put an "unnamed" row in
+            # the registry and let it be run by accident.
+            if obj.name == Strategy.name:
+                continue
+            if obj.name in found and found[obj.name] is not obj:
+                raise ValueError(f"Duplicate strategy name {obj.name!r}")
+            found[obj.name] = obj
     return found
 
 
