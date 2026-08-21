@@ -17,8 +17,10 @@ on one shared equity curve:
 
   * every trade keeps the R MULTIPLE core computed for it - all fills, fees,
     slippage and funding are core's numbers, untouched;
-  * risk is a fixed fraction of BOOK equity at the moment of entry, so sizing
-    compounds against the book rather than against each leg's private curve;
+  * risk is a fixed fraction of the STARTING balance by default, because a
+    prop evaluation is a fixed account - you make 8% of what you started with
+    before losing 8% of it, and you do not compound your way there. Pass
+    compound=True for the separate multi-year question;
   * at most `max_concurrent` positions are open at once. A signal arriving
     with every slot full is DROPPED, not queued - which is what a real account
     out of margin does, and what N5's K=4 cap means.
@@ -75,11 +77,22 @@ def collect(results: dict[str, object]) -> pd.DataFrame:
 
 
 def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
-             max_concurrent: int = 4, starting_balance: float = 100_000.0):
+             max_concurrent: int = 4, starting_balance: float = 100_000.0,
+             compound: bool = False):
     """Replay the combined trade list on one account.
 
-    Returns (book_trades, equity_curve). The curve is indexed by exit time,
-    because that is when a trade's P&L actually lands.
+    `compound=False` is the default and the right setting for the question
+    this project asks. A prop evaluation is a FIXED account: you are trying to
+    make 8% of the starting balance before losing 8% of it, and you do not get
+    to compound your way there. Sizing off a growing equity curve also makes
+    "days to target" meaningless over a multi-year window - the late years
+    dwarf the early ones, average daily P&L is then dominated by an account
+    that has already 100x'd, and the estimate collapses toward zero. Compound
+    sizing is still available for the separate question of what the book does
+    over years.
+
+    Returns (book_trades, equity_curve, dropped). The curve is indexed by exit
+    time, because that is when a trade's P&L actually lands.
     """
     equity = starting_balance
     open_slots: list[pd.Timestamp] = []      # exit times of live positions
@@ -93,7 +106,7 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
         if len(open_slots) >= max_concurrent:
             dropped += 1
             continue
-        risk = equity * risk_pct
+        risk = (equity if compound else starting_balance) * risk_pct
         pnl = risk * row.r_multiple
         equity += pnl
         open_slots.append(row.exit_time)
@@ -125,6 +138,8 @@ def metrics(bt: pd.DataFrame, curve: pd.Series, *, starting_balance: float = 100
 
     daily = curve.resample("1D").last().ffill().diff().dropna()
     drift = float(daily.mean())
+    # with fixed risk this is a straight rate; with compounding it is not, and
+    # the caller has been warned in simulate()
     target_cash = starting_balance * target_pct / 100
     days_to_target = target_cash / drift if drift > 0 else float("nan")
 

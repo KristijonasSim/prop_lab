@@ -79,6 +79,11 @@ def _attach_hourly(df: pd.DataFrame, symbol: str, fname: str, col: str) -> pd.Da
 def _attach_dvol(df: pd.DataFrame, currency: str = "BTC") -> pd.DataFrame:
     """Deribit DVOL and its trailing percentile, as a DAILY series.
 
+    BTC's DVOL is attached to EVERY symbol on purpose: u40 gates its trend
+    legs on BTC implied vol regardless of which coin the leg is trading,
+    because it is being used as a read on the whole crypto regime rather than
+    on one instrument.
+
     The percentile is computed on daily closes and then forward-filled onto
     the bars, so a bar carries the rank of the last CLOSED day. Ranking on the
     current, unfinished day would be reading a close that has not happened.
@@ -124,11 +129,35 @@ def coverage(df: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
+# The union of N5's live baskets, and the timeframe each leg needs. Building
+# only what a leg actually trades keeps this honest: running a leg on a symbol
+# it was never given is a different test, and should be labelled as one.
+BASKETS = {
+    "1h": ["ADAUSDT", "ATOMUSDT", "AVAXUSDT", "BCHUSDT", "BTCUSDT", "DOGEUSDT",
+           "ETHUSDT", "LINKUSDT", "NEARUSDT", "SOLUSDT", "TRXUSDT", "XRPUSDT"],
+    "30m": ["BTCUSDT", "ETHUSDT", "XRPUSDT", "LINKUSDT"],
+    "4h": ["BTCUSDT", "ETHUSDT"],
+}
+
+
+def build_all(verbose: bool = True) -> list[tuple[str, str, int]]:
+    out = []
+    for tf, symbols in BASKETS.items():
+        for sym in symbols:
+            try:
+                frame = build(sym, tf)
+            except FileNotFoundError as e:
+                if verbose:
+                    print(f"  skip {sym} {tf}: {e}")
+                continue
+            out.append((sym, tf, len(frame)))
+            if verbose:
+                print(f"  {sym:10s} {tf:4s} {len(frame):7d} bars  "
+                      f"{frame.index.min().date()} .. {frame.index.max().date()}")
+    return out
+
+
 if __name__ == "__main__":
-    # 30m and 4h as well as 1h: nayrafa runs on 30m and liquidity_sweep on 4h,
-    # and the hourly-only feeds simply come through empty there.
-    for tf in ("30m", "1h", "4h"):
-        frame = build(tf=tf)
-        print(f"wrote futures_BTCUSDT_{tf}.parquet")
-        print(coverage(frame))
-        print()
+    print("building N5's baskets")
+    rows = build_all()
+    print(f"\nwrote {len(rows)} parquet files into {RAW}")

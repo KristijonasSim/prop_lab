@@ -30,12 +30,21 @@ def test_slot_frees_once_the_trade_has_closed():
     assert len(bt) == 2 and dropped == 0
 
 
-def test_risk_is_a_fraction_of_book_equity_not_leg_equity():
-    # after a +1R win at 1% risk, the next trade must risk 1% of the LARGER book
+def test_fixed_risk_is_the_default_because_an_evaluation_does_not_compound():
     t = _trades([("a", "2024-01-01", "2024-01-02", 1.0),
                  ("b", "2024-01-03", "2024-01-04", 1.0)])
     bt, _, _ = portfolio.simulate(t, risk_pct=0.01, max_concurrent=1,
                                   starting_balance=100_000)
+    assert bt.iloc[0]["risk"] == pytest.approx(1000.0)
+    assert bt.iloc[1]["risk"] == pytest.approx(1000.0)
+
+
+def test_compounding_sizes_off_the_grown_book_when_asked_for():
+    # after a +1R win at 1% risk, the next trade risks 1% of the LARGER book
+    t = _trades([("a", "2024-01-01", "2024-01-02", 1.0),
+                 ("b", "2024-01-03", "2024-01-04", 1.0)])
+    bt, _, _ = portfolio.simulate(t, risk_pct=0.01, max_concurrent=1,
+                                  starting_balance=100_000, compound=True)
     assert bt.iloc[0]["risk"] == pytest.approx(1000.0)
     assert bt.iloc[1]["risk"] == pytest.approx(1010.0)
 
