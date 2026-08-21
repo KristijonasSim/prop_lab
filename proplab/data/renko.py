@@ -92,13 +92,23 @@ def build(df: pd.DataFrame, brick_size: float, reversal: int = 2) -> pd.DataFram
 
 
 def atr_brick_size(df: pd.DataFrame, n: int = 14) -> float:
-    """Brick size from average true range, the usual alternative to a fixed size."""
+    """Brick size from average true range, the usual alternative to a fixed size.
+
+    Averaged over the WHOLE period, not the last n bars. Sizing off the tail
+    made the entire dataset a function of its own end date: on BTCUSDT 15m from
+    2024-01-01, ending 2026-08-19 gave a 54.09 brick and 176,073 bricks, while
+    ending one day later gave 427.93 and 8,455 - a 20x different dataset from a
+    one-day change to the window. Any renko result built that way says more
+    about the last few hours of data than about the strategy.
+
+    `n` is kept for call compatibility and now only sets the minimum bar count.
+    """
     high, low, close = df["high"].to_numpy(float), df["low"].to_numpy(float), df["close"].to_numpy(float)
     tr = np.maximum(high[1:] - low[1:],
                     np.maximum(np.abs(high[1:] - close[:-1]), np.abs(low[1:] - close[:-1])))
     if len(tr) < n:
         raise ValueError(f"need >= {n + 1} bars for an ATR brick size")
-    return float(np.mean(tr[-n:]))
+    return float(np.mean(tr))
 
 
 def summarise(bricks: pd.DataFrame) -> dict:
