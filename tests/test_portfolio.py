@@ -72,6 +72,7 @@ def test_trades_without_a_defined_risk_are_excluded():
     class _T:
         def __init__(self, r, risk):
             self.r_multiple, self.initial_risk = r, risk
+            self.direction = 1
             self.entry_time = pd.Timestamp("2024-01-01", tz="UTC")
             self.exit_time = pd.Timestamp("2024-01-02", tz="UTC")
             self.bars_held, self.exit_reason = 1, "stop"

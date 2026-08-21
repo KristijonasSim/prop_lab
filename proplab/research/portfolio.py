@@ -70,6 +70,7 @@ def collect(results: dict[str, object]) -> pd.DataFrame:
                 continue
             rows.append({"leg": leg, "entry_time": t.entry_time,
                          "exit_time": t.exit_time, "r_multiple": float(r),
+                         "direction": int(t.direction),
                          "bars_held": t.bars_held, "exit_reason": t.exit_reason})
     if not rows:
         return pd.DataFrame(columns=["leg", "entry_time", "exit_time", "r_multiple"])
@@ -78,7 +79,8 @@ def collect(results: dict[str, object]) -> pd.DataFrame:
 
 def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
              max_concurrent: int = 4, starting_balance: float = 100_000.0,
-             compound: bool = False, max_per_leg: int | None = None):
+             compound: bool = False, max_per_leg: int | None = None,
+             max_same_side: int | None = None):
     """Replay the combined trade list on one account.
 
     `compound=False` is the default and the right setting for the question
@@ -90,6 +92,14 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
     that has already 100x'd, and the estimate collapses toward zero. Compound
     sizing is still available for the separate question of what the book does
     over years.
+
+    `max_same_side` caps how many positions may point the same way at once,
+    across every leg. This is aimed at the failure mode the evaluation replay
+    identified: attempts die on the DAILY loss rule far more often than on max
+    loss, and a day only loses 4% when several positions stop out together -
+    which is what a book of same-direction bets does when the market turns.
+    Neither the total cap nor the per-leg cap sees that, because the positions
+    are spread across legs and symbols; the only thing they share is a side.
 
     `max_per_leg` caps how many positions ONE leg may hold at once across all
     its symbols. Without it a leg that fires in bursts - pc takes about six
@@ -103,6 +113,7 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
     equity = starting_balance
     open_slots: list[pd.Timestamp] = []      # exit times of live positions
     per_leg: dict[str, list[pd.Timestamp]] = {}
+    per_side: dict[int, list[pd.Timestamp]] = {1: [], -1: []}
     taken: list[BookTrade] = []
     dropped = 0
 
@@ -122,7 +133,17 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
             if len(live) >= max_per_leg:
                 dropped += 1
                 continue
+        side = int(getattr(row, "direction", 1))
+        if max_same_side is not None:
+            same = [x for x in per_side.get(side, []) if x > now]
+            per_side[side] = same
+            if len(same) >= max_same_side:
+                dropped += 1
+                continue
+        if max_per_leg is not None:
             per_leg[base].append(row.exit_time)
+        if max_same_side is not None:
+            per_side[side].append(row.exit_time)
         risk = (equity if compound else starting_balance) * risk_pct
         pnl = risk * row.r_multiple
         equity += pnl

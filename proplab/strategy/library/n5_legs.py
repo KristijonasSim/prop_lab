@@ -124,18 +124,30 @@ class _N5Leg(Strategy):
     # which makes a gated fade leg the honest control - if the gate helps one
     # of those too, it is not selecting a regime, it is just cutting trades.
     # Fail-OPEN on a missing value, matching the live bot.
+    # `dvol_thr` blocks BELOW the threshold - u40's trend-leg rule, calm
+    # markets whipsaw trends. `dvol_thr_max` blocks ABOVE one, which is the
+    # mirror hypothesis for the fade legs: a crowding fade needs the crowd to
+    # be wrong, and in a high-volatility regime the crowd is usually right and
+    # the move simply continues. The evidence for even asking is the control
+    # run - gating oi with the TREND rule (block when calm) took it from PF
+    # 1.850 to 0.800, which says its good trades are the calm ones.
     dvol_thr: float | None = None
+    dvol_thr_max: float | None = None
 
     def _dvol_blocks(self, ctx: Context) -> bool:
-        if self.dvol_thr is None:
+        if self.dvol_thr is None and self.dvol_thr_max is None:
             return False
         try:
             pct = float(ctx.frame(1)["dvol_pct"].to_numpy(float)[-1])
         except (KeyError, IndexError):
             return False
-        if pct != pct:
+        if pct != pct:                       # fail-open, as the live bot does
             return False
-        return pct < self.dvol_thr
+        if self.dvol_thr is not None and pct < self.dvol_thr:
+            return True
+        if self.dvol_thr_max is not None and pct >= self.dvol_thr_max:
+            return True
+        return False
 
     # ---- entry helper ------------------------------------------------------
     def _take(self, ctx: Context, side: int, stop: float, target=None) -> None:
@@ -905,3 +917,31 @@ class N5PremiumConfluence(_N5Leg):
         if sig < 0 and not c < sma:
             return
         self._take(ctx, sig, c - sig * p["stop_atr"] * a)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Calm-regime variants of the FADE legs - the mirror of u40's trend gate.
+#
+# Not Kris's locked rule. It is my hypothesis, and it is only worth testing
+# because the control run pointed at it: gating a fade leg the way u40 gates a
+# trend leg (block when volatility is calm) destroyed it, which is evidence
+# the calm regime is where its edge lives.
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _calm_only(base: type, slug: str, thr: float = 0.67):
+    return type(base.__name__ + "Calm", (base,), {
+        "name": slug,
+        "dvol_thr_max": thr,
+        "variation": base.variation + (
+            f" CALM-ONLY: entries skipped once DVOL is at or above its "
+            f"{int(thr * 100)}th percentile of a trailing 180 days. My "
+            f"extension, not a locked rule."),
+        "__module__": __name__,
+    })
+
+
+N5LsrFadeCalm = _calm_only(N5LsrFade, "n5_lsr_calm")
+N5OiFadeCalm = _calm_only(N5OiFade, "n5_oi_calm")
+N5FundingFadeCalm = _calm_only(N5FundingFade, "n5_ff_calm")
+N5DeltaAbsorptionCalm = _calm_only(N5DeltaAbsorption, "n5_delta_absorption_calm")
+N5LiquiditySweepCalm = _calm_only(N5LiquiditySweep, "n5_liquidity_sweep_calm")
