@@ -117,8 +117,30 @@ class _N5Leg(Strategy):
                 if want < pos.stop:
                     ctx.move_stop(want)
 
+    # ---- DVOL regime gate ---------------------------------------------------
+    # trading-bots' bot_upcomers40 locked this: skip a TREND leg's entry while
+    # BTC implied vol sits in the bottom third of its trailing 180-day range,
+    # because trends whipsaw in calm markets. Fade legs are never gated there,
+    # which makes a gated fade leg the honest control - if the gate helps one
+    # of those too, it is not selecting a regime, it is just cutting trades.
+    # Fail-OPEN on a missing value, matching the live bot.
+    dvol_thr: float | None = None
+
+    def _dvol_blocks(self, ctx: Context) -> bool:
+        if self.dvol_thr is None:
+            return False
+        try:
+            pct = float(ctx.frame(1)["dvol_pct"].to_numpy(float)[-1])
+        except (KeyError, IndexError):
+            return False
+        if pct != pct:
+            return False
+        return pct < self.dvol_thr
+
     # ---- entry helper ------------------------------------------------------
     def _take(self, ctx: Context, side: int, stop: float, target=None) -> None:
+        if self._dvol_blocks(ctx):
+            return
         close = ctx.close
         risk = abs(close - stop)
         if risk <= 0:
@@ -731,3 +753,51 @@ class N5DeltaAbsorption(_N5Leg):
             if (dd < prev_high[1] and ctx.i - prev_high[0] >= 5
                     and bar.close < sma and fr >= -p["fthr"]):
                 self._take(ctx, -1, bar.high + stop_dist)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DVOL-gated variants.
+#
+# u40's placebo battery found this gate to be its only component that survived
+# a blind control ("98th percentile in isolation"), and proplab had never
+# tested it. `_dvol_gated` clones a leg with the gate switched on so the pair
+# differs by exactly one rule.
+#
+# nayrafa and asia_monday are on u40's own TREND_GATE list. volmom is not - it
+# joined in N2, after u40 - so gating it is MY extension, not Kris's locked
+# rule, and it is labelled that way. oi is the control: u40 never gates a fade
+# leg, so if the gate improves oi as well, it is cutting trades rather than
+# selecting a regime.
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _dvol_gated(base: type, slug: str, note: str, thr: float = 0.33):
+    # __module__ must be set explicitly: Strategy carries a metaclass, so a
+    # type() call picks up abc's module instead of this one, and the registry
+    # (rightly) only accepts classes defined in the module it is scanning.
+    return type(base.__name__ + "Dvol", (base,), {
+        "name": slug,
+        "dvol_thr": thr,
+        "variation": base.variation + f" DVOL-GATED: {note}",
+        "__module__": __name__,
+    })
+
+
+N5NayrafaDvol = _dvol_gated(
+    N5Nayrafa, "n5_nayrafa_dvol",
+    "entries skipped while DVOL sits below its 33rd percentile of a trailing "
+    "180 days. On u40's locked TREND_GATE list.")
+
+N5AsiaMondayDvol = _dvol_gated(
+    N5AsiaMonday, "n5_asia_monday_dvol",
+    "entries skipped below the 33rd DVOL percentile. On u40's locked "
+    "TREND_GATE list.")
+
+N5VolMomentumDvol = _dvol_gated(
+    N5VolMomentum, "n5_volmom_dvol",
+    "entries skipped below the 33rd DVOL percentile. NOT on u40's list - "
+    "volmom postdates it - so this is an extension, not the locked rule.")
+
+N5OiFadeDvol = _dvol_gated(
+    N5OiFade, "n5_oi_dvol",
+    "CONTROL, not a proposal. u40 never gates a fade leg; if the gate helps "
+    "here too then it is cutting trades rather than reading the regime.")

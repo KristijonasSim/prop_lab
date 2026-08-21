@@ -39,13 +39,19 @@ import pandas as pd
 
 SRC = Path("/home/kris/trading-bots/scalping/data")
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "data" / "raw" / "futures_BTCUSDT_1h.parquet"
+RAW = ROOT / "data" / "raw"
+OUT = RAW / "futures_BTCUSDT_1h.parquet"
 
-REQUIRED_FEEDS = ("delta", "funding", "buy_ratio", "oi")
+REQUIRED_FEEDS = ("delta", "funding", "buy_ratio", "oi", "dvol", "dvol_pct")
+
+# The DVOL regime gate, locked in trading-bots' bot_upcomers40: skip a TREND
+# leg's entry while BTC implied vol sits in the bottom third of its trailing
+# 180-day range, on the argument that trends whipsaw in calm markets.
+DVOL_WIN, DVOL_MIN_PERIODS = 180, 60
 
 
-def _read_klines(symbol: str = "BTCUSDT") -> pd.DataFrame:
-    df = pd.read_csv(SRC / f"{symbol}_1h.csv")
+def _read_klines(symbol: str = "BTCUSDT", tf: str = "1h") -> pd.DataFrame:
+    df = pd.read_csv(SRC / f"{symbol}_{tf}.csv")
     df["time"] = pd.to_datetime(df["start"], unit="ms", utc=True)
     df = df.set_index("time").drop(columns=["start"]).sort_index()
     return df[~df.index.duplicated(keep="last")]
@@ -70,18 +76,37 @@ def _attach_hourly(df: pd.DataFrame, symbol: str, fname: str, col: str) -> pd.Da
     return df
 
 
-def build(symbol: str = "BTCUSDT", out: Path | None = None) -> pd.DataFrame:
-    df = _read_klines(symbol)
+def _attach_dvol(df: pd.DataFrame, currency: str = "BTC") -> pd.DataFrame:
+    """Deribit DVOL and its trailing percentile, as a DAILY series.
+
+    The percentile is computed on daily closes and then forward-filled onto
+    the bars, so a bar carries the rank of the last CLOSED day. Ranking on the
+    current, unfinished day would be reading a close that has not happened.
+    """
+    d = pd.read_csv(SRC / f"{currency}_dvol.csv")
+    idx = pd.to_datetime(d["date"], utc=True)
+    dv = pd.Series(d["close"].to_numpy(float), index=idx).sort_index()
+    dv = dv[~dv.index.duplicated(keep="last")]
+    pct = dv.rolling(DVOL_WIN, min_periods=DVOL_MIN_PERIODS).rank(pct=True)
+    # shift(1): the rank of days up to and including YESTERDAY's close
+    df["dvol"] = dv.shift(1).reindex(df.index, method="ffill").to_numpy()
+    df["dvol_pct"] = pct.shift(1).reindex(df.index, method="ffill").to_numpy()
+    return df
+
+
+def build(symbol: str = "BTCUSDT", tf: str = "1h", out: Path | None = None) -> pd.DataFrame:
+    df = _read_klines(symbol, tf)
     df = _attach_funding(df, symbol)
     df = _attach_hourly(df, symbol, f"{symbol}_lsr_1h.csv", "buy_ratio")
     df = _attach_hourly(df, symbol, f"{symbol}_oi_1h.csv", "oi")
+    df = _attach_dvol(df)
 
     # quote_volume/trades are not in the source CSV; the engine does not need
     # them, but the loader's REQUIRED set does want volume.
     keep = ["open", "high", "low", "close", "volume", *REQUIRED_FEEDS]
     df = df[[c for c in keep if c in df.columns]]
 
-    dest = out or OUT
+    dest = out or (RAW / f"futures_{symbol}_{tf}.parquet")
     dest.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(dest)
     return df
@@ -100,6 +125,10 @@ def coverage(df: pd.DataFrame) -> str:
 
 
 if __name__ == "__main__":
-    frame = build()
-    print(f"wrote {OUT}")
-    print(coverage(frame))
+    # 30m and 4h as well as 1h: nayrafa runs on 30m and liquidity_sweep on 4h,
+    # and the hourly-only feeds simply come through empty there.
+    for tf in ("30m", "1h", "4h"):
+        frame = build(tf=tf)
+        print(f"wrote futures_BTCUSDT_{tf}.parquet")
+        print(coverage(frame))
+        print()
