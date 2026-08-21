@@ -78,7 +78,7 @@ def collect(results: dict[str, object]) -> pd.DataFrame:
 
 def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
              max_concurrent: int = 4, starting_balance: float = 100_000.0,
-             compound: bool = False):
+             compound: bool = False, max_per_leg: int | None = None):
     """Replay the combined trade list on one account.
 
     `compound=False` is the default and the right setting for the question
@@ -91,11 +91,18 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
     sizing is still available for the separate question of what the book does
     over years.
 
+    `max_per_leg` caps how many positions ONE leg may hold at once across all
+    its symbols. Without it a leg that fires in bursts - pc takes about six
+    coins at a time - puts six correlated positions on the book and the
+    drawdown is six deep rather than one. The total cap does not catch that,
+    because the slots are genuinely free; they are just all the same bet.
+
     Returns (book_trades, equity_curve, dropped). The curve is indexed by exit
     time, because that is when a trade's P&L actually lands.
     """
     equity = starting_balance
     open_slots: list[pd.Timestamp] = []      # exit times of live positions
+    per_leg: dict[str, list[pd.Timestamp]] = {}
     taken: list[BookTrade] = []
     dropped = 0
 
@@ -106,6 +113,16 @@ def simulate(trades: pd.DataFrame, *, risk_pct: float = 0.005,
         if len(open_slots) >= max_concurrent:
             dropped += 1
             continue
+        if max_per_leg is not None:
+            # a leg is the strategy, not the strategy/symbol pair - "pc" holding
+            # six coins is one bet six times over
+            base = str(row.leg).split("/")[0]
+            live = [x for x in per_leg.get(base, []) if x > now]
+            per_leg[base] = live
+            if len(live) >= max_per_leg:
+                dropped += 1
+                continue
+            per_leg[base].append(row.exit_time)
         risk = (equity if compound else starting_balance) * risk_pct
         pnl = risk * row.r_multiple
         equity += pnl
@@ -178,3 +195,104 @@ def per_leg(bt: pd.DataFrame) -> pd.DataFrame:
     })
     out["share_of_pnl_pct"] = (100 * out["pnl"] / out["pnl"].sum()).round(1)
     return out.sort_values("pnl", ascending=False)
+
+
+def evaluation_trials(bt: pd.DataFrame, *, starting_balance: float = 100_000.0,
+                      target_pct: float = 8.0, max_loss_pct: float = 8.0,
+                      daily_loss_pct: float = 4.0, deadline_days: int | None = None,
+                      step_days: int = 1, daily_stop_pct: float | None = None) -> pd.DataFrame:
+    """Run the book as a PROP EVALUATION from every possible start date.
+
+    "Max drawdown over four years <= 8%" is the wrong question and it is far
+    stricter than the rule it stands in for. An evaluation is a single
+    attempt: you start on some date and either reach +8% or breach. Surviving
+    every four-year drawdown means surviving the worst stretch that ever
+    happened; passing an evaluation only means the ONE you sat was a good one.
+    Sizing that fails the first can pass the second most of the time.
+
+    `daily_stop_pct` is a circuit breaker: once a day's realised P&L is below
+    that fraction of the starting balance, take no further ENTRIES that day.
+    It exists because the daily limit, not the max-loss limit, is what ends
+    most attempts.
+
+    Entries and exits are processed as one chronological event stream, so the
+    breaker is decided on the P&L actually realised at that moment - not on
+    the day's eventual total, which would be reading the future.
+    """
+    if bt.empty:
+        return pd.DataFrame()
+    b = bt.sort_values("entry_time").reset_index(drop=True)
+    events = []
+    for i, row in enumerate(b.itertuples(index=False)):
+        events.append((row.entry_time, 0, i))       # 0 = entry, ordered first
+        events.append((row.exit_time, 1, i))        # 1 = exit
+    events.sort(key=lambda e: (e[0], e[1]))
+    pnl = b["pnl"].to_numpy(float)
+
+    target_cash = starting_balance * target_pct / 100
+    max_loss_cash = starting_balance * max_loss_pct / 100
+    daily_cash = starting_balance * daily_loss_pct / 100
+    stop_cash = (starting_balance * daily_stop_pct / 100
+                 if daily_stop_pct is not None else None)
+
+    entry_times = pd.DatetimeIndex(b["entry_time"])
+    starts = pd.date_range(entry_times[0].normalize(), entry_times[-1].normalize(),
+                           freq=f"{step_days}D")
+    rows = []
+    for s in starts:
+        equity, day_pnl, cur_day = 0.0, 0.0, None
+        live: set[int] = set()
+        outcome, took = "timeout", None
+        for when, kind, i in events:
+            if when < s:
+                continue
+            d = when.normalize()
+            if cur_day is None or d != cur_day:
+                cur_day, day_pnl = d, 0.0
+            elapsed = (when - s).days
+            if deadline_days is not None and elapsed > deadline_days:
+                outcome, took = "timeout", elapsed
+                break
+            if kind == 0:
+                if stop_cash is not None and day_pnl <= -stop_cash:
+                    continue                    # halted for the day
+                live.add(i)
+                continue
+            if i not in live:
+                continue                        # its entry was skipped
+            live.discard(i)
+            equity += pnl[i]
+            day_pnl += pnl[i]
+            if equity >= target_cash:
+                outcome, took = "pass", elapsed
+                break
+            if equity <= -max_loss_cash:
+                outcome, took = "max_loss", elapsed
+                break
+            if day_pnl <= -daily_cash:
+                outcome, took = "daily_loss", elapsed
+                break
+        else:
+            took = (events[-1][0] - s).days
+        rows.append({"start": s, "outcome": outcome, "days": took})
+    return pd.DataFrame(rows)
+
+
+def evaluation_summary(trials: pd.DataFrame, deadline_days: int = 14) -> dict:
+    """Headline numbers for a run of attempts. `deadline_days` only labels the
+    'passed in time' column - trials themselves may have run without a deadline."""
+    if trials.empty:
+        return {}
+    n = len(trials)
+    passed = trials[trials["outcome"] == "pass"]
+    in_time = passed[passed["days"] <= deadline_days]
+    return {
+        "attempts": n,
+        "pass_pct": round(100 * len(passed) / n, 1),
+        "breach_pct": round(100 * trials["outcome"].isin(["max_loss", "daily_loss"]).mean(), 1),
+        "daily_loss_pct_of_all": round(100 * (trials["outcome"] == "daily_loss").mean(), 1),
+        "timeout_pct": round(100 * (trials["outcome"] == "timeout").mean(), 1),
+        f"passed_within_{deadline_days}d_pct": round(100 * len(in_time) / n, 1),
+        "median_days_to_pass": float(passed["days"].median()) if len(passed) else None,
+        "p25_days_to_pass": float(passed["days"].quantile(0.25)) if len(passed) else None,
+    }

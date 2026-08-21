@@ -42,7 +42,8 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
 OUT = RAW / "futures_BTCUSDT_1h.parquet"
 
-REQUIRED_FEEDS = ("delta", "funding", "buy_ratio", "oi", "dvol", "dvol_pct")
+REQUIRED_FEEDS = ("delta", "funding", "buy_ratio", "oi", "dvol", "dvol_pct",
+                  "zk", "zc")
 
 # The DVOL regime gate, locked in trading-bots' bot_upcomers40: skip a TREND
 # leg's entry while BTC implied vol sits in the bottom third of its trailing
@@ -99,12 +100,38 @@ def _attach_dvol(df: pd.DataFrame, currency: str = "BTC") -> pd.DataFrame:
     return df
 
 
+def _attach_premium(df: pd.DataFrame) -> pd.DataFrame:
+    """The joint premium index: kimchi z (`zk`) and Coinbase z (`zc`).
+
+    Market-wide, not per-symbol - it measures where crypto is being bid
+    relative to the rest of the world, so the same pair of series is attached
+    to every coin, which is exactly how the source strategy uses it.
+
+    Built by trading-bots' own `strategy_premium_confluence.build_joint_index()`
+    and copied to data/feeds/premium_index.csv, because reimplementing an index
+    from Upbit KRW, USD/KRW and Coinbase prices would be a new construction
+    rather than a port of Kris's.
+    """
+    f = ROOT / "data" / "feeds" / "premium_index.csv"
+    if not f.exists():
+        df["zk"] = float("nan")
+        df["zc"] = float("nan")
+        return df
+    ix = pd.read_csv(f)
+    ix.index = pd.to_datetime(ix["start"], unit="ms", utc=True)
+    ix = ix[~ix.index.duplicated(keep="last")].sort_index()
+    for col in ("zk", "zc"):
+        df[col] = ix[col].reindex(df.index).to_numpy()
+    return df
+
+
 def build(symbol: str = "BTCUSDT", tf: str = "1h", out: Path | None = None) -> pd.DataFrame:
     df = _read_klines(symbol, tf)
     df = _attach_funding(df, symbol)
     df = _attach_hourly(df, symbol, f"{symbol}_lsr_1h.csv", "buy_ratio")
     df = _attach_hourly(df, symbol, f"{symbol}_oi_1h.csv", "oi")
     df = _attach_dvol(df)
+    df = _attach_premium(df)
 
     # quote_volume/trades are not in the source CSV; the engine does not need
     # them, but the loader's REQUIRED set does want volume.
@@ -129,15 +156,14 @@ def coverage(df: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
-# The union of N5's live baskets, and the timeframe each leg needs. Building
-# only what a leg actually trades keeps this honest: running a leg on a symbol
-# it was never given is a different test, and should be labelled as one.
-BASKETS = {
-    "1h": ["ADAUSDT", "ATOMUSDT", "AVAXUSDT", "BCHUSDT", "BTCUSDT", "DOGEUSDT",
-           "ETHUSDT", "LINKUSDT", "NEARUSDT", "SOLUSDT", "TRXUSDT", "XRPUSDT"],
-    "30m": ["BTCUSDT", "ETHUSDT", "XRPUSDT", "LINKUSDT"],
-    "4h": ["BTCUSDT", "ETHUSDT"],
-}
+# Every symbol N5 touches, at every timeframe its legs use. The legs' own
+# baskets are a SUBSET of this: running a leg on a symbol it was never given
+# is a different test - an out-of-sample one in the symbol dimension - and is
+# labelled that way wherever it is used.
+SYMBOLS = ["ADAUSDT", "ATOMUSDT", "AVAXUSDT", "BCHUSDT", "BTCUSDT", "DOGEUSDT",
+           "ETHUSDT", "LINKUSDT", "NEARUSDT", "SOLUSDT", "TRXUSDT", "XRPUSDT"]
+
+BASKETS = {tf: list(SYMBOLS) for tf in ("30m", "1h", "4h")}
 
 
 def build_all(verbose: bool = True) -> list[tuple[str, str, int]]:

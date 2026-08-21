@@ -81,3 +81,59 @@ def test_trades_without_a_defined_risk_are_excluded():
 
     out = portfolio.collect({"leg": _Res()})
     assert len(out) == 1        # only the one with a real R and real risk
+
+
+# ---- prop-evaluation replay ------------------------------------------------
+
+def _book(rows):
+    """rows: (entry, exit, pnl) -> the frame simulate() would have produced."""
+    return pd.DataFrame(
+        [{"leg": "a", "entry_time": pd.Timestamp(e, tz="UTC"),
+          "exit_time": pd.Timestamp(x, tz="UTC"), "r_multiple": p / 1000,
+          "risk": 1000.0, "pnl": p, "equity_after": 0.0}
+         for e, x, p in rows])
+
+
+def test_evaluation_passes_when_the_target_is_reached():
+    bt = _book([("2024-01-01", "2024-01-02", 9000.0)])
+    tr = portfolio.evaluation_trials(bt, step_days=1)
+    assert tr.iloc[0]["outcome"] == "pass"
+
+
+def test_evaluation_fails_on_the_daily_loss_limit_before_the_max_loss():
+    # one day losing 5% breaches the 4% daily rule while total loss is under 8%
+    bt = _book([("2024-01-01", "2024-01-01 10:00", -5000.0)])
+    tr = portfolio.evaluation_trials(bt, step_days=1)
+    assert tr.iloc[0]["outcome"] == "daily_loss"
+
+
+def test_evaluation_fails_on_max_loss_when_spread_over_days():
+    bt = _book([(f"2024-01-{d:02d}", f"2024-01-{d:02d} 10:00", -3000.0)
+                for d in range(1, 5)])
+    tr = portfolio.evaluation_trials(bt, step_days=1)
+    assert tr.iloc[0]["outcome"] == "max_loss"
+
+
+def test_deadline_produces_a_timeout():
+    bt = _book([("2024-01-01", "2024-03-01", 9000.0)])
+    tr = portfolio.evaluation_trials(bt, deadline_days=14, step_days=1)
+    assert tr.iloc[0]["outcome"] == "timeout"
+
+
+def test_daily_breaker_skips_entries_after_the_day_is_down():
+    # first trade loses 3.5%; with a 3% breaker the second must not be entered,
+    # so the day stops at -3.5% instead of breaching the 4% limit
+    bt = _book([("2024-01-01 01:00", "2024-01-01 02:00", -3500.0),
+                ("2024-01-01 03:00", "2024-01-01 04:00", -3000.0)])
+    without = portfolio.evaluation_trials(bt, step_days=1)
+    with_brk = portfolio.evaluation_trials(bt, step_days=1, daily_stop_pct=3.0)
+    assert without.iloc[0]["outcome"] == "daily_loss"
+    assert with_brk.iloc[0]["outcome"] != "daily_loss"
+
+
+def test_summary_counts_only_passes_inside_the_deadline():
+    tr = pd.DataFrame({"outcome": ["pass", "pass", "max_loss", "timeout"],
+                       "days": [3, 40, 5, 14]})
+    s = portfolio.evaluation_summary(tr, deadline_days=14)
+    assert s["pass_pct"] == 50.0
+    assert s["passed_within_14d_pct"] == 25.0   # the 40-day pass does not count

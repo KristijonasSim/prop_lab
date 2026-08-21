@@ -801,3 +801,107 @@ N5OiFadeDvol = _dvol_gated(
     N5OiFade, "n5_oi_dvol",
     "CONTROL, not a proposal. u40 never gates a fade leg; if the gate helps "
     "here too then it is cutting trades rather than reading the regime.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# pc - premium confluence. The ninth leg, and in u42 the largest single
+# contributor at 29.9% of book profit on PF 4.00.
+#
+# It was left unported earlier because bot_n5 gives it `signal=None` and
+# `is_premium=True` - live, the bot drives it from a premium poll rather than
+# a bar-close rule. But the BACKTEST form does exist, in
+# scalping/strategy_premium_confluence.py, and that is what is ported here:
+# the same LOCKED thresholds, the same trend filter, the same z-cross exit.
+#
+# The index itself is not reimplemented. `build_joint_index()` combines Upbit
+# KRW prices, USD/KRW and Coinbase USD prices into two z-scores, and rebuilding
+# that from parts would be a new construction wearing Kris's name. It is built
+# by trading-bots' own code and imported as a feed.
+# ═══════════════════════════════════════════════════════════════════════════
+
+class N5PremiumConfluence(_N5Leg):
+    name = "n5_pc"
+    hypothesis = (
+        "When Korean and US spot buyers are BOTH paying a premium to the "
+        "world perp price, and one of them moves to an extreme, the move "
+        "continues."
+    )
+    mechanism = (
+        "The kimchi premium is what Koreans pay above the world price, and the "
+        "Coinbase premium is what US spot buyers pay above Binance. Both are "
+        "hard to arbitrage away: Korean capital controls make the first "
+        "sticky, and the second reflects US institutional flow arriving "
+        "through a specific venue. So an extreme in either is real demand "
+        "that has not yet reached the perp, rather than noise. Requiring the "
+        "OTHER premium to agree is what makes it confluence instead of a "
+        "single-venue quirk - one venue alone can be a withdrawal halt or a "
+        "stablecoin wobble; both at once is flow.\n\n"
+        "The weakness is frequency. This fires in bursts of roughly one every "
+        "17 days across the basket, so however good it looks per trade, it "
+        "cannot carry an evaluation on its own."
+    )
+    variation = (
+        "Locked live values: enter when either premium z crosses 2.0 while "
+        "the other is at least 1.0 and agreeing in sign, filtered by a "
+        "400-bar SMA; stop 3 Wilder ATR, rr 1.5, 48-bar hold, cooldown 1, and "
+        "an exit when the mean of the two z-scores crosses back through zero."
+    )
+    references = ["trading-bots: scalping/strategy_premium_confluence.py "
+                  "(LOCKED / LOCKED_TRADE), the `pc` leg of bot_n5.LEGS"]
+
+    rr, max_hold, cooldown, trail_r = 1.5, 48, 1, 0.0
+    params = {"risk_pct": 0.005, "atr_len": 14,
+              "thr": 2.0, "agree": 1.0, "stop_atr": 3.0, "trend_win": 400}
+
+    def on_bar(self, ctx: Context) -> None:
+        p = ctx.params
+        a = self._atr(ctx)
+        self._track_exit(ctx)
+
+        z = ctx.frame(2)
+        try:
+            zk = z["zk"].to_numpy(float)
+            zc = z["zc"].to_numpy(float)
+        except KeyError:
+            return
+        if len(zk) < 2:
+            return
+        zk_now, zk_prev, zc_now, zc_prev = zk[-1], zk[-2], zc[-1], zc[-2]
+        if any(v != v for v in (zk_now, zk_prev, zc_now, zc_prev)):
+            return
+
+        # the premium exit: mean z crossing back through zero closes the trade,
+        # whichever side it is on
+        if ctx.position is not None:
+            zm, zm_prev = (zk_now + zc_now) / 2, (zk_prev + zc_prev) / 2
+            if ctx.position.is_long and zm <= 0 < zm_prev:
+                ctx.close_position("premium_faded")
+            elif (not ctx.position.is_long) and zm >= 0 > zm_prev:
+                ctx.close_position("premium_faded")
+            return
+
+        if not self._cool(ctx) or not a > 0 or ctx.bars_seen < p["trend_win"] + 2:
+            return
+
+        thr, agree = p["thr"], p["agree"]
+        sig = 0
+        # either premium may be the one crossing; the other only has to agree
+        if zk_now >= thr > zk_prev and zc_now >= agree:
+            sig = 1
+        elif zk_now <= -thr < zk_prev and zc_now <= -agree:
+            sig = -1
+        if sig == 0:
+            if zc_now >= thr > zc_prev and zk_now >= agree:
+                sig = 1
+            elif zc_now <= -thr < zc_prev and zk_now <= -agree:
+                sig = -1
+        if sig == 0:
+            return
+
+        sma = float(np.mean(ctx.series("close", p["trend_win"])))
+        c = ctx.close
+        if sig > 0 and not c > sma:
+            return
+        if sig < 0 and not c < sma:
+            return
+        self._take(ctx, sig, c - sig * p["stop_atr"] * a)
