@@ -1,11 +1,12 @@
+# Local environment only — rebuild from requirements-lock.txt
 .venv/
 __pycache__/
 *.py[cod]
-.env
-data/*.parquet
-data/**/*.parquet
-data/**/*.csv
-backtests/**/*.parquet
 .ipynb_checkpoints/
 .pytest_cache/
-catalog/
+
+# Secrets
+.env
+
+# Everything else is committed on purpose, including data/ and backtests/,
+# so a clone reproduces the results without re-downloading anything.
