@@ -396,3 +396,37 @@ combination is indistinguishable from noise despite a headline near 2.0.
 passed. Out-of-sample, walk-forward, the prop-challenge simulation and the NautilusTrader
 cross-check are all still to run, and those are the four tests that killed every ORB
 candidate.
+
+### Stage 4 — three challenge profiles (2026-08-31)
+
+Kris asked for a safest / moderate / riskiest configuration with PF, CAGR, drawdown and
+time to pass. Method: candidates ranked on the FIT window only (2023-09 -> 2025-09), then
+every number measured on the test year and the full period. Prop simulation opens a fresh
+account every trading day, fixed risk, real breaches, 400-day limit.
+
+| profile | market | tf | risk | PF fit | PF test | CAGR | max DD | pass | breach 8% | median days |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Conservative | XAUUSD | 15m | 0.50% | 1.570 | 2.489 | 24.0% | -5.9% | 96% | 0% | 127 |
+| Moderate | XAUUSD | 5m | 0.75% | 1.554 | 1.915 | 34.4% | -7.6% | 82% | 13% | 50 |
+| Aggressive | XAUUSD | 5m | 2.00% | 1.554 | 1.915 | 68.8% | -13.2% | 44% | 23% | 18 |
+| Diversifier | BTCUSDT | 1h | 0.75% | 2.403 | 1.355 | 24.6% | -7.8% | 54% | 25% | 51 |
+
+Moderate and Aggressive are the SAME configuration at different risk — sizing is the lever,
+not the strategy. All are band-break on a rolling VWAP anchor, honest fills, no breakeven
+stop and no retest entry (H-001 proved both destroy edge).
+
+**Every profile improved on the test year it was not chosen on** (1.570->2.489,
+1.554->1.915), which is the opposite of the ORB signature. The BTC diversifier decayed
+(2.403->1.355) and is the weakest of the four.
+
+**Three reasons these are candidates and not a plan:**
+1. No walk-forward yet. That is the only test with no hindsight in it and the one that
+   killed every ORB candidate.
+2. Frequency: 0.14-0.36 trades/day, so 18-127 days to pass against a phase target of ~14.
+   Only the Aggressive profile fits the window, and it passes only 44% of the time.
+3. Three of four are gold. Running them together is one bet, not a book.
+
+Selection bias remains despite the fit/test split: the top three per market/timeframe were
+carried forward on fit-window profit factor, but the final three were chosen using
+full-period pass rates. A clean version would choose the profile inside each walk-forward
+fold.

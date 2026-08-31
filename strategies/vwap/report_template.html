@@ -123,6 +123,19 @@ a{color:var(--accent)}
 <div class="wrap">
 
 <section>
+  <div class="shead"><span class="stage">PROFILES</span><h2>Three ways to size the same edge</h2>
+    <span class="aside">chosen on 2023-09 &rarr; 2025-09, measured after</span></div>
+  <p class="tight">Risk per trade is the lever, not the strategy. Drawdown and time-to-pass
+    move in opposite directions as you turn it. <strong>Every candidate was ranked on the fit
+    window only</strong>, so the test-year profit factor below is a number the configuration
+    was not selected on.</p>
+  <div class="scroll"><table id="profiles"></table></div>
+  <p class="tight">The rules behind each one:</p>
+  <div class="scroll"><table id="profilecfg"></table></div>
+  <div class="callout bad" id="profile-warning"></div>
+</section>
+
+<section>
   <div class="shead"><span class="stage">01</span><h2>The fill test</h2>
     <span class="aside">band families only</span></div>
   <p class="tight">A band strategy is naturally traded with a resting limit order at the
@@ -204,6 +217,44 @@ $('readout').innerHTML = [
   {k:'Best a NULL search found', v:f(TN.null_best||0,2), n:'on shuffled data with no edge in it', tone:'fail'},
 ].map(c=>`<div class="cell"><div class="k">${c.k}</div><div class="v ${c.tone||''}">${c.v}</div>
   <div class="n2">${c.n}</div></div>`).join('');
+
+if (D.profiles){
+  const P=D.profiles;
+  table($('profiles'),[
+    {h:'Profile',k:'profile',cls:()=>'name'},
+    {h:'Market',k:'symbol'},{h:'TF',k:'tf'},
+    {h:'Risk / trade',n:1,f:r=>(r.risk*100).toFixed(2)+'%'},
+    {h:'PF fit years',n:1,f:r=>f(r.fit_pf),cls:r=>cls(r.fit_pf)},
+    {h:'PF test year',n:1,f:r=>f(r.pf_oos),cls:r=>cls(r.pf_oos)},
+    {h:'PF full period',n:1,f:r=>f(r.pf_all),cls:r=>cls(r.pf_all)},
+    {h:'CAGR',n:1,f:r=>(r.cagr*100).toFixed(1)+'%',cls:()=>'good'},
+    {h:'Max DD',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',cls:r=>r.max_dd<=-0.08?'bad':'good'},
+    {h:'Sharpe',n:1,f:r=>f(r.sharpe,2)},
+    {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+    {h:'Pass rate',n:1,f:r=>(r.pass_rate*100).toFixed(0)+'%',cls:r=>r.pass_rate>=0.7?'good':(r.pass_rate<0.5?'bad':'')},
+    {h:'Breach 8% cap',n:1,f:r=>(r.fail_max*100).toFixed(0)+'%',cls:r=>r.fail_max>0.2?'bad':''},
+    {h:'Days to pass (median)',n:1,f:r=>f(r.median_days,0)},
+    {h:'Days to pass (best 25%)',n:1,f:r=>f(r.p25_days,0)},
+  ], P, 'Pass rate and days-to-pass: a fresh account opened every trading day, 4% daily / 8% max / 8% target, fixed risk, real breaches, no size shrinking, 400-day limit.');
+
+  table($('profilecfg'),[
+    {h:'Profile',k:'profile',cls:()=>'name'},
+    {h:'Family',k:'family'},{h:'VWAP anchor',k:'anchor'},
+    {h:'Entry band',n:1,f:r=>f(r.band,1)+' sigma'},
+    {h:'Stop',k:'stop'},{h:'Target',k:'target'},
+    {h:'Filter',k:'filters'},
+    {h:'Trades (3y)',k:'trades',n:1},
+    {h:'Fill',f:()=>'close beyond band, next open'},
+  ], P, 'All four use honest fills. None uses a breakeven stop or a retest entry - H-001 showed both destroy edge.');
+
+  $('profile-warning').innerHTML = `<p><strong>Read these as candidates, not as a plan.</strong>
+    Three things are not yet true of them. They have not been walk-forwarded, which is the only
+    test that removes hindsight entirely and the one that killed every ORB candidate. They trade
+    ${f(Math.min(...P.map(r=>r.tpd)),2)}-${f(Math.max(...P.map(r=>r.tpd)),2)} times a day, so the
+    median account needs ${f(Math.min(...P.map(r=>r.median_days)),0)}-${f(Math.max(...P.map(r=>r.median_days)),0)}
+    days to pass - the current phase wants roughly 14. And three of the four are the same
+    instrument, so running them together is one bet, not a diversified book.</p>`;
+}
 
 table($('fill'),[
   {h:'Market',k:'symbol',cls:()=>'name'},

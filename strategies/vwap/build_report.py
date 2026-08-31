@@ -38,6 +38,11 @@ def anchor_label(r) -> str:
 def collect() -> dict:
     d: dict = {}
 
+    # ---------- stage 4: challenge profiles ----------
+    pj = OUT / "profiles.json"
+    if pj.exists():
+        d["profiles"] = json.loads(pj.read_text())
+
     # ---------- stage 1: the fill test ----------
     s1 = pd.read_csv(OUT / "stage1_grid.csv")
     k1 = s1[(s1.cost_mult == 1) & (s1.trades >= 100)]
