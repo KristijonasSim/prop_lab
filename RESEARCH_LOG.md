@@ -246,3 +246,51 @@ resolves: top 10 by fit PF, their median test PF, and how many stayed above 1.0.
 Gold 1.192 -> 1.148 (9/10), GBPUSD 1.231 -> 1.211 (8/10), EURUSD 1.106 -> 0.700 (1/10),
 BTC 0.964 -> 0.710 (0/10). Also added PF-at-2x and PF-at-3x columns to the best-per-market
 table, since the cost cliff is what decides every one of them.
+
+### H-001 ORB — the FX universe test (2026-08-31)
+
+Kris asked whether ORB might work only on FX, since GBPUSD was the one market to clear
+PF 1.20. Extended the universe to eight instruments (EURUSD, GBPUSD, USDJPY, AUDUSD,
+USDCAD, USDCHF, NZDUSD, XAUUSD), 8,160 configurations each, same 3-year window.
+JPY crosses and silver were dropped: Dukascopy throttles hard above five parallel
+downloads and they would have added another hour.
+
+**I was wrong that GBPUSD was a lucky pair.** Six of eight instruments produce
+gate-clearing configurations at 1x cost, and two of them beat GBPUSD:
+
+| pair | clear 1.20 | best PF | best at 2x | median | top10 fit -> test | DD |
+|---|---|---|---|---|---|---|
+| AUDUSD | 26 | 1.698 | 0.737 | 0.675 | 1.325 -> 1.867 (10/10) | -14.1% |
+| USDCHF | 19 | 1.506 | 0.614 | 0.587 | 1.108 -> 1.224 (8/10) | -28.1% |
+| GBPUSD | 11 | 1.439 | 0.553 | 0.663 | 1.231 -> 1.211 (8/10) | -9.4% |
+| USDJPY | 6 | 1.320 | 1.123 | 0.689 | 1.353 -> 0.858 (3/10) | -26.3% |
+| NZDUSD | 5 | 1.300 | 0.584 | 0.610 | 1.037 -> 0.764 (1/10) | -27.9% |
+| XAUUSD | 2 | 1.262 | 1.046 | 0.711 | 1.192 -> 1.148 (9/10) | -63.8% |
+| EURUSD | 0 | 1.081 | 0.836 | 0.634 | 1.106 -> 0.700 (1/10) | -65.4% |
+| USDCAD | 0 | 1.075 | 0.823 | 0.488 | 0.984 -> 0.893 (4/10) | -40.8% |
+
+So the pattern is FX-wide at institutional spreads, not one pair's accident. That is a
+real correction to the earlier read.
+
+**But two things are universal across all eight, and they are what settle it.**
+
+1. **Zero of 65,280 configurations clear PF 1.20 at 2x cost.** Not one, on any
+   instrument. The break-even spread by pair: EURUSD and USDCAD die at 1.0x, GBPUSD and
+   NZDUSD at 1.2x, USDCHF and XAUUSD at 1.3x, AUDUSD at 1.5x, USDJPY at 1.6x. 1x here is
+   an institutional ECN spread; a prop firm is routinely 4-6x that. The edge is
+   systematically about the width of one extra spread, on every pair independently.
+2. **Every single best configuration has a max drawdown that breaches the 8% cap** —
+   from -9.4% (GBPUSD, the mildest) to -65% (EURUSD). All at a fixed 1% risk per trade.
+
+And only two of eight resolve fast enough for the current phase (XAUUSD 11 days,
+EURUSD 14); the rest run 19 to 339 days.
+
+The transfer test says the same thing from the other direction: each market's winning
+configuration scores 0.32-0.82 on the other markets, and of 8,160 configs scored on
+EURUSD, GBPUSD and XAUUSD together, **zero clear 1.20 on more than one**. The gate
+clearers are broad as a phenomenon but individually pair-specific — which is what an
+edge that sits just under the noise floor looks like when you search 8,160 ways.
+
+**Verdict unchanged, reasoning upgraded.** ORB is not dead because GBPUSD got lucky. It
+is dead because the effect is real, small, present across FX, and uniformly smaller than
+the cost of trading it anywhere a retail account can actually trade.

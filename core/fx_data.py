@@ -36,7 +36,17 @@ UA = {
 }
 
 # price integers are scaled by 10**digits
-POINT = {"EURUSD": 1e5, "GBPUSD": 1e5, "USDJPY": 1e3, "XAUUSD": 1e3, "XAGUSD": 1e3}
+POINT = {
+    # 5-decimal majors and crosses
+    "EURUSD": 1e5, "GBPUSD": 1e5, "AUDUSD": 1e5, "NZDUSD": 1e5,
+    "USDCAD": 1e5, "USDCHF": 1e5, "EURGBP": 1e5, "EURCHF": 1e5,
+    "EURAUD": 1e5, "GBPAUD": 1e5, "AUDNZD": 1e5, "USDMXN": 1e5,
+    # 3-decimal JPY crosses
+    "USDJPY": 1e3, "EURJPY": 1e3, "GBPJPY": 1e3, "AUDJPY": 1e3,
+    "CHFJPY": 1e3, "CADJPY": 1e3, "NZDJPY": 1e3,
+    # metals
+    "XAUUSD": 1e3, "XAGUSD": 1e3,
+}
 TICK = struct.Struct(">IIIff")          # ms, ask, bid, askvol, bidvol
 CANDLE = struct.Struct(">Iiiiif")       # sec-from-midnight, O, C, L, H as ints scaled
                                         # by POINT, then volume as float32. Reading
