@@ -52,6 +52,10 @@ manager that sizes down to avoid ever breaching — that produces a fake 0% fail
 
 ## 3. Where things stand
 
+Each idea gets an ID — **H-001**, **H-002** and so on, in the order Kris brought them.
+The ID tags every row in `STRATEGY_LOG.md`, so any number can be traced back to the
+hypothesis it came from. Folders are named after the strategy, not the ID.
+
 | ID | Hypothesis | Verdict |
 |---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** — see `backtests/orb/report.html` |
@@ -179,8 +183,53 @@ Every one of these inflated results before it was caught. Assume the next one ex
 
 ## 8. If you are picking this up cold
 
-Run `.venv/bin/python smoke_test.py` first. Then read `RESEARCH_LOG.md` top to bottom — it is
-the reasoning behind every verdict, in order. `STRATEGY_LOG.md` is the one-row-per-variation
-ledger, pass and fail; the failures are the denominator that makes a winner believable.
+```bash
+git clone git@github.com:KristijonasSim/prop_lab.git && cd prop_lab
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-lock.txt
+.venv/bin/python smoke_test.py            # must end with READY
+```
 
-Then run the H-002 walk-forward. Everything else is secondary.
+Then read `RESEARCH_LOG.md` top to bottom — it is the reasoning behind every verdict, in
+order. `STRATEGY_LOG.md` is the one-row-per-variation ledger, pass and fail; the failures
+are the denominator that makes a winner believable.
+
+Published result pages (private artifacts, Kris can share them):
+- H-001 ORB — <https://claude.ai/code/artifact/a38e8a90-fc1a-4133-afc1-da3a826ae370>
+- H-002 VWAP — <https://claude.ai/code/artifact/cb748842-7d3b-45f7-9d69-827e00ba82f4>
+
+Rebuild either locally with `.venv/bin/python strategies/<orb|vwap>/build_report.py`.
+
+### The next job, concretely
+
+**Walk-forward H-002.** Nothing else matters until this exists, because every H-002 number
+in the repo was chosen with hindsight and this is the one test that removes it.
+
+Copy `strategies/orb/stage4_walkforward.py` — it is the working template and the same shape
+applies. What it has to do:
+
+1. Roll quarterly over 2023-09 to 2026-08. Train on the trailing 12 months, test the next 3.
+2. Inside each fold, choose the configuration on the TRAIN slice only, by profit factor with
+   a trade-count floor. Re-choose every fold; never carry a config forward by hand.
+3. **Also re-choose the filters inside the fold.** The H-002 filter set was picked from a
+   29-filter study on overlapping data, so leaving it fixed leaves selection bias in.
+4. Trade the chosen config on the TEST slice at 1x cost and stitch the test trades together.
+5. Report on the stitched series: profit factor, trades/day, average R, max drawdown, and
+   quarters above breakeven. Compare against the fitted numbers already in `RESEARCH_LOG.md`.
+
+The bar to beat: ORB's stitched walk-forward was **PF 0.781** over 2,746 trades, against a
+fitted best of 1.698. If H-002's stitched walk-forward comes in near or above 1.20 with a
+usable trade frequency, it is the first real candidate this project has produced. If it
+collapses the way ORB's did, H-002 joins ORB in the log and the next hypothesis starts.
+
+After that, in order: the prop-challenge simulation re-run on walk-forward output rather
+than fitted configs; a NautilusTrader cross-check of the VWAP kernel (`core/nautilus_setup.py`
+and `strategies/orb/stage6_nautilus.py` show the pattern); and XAGUSD, which Kris asked for
+and which may still be mid-download in `data/dukascopy_raw/XAGUSD/`.
+
+### What Kris will ask you
+
+He moves fast and asks for outcomes ("make it 1.6 PF", "pass in a week"). Give him the
+number he asked for **and** the number that says whether it is real — the null benchmark and
+the walk-forward exist for exactly that. He responds well to being shown the arithmetic
+before the simulation; he pushed back correctly on a result once and was right to.
