@@ -148,6 +148,12 @@ def assets(d: dict) -> dict:
         k1 = g[(g.cost_mult == 1) & (g.trades >= 100)]
         if len(k1):
             b = k1.loc[k1.pf.idxmax()]
+            CFG = ["hour", "or_bars", "hold_bars", "entry_mode", "stop_mode",
+                   "stop_atr_mult", "rr", "fade"]
+            same = g.copy()
+            for kk in CFG:
+                same = same[same[kk] == b[kk]]
+            pf_at = {float(r.cost_mult): round(float(r.pf), 3) for _, r in same.iterrows()}
             best.append({
                 "symbol": names[sym],
                 "anchor": f"{int(b.hour):02d}:00",
@@ -163,6 +169,7 @@ def assets(d: dict) -> dict:
                 "sharpe": round(float(b.sharpe), 2),
                 "resolve": (round(float(b.days_to_target), 1)
                             if np.isfinite(b.days_to_target) else None),
+                "pf2x": pf_at.get(2.0), "pf3x": pf_at.get(3.0),
             })
     # PF distribution per asset at 1x
     bins = np.arange(0.0, 2.01, 0.05)
@@ -224,11 +231,17 @@ def assets(d: dict) -> dict:
             if not len(mg):
                 continue
             g = mg[mg.pf_is >= 1.2]
+            # "clears 1.20 in sample" is empty for two markets, so rank by fit PF
+            # instead and report the top 10 - a cell that always has a number.
+            top10 = mg.nlargest(10, "pf_is")
             surv.append({
                 "symbol": names[sym], "paired": int(len(mg)),
                 "is_gate": int(len(g)),
                 "oos_gate": int((g.pf_oos >= 1.2).sum()) if len(g) else 0,
                 "median_oos_gate": round(float(g.pf_oos.median()), 3) if len(g) else None,
+                "top10_is": round(float(top10.pf_is.median()), 3),
+                "top10_oos": round(float(top10.pf_oos.median()), 3),
+                "top10_kept": int((top10.pf_oos >= 1.0).sum()),
                 "median_oos_all": round(float(mg.pf_oos.median()), 3),
             })
 

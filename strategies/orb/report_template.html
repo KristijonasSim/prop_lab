@@ -127,7 +127,9 @@ a{color:var(--accent)}
     <span class="aside" id="best-window"></span></div>
   <p class="tight">The winner of an 8,160-way search per market, at realistic cost. Gate is
     PF&nbsp;1.20. <strong>Days to resolve</strong> is the estimated trading days to hit the 8%
-    target or breach the 8% cap &mdash; the current phase needs that under ~14.</p>
+    target or breach the 8% cap &mdash; the current phase needs that under ~14. The two cost
+    columns are where these die: 1&times; assumes institutional spreads, and a prop firm's
+    are routinely 4&ndash;6&times; that.</p>
   <div class="scroll"><table id="assets-best"></table></div>
 </section>
 
@@ -259,7 +261,9 @@ if (D.assets){
     {h:'Hold',n:1,f:r=>f(r.hold,1)+'h'},
     {h:'Max DD',n:1,f:r=>(r.dd*100).toFixed(0)+'%'},
     {h:'Sharpe',n:1,f:r=>f(r.sharpe,2),cls:r=>r.sharpe>0?'':'bad'},
-    {h:'Days to resolve',n:1,f:r=>r.resolve!=null?f(r.resolve,0):'&mdash;'},
+    {h:'Days to resolve',n:1,f:r=>r.resolve!=null?f(r.resolve,0):'&mdash;',cls:r=>r.resolve>14?'bad':''},
+    {h:'PF at 2x cost',n:1,f:r=>r.pf2x==null?'&mdash;':f(r.pf2x),cls:r=>cls(r.pf2x)},
+    {h:'PF at 3x cost',n:1,f:r=>r.pf3x==null?'&mdash;':f(r.pf3x),cls:r=>cls(r.pf3x)},
     {h:'Clears gate',f:r=>r.pf>=1.2?'<span class="chip yes">yes</span>':'<span class="chip no">no</span>'},
   ], D.assets.best, 'Max drawdown at a fixed 1% risk per trade, so it scales linearly with size.');
 
@@ -281,10 +285,14 @@ if (D.assets){
       {h:'Configs paired',k:'paired',n:1},
       {h:'Clear 1.20 on fit years',k:'is_gate',n:1},
       {h:'Still clear on test year',n:1,f:r=>r.oos_gate,cls:r=>r.oos_gate?'good':'bad'},
-      {h:'Median test PF of those',n:1,f:r=>r.median_oos_gate==null?'&mdash;':f(r.median_oos_gate),
-        cls:r=>r.median_oos_gate?cls(r.median_oos_gate):''},
+      {h:'Median test PF of those',n:1,f:r=>r.median_oos_gate==null?'none cleared':f(r.median_oos_gate),
+        cls:r=>r.median_oos_gate?cls(r.median_oos_gate):'dim'},
+      {h:'Top 10 by fit PF',n:1,f:r=>f(r.top10_is),cls:r=>cls(r.top10_is)},
+      {h:'&rarr; their test PF',n:1,f:r=>f(r.top10_oos),cls:r=>cls(r.top10_oos)},
+      {h:'&rarr; still above 1.0',n:1,f:r=>r.top10_kept+' / 10',cls:r=>r.top10_kept>=5?'':'bad'},
       {h:'Median test PF, all configs',n:1,f:r=>f(r.median_oos_all),cls:r=>cls(r.median_oos_all)},
-    ], D.assets.survival);
+    ], D.assets.survival,
+    'Two markets had nothing clear the gate on the fit years, so the last four columns rank by fit profit factor instead and follow the top 10 across - always a number, never an empty cell.');
     $('survival-note').innerHTML = D.survival_note;
   }
 

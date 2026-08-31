@@ -33636,7 +33636,9 @@
     "avg_r": 0.2506,
     "dd": -0.6381,
     "sharpe": 1.08,
-    "resolve": 11.3
+    "resolve": 11.3,
+    "pf2x": 1.046,
+    "pf3x": 0.885
    },
    {
     "symbol": "EURUSD",
@@ -33652,7 +33654,9 @@
     "avg_r": 0.0866,
     "dd": -0.6542,
     "sharpe": 0.4,
-    "resolve": 14.0
+    "resolve": 14.0,
+    "pf2x": 0.836,
+    "pf3x": 0.669
    },
    {
     "symbol": "GBPUSD",
@@ -33668,7 +33672,9 @@
     "avg_r": 0.0582,
     "dd": -0.094,
     "sharpe": 1.63,
-    "resolve": 338.7
+    "resolve": 338.7,
+    "pf2x": 0.553,
+    "pf3x": 0.213
    },
    {
     "symbol": "Bitcoin (BTCUSDT)",
@@ -33684,7 +33690,9 @@
     "avg_r": -0.0063,
     "dd": -0.7527,
     "sharpe": -0.05,
-    "resolve": 18.9
+    "resolve": 18.9,
+    "pf2x": 0.746,
+    "pf3x": 0.579
    }
   ],
   "dist": {
@@ -33999,6 +34007,9 @@
     "is_gate": 2,
     "oos_gate": 0,
     "median_oos_gate": 0.976,
+    "top10_is": 1.192,
+    "top10_oos": 1.148,
+    "top10_kept": 9,
     "median_oos_all": 0.79
    },
    {
@@ -34007,6 +34018,9 @@
     "is_gate": 0,
     "oos_gate": 0,
     "median_oos_gate": null,
+    "top10_is": 1.106,
+    "top10_oos": 0.7,
+    "top10_kept": 1,
     "median_oos_all": 0.614
    },
    {
@@ -34015,6 +34029,9 @@
     "is_gate": 9,
     "oos_gate": 5,
     "median_oos_gate": 1.203,
+    "top10_is": 1.231,
+    "top10_oos": 1.211,
+    "top10_kept": 8,
     "median_oos_all": 0.636
    },
    {
@@ -34023,6 +34040,9 @@
     "is_gate": 0,
     "oos_gate": 0,
     "median_oos_gate": null,
+    "top10_is": 0.964,
+    "top10_oos": 0.71,
+    "top10_kept": 0,
     "median_oos_all": 0.458
    }
   ],

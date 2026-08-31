@@ -210,3 +210,39 @@ that was not run.
 the NY cash auction is the only anchor that carries anything; participation filters
 (relative volume) are the only family that lifts a median; and breakeven stops and retest
 entries actively destroy edge and should not be added to future strategies by default.
+
+### H-001 ORB — the GBPUSD 1.439, examined properly (2026-08-31)
+
+Kris pushed back on calling the study a failure when the table shows PF 1.439. Fair
+challenge, so here is that exact configuration taken apart. 20:00 UTC anchor, 1h opening
+range, faded, close-beyond entry, 2x ATR stop, 1R target.
+
+**What is genuinely good about it:**
+- 439 trades, 54.9% win rate — the right shape for a challenge, not a lottery-ticket payoff.
+- It got BETTER out of sample: fit years PF 1.160 -> test year PF 1.865.
+- Prop challenge sim: 52.1% pass, and it never breaches the 4% daily cap.
+- +25.5R over 3 years = about +8.5%/year at 1% risk.
+
+**What kills it, in order of severity:**
+1. **The cost cliff. 1x PF 1.439 -> 2x PF 0.553 -> 3x PF 0.213.** The 1x assumption
+   (0.50 fee + 0.30 slippage per side = 1.6 bps round trip) is an institutional ECN
+   spread. A prop firm on GBPUSD routinely quotes 1.0-1.5 pips = 7-11 bps round trip,
+   which is 4-7x the 1x column. At any realistic prop-firm cost this is PF ~0.2.
+2. **Its own max drawdown is -9.4%, larger than the 8% max-loss cap.** The historical
+   worst run would have failed the account outright.
+3. **339 days to resolve, median 148 days to pass.** The phase constraint is 1-2 weeks.
+4. Per-trade edge is +0.058R. One extra pip of spread erases it entirely.
+5. The 20:00 anchor is the WORST anchor by median across every FX pair (0.486). This is
+   the luckiest cell of the weakest family, which is exactly where a 8,160-way search
+   puts its maximum.
+
+The answer to "so it's not that bad?" is: it is the best thing in the study, it is not
+noise in the naive sense, and it is still untradeable — because the edge is smaller than
+the spread difference between a retail broker and a prop firm.
+
+**Report fix:** the out-of-sample table had two empty cells (markets where nothing cleared
+the gate in sample, so there was no median to report). Replaced with a ranking that always
+resolves: top 10 by fit PF, their median test PF, and how many stayed above 1.0.
+Gold 1.192 -> 1.148 (9/10), GBPUSD 1.231 -> 1.211 (8/10), EURUSD 1.106 -> 0.700 (1/10),
+BTC 0.964 -> 0.710 (0/10). Also added PF-at-2x and PF-at-3x columns to the best-per-market
+table, since the cost cliff is what decides every one of them.
