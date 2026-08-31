@@ -145,3 +145,68 @@ trades can distinguish 0.79 from 1.05.
    market we can already trade. Fits the current phase.
 3. Index futures (NQ/ES) at the NY open — the instrument most retail ORB traders use,
    and the one gap left in the session-anchored test.
+
+### H-001 ORB — upgrade attempt (2026-08-31)
+
+Kris asked whether ORB can be made better: more session anchors including Asia, plus
+filters. Four new stages.
+
+**Stage 9 — 20 session anchors** (Sydney 21:00/22:00, Tokyo 00:00/01:00, Asia 02:00/04:00,
+Frankfurt 06:00/07:00, London 07:30/08:00/08:30/09:00, NY 12:00/13:00/13:30/14:00/14:30/
+15:00/16:00, NY close 20:00). The original grid only had :00 anchors and never tested the
+NY cash auction at 13:30/14:30 UTC, which is the one event in this study with a documented
+mechanism.
+
+Result is a smooth, unambiguous curve. Median PF by anchor, FX+metal mean: Asia 0.62-0.68,
+London 0.71, **NY cash open 13:30 UTC 0.791 (the peak, best on all three)**, decaying to
+NY close 20:00 at 0.577 (the worst). Bitcoin is nearly flat (0.48-0.57). **Adding Asian
+sessions makes ORB worse, not better** — they are the weakest region tested.
+
+**Stage 10 — 29 filters, scored as paired lifts** (same configs run with the filter off
+and on; a filter that only raises the maximum has just shrunk the sample). Base median
+0.679. Nine filters lift, ten hurt.
+
+| filter | median PF | lift | improved | trades kept |
+|---|---|---|---|---|
+| breakout-bar rvol > 2.0 | 0.768 | +0.052 | 61% | 78% |
+| ATR rank > 0.7 | 0.745 | +0.050 | 75% | 36% |
+| **against 20-EMA** | 0.753 | +0.039 | **77%** | **94%** |
+| opening-range rvol > 2.0 | 0.723 | +0.038 | 64% | 29% |
+| retest entry (4/8/16 bars) | 0.649 | **-0.029** | 37% | 86% |
+| breakeven at 1.0R | 0.643 | **-0.015** | 8% | 100% |
+| breakeven at 0.5R | 0.582 | **-0.078** | 5% | 100% |
+
+Two findings worth keeping beyond ORB: **breakeven stops are the single most damaging
+thing on the list**, and the **retest entry — the most commonly recommended ORB
+improvement anywhere — loses on every setting tested**. "Against the 20-EMA" is the
+standout because it lifts the median while keeping 94% of trades; combined with fade
+beating follow earlier, the consistent message is that these markets mean-revert at the
+session open and the breakout-continuation premise is backwards.
+
+**Stage 11 — stack the three winners** (breakout rvol, high-volatility regime, counter-20EMA)
+on the two NY anchors, fit 2y / test 1y. Medians rise to 0.60-0.82. Survivors: BTC 103 of
+179 clear the gate again out of sample (10.6x the 5.4% base rate), EURUSD 328 of 857 (7.8x).
+The best BTC config — 13:30 NY cash open, 15m range, follow the break, breakout rvol > 1.5,
+counter-20EMA — is positive in 8 of 9 years and in both directions (longs PF 1.43, shorts
+1.97), so it is not a bear-market artefact. But it is also the winner of an 11,583-way
+search, so its year-by-year record is post-hoc.
+
+**Stage 12 — walk-forward the filtered family**, BTC, 31 quarters, config re-chosen on the
+trailing 12 months each quarter and traded blind. **PF 1.165, 470 trades, +42.4R, 13/31
+quarters above breakeven** — against **0.781 / -594R / 5 of 31** for the same walk-forward
+without filters. This is the only number in the whole ORB study that nobody chose after
+the fact, and the filters genuinely moved it.
+
+**It still fails, for two reasons.** PF 1.165 is below the 1.20 gate. And 470 trades over
+eight years is **0.16 trades/day** — roughly +5%/year at 1% risk, so more than a year to
+clear an 8% target. That fails the current phase constraint by two orders of magnitude.
+
+One layer of selection remains un-removed: the filter set itself was chosen from the
+29-filter study on overlapping data. A fully clean test would re-choose the filters inside
+each walk-forward fold. Given the frequency problem makes the strategy unusable regardless,
+that was not run.
+
+**Verdict: ORB stays rejected, but the upgrade taught us three transferable things** —
+the NY cash auction is the only anchor that carries anything; participation filters
+(relative volume) are the only family that lifts a median; and breakeven stops and retest
+entries actively destroy edge and should not be added to future strategies by default.

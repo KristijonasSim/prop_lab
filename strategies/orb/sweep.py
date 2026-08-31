@@ -48,12 +48,31 @@ def features(df: pd.DataFrame, atr_len: int = 14, ema_len: int = 200,
     datr_d = dtr.ewm(alpha=1 / datr_len, adjust=False).mean().shift(1)
     datr = datr_d.reindex(df.index, method="ffill").bfill().values
 
-    return atr, ema, rvol, datr
+    ema_fast = pd.Series(c, index=df.index).ewm(span=20, adjust=False).mean().values
+
+    # ATR as a rolling percentile rank -> a volatility-regime switch that means
+    # the same thing on gold as on EURUSD.
+    atr_rank = (pd.Series(atr, index=df.index)
+                .rolling(96 * 60, min_periods=96 * 5)
+                .rank(pct=True).shift(1).fillna(0.5).values)
+
+    # daily trend: sign of yesterday's close vs the close 5 sessions before it,
+    # broadcast forward. Shifted, so today never sees its own close.
+    dc = df.close.resample("1D").last().dropna()
+    dsig = np.sign(dc - dc.shift(5)).shift(1).fillna(0.0)
+    dtrend = dsig.reindex(df.index, method="ffill").fillna(0.0).values
+
+    return atr, ema, rvol, datr, ema_fast, atr_rank, dtrend
 
 
-def session_starts(index: pd.DatetimeIndex, hour: int) -> np.ndarray:
-    """Bar indices where a session begins (first bar at `hour`:00 UTC each day)."""
-    is_start = (index.hour == hour) & (index.minute == 0)
+def session_starts(index: pd.DatetimeIndex, hour: int, minute: int = 0) -> np.ndarray:
+    """Bar indices where a session begins, at `hour`:`minute` UTC each day.
+
+    The minute matters: the New York cash auction is 13:30 or 14:30 UTC depending
+    on daylight saving, never 13:00, and that is the one auction in this study
+    with a documented mechanism behind it.
+    """
+    is_start = (index.hour == hour) & (index.minute == minute)
     return np.flatnonzero(is_start).astype(np.int64)
 
 
@@ -118,11 +137,11 @@ def trade_metrics(
 
 # ------------------------------------------------------------------ runner
 def run_one(df, feats, cfg, fee_bps, slip_bps) -> np.ndarray:
-    atr, ema, rvol, datr = feats
-    ss = session_starts(df.index, cfg["hour"])
+    atr, ema, rvol, datr, ema_fast, atr_rank, dtrend = feats
+    ss = session_starts(df.index, cfg["hour"], int(cfg.get("minute", 0)))
     return simulate(
         df.open.values, df.high.values, df.low.values, df.close.values,
-        atr, ema, rvol, datr,
+        atr, ema, rvol, datr, ema_fast, atr_rank, dtrend,
         ss,
         int(cfg["or_bars"]),
         int(cfg["hold_bars"]),
@@ -142,13 +161,23 @@ def run_one(df, feats, cfg, fee_bps, slip_bps) -> np.ndarray:
         float(cfg["min_risk_bps"]),
         float(cfg["min_rvol"]),
         int(cfg["use_datr"]),
+        float(cfg["min_break_rvol"]),
+        int(cfg["max_entry_bars"]),
+        float(cfg["be_at_r"]),
+        float(cfg["min_atr_rank"]),
+        float(cfg["max_atr_rank"]),
+        int(cfg["dtrend_mode"]),
+        int(cfg["fast_trend_mode"]),
+        int(cfg["retest_bars"]),
     )
 
 
 DEFAULTS = dict(dir_mode=0, entry_mode=0, stop_mode=0, stop_atr_mult=1.0, rr=0.0,
                 buffer_bps=0.0, one_trade=1, min_or_atr=0.0, max_or_atr=0.0,
                 trend_mode=0, fade=0, min_rvol=0.0, use_datr=0,
-                min_risk_bps=10.0)
+                min_risk_bps=10.0, min_break_rvol=0.0, max_entry_bars=0,
+                be_at_r=0.0, min_atr_rank=0.0, max_atr_rank=0.0,
+                dtrend_mode=0, fast_trend_mode=0, retest_bars=0)
 
 
 def grid(**axes) -> list[dict]:

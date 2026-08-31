@@ -28,14 +28,14 @@ N_COLS = 8
 R_STOP, R_TARGET, R_TIME = 0, 1, 2
 
 DIR_BOTH, DIR_LONG, DIR_SHORT = 0, 1, 2
-ENTRY_TOUCH, ENTRY_CLOSE, ENTRY_FIRST_CANDLE = 0, 1, 2
+ENTRY_TOUCH, ENTRY_CLOSE, ENTRY_FIRST_CANDLE, ENTRY_RETEST = 0, 1, 2, 3
 STOP_OR_OPPOSITE, STOP_OR_MID, STOP_ATR = 0, 1, 2
 TREND_NONE, TREND_WITH, TREND_AGAINST = 0, 1, 2
 
 
 @njit(cache=True)
 def simulate(
-    o, h, l, c, atr, ema, rvol, datr,
+    o, h, l, c, atr, ema, rvol, datr, ema_fast, atr_rank, dtrend,
     sess_start,          # int array: bar index where each session starts
     or_bars,             # int: bars in the opening range
     max_hold_bars,       # int: bars after OR end before a forced exit
@@ -60,6 +60,16 @@ def simulate(
                          # This is the filter the ORB literature says IS the edge.
     use_datr,            # 1 = size the ATR stop off DAILY ATR (the papers' 10%-of-ADR
                          # stop), 0 = off the 15m ATR
+    min_break_rvol,      # volume on the BREAKOUT bar vs its trailing mean (0 = off).
+                         # Distinct from min_rvol, which gates on the opening range.
+    max_entry_bars,      # only arm for this many bars after the range closes (0 = off).
+                         # A break six hours after the open is not an opening-range break.
+    be_at_r,             # move the stop to entry once price reaches this many R (0 = off)
+    min_atr_rank,        # volatility regime: percentile rank of ATR (0 = off)
+    max_atr_rank,        # 0 = off
+    dtrend_mode,         # 0 off, 1 only with the daily trend, 2 only against it
+    fast_trend_mode,     # same, against a fast EMA instead of the slow one
+    retest_bars,         # ENTRY_RETEST: bars allowed for the pullback (0 = no limit)
 ):
     n = o.shape[0]
     n_sess = sess_start.shape[0]
@@ -105,13 +115,24 @@ def simulate(
 
         if min_rvol > 0.0 and rvol[or_end - 1] < min_rvol:
             continue
+        ar = atr_rank[or_end - 1]
+        if min_atr_rank > 0.0 and ar < min_atr_rank:
+            continue
+        if max_atr_rank > 0.0 and ar > max_atr_rank:
+            continue
 
         trig_hi = or_hi * (1.0 + buf)
         trig_lo = or_lo * (1.0 - buf)
 
+        last_entry_bar = stop_bar
+        if max_entry_bars > 0 and or_end + max_entry_bars < stop_bar:
+            last_entry_bar = or_end + max_entry_bars
+
         taken = 0
         i = or_end
         while i < stop_bar:
+            if i >= last_entry_bar and taken == 0:
+                break
             if one_trade == 1 and taken == 1:
                 break
 
@@ -144,6 +165,32 @@ def simulate(
                 elif c[or_end - 1] < o[start]:
                     side = -1
                 entry = o[i]
+            elif entry_mode == ENTRY_RETEST:
+                # Wait for a close beyond the edge, then require price to come
+                # back and touch the level again before taking it.
+                if c[i] > trig_hi or c[i] < trig_lo:
+                    up_break = c[i] > trig_hi
+                    lvl = trig_hi if up_break else trig_lo
+                    limit = i + retest_bars if retest_bars > 0 else last_entry_bar
+                    if limit > last_entry_bar:
+                        limit = last_entry_bar
+                    j2 = i + 1
+                    while j2 < limit:
+                        if up_break and l[j2] <= lvl:
+                            side = 1
+                            entry = lvl
+                            entry_i = j2
+                            break
+                        if (not up_break) and h[j2] >= lvl:
+                            side = -1
+                            entry = lvl
+                            entry_i = j2
+                            break
+                        # a stop-out of the idea: it ran away without retesting
+                        j2 += 1
+                    if side == 0:
+                        i = j2 if j2 > i else i + 1
+                        continue
             else:  # close-beyond confirmation, fill at the next bar's open
                 if i + 1 >= stop_bar:
                     break
@@ -169,6 +216,30 @@ def simulate(
             if dir_mode == DIR_SHORT and side != -1:
                 i += 1
                 continue
+
+            if min_break_rvol > 0.0 and rvol[entry_i] < min_break_rvol:
+                i += 1
+                continue
+
+            if dtrend_mode != TREND_NONE:
+                dt = dtrend[entry_i]
+                with_d = (side == 1 and dt > 0) or (side == -1 and dt < 0)
+                if dtrend_mode == TREND_WITH and not with_d:
+                    i += 1
+                    continue
+                if dtrend_mode == TREND_AGAINST and with_d:
+                    i += 1
+                    continue
+
+            if fast_trend_mode != TREND_NONE:
+                ef = ema_fast[entry_i]
+                with_f = (side == 1 and entry > ef) or (side == -1 and entry < ef)
+                if fast_trend_mode == TREND_WITH and not with_f:
+                    i += 1
+                    continue
+                if fast_trend_mode == TREND_AGAINST and with_f:
+                    i += 1
+                    continue
 
             if trend_mode != TREND_NONE:
                 e = ema[entry_i]
@@ -203,6 +274,8 @@ def simulate(
             exit_px = 0.0
             exit_i = entry_i
             reason = R_TIME
+            be_armed = False
+            be_level = entry + risk * be_at_r if side == 1 else entry - risk * be_at_r
             j = entry_i
             while j < stop_bar:
                 if side == 1:
@@ -221,6 +294,13 @@ def simulate(
                     exit_i = j
                     reason = R_TARGET
                     break
+                # Arm the breakeven only at the END of the bar. Arming mid-bar
+                # would let the same bar both trigger and honour the new stop,
+                # which the 15m data cannot support.
+                if be_at_r > 0.0 and not be_armed:
+                    if (side == 1 and h[j] >= be_level) or (side == -1 and l[j] <= be_level):
+                        stop = entry
+                        be_armed = True
                 j += 1
             if reason == R_TIME:
                 exit_i = stop_bar - 1 if j >= stop_bar else j

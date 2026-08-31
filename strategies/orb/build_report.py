@@ -242,6 +242,90 @@ def assets(d: dict) -> dict:
     return d
 
 
+def upgrade(d: dict) -> dict:
+    """Stages 9-12: the attempt to make ORB better."""
+    p9, p10, p11 = OUT / "stage9_anchors.csv", OUT / "stage10_filter_lift.csv", OUT / "stage11_combined.csv"
+    if not (p9.exists() and p10.exists()):
+        return d
+    order = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSDT"]
+    names = {"XAUUSD": "Gold", "EURUSD": "EURUSD", "GBPUSD": "GBPUSD", "BTCUSDT": "Bitcoin"}
+
+    # --- anchors ---
+    s9 = pd.read_csv(p9)
+    s9 = s9[s9.trades >= 60]
+    piv = s9.pivot_table(index=["anchor_utc", "anchor"], columns="symbol",
+                         values="pf", aggfunc="median").round(3)
+    anchors = []
+    for (utc, name), row in piv.iterrows():
+        r = {"utc": utc, "anchor": name}
+        for sym in order:
+            r[sym] = round(float(row[sym]), 3) if sym in row and pd.notna(row[sym]) else None
+        fx = [r[s] for s in ("XAUUSD", "EURUSD", "GBPUSD") if r[s] is not None]
+        r["fxmean"] = round(sum(fx) / len(fx), 3) if fx else None
+        anchors.append(r)
+    anchors.sort(key=lambda r: r["utc"])
+
+    # --- filters ---
+    s10 = pd.read_csv(p10)
+    fl = s10[s10.symbol == "ALL"].sort_values("median_lift", ascending=False)
+    filters = [{"filter": r["filter"], "median_pf": r.median_pf_filtered,
+                "lift": r.median_lift, "improved": r.share_improved,
+                "kept": r.trades_kept, "tpd": r.median_tpd, "best": r.best_pf}
+               for _, r in fl.iterrows()]
+    base_med = float(fl.median_pf_base.iloc[0])
+
+    # --- stacked ---
+    stack = []
+    if p11.exists():
+        KEYS = ["hour", "minute", "or_bars", "hold_bars", "entry_mode", "stop_mode",
+                "stop_atr_mult", "rr", "fade", "min_break_rvol", "min_atr_rank",
+                "fast_trend_mode"]
+        s11 = pd.read_csv(p11)
+        a = s11[s11.window == "IS"]
+        b = s11[s11.window == "OOS"]
+        m = a.merge(b, on=KEYS + ["symbol"], suffixes=("_is", "_oos"))
+        m = m[(m.trades_is >= 60) & (m.trades_oos >= 25)]
+        for sym in order:
+            k = m[m.symbol == sym]
+            if not len(k):
+                continue
+            g = k[k.pf_is >= 1.2]
+            base = float((k.pf_oos >= 1.2).mean())
+            surv = float((g.pf_oos >= 1.2).mean()) if len(g) else float("nan")
+            stack.append({
+                "symbol": names[sym], "configs": int(len(k)),
+                "median_is": round(float(k.pf_is.median()), 3),
+                "gate_is": int(len(g)),
+                "gate_oos": int((g.pf_oos >= 1.2).sum()) if len(g) else 0,
+                "survival": round(surv, 3) if surv == surv else None,
+                "base_rate": round(base, 4),
+                "lift": round(surv / base, 1) if base and surv == surv else None,
+                "tpd": round(float(g.trades_per_day_oos.median()), 3) if len(g) else None,
+            })
+
+    # --- stage 12: walk-forward the filtered family (the only non-post-hoc number) ---
+    wf12 = {}
+    p12, log12 = OUT / "stage12_wf_filtered.csv", OUT / "stage12.log"
+    if p12.exists():
+        w = pd.read_csv(p12)
+        wf12 = {"quarters": int(len(w)),
+                "above1": int((w.test_pf > 1).sum()),
+                "median_train": round(float(w.train_pf.median()), 3),
+                "median_test": round(float(w.test_pf.median()), 3)}
+        if log12.exists():
+            import re as _re
+            mm = _re.search(r"STITCHED: (\d+) trades  PF ([\d.]+)  win ([\d.]+)%  total ([+\-\d.]+)R",
+                            log12.read_text())
+            if mm:
+                wf12.update(trades=int(mm.group(1)), pf=float(mm.group(2)),
+                            win=float(mm.group(3)), total_r=float(mm.group(4)))
+
+    d["upgrade"] = {"anchors": anchors, "filters": filters, "base_med": round(base_med, 3),
+                    "stack": stack, "cols": order, "colnames": [names[o] for o in order],
+                    "wf": wf12}
+    return d
+
+
 def width_table() -> list[dict]:
     """Stage 2 of the page: does a wider stop outrun the fee?"""
     from core import data as dl
@@ -399,6 +483,37 @@ def narrative(d: dict) -> dict:
          "status": "yes", "note": "NautilusTrader agrees, and is harsher."},
     ]
 
+    u = d.get("upgrade") or {}
+    if u:
+        wf12 = u.get("wf", {})
+        base_wf = d.get("wf", {}).get("stitched_pf")
+        best_anchor = max((r for r in u["anchors"] if r["fxmean"]), key=lambda r: r["fxmean"])
+        worst_anchor = min((r for r in u["anchors"] if r["fxmean"]), key=lambda r: r["fxmean"])
+        pos = [f for f in u["filters"] if f["lift"] > 0.01]
+        neg = [f for f in u["filters"] if f["lift"] < -0.01]
+        d["upgrade_note"] = (
+            f"<p><strong>The upgrade works, and it is still not enough.</strong> Choosing the "
+            f"configuration blind every quarter over eight years, the filtered family returns "
+            f"PF <strong>{wf12.get('pf','?')}</strong> across {wf12.get('trades','?')} trades "
+            f"(+{wf12.get('total_r','?')}R), against <strong>{base_wf}</strong> for the same "
+            f"walk-forward without filters. That is the one number here nobody chose after the "
+            f"fact. It is also below the 1.20 gate, and at "
+            f"{wf12.get('trades',0)/2900:.2f} trades a day it would need years, not weeks, to "
+            f"clear an 8% target.</p>")
+        d["anchor_finding"] = (
+            f"<p>Twenty anchors including Tokyo, Sydney and the half-hour opens. The curve is "
+            f"smooth and peaks exactly where the mechanism says it should: <strong>"
+            f"{best_anchor['anchor']} ({best_anchor['utc']} UTC)</strong> is the best on all three "
+            f"FX and metal markets at median PF {best_anchor['fxmean']:.3f}. <strong>Asia is the "
+            f"worst region tested</strong> and {worst_anchor['anchor']} is the worst anchor overall "
+            f"at {worst_anchor['fxmean']:.3f}. Adding Asian sessions makes ORB worse, not better.</p>")
+        d["filter_finding"] = (
+            f"<p>Base median with no filter is {u['base_med']}. {len(pos)} of "
+            f"{len(u['filters'])} filters lift it, {len(neg)} hurt. The useful ones are about "
+            f"participation and being stretched; the popular risk-management ones all cost money. "
+            f"<strong>Breakeven stops are the worst thing on the list</strong> and the retest entry "
+            f"— the most commonly recommended ORB improvement there is — loses on every setting.</p>")
+
     a = d.get("assets")
     if a and a.get("survival"):
         by = {r["symbol"]: r for r in a["survival"]}
@@ -462,13 +577,21 @@ if __name__ == "__main__":
         {"engine": "NautilusTrader", "trades": 341, "pf": 0.682, "win": 0.211},
     ]
     data = assets(data)
+    data = upgrade(data)
+    data["wf_base"] = {"trades": data.get("wf", {}).get("stitched_trades"),
+                       "pf": data.get("wf", {}).get("stitched_pf"),
+                       "win": data.get("wf", {}).get("stitched_win"),
+                       "total_r": data.get("wf", {}).get("stitched_r"),
+                       "above1": data.get("wf", {}).get("above1"),
+                       "quarters": data.get("wf", {}).get("quarters")}
     data = narrative(data)
     (OUT / "report_data.json").write_text(json.dumps(data, indent=1))
 
     # The page is tables only now, so ship only what it renders. The full dict
     # stays in report_data.json for anything that wants the raw series.
     KEEP = {"period", "stamp", "readout", "survival_note", "anchor_note",
-            "tests", "criteria", "why", "next"}
+            "tests", "criteria", "why", "next", "upgrade", "candidate",
+            "upgrade_note", "anchor_finding", "filter_finding", "wf_base"}
     A_KEEP = {"window", "gate", "best", "survival", "anchors", "anchor_cols", "anchor_keys"}
     page = {k: v for k, v in data.items() if k in KEEP}
     if data.get("assets"):

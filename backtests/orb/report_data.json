@@ -34028,6 +34028,530 @@
   ],
   "window": "2023-09-01 to 2026-08-31"
  },
+ "upgrade": {
+  "anchors": [
+   {
+    "utc": "00:00",
+    "anchor": "Tokyo open / UTC day",
+    "XAUUSD": 0.689,
+    "EURUSD": 0.573,
+    "GBPUSD": 0.595,
+    "BTCUSDT": 0.494,
+    "fxmean": 0.619
+   },
+   {
+    "utc": "01:00",
+    "anchor": "Tokyo +1",
+    "XAUUSD": 0.726,
+    "EURUSD": 0.577,
+    "GBPUSD": 0.607,
+    "BTCUSDT": 0.516,
+    "fxmean": 0.637
+   },
+   {
+    "utc": "02:00",
+    "anchor": "Asia mid",
+    "XAUUSD": 0.734,
+    "EURUSD": 0.582,
+    "GBPUSD": 0.626,
+    "BTCUSDT": 0.504,
+    "fxmean": 0.647
+   },
+   {
+    "utc": "04:00",
+    "anchor": "Asia late",
+    "XAUUSD": 0.736,
+    "EURUSD": 0.633,
+    "GBPUSD": 0.66,
+    "BTCUSDT": 0.498,
+    "fxmean": 0.676
+   },
+   {
+    "utc": "06:00",
+    "anchor": "Frankfurt pre",
+    "XAUUSD": 0.742,
+    "EURUSD": 0.689,
+    "GBPUSD": 0.687,
+    "BTCUSDT": 0.493,
+    "fxmean": 0.706
+   },
+   {
+    "utc": "07:00",
+    "anchor": "Frankfurt open",
+    "XAUUSD": 0.748,
+    "EURUSD": 0.692,
+    "GBPUSD": 0.688,
+    "BTCUSDT": 0.486,
+    "fxmean": 0.709
+   },
+   {
+    "utc": "07:30",
+    "anchor": "London pre",
+    "XAUUSD": 0.745,
+    "EURUSD": 0.702,
+    "GBPUSD": 0.696,
+    "BTCUSDT": 0.48,
+    "fxmean": 0.714
+   },
+   {
+    "utc": "08:00",
+    "anchor": "London open",
+    "XAUUSD": 0.746,
+    "EURUSD": 0.71,
+    "GBPUSD": 0.69,
+    "BTCUSDT": 0.479,
+    "fxmean": 0.715
+   },
+   {
+    "utc": "08:30",
+    "anchor": "London +30",
+    "XAUUSD": 0.746,
+    "EURUSD": 0.714,
+    "GBPUSD": 0.695,
+    "BTCUSDT": 0.492,
+    "fxmean": 0.718
+   },
+   {
+    "utc": "09:00",
+    "anchor": "London +1",
+    "XAUUSD": 0.756,
+    "EURUSD": 0.715,
+    "GBPUSD": 0.687,
+    "BTCUSDT": 0.496,
+    "fxmean": 0.719
+   },
+   {
+    "utc": "12:00",
+    "anchor": "NY pre",
+    "XAUUSD": 0.791,
+    "EURUSD": 0.73,
+    "GBPUSD": 0.774,
+    "BTCUSDT": 0.526,
+    "fxmean": 0.765
+   },
+   {
+    "utc": "13:00",
+    "anchor": "NY futures",
+    "XAUUSD": 0.809,
+    "EURUSD": 0.745,
+    "GBPUSD": 0.79,
+    "BTCUSDT": 0.535,
+    "fxmean": 0.781
+   },
+   {
+    "utc": "13:30",
+    "anchor": "NY cash open (EDT)",
+    "XAUUSD": 0.815,
+    "EURUSD": 0.764,
+    "GBPUSD": 0.794,
+    "BTCUSDT": 0.562,
+    "fxmean": 0.791
+   },
+   {
+    "utc": "14:00",
+    "anchor": "NY +30",
+    "XAUUSD": 0.794,
+    "EURUSD": 0.758,
+    "GBPUSD": 0.766,
+    "BTCUSDT": 0.56,
+    "fxmean": 0.773
+   },
+   {
+    "utc": "14:30",
+    "anchor": "NY cash open (EST)",
+    "XAUUSD": 0.778,
+    "EURUSD": 0.742,
+    "GBPUSD": 0.746,
+    "BTCUSDT": 0.566,
+    "fxmean": 0.755
+   },
+   {
+    "utc": "15:00",
+    "anchor": "NY morning",
+    "XAUUSD": 0.77,
+    "EURUSD": 0.742,
+    "GBPUSD": 0.744,
+    "BTCUSDT": 0.557,
+    "fxmean": 0.752
+   },
+   {
+    "utc": "16:00",
+    "anchor": "NY afternoon",
+    "XAUUSD": 0.744,
+    "EURUSD": 0.668,
+    "GBPUSD": 0.71,
+    "BTCUSDT": 0.539,
+    "fxmean": 0.707
+   },
+   {
+    "utc": "20:00",
+    "anchor": "NY close",
+    "XAUUSD": 0.635,
+    "EURUSD": 0.536,
+    "GBPUSD": 0.56,
+    "BTCUSDT": 0.528,
+    "fxmean": 0.577
+   },
+   {
+    "utc": "21:00",
+    "anchor": "Sydney open",
+    "XAUUSD": 0.661,
+    "EURUSD": 0.558,
+    "GBPUSD": 0.579,
+    "BTCUSDT": 0.53,
+    "fxmean": 0.599
+   },
+   {
+    "utc": "22:00",
+    "anchor": "Sydney +1",
+    "XAUUSD": 0.659,
+    "EURUSD": 0.571,
+    "GBPUSD": 0.61,
+    "BTCUSDT": 0.522,
+    "fxmean": 0.613
+   }
+  ],
+  "filters": [
+   {
+    "filter": "breakout-bar rvol > 2.0",
+    "median_pf": 0.768,
+    "lift": 0.052,
+    "improved": 0.606,
+    "kept": 0.782,
+    "tpd": 0.573,
+    "best": 2.296
+   },
+   {
+    "filter": "ATR rank > 0.7",
+    "median_pf": 0.745,
+    "lift": 0.05,
+    "improved": 0.753,
+    "kept": 0.356,
+    "tpd": 0.331,
+    "best": 1.61
+   },
+   {
+    "filter": "against 20-EMA",
+    "median_pf": 0.753,
+    "lift": 0.039,
+    "improved": 0.769,
+    "kept": 0.935,
+    "tpd": 0.638,
+    "best": 1.829
+   },
+   {
+    "filter": "opening-range rvol > 2.0",
+    "median_pf": 0.723,
+    "lift": 0.038,
+    "improved": 0.639,
+    "kept": 0.289,
+    "tpd": 0.238,
+    "best": 1.762
+   },
+   {
+    "filter": "breakout-bar rvol > 1.5",
+    "median_pf": 0.741,
+    "lift": 0.032,
+    "improved": 0.597,
+    "kept": 0.897,
+    "tpd": 0.647,
+    "best": 1.555
+   },
+   {
+    "filter": "opening-range rvol > 1.5",
+    "median_pf": 0.713,
+    "lift": 0.027,
+    "improved": 0.659,
+    "kept": 0.404,
+    "tpd": 0.29,
+    "best": 2.206
+   },
+   {
+    "filter": "breakout-bar rvol > 1.2",
+    "median_pf": 0.729,
+    "lift": 0.022,
+    "improved": 0.609,
+    "kept": 0.952,
+    "tpd": 0.667,
+    "best": 1.286
+   },
+   {
+    "filter": "opening-range rvol > 1.2",
+    "median_pf": 0.71,
+    "lift": 0.02,
+    "improved": 0.681,
+    "kept": 0.537,
+    "tpd": 0.414,
+    "best": 1.822
+   },
+   {
+    "filter": "ATR rank > 0.5",
+    "median_pf": 0.709,
+    "lift": 0.019,
+    "improved": 0.727,
+    "kept": 0.665,
+    "tpd": 0.51,
+    "best": 2.136
+   },
+   {
+    "filter": "with 200-EMA",
+    "median_pf": 0.684,
+    "lift": 0.008,
+    "improved": 0.554,
+    "kept": 0.838,
+    "tpd": 0.591,
+    "best": 1.353
+   },
+   {
+    "filter": "with 5-day trend",
+    "median_pf": 0.684,
+    "lift": 0.008,
+    "improved": 0.552,
+    "kept": 0.739,
+    "tpd": 0.538,
+    "best": 1.373
+   },
+   {
+    "filter": "entry window 4 bars",
+    "median_pf": 0.682,
+    "lift": 0.002,
+    "improved": 0.544,
+    "kept": 0.82,
+    "tpd": 0.594,
+    "best": 1.313
+   },
+   {
+    "filter": "entry window 8 bars",
+    "median_pf": 0.68,
+    "lift": 0.001,
+    "improved": 0.541,
+    "kept": 0.938,
+    "tpd": 0.661,
+    "best": 1.276
+   },
+   {
+    "filter": "entry window 16 bars",
+    "median_pf": 0.679,
+    "lift": 0.0,
+    "improved": 0.328,
+    "kept": 0.996,
+    "tpd": 0.683,
+    "best": 1.263
+   },
+   {
+    "filter": "range > 0.5x ATR",
+    "median_pf": 0.679,
+    "lift": 0.0,
+    "improved": 0.151,
+    "kept": 1.0,
+    "tpd": 0.698,
+    "best": 1.275
+   },
+   {
+    "filter": "range > 1.0x ATR",
+    "median_pf": 0.679,
+    "lift": 0.0,
+    "improved": 0.359,
+    "kept": 0.986,
+    "tpd": 0.658,
+    "best": 1.355
+   },
+   {
+    "filter": "breakeven at 1.5R",
+    "median_pf": 0.661,
+    "lift": -0.002,
+    "improved": 0.126,
+    "kept": 1.0,
+    "tpd": 0.698,
+    "best": 1.214
+   },
+   {
+    "filter": "range < 1.0x ATR",
+    "median_pf": 0.605,
+    "lift": -0.006,
+    "improved": 0.467,
+    "kept": 0.262,
+    "tpd": 0.199,
+    "best": 1.696
+   },
+   {
+    "filter": "range < 1.5x ATR",
+    "median_pf": 0.645,
+    "lift": -0.008,
+    "improved": 0.448,
+    "kept": 0.427,
+    "tpd": 0.303,
+    "best": 1.892
+   },
+   {
+    "filter": "breakeven at 1.0R",
+    "median_pf": 0.643,
+    "lift": -0.015,
+    "improved": 0.077,
+    "kept": 1.0,
+    "tpd": 0.698,
+    "best": 1.188
+   },
+   {
+    "filter": "with 20-EMA",
+    "median_pf": 0.59,
+    "lift": -0.02,
+    "improved": 0.184,
+    "kept": 0.997,
+    "tpd": 0.676,
+    "best": 1.188
+   },
+   {
+    "filter": "against 200-EMA",
+    "median_pf": 0.659,
+    "lift": -0.025,
+    "improved": 0.34,
+    "kept": 0.708,
+    "tpd": 0.518,
+    "best": 1.173
+   },
+   {
+    "filter": "against 5-day trend",
+    "median_pf": 0.651,
+    "lift": -0.027,
+    "improved": 0.314,
+    "kept": 0.743,
+    "tpd": 0.539,
+    "best": 1.196
+   },
+   {
+    "filter": "retest, 16 bars",
+    "median_pf": 0.649,
+    "lift": -0.028,
+    "improved": 0.371,
+    "kept": 0.868,
+    "tpd": 0.619,
+    "best": 1.168
+   },
+   {
+    "filter": "retest, 4 bars",
+    "median_pf": 0.648,
+    "lift": -0.029,
+    "improved": 0.372,
+    "kept": 0.857,
+    "tpd": 0.612,
+    "best": 1.141
+   },
+   {
+    "filter": "retest, 8 bars",
+    "median_pf": 0.649,
+    "lift": -0.029,
+    "improved": 0.369,
+    "kept": 0.863,
+    "tpd": 0.617,
+    "best": 1.137
+   },
+   {
+    "filter": "ATR rank < 0.5",
+    "median_pf": 0.577,
+    "lift": -0.05,
+    "improved": 0.22,
+    "kept": 0.476,
+    "tpd": 0.403,
+    "best": 1.509
+   },
+   {
+    "filter": "breakeven at 0.5R",
+    "median_pf": 0.582,
+    "lift": -0.078,
+    "improved": 0.054,
+    "kept": 1.0,
+    "tpd": 0.698,
+    "best": 1.162
+   },
+   {
+    "filter": "ATR rank < 0.3",
+    "median_pf": 0.484,
+    "lift": -0.098,
+    "improved": 0.173,
+    "kept": 0.303,
+    "tpd": 0.255,
+    "best": 1.735
+   }
+  ],
+  "base_med": 0.679,
+  "stack": [
+   {
+    "symbol": "Gold",
+    "configs": 11844,
+    "median_is": 0.768,
+    "gate_is": 92,
+    "gate_oos": 19,
+    "survival": 0.207,
+    "base_rate": 0.1142,
+    "lift": 1.8,
+    "tpd": 0.139
+   },
+   {
+    "symbol": "EURUSD",
+    "configs": 12123,
+    "median_is": 0.803,
+    "gate_is": 857,
+    "gate_oos": 328,
+    "survival": 0.383,
+    "base_rate": 0.0492,
+    "lift": 7.8,
+    "tpd": 0.154
+   },
+   {
+    "symbol": "GBPUSD",
+    "configs": 12078,
+    "median_is": 0.818,
+    "gate_is": 760,
+    "gate_oos": 49,
+    "survival": 0.064,
+    "base_rate": 0.0131,
+    "lift": 4.9,
+    "tpd": 0.174
+   },
+   {
+    "symbol": "Bitcoin",
+    "configs": 11583,
+    "median_is": 0.599,
+    "gate_is": 179,
+    "gate_oos": 103,
+    "survival": 0.575,
+    "base_rate": 0.0541,
+    "lift": 10.6,
+    "tpd": 0.524
+   }
+  ],
+  "cols": [
+   "XAUUSD",
+   "EURUSD",
+   "GBPUSD",
+   "BTCUSDT"
+  ],
+  "colnames": [
+   "Gold",
+   "EURUSD",
+   "GBPUSD",
+   "Bitcoin"
+  ],
+  "wf": {
+   "quarters": 31,
+   "above1": 13,
+   "median_train": 2.65,
+   "median_test": 0.788,
+   "trades": 470,
+   "pf": 1.165,
+   "win": 41.9,
+   "total_r": 42.4
+  }
+ },
+ "wf_base": {
+  "trades": 2746,
+  "pf": 0.781,
+  "win": 22.2,
+  "total_r": -594.0,
+  "above1": 5,
+  "quarters": 31
+ },
  "_is1": {
   "window": "IS",
   "cost": "1x",
@@ -34227,6 +34751,9 @@
    "note": "NautilusTrader agrees, and is harsher."
   }
  ],
+ "upgrade_note": "<p><strong>The upgrade works, and it is still not enough.</strong> Choosing the configuration blind every quarter over eight years, the filtered family returns PF <strong>1.165</strong> across 470 trades (+42.4R), against <strong>0.781</strong> for the same walk-forward without filters. That is the one number here nobody chose after the fact. It is also below the 1.20 gate, and at 0.16 trades a day it would need years, not weeks, to clear an 8% target.</p>",
+ "anchor_finding": "<p>Twenty anchors including Tokyo, Sydney and the half-hour opens. The curve is smooth and peaks exactly where the mechanism says it should: <strong>NY cash open (EDT) (13:30 UTC)</strong> is the best on all three FX and metal markets at median PF 0.791. <strong>Asia is the worst region tested</strong> and NY close is the worst anchor overall at 0.577. Adding Asian sessions makes ORB worse, not better.</p>",
+ "filter_finding": "<p>Base median with no filter is 0.679. 9 of 29 filters lift it, 10 hurt. The useful ones are about participation and being stretched; the popular risk-management ones all cost money. <strong>Breakeven stops are the worst thing on the list</strong> and the retest entry \u2014 the most commonly recommended ORB improvement there is \u2014 loses on every setting.</p>",
  "survival_note": "<p><strong>GBPUSD's 5 survivors are one setup, not 9.</strong> All nine are a 1-hour range, faded, entered on a close beyond the edge, almost all at the 20:00 anchor &mdash; one observation wearing nine hats, so the 0.4% base rate it is being compared against does not apply. Gold kept none.</p>",
  "assets_callout": "<p><strong>The answer does not change by market.</strong> Over one common three-year window, 13 configurations out of 32,640 clear PF 1.20 at realistic cost across all four instruments. The best single result anywhere is 1.439 on GBPUSD. With fees stripped to zero the medians are Gold 0.982, EURUSD 0.948, GBPUSD 0.971, Bitcoin 0.984 &mdash; at or below breakeven before a single cost is charged.</p>",
  "assets_window": "2023-09-01 to 2026-08-31",
