@@ -294,3 +294,73 @@ edge that sits just under the noise floor looks like when you search 8,160 ways.
 **Verdict unchanged, reasoning upgraded.** ORB is not dead because GBPUSD got lucky. It
 is dead because the effect is real, small, present across FX, and uniformly smaller than
 the cost of trading it anywhere a retail account can actually trade.
+
+## H-002 VWAP — in progress (opened 2026-08-31)
+
+Mechanism, literature and the model families are written up in
+`strategies/vwap/notes.md`. Short version: VWAP is the benchmark institutional
+execution is graded against, so there is continuous flow tied to the line all
+session — a much better fit for 24h markets than ORB's once-a-day auction.
+
+### Stage 1 — five families, 9 markets, 287,712 backtests
+
+Families: trend/stop-and-reverse, band fade, band breakout, VWAP reclaim, first
+pullback. Three session anchors, band widths 1.0-3.0 sigma, both fill assumptions,
+0x/1x/2x/3x cost.
+
+**The headline was PF 2.932 on BTC and it was an artefact.** All 119 configurations
+clearing PF 1.20 were `fill_mode=0` — a resting limit at the band, which assumes a
+wick touch fills you. That is precisely the failure `~/trading-bots` documented
+(band fade backtested 3.0, traded live 0.7). With honest fills — close beyond the
+band, entry at the next open — **zero** configurations cleared 1.20 anywhere, and
+BTC's best fell from 2.932 to 0.876.
+
+Building both fill assumptions into the engine from the start caught this on the
+first pass. Every band result from here reports the honest number.
+
+Partial corroboration of the old repo: in the trend family the top two markets are
+XAUUSD (0.871) and USDJPY (0.842), with BTC last at 0.554 — exactly the ordering
+`~/trading-bots` recorded. The ranking replicates; the level does not clear breakeven.
+
+### Stage 2 — paper-faithful trend, rolling VWAP, ORB's surviving filters
+
+Three gaps closed: the Zarattini trend variant has no stop (only the VWAP cross),
+stage 1 always carried one; rolling-window VWAP was untested; and the two filters
+that lifted a median on ORB (relative volume, volatility regime) were untested here.
+18,816 configs per market, honest fills only.
+
+**This is materially better than anything ORB produced.** 805 configurations clear
+PF 1.20 at 1x cost, and **101 still clear it at 2x cost** — ORB had zero at 2x on any
+market. Median 2x profit factor of the gate-clearers is 1.034. 23 configurations reach
+PF 1.6. Best: XAUUSD 2.087 (break, 4-day rolling anchor), BTC 1.730 (reclaim).
+
+Caveat carried forward: the PF>=1.6 group trades 0.13-0.29 times a day, which fails
+the phase constraint the same way ORB's winners did. The trend family at the 00:00
+anchor is the only high-frequency group (1.6 trades/day, best 1.426).
+
+### Stage 3 — timeframes and a null benchmark (running)
+
+FX and metals rebuilt from the cached 1-minute files at 5m/15m/30m/1h/4h via
+`core/fx_data.build_tf`; BTC resampled from 15m. Hold horizons specified in hours and
+converted per timeframe so they mean the same thing everywhere.
+
+**Method addition: every grid is also run on a phase-randomised copy of the same
+market** — real returns, shuffled, so the distribution survives and the sequence does
+not. Any edge is destroyed by construction, so whatever maximum profit factor the
+search still produces is the score a live result has to beat. Early readings:
+
+| market | tf | real best | real >=1.6 | null best | null >=1.6 |
+|---|---|---|---|---|---|
+| BTCUSDT | 1h | 1.952 | 13 | 1.254 | 0 |
+| BTCUSDT | 4h | 2.777 | 105 | 1.701 | 2 |
+| XAUUSD | 5m | 1.864 | 32 | 1.310 | 0 |
+| XAUUSD | 1h | 2.392 | 37 | 2.038 | 3 |
+| XAUUSD | 4h | 1.920 | 44 | 1.877 | 7 |
+| EURUSD | 15m | 1.309 | 0 | 1.804 | 2 |
+
+Two conclusions already. **A PF of 1.6 is reachable by pure search noise on this
+dataset** — shuffled gold at 1h produced 2.038 and shuffled EURUSD 15m produced 1.804,
+beating the real data. A single high profit factor is therefore not evidence of
+anything on its own. **But some combinations separate cleanly**: gold at 5m has 32
+real configurations above 1.6 against zero in the null, and BTC at 1h has 13 against
+zero. The count above the null, not the headline maximum, is the statistic to chase.

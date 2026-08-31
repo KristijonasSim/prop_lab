@@ -146,8 +146,41 @@ def download(sym: str, start: str, end: str, workers: int = 48, force: bool = Fa
     return df
 
 
-def load(sym: str) -> pd.DataFrame:
-    path = DATA_DIR / f"{sym}_dukascopy_15m.parquet"
+def build_tf(sym: str, tf: str, start: str = "2023-09-01", end: str = "2026-09-01",
+             force: bool = False) -> pd.DataFrame:
+    """Rebuild any timeframe from the cached 1-minute .bi5 files.
+
+    The raw cache is already on disk, so this costs no downloads — which is the
+    whole reason it is committed to the repo.
+    """
+    path = DATA_DIR / f"{sym}_dukascopy_{tf}.parquet"
+    if path.exists() and not force:
+        return pd.read_parquet(path).sort_index()
+
+    t0 = datetime.fromisoformat(start).replace(tzinfo=timezone.utc)
+    t1 = datetime.fromisoformat(end).replace(tzinfo=timezone.utc)
+    frames = []
+    t = t0
+    while t < t1:
+        cache = RAW_DIR / sym / f"{t:%Y%m%d}.bi5"
+        if cache.exists():
+            d = _decode(cache.read_bytes(), sym, t)
+            if d is not None:
+                frames.append(d)
+        t += timedelta(days=1)
+    if not frames:
+        raise FileNotFoundError(f"no cached raw files for {sym}")
+    m1 = pd.concat(frames).sort_index()
+    m1 = m1[~m1.index.duplicated(keep="last")]
+    df = m1.resample(tf, label="left", closed="left").agg(AGG).dropna(subset=["open"])
+    df.to_parquet(path)
+    return df
+
+
+def load(sym: str, tf: str = "15m") -> pd.DataFrame:
+    path = DATA_DIR / f"{sym}_dukascopy_{tf}.parquet"
     if not path.exists():
+        if tf != "15m":
+            return build_tf(sym, tf)
         raise FileNotFoundError(f"{path} — run core.fx_data.download() first")
     return pd.read_parquet(path).sort_index()

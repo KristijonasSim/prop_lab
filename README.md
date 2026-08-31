@@ -40,16 +40,20 @@ RESEARCH_LOG.md   the long findings behind each verdict
 
 - **Crypto**: Binance via ccxt. `core/data.py` — downloads 15m, resamples the rest.
   BTCUSDT from 2017-08 (316k bars).
-- **FX and metals**: Dukascopy 1-minute candles via `core/fx_data.py`, resampled to
-  15m. Eight instruments, 2023-09 to 2026-08. Raw `.bi5` files are cached in
+- **FX and metals**: Dukascopy 1-minute candles via `core/fx_data.py`. Eight
+  instruments, 2023-09 to 2026-08. Raw `.bi5` files are cached in
   `data/dukascopy_raw/` and committed, so nothing needs re-downloading — the
   server throttles hard and a full pull takes hours.
+  `core/fx_data.build_tf(sym, "5min")` rebuilds any timeframe from that cache in
+  about a minute; 5m/15m/30m/1h/4h are committed as parquet so a clone needs no
+  rebuild either.
 
 ## Hypotheses
 
 | ID | Name | Verdict | Where |
 |---|---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** | `strategies/orb/`, `backtests/orb/report.html` |
+| H-002 | VWAP (5 model families) | **In progress** | `strategies/vwap/`, `strategies/vwap/notes.md` |
 
 H-001 was swept across 8 instruments and 65,280 configurations, in and out of
 sample, walk-forward, and through a prop-challenge simulation. Open
