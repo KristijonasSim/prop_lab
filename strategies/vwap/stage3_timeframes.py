@@ -127,7 +127,7 @@ def main():
 
             sh = shuffle_market(df, seed=abs(hash((sym, tf))) % (2**31))
             rn = sweep(sh, cfgs, fee, slip, feats=features(sh))
-            rn["symbol"], rn["tf"], rn["kind"] = sym, tf, "null"
+            rn["symbol"], rn["tf"], rn["kind"] = sym, tf, "shuffled"   # not "null": pandas reads that back as NaN
             null.append(rn)
 
             a = r[r.trades >= 100]

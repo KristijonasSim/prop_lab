@@ -53,7 +53,7 @@ RESEARCH_LOG.md   the long findings behind each verdict
 | ID | Name | Verdict | Where |
 |---|---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** | `strategies/orb/`, `backtests/orb/report.html` |
-| H-002 | VWAP (5 model families) | **In progress** | `strategies/vwap/`, `strategies/vwap/notes.md` |
+| H-002 | VWAP (5 model families) | **In progress** | `strategies/vwap/`, `backtests/vwap/report.html` |
 
 H-001 was swept across 8 instruments and 65,280 configurations, in and out of
 sample, walk-forward, and through a prop-challenge simulation. Open
@@ -62,5 +62,6 @@ sample, walk-forward, and through a prop-challenge simulation. Open
 ## Regenerating the report
 
 ```bash
-.venv/bin/python strategies/orb/build_report.py   # rebuilds backtests/orb/report.html
+.venv/bin/python strategies/orb/build_report.py    # rebuilds backtests/orb/report.html
+.venv/bin/python strategies/vwap/build_report.py   # rebuilds backtests/vwap/report.html
 ```

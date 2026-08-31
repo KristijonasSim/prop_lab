@@ -358,9 +358,41 @@ search still produces is the score a live result has to beat. Early readings:
 | XAUUSD | 4h | 1.920 | 44 | 1.877 | 7 |
 | EURUSD | 15m | 1.309 | 0 | 1.804 | 2 |
 
-Two conclusions already. **A PF of 1.6 is reachable by pure search noise on this
+### Stage 3 complete — 44 market x timeframe combinations, real vs shuffled
+
+Two conclusions. **A PF of 1.6 is reachable by pure search noise on this
 dataset** — shuffled gold at 1h produced 2.038 and shuffled EURUSD 15m produced 1.804,
 beating the real data. A single high profit factor is therefore not evidence of
 anything on its own. **But some combinations separate cleanly**: gold at 5m has 32
 real configurations above 1.6 against zero in the null, and BTC at 1h has 13 against
 zero. The count above the null, not the headline maximum, is the statistic to chase.
+
+Final stage 3 numbers: the shuffled markets produced **86 configurations above PF 1.6**,
+topping out at **2.412**. The real markets produced 290. **16 of 44 market x timeframe
+combinations beat their own null** on both the maximum and the count above 1.6.
+
+Ranked by how far the real maximum exceeds its null:
+
+| market | tf | real best | real >=1.6 | null best | null >=1.6 | edge | trades/day |
+|---|---|---|---|---|---|---|---|
+| Bitcoin | 4h | 2.777 | 105 | 1.701 | 2 | +1.076 | 0.10 |
+| Bitcoin | 1h | 1.952 | 13 | 1.254 | 0 | +0.698 | 0.14 |
+| Bitcoin | 15m | 1.730 | 2 | 1.031 | 0 | +0.699 | 0.16 |
+| Gold | 5m | 1.864 | 32 | 1.310 | 0 | +0.554 | 0.10 |
+| USDCHF | 1h | 1.694 | 4 | 1.187 | 0 | +0.507 | 0.13 |
+| Gold | 30m | 2.014 | 15 | 1.579 | 0 | +0.435 | 0.14 |
+| Gold | 1h | 2.392 | 37 | 2.038 | 3 | +0.354 | 0.09 |
+
+**A caution that applies to every row: trades per day is 0.09-0.28.** The strongest
+configurations in this whole study trade roughly once a week. That is the same defect
+that disqualified every ORB winner, and it is present here before out-of-sample testing
+has even started. A 2.777 profit factor on 0.10 trades a day cannot clear an 8% target
+inside the current phase window no matter how real it is.
+
+Also note Gold at 4h: real 1.920 against a null of 1.877. The gap is +0.043 — that
+combination is indistinguishable from noise despite a headline near 2.0.
+
+**Nothing here is a result yet.** Fill realism, cost stress and the null benchmark are
+passed. Out-of-sample, walk-forward, the prop-challenge simulation and the NautilusTrader
+cross-check are all still to run, and those are the four tests that killed every ORB
+candidate.

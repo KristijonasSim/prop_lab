@@ -1,0 +1,288 @@
+<title>VWAP Model Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#EEF0F3; --surface:#FFFFFF; --sunk:#E5E8EC;
+  --ink:#151A21; --muted:#5A6470; --faint:#8E97A2;
+  --line:#D3D8DE; --line-strong:#B9C1CA;
+  --accent:#A86A18; --fail:#A93B31; --pass:#1F6E59; --warn:#8A6A12;
+  --failbg:#F5E2E0; --passbg:#DDEEE8;
+  --shadow:0 1px 2px rgba(20,26,34,.06),0 8px 24px -14px rgba(20,26,34,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1218; --surface:#161B23; --sunk:#11161D;
+    --ink:#E4E8ED; --muted:#8B94A1; --faint:#697280;
+    --line:#242B35; --line-strong:#333C48;
+    --accent:#D69A45; --fail:#D96A5E; --pass:#4BA98E; --warn:#C9A24A;
+    --failbg:#2A1917; --passbg:#14261F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1218; --surface:#161B23; --sunk:#11161D;
+  --ink:#E4E8ED; --muted:#8B94A1; --faint:#697280;
+  --line:#242B35; --line-strong:#333C48;
+  --accent:#D69A45; --fail:#D96A5E; --pass:#4BA98E; --warn:#C9A24A;
+  --failbg:#2A1917; --passbg:#14261F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:0 22px 80px}
+.mono,td.n,th.n{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+header{border-bottom:1px solid var(--line);background:var(--surface)}
+.mast{max-width:1140px;margin:0 auto;padding:28px 22px 24px;display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.eyebrow b{color:var(--accent);font-weight:500}
+h1{margin:0;font-size:clamp(26px,4.5vw,38px);line-height:1.05;letter-spacing:-.02em;font-weight:700}
+.sub{margin:0;color:var(--muted);font-size:15.5px;max-width:70ch}
+.stamp{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  border:1.5px solid var(--fail);color:var(--fail);border-radius:2px;padding:5px 12px;
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:700}
+.stamp::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fail)}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.cell{background:var(--surface);padding:12px 14px 13px;display:flex;flex-direction:column;gap:4px}
+.cell .k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint)}
+.cell .v{font-family:"JetBrains Mono",monospace;font-size:23px;font-weight:700;line-height:1}
+.cell .n2{font-size:12px;color:var(--muted)}
+.v.fail{color:var(--fail)} .v.pass{color:var(--pass)}
+
+section{margin-top:44px}
+.shead{display:flex;align-items:baseline;gap:12px;border-bottom:1.5px solid var(--ink);
+  padding-bottom:8px;margin-bottom:8px}
+.stage{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.11em;
+  color:var(--accent);font-weight:700;white-space:nowrap;padding-top:3px}
+h2{margin:0;font-size:21px;letter-spacing:-.01em;font-weight:600;flex:1}
+.shead .aside{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);white-space:nowrap}
+h3{margin:26px 0 8px;font-size:14.5px;font-weight:600}
+p{margin:8px 0 0;max-width:78ch;color:var(--muted);font-size:14.5px}
+p.tight{margin:6px 0 0}
+strong{font-weight:600;color:var(--ink)}
+
+.scroll{overflow-x:auto;margin:14px 0 0;border:1px solid var(--line);border-radius:3px;
+  background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--sunk);
+  border-bottom:1px solid var(--line-strong)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--sunk)}
+td.n,th.n{text-align:right}
+td.n{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
+td.name{font-weight:600}
+.bad{color:var(--fail);font-weight:600}
+.good{color:var(--pass);font-weight:600}
+.dim{color:var(--faint)}
+td.wrap-note{white-space:normal;color:var(--muted);font-size:12.5px;min-width:300px}
+caption{caption-side:bottom;text-align:left;padding:8px 12px;color:var(--faint);
+  font-size:11.5px;border-top:1px solid var(--line)}
+.chip{display:inline-block;padding:2px 8px;border-radius:2px;font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.chip.no{background:var(--failbg);color:var(--fail)}
+.chip.yes{background:var(--passbg);color:var(--pass)}
+.chip.part{background:var(--sunk);color:var(--warn)}
+.bar{position:relative;height:7px;background:var(--sunk);border-radius:2px;min-width:110px;
+  display:block;overflow:visible}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--fail)}
+.bar i.ok{background:var(--pass)}
+.bar u{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink);opacity:.55}
+footer{margin-top:52px;border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font-size:12px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){.wrap{padding:0 14px 60px}.mast{padding:22px 14px 20px}}
+</style>
+<header>
+  <div class="mast">
+    <div class="eyebrow">
+      <span>prop_lab &middot; hypothesis <b>H-002</b></span>
+      <span id="scope"></span>
+      <span>2023-09-01 to 2026-08-31</span>
+    </div>
+    <h1>VWAP</h1>
+    <p class="sub">Five model families around the volume-weighted average price:
+      trend / stop-and-reverse, band fade, band breakout, VWAP reclaim and first
+      pullback. Session anchors and rolling windows, five timeframes, both fill
+      assumptions.</p>
+    <div class="stamp" id="stamp" style="border-color:var(--warn);color:var(--warn)"></div>
+    <div class="readout" id="readout"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <div class="shead"><span class="stage">01</span><h2>The fill test</h2>
+    <span class="aside">band families only</span></div>
+  <p class="tight">A band strategy is naturally traded with a resting limit order at the
+    band. A backtest that assumes a wick touch fills you is assuming queue priority it
+    cannot verify &mdash; the old repo has a strategy that backtested at PF 3.0 and traded
+    live at 0.7 for exactly this reason. So every band config is run twice: a limit at
+    the band, and a close beyond it with entry at the next open.</p>
+  <div class="scroll"><table id="fill"></table></div>
+  <div class="callout bad" id="fill-note"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="stage">02</span><h2>Best per market, honest fills</h2>
+    <span class="aside" id="s2-aside"></span></div>
+  <p class="tight">Paper-faithful unstopped trend, rolling-window VWAP and the two filters
+    that survived H-001. Limit fills dropped. <strong>PF at 2&times;</strong> is the column
+    that killed every ORB candidate.</p>
+  <div class="scroll"><table id="best"></table></div>
+  <div class="callout" id="s2-note"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="stage">03</span><h2>Which family carries it</h2></div>
+  <div class="scroll"><table id="fam"></table></div>
+</section>
+
+<section>
+  <div class="shead"><span class="stage">04</span><h2>Timeframes, scored against a null</h2>
+    <span class="aside" id="tf-aside"></span></div>
+  <p class="tight">Every grid is also run on a <strong>phase-randomised copy</strong> of the
+    same market &mdash; real returns, shuffled, so the distribution survives and the
+    sequence does not. Any edge is destroyed by construction, so whatever the search still
+    finds there is the score to beat. <strong>Beats null</strong> means the real data won on
+    both the maximum and the count above 1.6.</p>
+  <div class="scroll"><table id="tfnull"></table></div>
+  <div class="callout bad" id="tf-note"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="stage">NEXT</span><h2>What still has to happen</h2></div>
+  <p class="tight">Nothing here is a result yet. These are the tests that killed every ORB
+    candidate, in the order they will be run.</p>
+  <div class="scroll"><table id="todo"></table></div>
+</section>
+
+<footer>
+  <p>prop_lab &middot; H-002 &middot; generated by <span class="mono">strategies/vwap/build_report.py</span>
+     from the CSVs in <span class="mono">backtests/vwap/</span>. Costs per side, 1&times;:
+     BTC 5.0+2.0&nbsp;bps, Gold 1.0+0.5, EURUSD 0.45+0.3, and so on per pair.
+     Fixed 1% risk per trade. Stop assumed to fill before target when a bar contains both.</p>
+</footer>
+</div>
+
+<script id="data" type="application/json">{"fill": [{"symbol": "Gold", "limit_best": 0.987, "limit_gate": 0, "limit_trades": 5101, "honest_best": 1.084, "honest_gate": 0, "honest_trades": 2645}, {"symbol": "USDJPY", "limit_best": 1.028, "limit_gate": 0, "limit_trades": 4892, "honest_best": 1.079, "honest_gate": 0, "honest_trades": 2667}, {"symbol": "EURUSD", "limit_best": 1.214, "limit_gate": 3, "limit_trades": 4988, "honest_best": 1.046, "honest_gate": 0, "honest_trades": 2678}, {"symbol": "GBPUSD", "limit_best": 1.148, "limit_gate": 0, "limit_trades": 5103, "honest_best": 1.024, "honest_gate": 0, "honest_trades": 2759}, {"symbol": "AUDUSD", "limit_best": 0.988, "limit_gate": 0, "limit_trades": 5266, "honest_best": 0.997, "honest_gate": 0, "honest_trades": 2758}, {"symbol": "USDCHF", "limit_best": 0.988, "limit_gate": 0, "limit_trades": 5417, "honest_best": 0.922, "honest_gate": 0, "honest_trades": 2832}, {"symbol": "USDCAD", "limit_best": 0.755, "limit_gate": 0, "limit_trades": 5088, "honest_best": 0.857, "honest_gate": 0, "honest_trades": 2754}, {"symbol": "NZDUSD", "limit_best": 0.877, "limit_gate": 0, "limit_trades": 5622, "honest_best": 0.906, "honest_gate": 0, "honest_trades": 2920}, {"symbol": "Bitcoin", "limit_best": 2.932, "limit_gate": 116, "limit_trades": 4871, "honest_best": 0.876, "honest_gate": 0, "honest_trades": 2706}], "fill_totals": {"limit_gate": 119, "honest_gate": 0, "configs": 71928, "backtests": 287712}, "best": [{"symbol": "Gold", "family": "band break", "anchor": "rolling 384 bars", "band": 2.5, "trades": 111, "tpd": 0.1, "pf": 2.087, "pf2x": 1.648, "win": 0.189, "avg_r": 1.091, "hold": 13.2, "sharpe": 0.86, "resolve": 18.0, "gate": 276, "gate2x": 81}, {"symbol": "USDJPY", "family": "reclaim", "anchor": "13:30 UTC", "band": 2.5, "trades": 258, "tpd": 0.24, "pf": 1.696, "pf2x": 1.378, "win": 0.291, "avg_r": 0.533, "hold": 3.0, "sharpe": 0.99, "resolve": 18.0, "gate": 87, "gate2x": 6}, {"symbol": "EURUSD", "family": "pullback", "anchor": "rolling 384 bars", "band": 2.0, "trades": 305, "tpd": 0.28, "pf": 1.299, "pf2x": 1.098, "win": 0.482, "avg_r": 0.123, "hold": 7.2, "sharpe": 0.8, "resolve": 129.0, "gate": 10, "gate2x": 0}, {"symbol": "GBPUSD", "family": "reclaim", "anchor": "rolling 384 bars", "band": 1.5, "trades": 124, "tpd": 0.11, "pf": 1.577, "pf2x": 1.371, "win": 0.347, "avg_r": 0.36, "hold": 21.9, "sharpe": 0.86, "resolve": 105.0, "gate": 4, "gate2x": 2}, {"symbol": "AUDUSD", "family": "band fade", "anchor": "rolling 384 bars", "band": 2.5, "trades": 291, "tpd": 0.27, "pf": 1.663, "pf2x": 1.486, "win": 0.337, "avg_r": 0.463, "hold": 27.0, "sharpe": 1.52, "resolve": 36.0, "gate": 51, "gate2x": 4}, {"symbol": "USDCHF", "family": "reclaim", "anchor": "rolling 384 bars", "band": 2.5, "trades": 144, "tpd": 0.13, "pf": 1.251, "pf2x": 1.064, "win": 0.34, "avg_r": 0.175, "hold": 18.2, "sharpe": 0.51, "resolve": 132.0, "gate": 2, "gate2x": 0}, {"symbol": "USDCAD", "family": "reclaim", "anchor": "rolling 384 bars", "band": 1.5, "trades": 217, "tpd": 0.2, "pf": 1.24, "pf2x": 0.937, "win": 0.217, "avg_r": 0.243, "hold": 14.5, "sharpe": 0.51, "resolve": 34.0, "gate": 1, "gate2x": 0}, {"symbol": "NZDUSD", "family": "pullback", "anchor": "rolling 384 bars", "band": 2.0, "trades": 191, "tpd": 0.17, "pf": 1.173, "pf2x": 1.009, "win": 0.345, "avg_r": 0.114, "hold": 26.8, "sharpe": 0.4, "resolve": 119.0, "gate": 0, "gate2x": 0}, {"symbol": "Bitcoin", "family": "reclaim", "anchor": "rolling 384 bars", "band": 1.5, "trades": 176, "tpd": 0.16, "pf": 1.73, "pf2x": 1.42, "win": 0.42, "avg_r": 0.44, "hold": 24.2, "sharpe": 1.21, "resolve": 65.0, "gate": 374, "gate2x": 8}], "stage2": {"configs": 169041, "gate": 805, "gate2x": 101, "median2x_of_gate": 1.034, "over16": 23}, "families": [{"family": "trend", "configs": 12096, "median": 0.752, "best": 1.426, "gate": 137, "tpd": 1.73}, {"family": "band fade", "configs": 54384, "median": 0.679, "best": 1.663, "gate": 44, "tpd": 1.18}, {"family": "pullback", "configs": 12096, "median": 0.675, "best": 1.582, "gate": 36, "tpd": 0.74}, {"family": "reclaim", "configs": 36072, "median": 0.658, "best": 1.73, "gate": 126, "tpd": 0.52}, {"family": "band break", "configs": 54393, "median": 0.549, "best": 2.087, "gate": 462, "tpd": 1.29}], "tfnull": [{"symbol": "Gold", "tf": "5m", "real_best": 1.864, "real_16": 32, "null_best": 1.31, "null_16": 0, "edge": 0.554, "beats": true, "tpd": 0.1}, {"symbol": "Gold", "tf": "15m", "real_best": 2.087, "real_16": 12, "null_best": 1.853, "null_16": 6, "edge": 0.234, "beats": true, "tpd": 0.1}, {"symbol": "Gold", "tf": "30m", "real_best": 2.014, "real_16": 15, "null_best": 1.579, "null_16": 0, "edge": 0.435, "beats": true, "tpd": 0.14}, {"symbol": "Gold", "tf": "1h", "real_best": 2.392, "real_16": 37, "null_best": 2.038, "null_16": 3, "edge": 0.354, "beats": true, "tpd": 0.09}, {"symbol": "Gold", "tf": "4h", "real_best": 1.92, "real_16": 44, "null_best": 1.877, "null_16": 7, "edge": 0.043, "beats": true, "tpd": 0.11}, {"symbol": "USDJPY", "tf": "5m", "real_best": 1.382, "real_16": 0, "null_best": 1.245, "null_16": 0, "edge": 0.137, "beats": false, "tpd": 0.25}, {"symbol": "USDJPY", "tf": "15m", "real_best": 1.434, "real_16": 0, "null_best": 1.454, "null_16": 0, "edge": -0.02, "beats": false, "tpd": 0.17}, {"symbol": "USDJPY", "tf": "30m", "real_best": 1.661, "real_16": 1, "null_best": 1.807, "null_16": 4, "edge": -0.146, "beats": false, "tpd": 0.13}, {"symbol": "USDJPY", "tf": "1h", "real_best": 1.837, "real_16": 5, "null_best": 1.527, "null_16": 0, "edge": 0.31, "beats": true, "tpd": 0.18}, {"symbol": "USDJPY", "tf": "4h", "real_best": 2.036, "real_16": 8, "null_best": 2.412, "null_16": 53, "edge": -0.376, "beats": false, "tpd": 0.17}, {"symbol": "EURUSD", "tf": "5m", "real_best": 1.83, "real_16": 1, "null_best": 1.459, "null_16": 0, "edge": 0.371, "beats": true, "tpd": 0.16}, {"symbol": "EURUSD", "tf": "15m", "real_best": 1.309, "real_16": 0, "null_best": 1.804, "null_16": 2, "edge": -0.495, "beats": false, "tpd": 0.33}, {"symbol": "EURUSD", "tf": "30m", "real_best": 1.479, "real_16": 0, "null_best": 1.251, "null_16": 0, "edge": 0.228, "beats": false, "tpd": 0.25}, {"symbol": "EURUSD", "tf": "1h", "real_best": 1.38, "real_16": 0, "null_best": 1.419, "null_16": 0, "edge": -0.039, "beats": false, "tpd": 0.11}, {"symbol": "EURUSD", "tf": "4h", "real_best": 1.709, "real_16": 2, "null_best": 1.45, "null_16": 0, "edge": 0.259, "beats": true, "tpd": 0.11}, {"symbol": "GBPUSD", "tf": "5m", "real_best": 1.45, "real_16": 0, "null_best": 1.253, "null_16": 0, "edge": 0.197, "beats": false, "tpd": 0.09}, {"symbol": "GBPUSD", "tf": "15m", "real_best": 1.577, "real_16": 0, "null_best": 1.312, "null_16": 0, "edge": 0.265, "beats": false, "tpd": 0.11}, {"symbol": "GBPUSD", "tf": "30m", "real_best": 1.333, "real_16": 0, "null_best": 1.301, "null_16": 0, "edge": 0.032, "beats": false, "tpd": 0.31}, {"symbol": "GBPUSD", "tf": "1h", "real_best": 1.543, "real_16": 0, "null_best": 1.444, "null_16": 0, "edge": 0.099, "beats": false, "tpd": 0.1}, {"symbol": "GBPUSD", "tf": "4h", "real_best": 1.545, "real_16": 0, "null_best": 1.748, "null_16": 4, "edge": -0.203, "beats": false, "tpd": 0.09}, {"symbol": "AUDUSD", "tf": "5m", "real_best": 1.165, "real_16": 0, "null_best": 1.043, "null_16": 0, "edge": 0.122, "beats": false, "tpd": 0.35}, {"symbol": "AUDUSD", "tf": "15m", "real_best": 1.663, "real_16": 1, "null_best": 1.232, "null_16": 0, "edge": 0.431, "beats": true, "tpd": 0.27}, {"symbol": "AUDUSD", "tf": "30m", "real_best": 1.449, "real_16": 0, "null_best": 1.213, "null_16": 0, "edge": 0.236, "beats": false, "tpd": 0.18}, {"symbol": "AUDUSD", "tf": "1h", "real_best": 1.637, "real_16": 2, "null_best": 1.292, "null_16": 0, "edge": 0.345, "beats": true, "tpd": 0.14}, {"symbol": "AUDUSD", "tf": "4h", "real_best": 1.606, "real_16": 2, "null_best": 1.853, "null_16": 4, "edge": -0.247, "beats": false, "tpd": 0.11}, {"symbol": "USDCHF", "tf": "5m", "real_best": 1.125, "real_16": 0, "null_best": 1.192, "null_16": 0, "edge": -0.067, "beats": false, "tpd": 0.61}, {"symbol": "USDCHF", "tf": "15m", "real_best": 1.251, "real_16": 0, "null_best": 1.181, "null_16": 0, "edge": 0.07, "beats": false, "tpd": 0.13}, {"symbol": "USDCHF", "tf": "30m", "real_best": 1.346, "real_16": 0, "null_best": 1.27, "null_16": 0, "edge": 0.076, "beats": false, "tpd": 0.17}, {"symbol": "USDCHF", "tf": "1h", "real_best": 1.694, "real_16": 4, "null_best": 1.187, "null_16": 0, "edge": 0.507, "beats": true, "tpd": 0.13}, {"symbol": "USDCHF", "tf": "4h", "real_best": 1.484, "real_16": 0, "null_best": 1.454, "null_16": 0, "edge": 0.03, "beats": false, "tpd": 0.11}, {"symbol": "USDCAD", "tf": "5m", "real_best": 1.031, "real_16": 0, "null_best": 1.197, "null_16": 0, "edge": -0.166, "beats": false, "tpd": 0.26}, {"symbol": "USDCAD", "tf": "15m", "real_best": 1.074, "real_16": 0, "null_best": 1.054, "null_16": 0, "edge": 0.02, "beats": false, "tpd": 0.29}, {"symbol": "USDCAD", "tf": "30m", "real_best": 1.098, "real_16": 0, "null_best": 0.993, "null_16": 0, "edge": 0.105, "beats": false, "tpd": 0.11}, {"symbol": "USDCAD", "tf": "1h", "real_best": 1.282, "real_16": 0, "null_best": 1.244, "null_16": 0, "edge": 0.038, "beats": false, "tpd": 0.16}, {"symbol": "USDCAD", "tf": "4h", "real_best": 1.42, "real_16": 0, "null_best": 1.429, "null_16": 0, "edge": -0.009, "beats": false, "tpd": 0.1}, {"symbol": "NZDUSD", "tf": "5m", "real_best": 1.074, "real_16": 0, "null_best": 1.49, "null_16": 0, "edge": -0.416, "beats": false, "tpd": 0.25}, {"symbol": "NZDUSD", "tf": "15m", "real_best": 1.158, "real_16": 0, "null_best": 1.619, "null_16": 1, "edge": -0.461, "beats": false, "tpd": 0.24}, {"symbol": "NZDUSD", "tf": "30m", "real_best": 1.169, "real_16": 0, "null_best": 1.364, "null_16": 0, "edge": -0.195, "beats": false, "tpd": 0.27}, {"symbol": "NZDUSD", "tf": "1h", "real_best": 1.304, "real_16": 0, "null_best": 1.469, "null_16": 0, "edge": -0.165, "beats": false, "tpd": 0.24}, {"symbol": "NZDUSD", "tf": "4h", "real_best": 1.611, "real_16": 2, "null_best": 1.242, "null_16": 0, "edge": 0.369, "beats": true, "tpd": 0.09}, {"symbol": "Bitcoin", "tf": "15m", "real_best": 1.73, "real_16": 2, "null_best": 1.031, "null_16": 0, "edge": 0.699, "beats": true, "tpd": 0.16}, {"symbol": "Bitcoin", "tf": "30m", "real_best": 1.742, "real_16": 2, "null_best": 1.326, "null_16": 0, "edge": 0.416, "beats": true, "tpd": 0.17}, {"symbol": "Bitcoin", "tf": "1h", "real_best": 1.952, "real_16": 13, "null_best": 1.254, "null_16": 0, "edge": 0.698, "beats": true, "tpd": 0.14}, {"symbol": "Bitcoin", "tf": "4h", "real_best": 2.777, "real_16": 105, "null_best": 1.701, "null_16": 2, "edge": 1.076, "beats": true, "tpd": 0.1}], "tfnull_summary": {"combos": 44, "beat": 16, "null_over16": 86, "real_over16": 290, "null_best": 2.412}}</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = id => document.getElementById(id);
+const f = (v,d=3) => (v===null||v===undefined||Number.isNaN(v)) ? '&mdash;' : Number(v).toFixed(d);
+const cls = pf => pf>=1.2 ? 'good' : (pf>=1.0 ? '' : 'bad');
+const pct = v => (v*100).toFixed(1)+'%';
+function table(el, cols, rows, cap){
+  el.innerHTML = `<thead><tr>${cols.map(c=>`<th class="${c.n?'n':''}">${c.h}</th>`).join('')}</tr></thead>`
+    + `<tbody>${rows.map(r=>`<tr>${cols.map(c=>{
+        const v = c.f ? c.f(r) : r[c.k];
+        return `<td class="${c.n?'n':''} ${c.cls?c.cls(r):''}">${v}</td>`;
+      }).join('')}</tr>`).join('')}</tbody>`
+    + (cap?`<caption>${cap}</caption>`:'');
+}
+
+const FT=D.fill_totals, S2=D.stage2, TN=D.tfnull_summary||{};
+$('scope').textContent = FT.backtests.toLocaleString()+' backtests, 9 markets';
+$('stamp').textContent = 'Live \u2014 survived the cost stress, not yet validated';
+$('readout').innerHTML = [
+  {k:'Stage 1 gate-clearers', v:FT.limit_gate, n:'all of them on a limit-fill assumption', tone:'fail'},
+  {k:'Same, honest fills', v:FT.honest_gate, n:'the limit result was an artefact', tone:'fail'},
+  {k:'Stage 2 clear PF 1.20', v:S2.gate.toLocaleString(), n:'paper-faithful trend + rolling VWAP', tone:'pass'},
+  {k:'Still clear at 2x cost', v:S2.gate2x, n:'ORB had zero at 2x on any market', tone:'pass'},
+  {k:'Reach PF 1.60', v:S2.over16, n:'before out-of-sample testing'},
+  {k:'Best a NULL search found', v:f(TN.null_best||0,2), n:'on shuffled data with no edge in it', tone:'fail'},
+].map(c=>`<div class="cell"><div class="k">${c.k}</div><div class="v ${c.tone||''}">${c.v}</div>
+  <div class="n2">${c.n}</div></div>`).join('');
+
+table($('fill'),[
+  {h:'Market',k:'symbol',cls:()=>'name'},
+  {h:'Limit-fill best PF',n:1,f:r=>f(r.limit_best),cls:r=>cls(r.limit_best)},
+  {h:'Limit clear 1.20',n:1,f:r=>r.limit_gate,cls:r=>r.limit_gate?'good':''},
+  {h:'Limit median trades',k:'limit_trades',n:1},
+  {h:'Honest best PF',n:1,f:r=>f(r.honest_best),cls:r=>cls(r.honest_best)},
+  {h:'Honest clear 1.20',n:1,f:r=>r.honest_gate,cls:r=>r.honest_gate?'good':'bad'},
+  {h:'Honest median trades',k:'honest_trades',n:1},
+], D.fill, 'Stage 1, 1x cost, band fade and band breakout only \u2014 the two families that enter at a band.');
+$('fill-note').innerHTML = `<p><strong>Every single one of the ${FT.limit_gate} configurations that
+  cleared the gate did so on the limit-fill assumption.</strong> With honest fills,
+  ${FT.honest_gate} cleared it anywhere. The limit version also takes roughly twice as many
+  trades, because it counts every wick touch as a fill. This is the artefact that turned a
+  PF 3.0 backtest into 0.7 live in the previous repo; building both assumptions into the
+  engine caught it on the first pass rather than after a loss.</p>`;
+
+$('s2-aside').textContent = S2.configs.toLocaleString()+' configs per market';
+table($('best'),[
+  {h:'Market',k:'symbol',cls:()=>'name'},
+  {h:'Family',k:'family'},{h:'Anchor',k:'anchor'},
+  {h:'Trades',k:'trades',n:1},
+  {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+  {h:'PF',n:1,f:r=>f(r.pf),cls:r=>cls(r.pf)},
+  {h:'PF at 2x cost',n:1,f:r=>f(r.pf2x),cls:r=>cls(r.pf2x)},
+  {h:'Win',n:1,f:r=>pct(r.win)},
+  {h:'Avg R',n:1,f:r=>(r.avg_r>=0?'+':'')+f(r.avg_r,3),cls:r=>r.avg_r>0?'good':'bad'},
+  {h:'Hold',n:1,f:r=>f(r.hold,1)+'h'},
+  {h:'Sharpe',n:1,f:r=>f(r.sharpe,2),cls:r=>r.sharpe>0?'':'bad'},
+  {h:'Days to resolve',n:1,f:r=>r.resolve==null?'&mdash;':f(r.resolve,0),cls:r=>r.resolve>14?'bad':''},
+  {h:'Configs clearing 1.20',k:'gate',n:1},
+  {h:'&rarr; still at 2x',n:1,f:r=>r.gate2x,cls:r=>r.gate2x?'good':'bad'},
+], D.best, 'Stage 2, honest fills, 1x cost. Days to resolve is the phase gate \u2014 the current phase needs it under ~14.');
+$('s2-note').innerHTML = `<p><strong>This is the first thing in the project to survive a cost
+  stress.</strong> ${S2.gate.toLocaleString()} configurations clear PF 1.20 at 1x and
+  <strong>${S2.gate2x} still clear it at 2x</strong>, with a median 2x profit factor of
+  ${f(S2.median2x_of_gate)}. ORB never produced a single one at 2x on any market. The open
+  question is frequency: the strongest configurations trade a fraction of a time per day,
+  which is the same thing that disqualified ORB's winners.</p>`;
+
+table($('fam'),[
+  {h:'Family',k:'family',cls:()=>'name'},
+  {h:'Configs',n:1,f:r=>r.configs.toLocaleString()},
+  {h:'Median PF',n:1,f:r=>f(r.median),cls:r=>cls(r.median)},
+  {h:'Best PF',n:1,f:r=>f(r.best),cls:r=>cls(r.best)},
+  {h:'Clear 1.20',n:1,f:r=>r.gate,cls:r=>r.gate?'good':'bad'},
+  {h:'Trades/day',n:1,f:r=>f(r.tpd,2)},
+], D.families, 'Medians, not maxima. Pooled across all nine markets at 1x cost.');
+
+if (D.tfnull){
+  $('tf-aside').textContent = TN.combos+' market x timeframe combinations';
+  table($('tfnull'),[
+    {h:'Market',k:'symbol',cls:()=>'name'},{h:'TF',k:'tf'},
+    {h:'Real best PF',n:1,f:r=>f(r.real_best),cls:r=>cls(r.real_best)},
+    {h:'Real &ge; 1.6',n:1,f:r=>r.real_16,cls:r=>r.real_16?'good':''},
+    {h:'Null best PF',n:1,f:r=>f(r.null_best),cls:r=>r.null_best>=1.6?'bad':'dim'},
+    {h:'Null &ge; 1.6',n:1,f:r=>r.null_16,cls:r=>r.null_16?'bad':'dim'},
+    {h:'Real &minus; null',n:1,f:r=>(r.edge>=0?'+':'')+f(r.edge,3),cls:r=>r.edge>0.3?'good':(r.edge<0?'bad':'')},
+    {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+    {h:'Beats null',f:r=>r.beats?'<span class="chip yes">yes</span>':'<span class="chip no">no</span>'},
+  ], D.tfnull, 'Null = the same search on the same market with its returns shuffled.');
+  $('tf-note').innerHTML = `<p><strong>A profit factor of 1.6 is reachable by search noise on
+    this dataset.</strong> The shuffled markets &mdash; which contain no edge at all by
+    construction &mdash; still produced ${TN.null_over16} configurations above 1.6, topping out
+    at ${f(TN.null_best,2)}. So a single high profit factor proves nothing on its own; what
+    matters is whether the real market beats its own null. ${TN.beat} of ${TN.combos}
+    combinations do.</p>`;
+}
+
+table($('todo'),[
+  {h:'Test',k:'t',cls:()=>'name'},{h:'What it decides',k:'w',cls:()=>'wrap-note'},
+  {h:'Status',f:r=>r.done?'<span class="chip yes">done</span>':'<span class="chip part">pending</span>'},
+], [
+ {t:'Fill realism', w:'Whether the result depends on a limit fill nobody can guarantee.', done:true},
+ {t:'Cost stress to 2x and 3x', w:'Whether the edge is bigger than the spread difference between an ECN and a prop firm. This is what killed ORB.', done:true},
+ {t:'Null benchmark', w:'Whether the profit factor beats what the same search finds in data with no edge in it.', done:true},
+ {t:'Out of sample', w:'Whether the configurations that win on the fit years still win on a year nobody chose them on.', done:false},
+ {t:'Walk-forward', w:'Whether a configuration chosen blind each quarter makes money. The only number that is not post-hoc.', done:false},
+ {t:'Prop challenge simulation', w:'Pass rate and breach rate under 4% daily / 8% max / 8% target, fixed risk, real breaches.', done:false},
+ {t:'NautilusTrader cross-check', w:'Whether an independent matching engine agrees with the kernel.', done:false},
+]);
+</script>
