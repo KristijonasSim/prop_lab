@@ -33571,6 +33571,56 @@
     "median": 0.128
    }
   ],
+  "gate": [
+   {
+    "symbol": "Gold (XAUUSD)",
+    "configs": 8160,
+    "clear_gate": 2,
+    "clear_be": 170,
+    "best": 1.262,
+    "median": 0.711,
+    "best_zero_fee": 1.82,
+    "median_zero_fee": 0.982,
+    "clear_gate_2x": 0,
+    "tpd": 0.7
+   },
+   {
+    "symbol": "EURUSD",
+    "configs": 8160,
+    "clear_gate": 0,
+    "clear_be": 24,
+    "best": 1.081,
+    "median": 0.634,
+    "best_zero_fee": 2.929,
+    "median_zero_fee": 0.948,
+    "clear_gate_2x": 0,
+    "tpd": 0.7
+   },
+   {
+    "symbol": "GBPUSD",
+    "configs": 8160,
+    "clear_gate": 11,
+    "clear_be": 97,
+    "best": 1.439,
+    "median": 0.663,
+    "best_zero_fee": 3.768,
+    "median_zero_fee": 0.971,
+    "clear_gate_2x": 0,
+    "tpd": 0.4
+   },
+   {
+    "symbol": "Bitcoin (BTCUSDT)",
+    "configs": 8160,
+    "clear_gate": 0,
+    "clear_be": 0,
+    "best": 0.993,
+    "median": 0.481,
+    "best_zero_fee": 1.587,
+    "median_zero_fee": 0.984,
+    "clear_gate_2x": 0,
+    "tpd": 1.0
+   }
+  ],
   "best": [
    {
     "symbol": "Gold (XAUUSD)",
@@ -33978,30 +34028,48 @@
   ],
   "window": "2023-09-01 to 2026-08-31"
  },
+ "_is1": {
+  "window": "IS",
+  "cost": "1x",
+  "n": 8160,
+  "gate": 0,
+  "be": 6,
+  "best": 1.045,
+  "median": 0.556
+ },
+ "_is0": {
+  "window": "IS",
+  "cost": "0x",
+  "n": 8160,
+  "gate": 219,
+  "be": 2986,
+  "best": 1.541,
+  "median": 0.96
+ },
  "period": "2018-01-01 to 2026-08-31",
- "stamp": "Rejected \u2014 does not clear the gate",
+ "stamp": "Rejected on every market tested",
  "readout": [
   {
    "k": "Configs tested",
-   "v": "8,160",
-   "n": "8 anchors x 5 ranges x 4 horizons x entry/stop/target/direction"
+   "v": "32,640",
+   "n": "8,160 per market, four markets"
   },
   {
-   "k": "Clearing PF 1.20",
+   "k": "Clear the PF 1.20 gate",
+   "v": "13",
+   "n": "0.04% of them, none robust",
+   "tone": "fail"
+  },
+  {
+   "k": "Survive 2x cost",
    "v": "0",
-   "n": "in sample and out of sample, at real cost",
+   "n": "costs are an assumption until a firm is picked",
    "tone": "fail"
   },
   {
-   "k": "Best PF, real cost",
-   "v": "1.045",
-   "n": "out of sample it did 0.964",
-   "tone": "fail"
-  },
-  {
-   "k": "Median PF, zero fees",
-   "v": "0.960",
-   "n": "loses money before a single bp is charged",
+   "k": "Best PF anywhere",
+   "v": "1.439",
+   "n": "GBPUSD, and it needs 339 days to resolve",
    "tone": "fail"
   },
   {
@@ -34013,15 +34081,154 @@
   {
    "k": "Prop pass rate",
    "v": "36%",
-   "n": "best config; 64% breach the 8% max loss",
+   "n": "64% breach the 8% cap instead",
    "tone": "fail"
+  }
+ ],
+ "why": [
+  {
+   "r": "The published edge is a basket, not a chart pattern",
+   "d": "Top 20 of 7,000+ US stocks by opening relative volume, rebuilt daily: Sharpe 2.81. The same paper's unfiltered version, which is what a single-symbol sweep resembles: Sharpe 0.48."
+  },
+  {
+   "r": "Equities have the auction; these markets do not",
+   "d": "One daily open concentrates overnight news into a few minutes. FX and gold have session opens but no auction and no overnight order backlog; crypto has neither."
+  },
+  {
+   "r": "Live ORB is discretionary",
+   "d": "Traders filter by gap size, pre-market range, news and whether it looks like a trend day. A mechanical sweep cannot reproduce that - and cannot falsify it either."
+  },
+  {
+   "r": "The losing months are not posted",
+   "d": "Most public ORB results come from people selling something, over a chosen window. Not evidence either way, but it explains the visibility gap."
+  },
+  {
+   "r": "A 25% shortfall is invisible on a chart",
+   "d": "The best anchor family here sits at median PF 0.789. Eyeballing a handful of charts cannot tell 0.79 from 1.05; only a few hundred trades can."
+  }
+ ],
+ "next": [
+  {
+   "c": "US equities cross-section, top 20 by opening relative volume",
+   "w": "The actual published strategy. If this fails, ORB is dead everywhere, not just here.",
+   "phase": true
+  },
+  {
+   "c": "Crypto analogue: rank 50+ coins daily by relative volume, trade the top few",
+   "w": "Whether cross-sectional selection - the part that carries the edge - transfers to a market we can already trade.",
+   "phase": true
+  },
+  {
+   "c": "Index futures (NQ / ES) at the NY open",
+   "w": "The instrument most retail ORB traders actually use, and the one gap left in the session-anchored test.",
+   "phase": true
   }
  ],
  "stage1_callout": "<p><strong>Nothing clears the gate.</strong> Of 8,160 configurations with at least 200 trades, <strong>zero</strong> reach profit factor 1.20 at realistic cost. Only 6 of them exceed 1.00 at all, the best at 1.045. The median configuration sits at 0.556. Strip the fees entirely and the median is still 0.960 &mdash; below breakeven.</p>",
  "lit_callout": "<p><strong>The filter does not survive contact with new data.</strong> 75 configurations clear PF 1.20 in sample. Out of sample 4 of them still do &mdash; 5%. The median out-of-sample profit factor of that hand-picked group is 0.945, below breakeven. The single best in-sample config (1.907) scored 0.671 out of sample. And the survivors trade about 0.11 times a day &mdash; roughly one trade a fortnight, which fails the current phase constraint on its own.</p>",
  "prop_note": "<strong>36% of accounts pass</strong> with the best configuration at real cost, and 64% breach the 8% max loss. Buying challenges at roughly &euro;30 each to run a negative-expectancy engine is a losing trade on its own: the accounts that do pass are then funded with a system whose edge is below zero. The daily-loss cap is never the thing that kills it &mdash; at 1% risk and about one trade a day, the account bleeds down to the overall cap instead.",
- "survival_callout": "<p><strong>Only GBPUSD carried anything into the unseen year, and it turned out to be one cell rather than an effect.</strong> 9 configurations cleared PF 1.20 on the fit window and 5 of them cleared it again on the test year. Against a base rate of 0.4% that looks overwhelming &mdash; until you look at what those configurations are. All nine are the same setup: a 1-hour range, faded, entered on a close beyond the edge, almost all of them at the 20:00 anchor. They are one observation wearing nine hats, so the significance test does not apply. Gold cleared the gate 2 times in sample and 0 times out of it, with a median of 0.976.</p>",
+ "tests": [
+  {
+   "test": "Full parameter grid, 4 markets",
+   "asks": "Does any of 8,160 configs per market clear PF 1.20 at real cost?",
+   "result": "13 of 32,640 do, all fragile",
+   "pass": false
+  },
+  {
+   "test": "Zero-fee diagnostic",
+   "asks": "Is the failure just costs, or is there no edge to protect?",
+   "result": "median PF 0.960 with fees stripped to zero",
+   "pass": false
+  },
+  {
+   "test": "Wider stops",
+   "asks": "Can a bigger 1R outrun the fee burden?",
+   "result": "net PF 0.61-0.78 at every width from 1x to 8x ATR",
+   "pass": false
+  },
+  {
+   "test": "Relative-volume filter",
+   "asks": "Does the filter the papers credit transfer?",
+   "result": "75 clear in sample, 4 repeat out of sample",
+   "pass": false
+  },
+  {
+   "test": "Out of sample, all markets",
+   "asks": "Do the winners survive on data they were not chosen on?",
+   "result": "Gold 2 -> 0. GBPUSD 9 -> 5, but all 9 are one cluster",
+   "pass": false
+  },
+  {
+   "test": "Walk-forward, 31 quarters",
+   "asks": "What happens when the choice is made blind, every quarter?",
+   "result": "PF 0.781 over 2,746 trades, 5/31 quarters above breakeven",
+   "pass": false
+  },
+  {
+   "test": "Session-anchor test",
+   "asks": "Do the real session opens beat arbitrary clock times?",
+   "result": "yes - NY open is best on all 3 FX/metals - but best median is only 0.789",
+   "pass": null
+  },
+  {
+   "test": "Prop challenge simulation",
+   "asks": "Would it pass an evaluation?",
+   "result": "36% pass, 64% breach the 8% cap",
+   "pass": false
+  },
+  {
+   "test": "Independent engine",
+   "asks": "Is the negative result an artefact of my own code?",
+   "result": "NautilusTrader agrees on trade count and reports a worse PF",
+   "pass": true
+  }
+ ],
+ "criteria": [
+  {
+   "c": "A mechanism is named",
+   "q": "Is there a reason an edge should exist, and who pays for it?",
+   "status": "yes",
+   "note": "Institutions repricing a stock against overnight news, compressed into one daily auction."
+  },
+  {
+   "c": "The mechanism was present in the test",
+   "q": "Was that precondition actually there in what I tested?",
+   "status": "no",
+   "note": "None of the four markets has a daily auction, and none of them allows picking today's 20 most active names out of 7,000."
+  },
+  {
+   "c": "Clears the gate at real cost",
+   "q": "PF >= 1.20 after fees and slippage.",
+   "status": "no",
+   "note": "13 configurations out of 32,640, none robust."
+  },
+  {
+   "c": "Not merely a cost problem",
+   "q": "Does it work with fees set to zero?",
+   "status": "no",
+   "note": "Median PF 0.95-0.98 at zero cost. Nothing for a cheaper venue to rescue."
+  },
+  {
+   "c": "Survives out of sample",
+   "q": "Same configuration, data it was not chosen on.",
+   "status": "no",
+   "note": "Gold loses all its winners. GBPUSD's survivors are one cluster on the worst anchor."
+  },
+  {
+   "c": "Survives walk-forward",
+   "q": "Chosen blind, re-chosen every quarter.",
+   "status": "no",
+   "note": "PF 0.781 across 2,746 trades."
+  },
+  {
+   "c": "Verified by a second engine",
+   "q": "Is the result an artefact of my own backtester?",
+   "status": "yes",
+   "note": "NautilusTrader agrees, and is harsher."
+  }
+ ],
+ "survival_note": "<p><strong>GBPUSD's 5 survivors are one setup, not 9.</strong> All nine are a 1-hour range, faded, entered on a close beyond the edge, almost all at the 20:00 anchor &mdash; one observation wearing nine hats, so the 0.4% base rate it is being compared against does not apply. Gold kept none.</p>",
  "assets_callout": "<p><strong>The answer does not change by market.</strong> Over one common three-year window, 13 configurations out of 32,640 clear PF 1.20 at realistic cost across all four instruments. The best single result anywhere is 1.439 on GBPUSD. With fees stripped to zero the medians are Gold 0.982, EURUSD 0.948, GBPUSD 0.971, Bitcoin 0.984 &mdash; at or below breakeven before a single cost is charged.</p>",
  "assets_window": "2023-09-01 to 2026-08-31",
- "anchor_callout": "<p><strong>The method finds session structure exactly where session structure exists &mdash; and it is still not enough.</strong> Gold, EURUSD and GBPUSD all agree on the same best anchor by median profit factor, the <strong>13:00 NY open</strong>, and on the same worst one, the <strong>20:00 NY close</strong>. The spread between best and worst anchor is 57% on EURUSD and 56% on GBPUSD, against only 16% on Bitcoin &mdash; which is what a market with no opening auction should look like. That is a good sign about the test: it finds session structure where session structure exists and almost none where it does not. But the best anchor on the best instrument still has a median profit factor of 0.789. The session effect is real, measurable, and far too small to trade.</p><p>It also disposes of the GBPUSD result above. Its 20:00 anchor is not a session open at all; it is the New York close, and it is the <em>worst</em> anchor on every FX pair by median. That configuration is the luckiest cell of the weakest family.</p>"
+ "anchor_note": "<p><strong>Session structure is real and too small to trade.</strong> Gold, EURUSD and GBPUSD all pick the same best anchor (13:00 NY open) and the same worst one (20:00 NY close). Best-to-worst spread is 57% on EURUSD against 16% on Bitcoin, which has no auction &mdash; so the test does detect the real thing where it exists. The best anchor's median is still 0.789. It also sinks the GBPUSD result above: 20:00 is the New York <em>close</em>, the worst anchor on every FX pair.</p>"
 }

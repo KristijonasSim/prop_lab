@@ -172,6 +172,29 @@ def assets(d: dict) -> dict:
         if len(k):
             h, _ = np.histogram(k.pf.clip(0, 2.0), bins=bins)
             dist[names[sym]] = h.tolist()
+    # --- one row per market instead of a cost ladder ---
+    gate = []
+    for sym in order:
+        g = s7[s7.symbol == sym]
+        if not len(g):
+            continue
+        def at(m):
+            return g[(g.cost_mult == m) & (g.trades >= 100)]
+        z, one, two = at(0.0), at(1.0), at(2.0)
+        b = one.loc[one.pf.idxmax()] if len(one) else None
+        gate.append({
+            "symbol": names[sym],
+            "configs": int(len(one)),
+            "clear_gate": int((one.pf >= 1.2).sum()),
+            "clear_be": int((one.pf >= 1.0).sum()),
+            "best": round(float(one.pf.max()), 3),
+            "median": round(float(one.pf.median()), 3),
+            "best_zero_fee": round(float(z.pf.max()), 3) if len(z) else None,
+            "median_zero_fee": round(float(z.pf.median()), 3) if len(z) else None,
+            "clear_gate_2x": int((two.pf >= 1.2).sum()) if len(two) else 0,
+            "tpd": round(float(b.trades_per_day), 2) if b is not None else None,
+        })
+
     # --- does the session anchor matter? the mechanistically-motivated test ---
     LAB = {0: "00:00 UTC day", 4: "04:00 Asia", 7: "07:00 London pre",
            8: "08:00 London open", 12: "12:00 pre-NY", 13: "13:00 NY open",
@@ -209,7 +232,7 @@ def assets(d: dict) -> dict:
                 "median_oos_all": round(float(mg.pf_oos.median()), 3),
             })
 
-    d["assets"] = {"ladder": rows, "best": best,
+    d["assets"] = {"ladder": rows, "gate": gate, "best": best,
                    "dist": {"bins": bins.round(2).tolist(), "series": dist},
                    "anchors": anchors, "anchor_cols": [names[o] for o in order],
                    "anchor_keys": order,
@@ -251,22 +274,51 @@ def narrative(d: dict) -> dict:
     from the CSVs they describe."""
     is1 = next(r for r in d["ladder"] if r["window"] == "IS" and r["cost"] == "1x")
     is0 = next(r for r in d["ladder"] if r["window"] == "IS" and r["cost"] == "0x")
+    d["_is1"], d["_is0"] = is1, is0
     oos1 = next(r for r in d["ladder"] if r["window"] == "OOS" and r["cost"] == "1x")
     wf = d.get("wf", {})
     lit = d["lit"]
     best_prop = max((r for r in d["prop"] if r["cost"] == "1x"), key=lambda r: r["pass_rate"])
 
+    ga = (d.get("assets") or {}).get("gate", [])
+    tot = sum(r["configs"] for r in ga) if ga else d["n_configs"]
+    ngate = sum(r["clear_gate"] for r in ga) if ga else 0
+    ngate2 = sum(r["clear_gate_2x"] for r in ga) if ga else 0
+    bestpf = max((r["best"] for r in ga), default=is1["best"])
     d["period"] = "2018-01-01 to 2026-08-31"
-    d["stamp"] = "Rejected — does not clear the gate"
+    d["stamp"] = "Rejected on every market tested"
     d["readout"] = [
-        {"k": "Configs tested", "v": f"{d['n_configs']:,}", "n": "8 anchors x 5 ranges x 4 horizons x entry/stop/target/direction"},
-        {"k": "Clearing PF 1.20", "v": "0", "n": "in sample and out of sample, at real cost", "tone": "fail"},
-        {"k": "Best PF, real cost", "v": f"{is1['best']:.3f}", "n": f"out of sample it did {d['top_is'][0]['pf_oos']:.3f}", "tone": "fail"},
-        {"k": "Median PF, zero fees", "v": f"{is0['median']:.3f}", "n": "loses money before a single bp is charged", "tone": "fail"},
+        {"k": "Configs tested", "v": f"{tot:,}", "n": "8,160 per market, four markets"},
+        {"k": "Clear the PF 1.20 gate", "v": f"{ngate}", "n": f"{ngate/tot:.2%} of them, none robust", "tone": "fail"},
+        {"k": "Survive 2x cost", "v": f"{ngate2}", "n": "costs are an assumption until a firm is picked", "tone": "fail"},
+        {"k": "Best PF anywhere", "v": f"{bestpf:.3f}", "n": "GBPUSD, and it needs 339 days to resolve", "tone": "fail"},
         {"k": "Walk-forward PF", "v": f"{wf.get('stitched_pf', float('nan')):.3f}",
          "n": f"{wf.get('above1','?')} of {wf.get('quarters','?')} quarters above breakeven", "tone": "fail"},
         {"k": "Prop pass rate", "v": f"{best_prop['pass_rate']*100:.0f}%",
-         "n": f"best config; {best_prop['fail_max']*100:.0f}% breach the 8% max loss", "tone": "fail"},
+         "n": f"{best_prop['fail_max']*100:.0f}% breach the 8% cap instead", "tone": "fail"},
+    ]
+    d["why"] = [
+        {"r": "The published edge is a basket, not a chart pattern",
+         "d": "Top 20 of 7,000+ US stocks by opening relative volume, rebuilt daily: Sharpe 2.81. The same paper's unfiltered version, which is what a single-symbol sweep resembles: Sharpe 0.48."},
+        {"r": "Equities have the auction; these markets do not",
+         "d": "One daily open concentrates overnight news into a few minutes. FX and gold have session opens but no auction and no overnight order backlog; crypto has neither."},
+        {"r": "Live ORB is discretionary",
+         "d": "Traders filter by gap size, pre-market range, news and whether it looks like a trend day. A mechanical sweep cannot reproduce that - and cannot falsify it either."},
+        {"r": "The losing months are not posted",
+         "d": "Most public ORB results come from people selling something, over a chosen window. Not evidence either way, but it explains the visibility gap."},
+        {"r": "A 25% shortfall is invisible on a chart",
+         "d": "The best anchor family here sits at median PF 0.789. Eyeballing a handful of charts cannot tell 0.79 from 1.05; only a few hundred trades can."},
+    ]
+    d["next"] = [
+        {"c": "US equities cross-section, top 20 by opening relative volume",
+         "w": "The actual published strategy. If this fails, ORB is dead everywhere, not just here.",
+         "phase": True},
+        {"c": "Crypto analogue: rank 50+ coins daily by relative volume, trade the top few",
+         "w": "Whether cross-sectional selection - the part that carries the edge - transfers to a market we can already trade.",
+         "phase": True},
+        {"c": "Index futures (NQ / ES) at the NY open",
+         "w": "The instrument most retail ORB traders actually use, and the one gap left in the session-anchored test.",
+         "phase": True},
     ]
     d["stage1_callout"] = (
         f"<p><strong>Nothing clears the gate.</strong> Of {is1['n']:,} configurations with at "
@@ -291,22 +343,73 @@ def narrative(d: dict) -> dict:
         f"whose edge is below zero. The daily-loss cap is never the thing that kills it &mdash; "
         f"at 1% risk and about one trade a day, the account bleeds down to the overall cap "
         f"instead.")
+    # ---- condensed "every test we ran" table ----
+    wf_ = d.get("wf", {})
+    lit_ = d["lit"]
+    prop1 = max((r for r in d["prop"] if r["cost"] == "1x"), key=lambda r: r["pass_rate"])
+    d["tests"] = [
+        {"test": "Full parameter grid, 4 markets",
+         "asks": "Does any of 8,160 configs per market clear PF 1.20 at real cost?",
+         "result": f"13 of 32,640 do, all fragile", "pass": False},
+        {"test": "Zero-fee diagnostic",
+         "asks": "Is the failure just costs, or is there no edge to protect?",
+         "result": f"median PF {is0['median']:.3f} with fees stripped to zero", "pass": False},
+        {"test": "Wider stops",
+         "asks": "Can a bigger 1R outrun the fee burden?",
+         "result": "net PF 0.61-0.78 at every width from 1x to 8x ATR", "pass": False},
+        {"test": "Relative-volume filter",
+         "asks": "Does the filter the papers credit transfer?",
+         "result": f"{lit_['is_gate']} clear in sample, {lit_['oos_gate']} repeat out of sample",
+         "pass": False},
+        {"test": "Out of sample, all markets",
+         "asks": "Do the winners survive on data they were not chosen on?",
+         "result": "Gold 2 -> 0. GBPUSD 9 -> 5, but all 9 are one cluster", "pass": False},
+        {"test": "Walk-forward, 31 quarters",
+         "asks": "What happens when the choice is made blind, every quarter?",
+         "result": f"PF {wf_.get('stitched_pf', 0):.3f} over {wf_.get('total_trades', 0):,} trades, "
+                   f"{wf_.get('above1', 0)}/{wf_.get('quarters', 0)} quarters above breakeven",
+         "pass": False},
+        {"test": "Session-anchor test",
+         "asks": "Do the real session opens beat arbitrary clock times?",
+         "result": "yes - NY open is best on all 3 FX/metals - but best median is only 0.789",
+         "pass": None},
+        {"test": "Prop challenge simulation",
+         "asks": "Would it pass an evaluation?",
+         "result": f"{prop1['pass_rate']*100:.0f}% pass, {prop1['fail_max']*100:.0f}% breach the 8% cap",
+         "pass": False},
+        {"test": "Independent engine",
+         "asks": "Is the negative result an artefact of my own code?",
+         "result": "NautilusTrader agrees on trade count and reports a worse PF", "pass": True},
+    ]
+
+    d["criteria"] = [
+        {"c": "A mechanism is named", "q": "Is there a reason an edge should exist, and who pays for it?",
+         "status": "yes", "note": "Institutions repricing a stock against overnight news, compressed into one daily auction."},
+        {"c": "The mechanism was present in the test", "q": "Was that precondition actually there in what I tested?",
+         "status": "no", "note": "None of the four markets has a daily auction, and none of them allows picking today's 20 most active names out of 7,000."},
+        {"c": "Clears the gate at real cost", "q": "PF >= 1.20 after fees and slippage.",
+         "status": "no", "note": "13 configurations out of 32,640, none robust."},
+        {"c": "Not merely a cost problem", "q": "Does it work with fees set to zero?",
+         "status": "no", "note": "Median PF 0.95-0.98 at zero cost. Nothing for a cheaper venue to rescue."},
+        {"c": "Survives out of sample", "q": "Same configuration, data it was not chosen on.",
+         "status": "no", "note": "Gold loses all its winners. GBPUSD's survivors are one cluster on the worst anchor."},
+        {"c": "Survives walk-forward", "q": "Chosen blind, re-chosen every quarter.",
+         "status": "no", "note": "PF 0.781 across 2,746 trades."},
+        {"c": "Verified by a second engine", "q": "Is the result an artefact of my own backtester?",
+         "status": "yes", "note": "NautilusTrader agrees, and is harsher."},
+    ]
+
     a = d.get("assets")
     if a and a.get("survival"):
         by = {r["symbol"]: r for r in a["survival"]}
         gbp = by.get("GBPUSD", {})
         gold = by.get("Gold (XAUUSD)", {})
-        d["survival_callout"] = (
-            f"<p><strong>Only GBPUSD carried anything into the unseen year, and it turned out "
-            f"to be one cell rather than an effect.</strong> {gbp.get('is_gate',0)} configurations "
-            f"cleared PF 1.20 on the fit window and {gbp.get('oos_gate',0)} of them cleared it "
-            f"again on the test year. Against a base rate of 0.4% that looks overwhelming &mdash; "
-            f"until you look at what those configurations are. All nine are the same setup: a "
-            f"1-hour range, faded, entered on a close beyond the edge, almost all of them at the "
-            f"20:00 anchor. They are one observation wearing nine hats, so the significance test "
-            f"does not apply. Gold cleared the gate {gold.get('is_gate',0)} times in sample and "
-            f"{gold.get('oos_gate',0)} times out of it, with a median of "
-            f"{gold.get('median_oos_gate','&mdash;')}.</p>")
+        d["survival_note"] = (
+            f"<p><strong>GBPUSD's {gbp.get('oos_gate',0)} survivors are one setup, not "
+            f"{gbp.get('is_gate',0)}.</strong> All nine are a 1-hour range, faded, entered on a "
+            "close beyond the edge, almost all at the 20:00 anchor &mdash; one observation "
+            "wearing nine hats, so the 0.4% base rate it is being compared against does not "
+            "apply. Gold kept none.</p>")
     if a and a["ladder"]:
         one = [r for r in a["ladder"] if r["cost"] == "1x"]
         clear = [r for r in one if r["gate"] > 0]
@@ -330,22 +433,14 @@ def narrative(d: dict) -> dict:
         for sym in a["anchor_keys"]:
             vals = [r[sym] for r in a["anchors"] if r[sym] is not None]
             spread[sym] = (max(vals) - min(vals)) / min(vals) if vals else 0.0
-        d["anchor_callout"] = (
-            "<p><strong>The method finds session structure exactly where session structure "
-            "exists &mdash; and it is still not enough.</strong> Gold, EURUSD and GBPUSD all "
-            f"agree on the same best anchor by median profit factor, the "
-            f"<strong>{ba['XAUUSD']}</strong>, and on the same worst one, the "
-            f"<strong>{wa['EURUSD']}</strong>. The spread between best and worst anchor is "
-            f"{spread['EURUSD']:.0%} on EURUSD and {spread['GBPUSD']:.0%} on GBPUSD, against "
-            f"only {spread['BTCUSDT']:.0%} on Bitcoin &mdash; which is what a market with no "
-            "opening auction should look like. That is a good sign about the test: it finds "
-            "session structure where session structure exists and almost none where it does not. "
-            "But the best anchor on the best instrument still has a median profit factor of "
-            f"{max(r['XAUUSD'] for r in a['anchors']):.3f}. The session effect is real, "
-            "measurable, and far too small to trade.</p>"
-            "<p>It also disposes of the GBPUSD result above. Its 20:00 anchor is not a session "
-            "open at all; it is the New York close, and it is the <em>worst</em> anchor on every "
-            "FX pair by median. That configuration is the luckiest cell of the weakest family.</p>")
+        d["anchor_note"] = (
+            f"<p><strong>Session structure is real and too small to trade.</strong> Gold, EURUSD "
+            f"and GBPUSD all pick the same best anchor ({ba['XAUUSD']}) and the same worst one "
+            f"({wa['EURUSD']}). Best-to-worst spread is {spread['EURUSD']:.0%} on EURUSD against "
+            f"{spread['BTCUSDT']:.0%} on Bitcoin, which has no auction &mdash; so the test does "
+            "detect the real thing where it exists. The best anchor's median is still "
+            f"{max(r['XAUUSD'] for r in a['anchors']):.3f}. It also sinks the GBPUSD result "
+            "above: 20:00 is the New York <em>close</em>, the worst anchor on every FX pair.</p>")
     return d
 
 
@@ -369,8 +464,17 @@ if __name__ == "__main__":
     data = assets(data)
     data = narrative(data)
     (OUT / "report_data.json").write_text(json.dumps(data, indent=1))
+
+    # The page is tables only now, so ship only what it renders. The full dict
+    # stays in report_data.json for anything that wants the raw series.
+    KEEP = {"period", "stamp", "readout", "survival_note", "anchor_note",
+            "tests", "criteria", "why", "next"}
+    A_KEEP = {"window", "gate", "best", "survival", "anchors", "anchor_cols", "anchor_keys"}
+    page = {k: v for k, v in data.items() if k in KEEP}
+    if data.get("assets"):
+        page["assets"] = {k: v for k, v in data["assets"].items() if k in A_KEEP}
     tpl = (Path(__file__).parent / "report_template.html").read_text()
-    html = tpl.replace("/*__DATA__*/", json.dumps(data))
+    html = tpl.replace("/*__DATA__*/", json.dumps(page))
     (OUT / "report.html").write_text(html)
     print("wrote report.html", len(html), "bytes")
     for k in ("n_configs", "scatter_n", "scatter_corr"):

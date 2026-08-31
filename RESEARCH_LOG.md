@@ -106,3 +106,42 @@ configuration is the luckiest cell of the weakest family.
 
 **Verdict unchanged: ORB is rejected on all four instruments.** The session effect is
 real and measurable and roughly 25% too small to pay for the spread.
+
+### When is a hypothesis dead? (decision rule adopted 2026-08-31)
+
+Kris asked how we know, given how many people trade ORB. Seven criteria, checked in
+order. A "no" on criterion 2 means the test was not a test of the hypothesis.
+
+1. A mechanism is named — why should an edge exist and who pays for it?
+2. **The mechanism was present in what we tested.**
+3. Clears PF 1.20 at realistic cost.
+4. Not merely a cost problem — check it with fees set to zero.
+5. Survives out of sample on the same configuration.
+6. Survives walk-forward, chosen blind.
+7. A second, independent engine agrees.
+
+**ORB scores no on 3-6, yes on 1 and 7 — and no on 2.** That last one is the important
+one and it changes the verdict's scope. The published edge is not "breakouts work"; it
+is picking the 20 stocks out of 7,000+ with abnormal opening relative volume, every day,
+and trading their opening range. The same paper's unfiltered single-name version scored
+Sharpe 0.48 — and a single-symbol sweep like ours is the unfiltered version.
+
+So the honest status is: **ORB is rejected for single-symbol crypto, FX and metals, and
+has not been tested in the structure where its edge is claimed.** Cross-sectional
+selection cannot be reproduced by sweeping parameters on one symbol, no matter how many.
+
+Why people trade it anyway, in rough order of how much weight each deserves: the
+published version is a basket strategy; equities have a daily auction and these markets
+do not; live ORB is discretionary and context-filtered, which a mechanical sweep can
+neither reproduce nor falsify; losing months are not posted; and a 25% shortfall
+(median PF 0.789 at the best anchor) is invisible on a chart — only a few hundred
+trades can distinguish 0.79 from 1.05.
+
+**Next candidates, in priority order:**
+1. US equities cross-section, top 20 daily by opening relative volume, 5m opening range.
+   The actual published strategy. If it fails, ORB is dead everywhere.
+2. Crypto analogue: rank 50+ coins daily by relative volume, trade the top few. Tests
+   whether cross-sectional selection — the part that carries the edge — transfers to a
+   market we can already trade. Fits the current phase.
+3. Index futures (NQ/ES) at the NY open — the instrument most retail ORB traders use,
+   and the one gap left in the session-anchored test.
