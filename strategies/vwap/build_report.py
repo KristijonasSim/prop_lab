@@ -25,6 +25,15 @@ CFGKEY = ["anchor_hour", "anchor_minute", "mode", "fill_mode", "band_k", "stop_m
           "min_atr_rank", "max_atr_rank"]
 
 
+def _read(stem: Path) -> pd.DataFrame:
+    """Prefer the parquet: the CSVs of these sweeps run past GitHub's 100 MB
+    file ceiling, so only the parquet is committed."""
+    q = stem.with_suffix(".parquet")
+    if q.exists():
+        return pd.read_parquet(q)
+    return pd.read_csv(stem.with_suffix(".csv"), low_memory=False)
+
+
 def nm(s):
     return NICE.get(s, s)
 
@@ -50,7 +59,7 @@ def collect() -> dict:
         d["corr"] = json.loads(pc.read_text())
 
     # ---------- stage 1: the fill test ----------
-    s1 = pd.read_csv(OUT / "stage1_grid.csv")
+    s1 = _read(OUT / "stage1_grid")
     k1 = s1[(s1.cost_mult == 1) & (s1.trades >= 100)]
     band = k1[k1["mode"].isin([1, 2])]          # only the families that enter at a band
     fill = []
@@ -77,7 +86,7 @@ def collect() -> dict:
     }
 
     # ---------- stage 2: honest fills, best per market, cost stress ----------
-    s2 = pd.read_csv(OUT / "stage2_paper.csv")
+    s2 = _read(OUT / "stage2_paper")
     s2["family"] = s2["mode"].map(FAM)
     a1 = s2[(s2.cost_mult == 1) & (s2.trades >= 100)]
     a2 = s2[s2.cost_mult == 2][["symbol"] + CFGKEY + ["pf"]].rename(columns={"pf": "pf2x"})

@@ -3,8 +3,10 @@
 Research pipeline for finding trading strategies that survive a prop-firm
 evaluation. One hypothesis at a time, tested to destruction, pass or fail logged.
 
-Read `CLAUDE.md` first — it holds the mission, the rules, the reporting fields
-and the known-dead list.
+**New here (human or agent)? Read [`HANDOFF.md`](HANDOFF.md) first.** It covers the goal,
+where the work stands, the findings that transfer between hypotheses, and the mistakes
+already made. `CLAUDE.md` holds the standing rules; `RESEARCH_LOG.md` holds the reasoning
+behind every verdict.
 
 ## Setting up on a new machine
 
@@ -53,7 +55,7 @@ RESEARCH_LOG.md   the long findings behind each verdict
 | ID | Name | Verdict | Where |
 |---|---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** | `strategies/orb/`, `backtests/orb/report.html` |
-| H-002 | VWAP (5 model families) | **In progress** | `strategies/vwap/`, `backtests/vwap/report.html` |
+| H-002 | VWAP (5 model families) | **Live candidate**, not yet walk-forwarded | `strategies/vwap/`, `backtests/vwap/report.html` |
 
 H-001 was swept across 8 instruments and 65,280 configurations, in and out of
 sample, walk-forward, and through a prop-challenge simulation. Open

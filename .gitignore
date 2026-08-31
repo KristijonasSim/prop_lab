@@ -14,4 +14,6 @@ __pycache__/
 # Exception: sweep outputs above ~100 MB as CSV. GitHub hard-rejects those, so
 # the large ones are committed as zstd parquet instead (same data, ~7x smaller)
 # and the raw CSV is ignored. See strategies/*/build_report.py for the readers.
+backtests/vwap/stage1_grid.csv
+backtests/vwap/stage2_paper.csv
 backtests/vwap/stage3_timeframes.csv
