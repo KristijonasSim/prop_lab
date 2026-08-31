@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+data/*.parquet
+data/**/*.parquet
+data/**/*.csv
+backtests/**/*.parquet
+.ipynb_checkpoints/
+.pytest_cache/
+catalog/

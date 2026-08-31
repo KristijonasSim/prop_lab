@@ -1,0 +1,18 @@
+# Pinned to a combination that actually works together (verified by smoke_test.py).
+# nautilus_trader 1.231's Cython BarDataWrangler reads df.values, which pandas 3
+# makes read-only under copy-on-write -> pandas must stay <3.
+# vectorbt 1.x requires pandas>=3.0.3, so we use the 0.28.x line instead.
+# vectorbt 0.28.x also breaks on plotly 6 (scattermapbox removed).
+
+nautilus_trader==1.231.0
+vectorbt==0.28.5
+pandas>=2.3,<3
+plotly<6
+ccxt>=4.5
+numpy
+pyarrow
+python-dotenv
+
+# FX/Gold — MetaTrader5 is a Windows-only package. This box is Linux with a wine
+# MT5 at ~/.mt5, so it needs an mt5linux-style RPC bridge. Not set up; crypto first.
+# MetaTrader5
