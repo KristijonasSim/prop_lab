@@ -37,22 +37,35 @@ def download(
         cached = pd.read_parquet(path)
 
     ex = _exchange(market)
-    start = (
-        int(cached.index[-1].timestamp() * 1000) + 1
-        if not cached.empty
-        else ex.parse8601(f"{since}T00:00:00Z")
-    )
+    want_from = ex.parse8601(f"{since}T00:00:00Z")
     now = ex.milliseconds()
+
+    # Two phases so an earlier `since` backfills instead of being skipped:
+    # (1) fill the gap before the cache, (2) top up after it.
+    spans: list[tuple[int, int]] = []
+    if cached.empty:
+        spans.append((want_from, now))
+    else:
+        cache_start = int(cached.index[0].timestamp() * 1000)
+        cache_end = int(cached.index[-1].timestamp() * 1000)
+        if want_from < cache_start:
+            spans.append((want_from, cache_start))
+        spans.append((cache_end + 1, now))
+
     rows: list[list] = []
-    while start < now:
-        batch = ex.fetch_ohlcv(symbol, BASE_TF, since=start, limit=1000)
-        if not batch:
-            break
-        rows += batch
-        start = batch[-1][0] + 1
-        if len(batch) < 1000:
-            break
-        time.sleep(ex.rateLimit / 1000)
+    for start, stop in spans:
+        while start < stop:
+            batch = ex.fetch_ohlcv(symbol, BASE_TF, since=start, limit=1000)
+            if not batch:
+                break
+            batch = [b for b in batch if b[0] < stop]
+            if not batch:
+                break
+            rows += batch
+            start = batch[-1][0] + 1
+            if len(batch) < 1000:
+                break
+            time.sleep(ex.rateLimit / 1000)
 
     if rows:
         new = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])

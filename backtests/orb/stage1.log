@@ -1,0 +1,14 @@
+configs 8160 | IS bars 209804 2018-01-01 -> 2023-12-31
+/home/kris/prop_lab/strategies/orb/sweep.py:49: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  datr = datr_d.reindex(df.index, method="ffill").fillna(method="bfill").values
+  cost 0x done in 43s
+/home/kris/prop_lab/strategies/orb/sweep.py:49: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  datr = datr_d.reindex(df.index, method="ffill").fillna(method="bfill").values
+  cost 1x done in 42s
+/home/kris/prop_lab/strategies/orb/sweep.py:49: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  datr = datr_d.reindex(df.index, method="ffill").fillna(method="bfill").values
+  cost 2x done in 42s
+/home/kris/prop_lab/strategies/orb/sweep.py:49: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  datr = datr_d.reindex(df.index, method="ffill").fillna(method="bfill").values
+  cost 3x done in 43s
+saved /home/kris/prop_lab/backtests/orb/stage1_is_grid.csv 32640 rows

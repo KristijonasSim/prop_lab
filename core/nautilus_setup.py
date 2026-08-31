@@ -15,8 +15,8 @@ from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
 VENUE = Venue("BINANCE")
 
-# Binance spot: 0.10%/side taker. Report every result at 1x, 2x, 3x (CLAUDE.md).
-TAKER_FEE = 0.001
+# Binance USDT-M perpetual: 0.05%/side taker. Report at 1x, 2x, 3x (CLAUDE.md).
+TAKER_FEE = 0.0005
 
 
 def make_engine(
@@ -30,11 +30,13 @@ def make_engine(
             logging=LoggingConfig(log_level=log_level),
         )
     )
+    # MARGIN, not CASH: a spot cash account silently rejects every short, which
+    # turns a two-sided strategy into a long-only one without saying so.
     engine.add_venue(
         venue=VENUE,
         oms_type=OmsType.NETTING,
-        account_type=AccountType.CASH,
-        base_currency=None,
+        account_type=AccountType.MARGIN,
+        base_currency=USDT,
         starting_balances=[Money(starting_equity, USDT)],
     )
     return engine
@@ -44,10 +46,9 @@ def add_bars(
     engine: BacktestEngine,
     df: pd.DataFrame,
     bar_spec: str = "15-MINUTE-LAST",
-    symbol: str = "BTCUSDT",
 ):
     """df: our OHLCV frame, UTC index. Returns (instrument, bar_type)."""
-    instrument = TestInstrumentProvider.btcusdt_binance()
+    instrument = TestInstrumentProvider.btcusdt_perp_binance()
     engine.add_instrument(instrument)
 
     bar_type = BarType.from_str(f"{instrument.id}-{bar_spec}-EXTERNAL")
