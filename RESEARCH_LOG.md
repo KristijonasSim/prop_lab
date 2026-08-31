@@ -430,3 +430,44 @@ Selection bias remains despite the fit/test split: the top three per market/time
 carried forward on fit-window profit factor, but the final three were chosen using
 full-period pass rates. A clean version would choose the profile inside each walk-forward
 fold.
+
+### Stage 5 — combining markets (2026-08-31)
+
+Kris asked whether trading two or more assets on different timeframes would speed up a
+challenge, aiming to pass in a week. Nine legs, one per market, best config per market as
+ranked on the fit window. 255 books, six risk levels, 8% and 5% targets.
+
+**The legs are effectively independent: mean pairwise correlation of daily R is 0.023.**
+Only one pair exceeds 0.25 (NZDUSD 4h / GBPUSD 4h at 0.29). That is what makes combining
+work — the drawdowns do not stack, so the same risk budget can be spread across more
+trades.
+
+**Scaling, 8% target, drawdown held inside the 8% cap:**
+
+| legs | risk | CAGR | max DD | pass rate | median days | pass in 14d |
+|---|---|---|---|---|---|---|
+| 1 | 0.75% | 24.8% | -7.8% | 55% | 52 | 1.0% |
+| 2 | 1.00% | 35.3% | -8.0% | 59% | 39 | 4.1% |
+| 3 | 1.00% | 40.7% | -7.4% | 67% | 30 | 8.6% |
+| 4 | 1.00% | 44.3% | -7.2% | 62% | 28 | 12.0% |
+
+Going from one market to four nearly halves the median time to pass, raises CAGR from 25%
+to 44%, and does it at a **smaller** drawdown. That is the diversification working exactly
+as intended, and it is the strongest structural result in the project so far.
+
+**On the one-week goal: no.** The arithmetic first. Gold 5m alone trades 2.5 times a week,
+so hitting 8% inside a week needs 12.9% risk per trade — one loser ends the account. Four
+combined legs trade ~10 times a week, which brings the requirement down to 3.2% per trade;
+still enough that three losers breach the 8% cap.
+
+The simulation agrees. On the easier **5% target** the best four-leg book passes within
+seven days **1.6% of the time**, with a median of 24 days and 46% through inside thirty.
+Best case found anywhere for a seven-day pass was 2.8%.
+
+**Honest expectation: three to four weeks per challenge, ~60-75% pass rate.** One week is
+the tail of the distribution, not a plan. Note also that a book of four best-of-market legs
+carries four times the selection bias of one leg — combining improves the risk profile, it
+does not launder the selection.
+
+Silver (XAGUSD) was requested for a gold/silver pair and is still downloading; the best
+metal+crypto book found so far is BTCUSDT 1h + XAUUSD 1h + NZDUSD 4h + USDCAD 1h.

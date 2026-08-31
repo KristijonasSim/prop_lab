@@ -136,6 +136,21 @@ a{color:var(--accent)}
 </section>
 
 <section>
+  <div class="shead"><span class="stage">PORTFOLIO</span><h2>Combining markets to pass faster</h2>
+    <span class="aside">255 books, 9 legs, one per market</span></div>
+  <p class="tight">Independent strategies add trades without adding proportional drawdown, so
+    the same risk budget resolves sooner. Whether that works depends entirely on the
+    correlation between the daily P&amp;L series &mdash; measured below, not assumed. Each row
+    is the best book at that leg count, sized so peak drawdown still fits inside the 8% cap.</p>
+  <div class="scroll"><table id="scaling"></table></div>
+  <div class="callout" id="scaling-note"></div>
+  <h3>Why it works: the legs barely touch each other</h3>
+  <p class="tight">Pairwise correlation of daily returns. Anything under about 0.2 is close
+    enough to independent that the drawdowns do not stack.</p>
+  <div class="scroll"><table id="corr"></table></div>
+</section>
+
+<section>
   <div class="shead"><span class="stage">01</span><h2>The fill test</h2>
     <span class="aside">band families only</span></div>
   <p class="tight">A band strategy is naturally traded with a resting limit order at the
@@ -217,6 +232,47 @@ $('readout').innerHTML = [
   {k:'Best a NULL search found', v:f(TN.null_best||0,2), n:'on shuffled data with no edge in it', tone:'fail'},
 ].map(c=>`<div class="cell"><div class="k">${c.k}</div><div class="v ${c.tone||''}">${c.v}</div>
   <div class="n2">${c.n}</div></div>`).join('');
+
+if (D.scaling){
+  const S=D.scaling;
+  table($('scaling'),[
+    {h:'Target',k:'target',cls:()=>'name'},
+    {h:'Legs',k:'n_legs',n:1},
+    {h:'Book',k:'legs',cls:()=>'wrap-note'},
+    {h:'Risk / trade',n:1,f:r=>(r.risk*100).toFixed(2)+'%'},
+    {h:'Avg corr',n:1,f:r=>f(r.corr,3)},
+    {h:'CAGR',n:1,f:r=>(r.cagr*100).toFixed(1)+'%',cls:()=>'good'},
+    {h:'Max DD',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',cls:r=>r.max_dd<=-0.08?'bad':'good'},
+    {h:'Pass rate',n:1,f:r=>(r.pass_rate*100).toFixed(0)+'%',cls:r=>r.pass_rate>=0.6?'good':''},
+    {h:'Median days',n:1,f:r=>f(r.median_days,0),cls:r=>r.median_days<=30?'good':''},
+    {h:'Pass in 7d',n:1,f:r=>(r.w7*100).toFixed(1)+'%',cls:r=>r.w7<0.05?'bad':'good'},
+    {h:'Pass in 14d',n:1,f:r=>(r.w14*100).toFixed(1)+'%'},
+    {h:'Pass in 30d',n:1,f:r=>(r.w30*100).toFixed(1)+'%'},
+  ], S, 'Best book at each leg count by share passing within 14 days, drawdown held inside the 8% cap. Fresh account every trading day.');
+  const one8=S.find(r=>r.target==='8%'&&r.n_legs===1), four8=S.find(r=>r.target==='8%'&&r.n_legs===4);
+  const four5=S.find(r=>r.target==='5%'&&r.n_legs===4);
+  $('scaling-note').innerHTML = `<p><strong>Combining works, and the gain is real.</strong> On the
+    8% target, going from one market to four cuts the median time to pass from
+    ${f(one8.median_days,0)} days to ${f(four8.median_days,0)}, lifts CAGR from
+    ${(one8.cagr*100).toFixed(0)}% to ${(four8.cagr*100).toFixed(0)}%, and does it at a
+    <em>smaller</em> drawdown (${(one8.max_dd*100).toFixed(1)}% vs ${(four8.max_dd*100).toFixed(1)}%)
+    because the legs are uncorrelated.</p>
+    <p><strong>A week is still not realistic.</strong> On the easier 5% target the best
+    four-leg book passes within seven days only ${(four5.w7*100).toFixed(1)}% of the time. Its
+    median is ${f(four5.median_days,0)} days and ${(four5.w30*100).toFixed(0)}% are through
+    inside thirty. Three to four weeks is the honest expectation; one week is the tail.</p>`;
+
+  if (D.corr){
+    const C=D.corr;
+    const rows=C.labels.map((lab,i)=>{const o={leg:lab};
+      C.labels.forEach((l2,j)=>o['c'+j]=C.matrix[i][j]); return o;});
+    table($('corr'),[{h:'',k:'leg',cls:()=>'name'}].concat(
+      C.labels.map((l,j)=>({h:l.replace(' ','<br>'),n:1,
+        f:r=>r['c'+j]===1?'&mdash;':f(r['c'+j],2),
+        cls:r=>Math.abs(r['c'+j])>=0.25&&r['c'+j]!==1?'bad':'dim'}))),
+      rows, 'Daily-R correlation. Only one pair (NZDUSD 4h / GBPUSD 4h, 0.29) is meaningfully linked.');
+  }
+}
 
 if (D.profiles){
   const P=D.profiles;

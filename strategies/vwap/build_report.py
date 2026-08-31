@@ -42,6 +42,12 @@ def collect() -> dict:
     pj = OUT / "profiles.json"
     if pj.exists():
         d["profiles"] = json.loads(pj.read_text())
+    ps = OUT / "portfolio_scaling.json"
+    if ps.exists():
+        d["scaling"] = json.loads(ps.read_text())
+    pc = OUT / "corr.json"
+    if pc.exists():
+        d["corr"] = json.loads(pc.read_text())
 
     # ---------- stage 1: the fill test ----------
     s1 = pd.read_csv(OUT / "stage1_grid.csv")

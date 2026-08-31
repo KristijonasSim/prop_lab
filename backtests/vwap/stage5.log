@@ -1,0 +1,14 @@
+leg BTCUSDT 1h: 1069 days, total 124.5R
+leg EURUSD 5m: 1008 days, total 208.5R
+leg AUDUSD 1h: 1063 days, total 53.0R
+leg XAUUSD 1h: 1069 days, total 33.8R
+leg USDJPY 15m: 1085 days, total 78.6R
+leg NZDUSD 4h: 1049 days, total 21.6R
+leg GBPUSD 4h: 1056 days, total 18.3R
+leg USDCHF 15m: 1077 days, total 28.3R
+leg USDCAD 1h: 1059 days, total 18.0R
+9 legs
+
+mean pairwise correlation of daily R: 0.023
+255 portfolios
+saved stage5_portfolio.csv 3038 rows
