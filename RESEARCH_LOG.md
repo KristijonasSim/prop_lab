@@ -64,3 +64,45 @@ funding-rate extremes, open-interest jumps, taker-delta imbalance, long/short ra
 spot-perp basis. `~/trading-bots` reached the same conclusion independently: every leg
 that ever worked there came from a feed, not a price pattern. An ORB trigger gated on
 a feed is a different hypothesis and needs its own test.
+
+### H-001 ORB — multi-asset extension (2026-08-31)
+
+Gold and FX added after Kris pointed out the first pass was BTC only. Data:
+Dukascopy 1-minute candles resampled to 15m, 2023-09-01 to 2026-08-31, via the new
+`core/fx_data.py`. EURUSD and XAUUSD complete (938 days, 0 gaps after a repair pass);
+GBPUSD 901 of 938 days (96%). BTC re-run on the identical window for comparability.
+
+**Results differ by market, unlike the BTC-only pass suggested.** Configs clearing
+PF 1.20 at 1x cost, out of 8,160 each: Gold 2, GBPUSD 11, EURUSD 0, BTC 0. BTC is the
+worst of the four — not one config even breaks even. Median PF at 1x: Gold 0.711,
+GBPUSD 0.663, EURUSD 0.634, BTC 0.481. Everything collapses at 2x cost.
+
+**IS/OOS split (fit 2023-09→2025-09, test the final year).** Gold: 2 clear the gate in
+sample, 0 out, median 0.976. GBPUSD: 9 clear in sample, 5 still clear out, median 1.203
+— a 129x lift over the 0.4% base rate, binomial p<0.001. That looked like a real find
+until the cluster check: **all nine are the same setup** (1h range, faded, close-beyond
+entry, almost all at the 20:00 anchor). They are one observation wearing nine hats, so
+the significance test does not apply.
+
+**The decisive test was the session anchor, which is what the mechanism actually
+predicts.** Median PF across all 1,020 configs sharing each anchor, 1x cost:
+
+| anchor | XAUUSD | EURUSD | GBPUSD | BTCUSDT |
+|---|---|---|---|---|
+| 00:00 UTC | 0.662 | 0.544 | 0.568 | 0.458 |
+| 08:00 London open | 0.705 | 0.671 | 0.670 | 0.455 |
+| 13:00 NY open | **0.789** | **0.734** | **0.756** | 0.518 |
+| 20:00 NY close | 0.577 | **0.468** | **0.486** | 0.484 |
+
+The NY open is the best anchor on all three FX/metal instruments and the NY close is
+the worst. Best-to-worst spread is 57% on EURUSD and 56% on GBPUSD against 16% on BTC
+— session structure is detected where it exists and is nearly absent where it does not,
+which is a good internal validity check on the method. But the best anchor on the best
+instrument still has a median PF of 0.789.
+
+**This also disposes of the GBPUSD survivor.** Its 20:00 anchor is not a session open;
+it is the NY close, and it is the single worst anchor on every FX pair by median. That
+configuration is the luckiest cell of the weakest family.
+
+**Verdict unchanged: ORB is rejected on all four instruments.** The session effect is
+real and measurable and roughly 25% too small to pay for the spread.

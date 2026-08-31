@@ -178,6 +178,49 @@ a{color:var(--accent)}
   </div>
 </section>
 
+
+<section id="assets">
+  <div class="shead"><span class="stage">ALL ASSETS</span><h2>Gold, FX and Bitcoin over one common window</h2>
+    <span class="aside" id="assets-window"></span></div>
+  <p class="lede">Bitcoin is the worst case for this hypothesis, because it has no
+    opening auction at all. Gold and the FX majors have genuine London and New York
+    session opens, so this is where ORB deserves its best shot.</p>
+  <p>The identical 8,160-configuration grid, run on each instrument over the same three
+    years. Costs are set per instrument: Gold and FX are far cheaper to trade relative to
+    their volatility than BTC, so the fee argument that killed Bitcoin does not
+    automatically carry over to them.</p>
+  <div class="scroll"><table id="assets-ladder"></table></div>
+  <figure>
+    <svg id="assets-dist" viewBox="0 0 900 320" role="img" aria-label="Profit factor distribution by instrument at realistic cost"></svg>
+    <div class="legend" id="assets-legend"></div>
+    <figcaption>Every configuration with at least 100 trades, at 1&times; cost, binned by
+      profit factor. Four different markets, four curves in the same place &mdash; all of
+      them left of breakeven.</figcaption>
+  </figure>
+  <div class="callout bad" id="c-assets"></div>
+  <h3>Does the session anchor matter?</h3>
+  <p>This is the test the mechanism actually predicts. If the opening range means
+    anything, the anchors that are real session opens should beat the arbitrary ones.
+    Median profit factor across all 1,020 configurations at each anchor, 1&times; cost:</p>
+  <div class="scroll"><table id="anchors"></table></div>
+  <div class="callout" id="c-anchor"></div>
+
+  <h3>Fit on two years, test on the third</h3>
+  <p>Gold and GBPUSD produced configurations above the gate, so they get the same
+    treatment the Bitcoin grid got: choose on the first two years, then look at the
+    year nobody chose on.</p>
+  <div class="scroll"><table id="survival"></table></div>
+  <div class="callout bad" id="c-survival"></div>
+
+  <h3>The best configuration found on each instrument</h3>
+  <p>Every mandatory reporting field, for the single highest-profit-factor configuration
+    per market at realistic cost. These are the winners of an 8,160-way search, which is
+    exactly why none of them should be believed on their own.</p>
+  <div class="scroll"><table id="assets-best"></table></div>
+  <p class="dim">Everything below this point is the Bitcoin deep dive: the full history,
+    the out-of-sample replay, the walk-forward and the prop-challenge simulation.</p>
+</section>
+
 <section>
   <div class="shead"><span class="stage">TEST 1</span><h2>The full parameter space, in sample</h2>
     <span class="aside" id="grid-n"></span></div>
@@ -494,6 +537,82 @@ function el(tag,attrs,parent){const n=document.createElementNS(SVGNS,tag);
     ${D.wf.above1} of ${D.wf.quarters} quarters finished above breakeven,
     across ${D.wf.total_trades.toLocaleString()} trades.`;
 })();
+
+
+/* ---- assets ---- */
+if (D.assets && D.assets.ladder.length){
+  $('assets-window').textContent = D.assets.window;
+  table($('assets-ladder'),[
+    {h:'Instrument',k:'symbol'},{h:'Cost',k:'cost'},
+    {h:'Configs',k:'n',n:1},
+    {h:'PF &ge; 1.20',n:1,f:r=>r.gate,cls:r=>r.gate?'good':'bad'},
+    {h:'PF &ge; 1.00',n:1,f:r=>r.be,cls:r=>r.be?'':'bad'},
+    {h:'Best PF',n:1,f:r=>f(r.best),cls:r=>cls(r.best)},
+    {h:'Median PF',n:1,f:r=>f(r.median),cls:r=>cls(r.median)},
+  ], D.assets.ladder, 'Same grid, same three years, per-instrument costs. 1&times; = BTC 5.0+2.0&nbsp;bps, Gold 1.0+0.5, EURUSD 0.45+0.3, GBPUSD 0.50+0.3, per side.');
+
+  table($('assets-best'),[
+    {h:'Instrument',k:'symbol'},{h:'Anchor',k:'anchor'},{h:'Range',k:'or'},
+    {h:'Dir',k:'dir'},{h:'Target',k:'target'},
+    {h:'Trades',k:'trades',n:1},
+    {h:'PF',n:1,f:r=>f(r.pf),cls:r=>cls(r.pf)},
+    {h:'Win rate',n:1,f:r=>(r.win*100).toFixed(1)+'%'},
+    {h:'Trades/day',n:1,f:r=>f(r.tpd,2)},
+    {h:'Avg hold',n:1,f:r=>f(r.hold,1)+'h'},
+    {h:'Avg R',n:1,f:r=>(r.avg_r>=0?'+':'')+f(r.avg_r,3),cls:r=>r.avg_r>0?'good':'bad'},
+    {h:'Max DD',n:1,f:r=>(r.dd*100).toFixed(0)+'%'},
+    {h:'Sharpe',n:1,f:r=>f(r.sharpe,2),cls:r=>r.sharpe>0?'':'bad'},
+    {h:'Days to resolve',n:1,f:r=>r.resolve!=null?f(r.resolve,0):'&mdash;'},
+  ], D.assets.best, 'Max drawdown is measured at a fixed 1% risk per trade, so it scales linearly with position size.');
+
+  if (D.assets.anchors){
+    const cols=[{h:'Session anchor',k:'anchor'}].concat(
+      D.assets.anchor_keys.map((k,i)=>({h:D.assets.anchor_cols[i],n:1,
+        f:r=>r[k]==null?'&mdash;':f(r[k]),cls:r=>cls(r[k])})));
+    table($('anchors'),cols,D.assets.anchors,
+      'Median profit factor of all 1,020 configurations sharing each anchor, 1&times; cost. Medians, not maxima &mdash; a maximum tells you about luck, a median tells you about the family.');
+    $('c-anchor').innerHTML = D.anchor_callout;
+  }
+  if (D.assets.survival && D.assets.survival.length){
+    table($('survival'),[
+      {h:'Instrument',k:'symbol'},
+      {h:'Paired configs',k:'paired',n:1},
+      {h:'Clear 1.20 on the fit years',k:'is_gate',n:1},
+      {h:'Still clear it on the test year',n:1,f:r=>r.oos_gate,cls:r=>r.oos_gate?'good':'bad'},
+      {h:'Median test PF of those',n:1,f:r=>r.median_oos_gate==null?'&mdash;':f(r.median_oos_gate),cls:r=>r.median_oos_gate?cls(r.median_oos_gate):''},
+      {h:'Median test PF, all configs',n:1,f:r=>f(r.median_oos_all),cls:r=>cls(r.median_oos_all)},
+    ], D.assets.survival, 'Fit 2023-09 to 2025-09, test 2025-09 to 2026-08.');
+    $('c-survival').innerHTML = D.survival_callout;
+  }
+  (function(){
+    const svg=$('assets-dist'), W=900,H=320,L=52,R=16,T=14,B=44;
+    const bins=D.assets.dist.bins, series=D.assets.dist.series;
+    const keys=Object.keys(series);
+    const palette=['var(--accent)','var(--pass)','var(--fail)','var(--faint)'];
+    const maxY=Math.max(...keys.flatMap(k=>series[k]));
+    const x=v=>L+(v/2.0)*(W-L-R), y=v=>H-B-(v/maxY)*(H-T-B);
+    for(let g=0;g<=4;g++){const gy=H-B-(g/4)*(H-T-B);
+      el('line',{class:'grid',x1:L,x2:W-R,y1:gy,y2:gy},svg);
+      el('text',{class:'tick',x:L-8,y:gy+3,'text-anchor':'end'},svg).textContent=Math.round(maxY*g/4);}
+    for(let v=0;v<=2.0001;v+=0.25)
+      el('text',{class:'tick',x:x(v),y:H-B+15,'text-anchor':'middle'},svg).textContent=v.toFixed(2);
+    keys.forEach((k,i)=>{
+      const pts=series[k].map((c,j)=>`${x((bins[j]+bins[j+1])/2)},${y(c)}`).join(' ');
+      el('polyline',{points:pts,fill:'none',stroke:palette[i%4],'stroke-width':2,
+        'stroke-linejoin':'round',opacity:.9},svg);});
+    el('line',{class:'be',x1:x(1),x2:x(1),y1:T,y2:H-B},svg);
+    el('line',{class:'gate',x1:x(1.2),x2:x(1.2),y1:T,y2:H-B},svg);
+    el('text',{class:'axlabel',x:x(1.2)+6,y:T+11,fill:'var(--fail)'},svg).textContent='gate 1.20';
+    el('text',{class:'axlabel',x:x(1)-6,y:T+11,'text-anchor':'end'},svg).textContent='breakeven';
+    el('line',{class:'ax',x1:L,x2:W-R,y1:H-B,y2:H-B},svg);
+    el('text',{class:'axlabel',x:(L+W)/2,y:H-8,'text-anchor':'middle'},svg).textContent='profit factor';
+    $('assets-legend').innerHTML=keys.map((k,i)=>
+      `<span><i class="sw" style="background:${palette[i%4]}"></i>${k}</span>`).join('');
+  })();
+  $('c-assets').innerHTML = D.assets_callout;
+} else {
+  const sec=$('assets'); if(sec) sec.remove();
+}
 
 $('c-stage1').innerHTML = D.stage1_callout;
 $('c-lit').innerHTML = D.lit_callout;
