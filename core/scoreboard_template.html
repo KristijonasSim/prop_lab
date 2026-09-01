@@ -89,6 +89,19 @@ h1{margin:0;font-size:clamp(24px,4vw,32px);line-height:1.05;letter-spacing:0;fon
   word-break:break-word}
 .vtext .cand b{color:var(--ink);font-weight:600}
 
+/* Pine Script copy */
+.pinebar{margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pinebtn{appearance:none;display:inline-flex;align-items:center;gap:8px;
+  font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;
+  padding:8px 14px;cursor:pointer;transition:background .12s,border-color .12s}
+.pinebtn:hover{background:var(--sunk);border-color:var(--accent)}
+.pinebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pinebtn[data-done="1"]{background:var(--passbg);border-color:var(--pass);color:var(--pass)}
+.pinebtn svg{width:14px;height:14px;flex:none}
+.pinenote{font-size:12px;color:var(--faint)}
+@media (prefers-reduced-motion:reduce){.pinebtn{transition:none}}
+
 /* headline tiles */
 .statusbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
   background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
@@ -219,6 +232,7 @@ a{color:var(--accent)}
       <h2 id="verdict"></h2>
       <p id="tagline"></p>
       <div class="cand" id="cand"></div>
+      <div class="pinebar" id="pinebar"></div>
     </div>
   </div>
 
@@ -301,6 +315,58 @@ function ring(total){
 }
 
 const selRisk={};
+
+// Pine Script copy. The source ships inside the page, so this never fetches.
+// navigator.clipboard is unavailable in some embedded contexts, hence the
+// execCommand fallback — without it the button silently does nothing there.
+let PINE_SRC = null;
+
+function copyText(t){
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(t).then(()=>true).catch(()=>legacyCopy(t));
+  }
+  return Promise.resolve(legacyCopy(t));
+}
+function legacyCopy(t){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = t;
+    ta.setAttribute('readonly','');
+    ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, t.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+
+function renderPine(s){
+  const bar = $('pinebar');
+  PINE_SRC = s.pine || null;
+  if (!PINE_SRC){
+    bar.innerHTML = '<span class="pinenote">No TradingView port for this hypothesis yet.</span>';
+    return;
+  }
+  const lines = PINE_SRC.split('\n').length;
+  bar.innerHTML = `<button class="pinebtn" id="pinebtn" type="button">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5.5" y="5.5" width="8" height="9" rx="1.5"></rect>
+        <path d="M10.5 5.5V3A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v8A1.5 1.5 0 0 0 4 12.5h1.5"></path>
+      </svg><span id="pinelabel">Copy Pine Script</span></button>
+    <span class="pinenote">Pine v6 &middot; ${lines} lines &middot; paste into the TradingView Pine Editor</span>`;
+  $('pinebtn').addEventListener('click', ()=>{
+    copyText(PINE_SRC).then(ok=>{
+      const b = $('pinebtn'), l = $('pinelabel');
+      l.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+      b.dataset.done = ok ? '1' : '0';
+      if (!ok) { /* selection is left in place so the user can copy manually */ }
+      setTimeout(()=>{ l.textContent='Copy Pine Script'; b.dataset.done='0'; }, 2000);
+    });
+  });
+}
 
 function render(s, sel){
   const L0=s.ladder;
@@ -429,6 +495,8 @@ function render(s, sel){
     {h:'Status',f:r=>r.done?'<span class="chip yes">done</span>'
       :'<span class="chip part">pending</span>'},
   ], s.todo);
+
+  renderPine(s);
 
   $('more').innerHTML = `<a href="${s.report}" target="_blank" rel="noopener">Open the full ${esc(s.name)} report &rarr;</a>
     <span>every configuration, every stage, all the workings</span>`;

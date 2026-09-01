@@ -1,0 +1,170 @@
+//@version=6
+// =============================================================================
+// H-002 · VWAP  —  board score 9.2/10  —  the only hypothesis still standing
+// prop_lab · https://github.com/KristijonasSim/prop_lab
+//
+// Five model families around a session-anchored (or rolling) VWAP and its
+// volume-weighted standard deviation bands.
+//
+// HONEST SCOPE. The board result is a FIVE-LEG BOOK — BTC 4h + ETH 1h + ETH 30m
+// + SOL 4h + XAUUSD 5m, equal weight, each leg's config re-chosen blind every
+// quarter by walk-forward. TradingView runs one symbol at a time, so this script
+// is ONE LEG. It cannot reproduce the book's PF 1.772 / 1.418-at-2x on its own,
+// and it does not re-pick its config each quarter the way the walk-forward does.
+// Presets below are the MODE each leg selected most often since 2024-09.
+//
+// Costs: set commission to your real taker fee. The board's headline is measured
+// at 2x cost (Binance spot taker 5bps + 2bps slippage per side = 14bps round
+// trip). A result that only works at 1x is not a result.
+// =============================================================================
+strategy("H-002 VWAP · prop_lab", overlay=true, initial_capital=10000,
+     default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+     commission_type=strategy.commission.percent, commission_value=0.05,
+     margin_long=100, margin_short=100, pyramiding=0, calc_on_every_tick=false)
+
+// ---------------------------------------------------------------- presets ---
+preset = input.string("ETH 1h · break", "Board leg preset", options=[
+     "BTC 4h · trend", "ETH 1h · break", "ETH 30m · reclaim",
+     "SOL 4h · trend (rolling)", "XAUUSD 5m · break (rolling)", "Manual"],
+     tooltip="The configuration each board leg picked most often since 2024-09. " +
+             "Choose Manual to drive the inputs below yourself.")
+
+// mode: 0 trend · 1 fade · 2 break · 3 reclaim · 4 pullback
+pMode    = preset == "BTC 4h · trend" ? 0 : preset == "ETH 1h · break" ? 2 :
+           preset == "ETH 30m · reclaim" ? 3 : preset == "SOL 4h · trend (rolling)" ? 0 :
+           preset == "XAUUSD 5m · break (rolling)" ? 2 : -1
+pBandK   = preset == "BTC 4h · trend" ? 2.0 : preset == "ETH 1h · break" ? 1.5 :
+           preset == "ETH 30m · reclaim" ? 1.5 : preset == "SOL 4h · trend (rolling)" ? 2.0 : 2.0
+pStopK   = preset == "BTC 4h · trend" ? 6.0 : preset == "ETH 1h · break" ? 1.0 :
+           preset == "ETH 30m · reclaim" ? 1.0 : preset == "SOL 4h · trend (rolling)" ? 0.5 : 1.0
+pHold    = preset == "ETH 1h · break" ? 4 : preset == "ETH 30m · reclaim" ? 24 : 0
+pRvol    = preset == "BTC 4h · trend" ? 1.5 : preset == "SOL 4h · trend (rolling)" ? 0.0 : 2.5
+pAnchorH = preset == "ETH 30m · reclaim" ? 8 : 0
+pRoll    = preset == "SOL 4h · trend (rolling)" ? 24 :
+           preset == "XAUUSD 5m · break (rolling)" ? 1152 : 0
+
+modeIn   = input.string("break", "Entry family", options=["trend","fade","break","reclaim","pullback"])
+bandKIn  = input.float(2.0,  "Band width (volume-weighted σ)", minval=0.5, step=0.5)
+stopKIn  = input.float(1.0,  "Stop (volume-weighted σ)",       minval=0.1, step=0.5)
+holdIn   = input.int(0,      "Max hold (bars, 0 = to session end)", minval=0)
+rvolIn   = input.float(2.5,  "Min relative volume (0 = off)",  minval=0.0, step=0.5)
+anchorHIn= input.int(0,      "Session anchor hour (UTC)",      minval=0, maxval=23)
+rollIn   = input.int(0,      "Rolling VWAP window (bars, 0 = session-anchored)", minval=0)
+rvolLen  = input.int(1920,   "Relative-volume baseline (bars)", minval=50,
+     tooltip="The Python kernel uses 1920 bars on whatever timeframe it runs, so " +
+             "this is a long baseline by design. Same number here for parity.")
+
+manual   = preset == "Manual"
+mode     = manual ? (modeIn=="trend"?0 : modeIn=="fade"?1 : modeIn=="break"?2 : modeIn=="reclaim"?3 : 4) : pMode
+bandK    = manual ? bandKIn   : pBandK
+stopK    = manual ? stopKIn   : pStopK
+maxHold  = manual ? holdIn    : pHold
+minRvol  = manual ? rvolIn    : pRvol
+anchorH  = manual ? anchorHIn : pAnchorH
+rollWin  = manual ? rollIn    : pRoll
+
+// ------------------------------------------------------------------- vwap ---
+tp = (high + low + close) / 3.0
+v  = volume <= 0 ? 1.0 : volume
+
+// session reset: at the anchor hour, or at the UTC day boundary when anchor = 0
+mod       = hour * 60 + minute
+anchorMod = anchorH * 60
+newSess   = anchorMod == 0 ? ta.change(time("1D")) != 0
+                           : (nz(mod[1], -1) < anchorMod and mod >= anchorMod)
+
+var float cpv  = 0.0
+var float cv   = 0.0
+var float cp2v = 0.0
+if newSess
+    cpv  := 0.0
+    cv   := 0.0
+    cp2v := 0.0
+cpv  := cpv  + tp * v
+cv   := cv   + v
+cp2v := cp2v + tp * tp * v
+
+sessVwap = cv > 0 ? cpv / cv : tp
+sessVar  = cv > 0 ? (cp2v / cv) - sessVwap * sessVwap : 0.0
+sessStd  = math.sqrt(math.max(sessVar, 0.0))
+
+// rolling variant — the only anchor that makes sense on a market with no session
+rw       = math.max(rollWin, 1)
+rpv      = math.sum(tp * v, rw)
+rv       = math.sum(v, rw)
+rp2v     = math.sum(tp * tp * v, rw)
+rollVwap = rv > 0 ? rpv / rv : tp
+rollVar  = rv > 0 ? (rp2v / rv) - rollVwap * rollVwap : 0.0
+rollStd  = math.sqrt(math.max(rollVar, 0.0))
+
+useRoll = rollWin > 0
+vwap    = useRoll ? rollVwap : sessVwap
+vwstd   = useRoll ? rollStd  : sessStd
+upper   = vwap + bandK * vwstd
+lower   = vwap - bandK * vwstd
+
+// relative volume, baseline shifted one bar so the current bar cannot see itself
+rvolBase = ta.sma(v, rvolLen)[1]
+rvol     = nz(rvolBase) > 0 ? v / rvolBase : 0.0
+rvolOK   = minRvol <= 0.0 or rvol >= minRvol
+
+// ---------------------------------------------------------------- entries ---
+// Every rule is evaluated on the CLOSED bar; TradingView fills the order at the
+// next bar's open, which is exactly what the Python kernel assumes.
+var int stretchUp = 0
+var int stretchDn = 0
+if newSess
+    stretchUp := 0
+    stretchDn := 0
+if high >= upper
+    stretchUp := 1
+if low <= lower
+    stretchDn := 1
+
+longSig  = false
+shortSig = false
+if mode == 0            // trend — long above VWAP, short below
+    longSig  := close > vwap and close[1] <= vwap[1]
+    shortSig := close < vwap and close[1] >= vwap[1]
+else if mode == 1       // fade — close beyond a band, take the other side
+    longSig  := close < lower
+    shortSig := close > upper
+else if mode == 2       // break — close beyond a band, go with it
+    longSig  := close > upper
+    shortSig := close < lower
+else if mode == 3       // reclaim — was stretched, now closes back through VWAP
+    longSig  := stretchDn == 1 and close > vwap and close[1] <= vwap[1]
+    shortSig := stretchUp == 1 and close < vwap and close[1] >= vwap[1]
+else                    // pullback — trending away, take the first touch back
+    longSig  := close[1] > vwap[1] and low <= vwap and close > vwap
+    shortSig := close[1] < vwap[1] and high >= vwap and close < vwap
+
+canTrade = rvolOK and vwstd > 0 and barstate.isconfirmed
+stopDist = stopK * vwstd
+
+if canTrade and longSig and strategy.position_size <= 0
+    strategy.entry("L", strategy.long)
+    strategy.exit("L x", "L", stop=close - stopDist)
+if canTrade and shortSig and strategy.position_size >= 0
+    strategy.entry("S", strategy.short)
+    strategy.exit("S x", "S", stop=close + stopDist)
+
+// ------------------------------------------------------------------ exits ---
+// Session end when holding to the horizon, or a fixed bar count when the config
+// sets one. The trend family also flips on a close back through VWAP.
+barsHeld = ta.barssince(strategy.position_size[1] == 0 and strategy.position_size != 0)
+if strategy.position_size != 0
+    if maxHold > 0 and barsHeld >= maxHold
+        strategy.close_all("hold")
+    else if maxHold == 0 and newSess
+        strategy.close_all("session")
+    else if mode == 0 and strategy.position_size > 0 and close < vwap
+        strategy.close_all("flip")
+    else if mode == 0 and strategy.position_size < 0 and close > vwap
+        strategy.close_all("flip")
+
+// ------------------------------------------------------------------- plot ---
+plot(vwap,  "VWAP",  color.new(color.orange, 0), 2)
+plot(upper, "Upper", color.new(color.gray, 40))
+plot(lower, "Lower", color.new(color.gray, 40))
+bgcolor(rvolOK and minRvol > 0 ? color.new(color.teal, 92) : na)

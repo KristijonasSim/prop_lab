@@ -1,0 +1,76 @@
+//@version=6
+// =============================================================================
+// H-008 · Beta-residual reversion  —  board score 2.1/10  —  REJECTED
+// prop_lab · https://github.com/KristijonasSim/prop_lab
+//
+// DO NOT TRADE THIS. It is the most decisively rejected idea on the board.
+//
+// WHY IT WAS REJECTED: 1,152 configurations. ZERO cleared PF 1.20 at 2x cost,
+// and the paired-shuffle null beat the real data on EVERY cut — 55.4% of null
+// configs profitable before costs against the real 51.6%, best PF at 2x 1.496
+// against 0.940. This is the H-005 trap again: a fade rule is EASIER to satisfy
+// on shuffled data, because permuted series revert around their extremes more
+// readily than real trending ones.
+//
+// THE DECISIVE DIAGNOSTIC IS THE Z-RESPONSE, AND IT IS FLAT. Profit factor
+// before any costs, by entry threshold: 1.5σ -> 1.000, 2.0σ -> 0.997,
+// 2.5σ -> 1.006, 3.0σ -> 1.013. A three-sigma residual reverts NO HARDER than a
+// 1.5-sigma one. The size of the deviation carries no information about what
+// happens next. Nothing here is cost-limited; there is no edge to protect.
+//
+// Every walk-forward fold also selected a config whose TRAIN profit factor was
+// already below 1.0 — the selector could not find a winner even in sample.
+//
+// Watch the histogram against the threshold bands as you raise the z input: if
+// a mechanism were there, the deeper bars would be followed by sharper snapbacks.
+// They are not. That is the whole result, visible on a chart.
+//
+// Mechanism as originally stated: BTC is the liquidity centre and alts trade as
+// a beta to it. A large short-horizon residual should be a liquidity event — a
+// market order sweeping a thin book — not information, so it should revert once
+// makers refill. Run this on ETH, SOL, BNB or XRP.
+// =============================================================================
+strategy("H-008 Beta-residual reversion · prop_lab [REJECTED]", overlay=false,
+     initial_capital=10000, default_qty_type=strategy.percent_of_equity,
+     default_qty_value=100, commission_type=strategy.commission.percent,
+     commission_value=0.05, margin_long=100, margin_short=100, pyramiding=0)
+
+factorSym = input.symbol("BINANCE:BTCUSDT", "Market factor")
+betaWin   = input.int(100, "Beta window (bars)",     minval=10)
+L         = input.int(16,  "Residual lookback (bars)", minval=1)
+zWin      = input.int(100, "Z-score window (bars)",  minval=20)
+zThr      = input.float(3.0, "Entry threshold (σ)",  minval=0.5, step=0.5)
+holdB     = input.int(2,   "Hold (bars)",            minval=1)
+
+fc = request.security(factorSym, timeframe.period, close, lookahead=barmerge.lookahead_off)
+
+rc = math.log(close / close[1])
+rb = math.log(fc / fc[1])
+
+// rolling beta of this coin on the factor, history up to and including this bar
+cv   = ta.cov(rc, rb, betaWin)
+vr   = ta.variance(rb, betaWin)
+beta = vr > 0 ? math.max(math.min(cv / vr, 5.0), -5.0) : na
+
+// residual move over the last L bars, and its z-score
+Lc    = math.log(close / close[L])
+Lb    = math.log(fc / fc[L])
+resid = Lc - beta * Lb
+sd    = ta.stdev(resid, zWin)
+z     = sd > 0 ? (resid - ta.sma(resid, zWin)) / sd : na
+
+ready = barstate.isconfirmed and not na(z) and not na(beta)
+// fade the residual
+if ready and z <= -zThr and strategy.position_size <= 0
+    strategy.entry("L", strategy.long)
+if ready and z >= zThr and strategy.position_size >= 0
+    strategy.entry("S", strategy.short)
+
+held = ta.barssince(strategy.position_size[1] == 0 and strategy.position_size != 0)
+if strategy.position_size != 0 and held >= holdB
+    strategy.close_all("hold")
+
+plot(z, "Residual z", color.new(color.orange, 0), 2, plot.style_histogram)
+hline(0, "", color.new(color.gray, 60))
+hline(zThr,  "Short", color.new(color.red, 30),   hline.style_dashed)
+hline(-zThr, "Long",  color.new(color.green, 30), hline.style_dashed)

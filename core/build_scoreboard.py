@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT))
 from core.scorecard import compute, expected_days, WEIGHTS, PHASE_DAYS  # noqa: E402
 
 BT = ROOT / "backtests"
+PINE = ROOT / "pine"
 
 LADDER_NOTE = (
     "Risk per trade is the only lever left once the configuration is chosen blind, "
@@ -65,6 +66,15 @@ def _risk_row(x: dict, base: dict, fields: dict, pf_2x) -> dict:
             "expected_days": x["expected_days"],
         },
     }
+
+
+def _pine(sid: str) -> str | None:
+    """The TradingView port of this hypothesis, if one exists.
+
+    Embedded in the page rather than fetched, because the board is published as a
+    single self-contained artifact with no origin to fetch from."""
+    p = PINE / f"{sid}.pine"
+    return p.read_text() if p.exists() else None
 
 
 def load(sid: str) -> dict | None:
@@ -105,6 +115,8 @@ def load(sid: str) -> dict | None:
                      for x in b["ladder"]],
         },
         "grid": b.get("grid") or {}, "todo": b.get("todo") or [],
+        # pine/<id>.pine, shipped inline so the page's copy button needs no fetch
+        "pine": _pine(sid),
     }
 
 
@@ -129,8 +141,9 @@ def main():
 
     print("wrote backtests/scoreboard.html")
     for s in out:
+        pine = "pine" if s.get("pine") else "NO PINE"
         print(f"  {s['hid']} {s['name']:26s} {s['score']['total']:4.1f}/10  "
-              f"{s['score']['verdict']}")
+              f"{s['score']['verdict']:52s} {pine}")
 
 
 if __name__ == "__main__":
