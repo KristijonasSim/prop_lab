@@ -1,0 +1,357 @@
+{
+ "id": "resid",
+ "hid": "H-008",
+ "name": "Beta-residual reversion",
+ "tagline": "Strip out BTC, fade what is left.",
+ "period": "ETH/SOL/BNB/XRP against BTC \u00b7 15m-4h \u00b7 2020-08 \u2192 2026-08",
+ "report": "",
+ "candidate": "config re-chosen blind each quarter on 2x-cost train PF",
+ "fields": {
+  "pf": 0.851,
+  "trades": 1097,
+  "trades_per_day": 0.509,
+  "trades_per_week": 3.56,
+  "avg_hold_h": 6.73,
+  "win_rate": 0.495,
+  "avg_r": -0.0227,
+  "total_r": -24.92,
+  "max_dd_r": -33.63,
+  "sharpe": -0.753,
+  "n_books": 4,
+  "tpd_per_book": 0.127,
+  "r_per_day": -0.0116
+ },
+ "pf_2x": 0.723,
+ "measured": {
+  "wf_pf": 0.851,
+  "wf_pf_2x": 0.723,
+  "null_margin": 0.0732,
+  "beats_null": false,
+  "consistency": 0.5,
+  "pf": 0.851,
+  "sharpe": -0.753
+ },
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 1.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.0841
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.0,
+   "fail_max": 0.0982,
+   "fail_daily": 0.0,
+   "still_open": 0.9018,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.1682
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.0,
+   "fail_max": 0.0361,
+   "fail_daily": 0.107,
+   "still_open": 0.8568,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.2522
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.0,
+   "fail_max": 0.1803,
+   "fail_daily": 0.0496,
+   "still_open": 0.7702,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.3363
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.0301,
+   "fail_max": 0.3234,
+   "fail_daily": 0.0297,
+   "still_open": 0.6168,
+   "median_days": 347.0,
+   "p25_days": 331.0,
+   "expected_days": 11528.2,
+   "max_dd": -0.4204
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.0829,
+   "fail_max": 0.412,
+   "fail_daily": 0.0297,
+   "still_open": 0.4754,
+   "median_days": 300.0,
+   "p25_days": 273.5,
+   "expected_days": 3618.8,
+   "max_dd": -0.5045
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.1297,
+   "fail_max": 0.6057,
+   "fail_daily": 0.0269,
+   "still_open": 0.2377,
+   "median_days": 297.5,
+   "p25_days": 237.75,
+   "expected_days": 2293.8,
+   "max_dd": -0.5886
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.1538,
+   "fail_max": 0.4356,
+   "fail_daily": 0.2567,
+   "still_open": 0.1538,
+   "median_days": 267.5,
+   "p25_days": 203.75,
+   "expected_days": 1739.3,
+   "max_dd": -0.6726
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.2247,
+   "fail_max": 0.4319,
+   "fail_daily": 0.3007,
+   "still_open": 0.0426,
+   "median_days": 169.0,
+   "p25_days": 86.0,
+   "expected_days": 752.1,
+   "max_dd": -0.8408
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.2479,
+   "fail_max": 0.4069,
+   "fail_daily": 0.3031,
+   "still_open": 0.0422,
+   "median_days": 117.0,
+   "p25_days": 66.0,
+   "expected_days": 472.0,
+   "max_dd": -1.0089
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.2711,
+   "fail_max": 0.1487,
+   "fail_daily": 0.5769,
+   "still_open": 0.0032,
+   "median_days": 90.0,
+   "p25_days": 54.0,
+   "expected_days": 332.0,
+   "max_dd": -1.3453
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.2943,
+   "fail_max": 0.1284,
+   "fail_daily": 0.5741,
+   "still_open": 0.0032,
+   "median_days": 73.0,
+   "p25_days": 40.0,
+   "expected_days": 248.0,
+   "max_dd": -1.6816
+  }
+ ],
+ "pick": {
+  "risk": 0.0025,
+  "pass_rate": 0.0,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 1.0,
+  "median_days": null,
+  "p25_days": null,
+  "expected_days": null,
+  "max_dd": -0.0841
+ },
+ "grid": {
+  "title": "Best 12 configurations of 1,152, by profit factor at 2x cost",
+  "note": "<strong>0x</strong> is the diagnostic column: it says whether the residual reverts at all before the spread is paid. <strong>hedged</strong> trades the coin against a beta-weighted BTC leg and crosses two spreads; <strong>naked</strong> trades the coin alone and crosses one, keeping the BTC exposure.",
+  "cols": [
+   "PF 0x",
+   "PF 1x",
+   "PF 2x",
+   "trades/day"
+  ],
+  "label": "Configuration",
+  "rows": [
+   {
+    "label": "4h beta200 L16 z3.0 H2 naked",
+    "cols": [
+     1.18,
+     1.054,
+     0.94,
+     0.23
+    ],
+    "worst": 0.94,
+    "clears": false
+   },
+   {
+    "label": "4h beta50 L16 z3.0 H2 naked",
+    "cols": [
+     1.132,
+     1.015,
+     0.91,
+     0.22
+    ],
+    "worst": 0.91,
+    "clears": false
+   },
+   {
+    "label": "4h beta100 L16 z3.0 H2 naked",
+    "cols": [
+     1.126,
+     1.009,
+     0.904,
+     0.23
+    ],
+    "worst": 0.904,
+    "clears": false
+   },
+   {
+    "label": "4h beta200 L16 z2.5 H4 naked",
+    "cols": [
+     1.041,
+     0.949,
+     0.864,
+     0.25
+    ],
+    "worst": 0.864,
+    "clears": false
+   },
+   {
+    "label": "4h beta200 L16 z3.0 H4 naked",
+    "cols": [
+     1.016,
+     0.935,
+     0.861,
+     0.11
+    ],
+    "worst": 0.861,
+    "clears": false
+   },
+   {
+    "label": "4h beta200 L16 z2.5 H2 naked",
+    "cols": [
+     1.098,
+     0.966,
+     0.85,
+     0.49
+    ],
+    "worst": 0.85,
+    "clears": false
+   },
+   {
+    "label": "4h beta200 L16 z2.0 H4 naked",
+    "cols": [
+     1.021,
+     0.919,
+     0.826,
+     0.53
+    ],
+    "worst": 0.826,
+    "clears": false
+   },
+   {
+    "label": "4h beta200 L16 z1.5 H4 naked",
+    "cols": [
+     1.022,
+     0.911,
+     0.812,
+     1.03
+    ],
+    "worst": 0.812,
+    "clears": false
+   },
+   {
+    "label": "4h beta50 L16 z2.5 H2 naked",
+    "cols": [
+     1.04,
+     0.918,
+     0.809,
+     0.49
+    ],
+    "worst": 0.809,
+    "clears": false
+   },
+   {
+    "label": "4h beta100 L16 z3.0 H4 naked",
+    "cols": [
+     0.947,
+     0.874,
+     0.806,
+     0.11
+    ],
+    "worst": 0.806,
+    "clears": false
+   },
+   {
+    "label": "4h beta50 L16 z2.5 H4 naked",
+    "cols": [
+     0.947,
+     0.863,
+     0.787,
+     0.25
+    ],
+    "worst": 0.787,
+    "clears": false
+   },
+   {
+    "label": "4h beta50 L16 z3.0 H4 naked",
+    "cols": [
+     0.933,
+     0.857,
+     0.786,
+     0.11
+    ],
+    "worst": 0.786,
+    "clears": false
+   }
+  ]
+ },
+ "todo": [
+  {
+   "t": "Full grid, 1,152 configs \u00d7 6 panels",
+   "w": "4 timeframes \u00d7 3 beta windows \u00d7 4 lookbacks \u00d7 4 z thresholds \u00d7 3 holds \u00d7 hedged/naked.",
+   "done": true
+  },
+  {
+   "t": "Paired-shuffle null, 5 seeds",
+   "w": "The decisive test \u2014 a fade rule is easier to satisfy on shuffled data, which is what killed H-005.",
+   "done": true
+  },
+  {
+   "t": "Cost stress 0x/1x/2x/3x",
+   "w": "Hedged pays two round trips, naked pays one; both priced.",
+   "done": true
+  },
+  {
+   "t": "Walk-forward",
+   "w": "Quarterly, config re-chosen blind on 2x-cost train profit factor.",
+   "done": true
+  },
+  {
+   "t": "Two-step prop simulation",
+   "w": "core/riskladder.run_accounts_two_step \u2014 8% then 5%, the structure firms actually sell.",
+   "done": false
+  },
+  {
+   "t": "NautilusTrader cross-check",
+   "w": "Independent matching engine has not verified this kernel.",
+   "done": false
+  }
+ ],
+ "note": "Rejected at stage 1. Zero of 1,152 configurations clear the gate at 2x cost and the paired-shuffle null beats the real data on every cut \u2014 more configs profitable before costs (55.4% vs 51.6%), higher median, higher best. This is the H-005 result again: a fade rule is EASIER to satisfy on shuffled data, because permuted series revert around their extremes more readily than real trending ones. The decisive diagnostic is the z-response, and it is flat \u2014 profit factor before any costs runs 1.000 / 0.997 / 1.006 / 1.013 as the entry threshold goes 1.5\u03c3 \u2192 3.0\u03c3. A three-sigma residual reverts no harder than a 1.5-sigma one, so the size of the deviation carries no information about what comes next. Nothing here is cost-limited; there is no edge to protect. Note every walk-forward fold selected a config whose TRAIN profit factor was already below 1.0 \u2014 the selector could not find a winner even in sample. Taken with H-007 this closes a family: continuation and reversion on the same relative structure, in opposite directions, both dead at retail cost."
+}

@@ -22,12 +22,12 @@ class Outcome(str, Enum):
 
 @dataclass(frozen=True)
 class PropRules:
-    """Kris's targets. No firm chosen yet.
+    """One evaluation phase.
 
     max_loss is enforced BOTH static (from starting balance) and trailing
-    (from equity high-water mark) at 8% — the stricter reading, because the
-    firm's spec is unknown. min_trading_days and consistency_share are
-    placeholders; confirm them when a firm is picked.
+    (from equity high-water mark) — the stricter reading, because firms differ
+    and the spec is not worth guessing generously. min_trading_days and
+    consistency_share are placeholders; confirm them against the signed firm.
     """
 
     profit_target: float = 0.08
@@ -37,6 +37,35 @@ class PropRules:
     static: bool = True
     min_trading_days: int = 5          # PLACEHOLDER
     consistency_share: float = 0.40    # PLACEHOLDER — max share of profit from one day
+
+
+# ---------------------------------------------------------------------------
+# Firm structure, chosen 2026-09-01.
+#
+# TARGET: a two-step evaluation on cTrader.
+#
+# Why cTrader and not MT5: CLAUDE.md prefers it outright — cTrader Open API is a
+# real REST/WebSocket API, while MT5 is GUI-only and its Python package is
+# Windows-only. This box is Linux with no working MT5 bridge, which is the exact
+# reason `live/paper_trade.py` runs the two XAUUSD legs signal-only off cached
+# data. cTrader carries both crypto and XAUUSD, so it is the one choice that
+# unblocks the whole book rather than half of it.
+#
+# Why two-step: HANDOFF recorded that most no-time-limit firms are two-step
+# (8% then 5%) while this file modelled a single 8% step, which understates
+# time-to-funded. TWO_STEP below is the honest structure.
+#
+# NOT VERIFIED: the exact numbers per firm. Percentages, min trading days and
+# consistency rules change and differ between firms — confirm on the firm's own
+# spec page before any money moves. The STRUCTURE is what is modelled here.
+# ---------------------------------------------------------------------------
+
+PHASE_1 = PropRules(profit_target=0.08, daily_loss=0.04, max_loss=0.08)
+PHASE_2 = PropRules(profit_target=0.05, daily_loss=0.04, max_loss=0.08)
+TWO_STEP = (PHASE_1, PHASE_2)
+
+# The old single-step assumption, kept so board numbers stay comparable.
+ONE_STEP = (PropRules(),)
 
 
 @dataclass

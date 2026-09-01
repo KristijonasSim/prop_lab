@@ -22,7 +22,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.prop_rules import PropRules                    # noqa: E402
+from core.prop_rules import PropRules, TWO_STEP        # noqa: E402
 
 RISK_LADDER = (0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175,
                0.02, 0.025, 0.03, 0.04, 0.05)
@@ -56,6 +56,55 @@ def run_accounts(daily_r: pd.Series, risk: float, rules: PropRules = PropRules()
             if eq >= rules.profit_target and traded >= rules.min_trading_days:
                 res = "PASS"; break
         out.append((res, day))
+    res = pd.DataFrame(out, columns=["outcome", "days"])
+    p = res[res.outcome == "PASS"]
+    return {
+        "pass_rate": round(len(p) / len(res), 4) if len(res) else 0.0,
+        "fail_max": round(float((res.outcome == "FAIL_MAX").mean()), 4),
+        "fail_daily": round(float((res.outcome == "FAIL_DAILY").mean()), 4),
+        "still_open": round(float((res.outcome == "OPEN").mean()), 4),
+        "median_days": float(p.days.median()) if len(p) else None,
+        "p25_days": float(p.days.quantile(0.25)) if len(p) else None,
+    }
+
+
+def run_accounts_two_step(daily_r: pd.Series, risk: float,
+                          phases=TWO_STEP, max_days: int = MAX_DAYS) -> dict:
+    """The same simulation, but an account must clear EVERY phase in sequence.
+
+    Phase 2 starts the day after phase 1 is cleared, on the same live series, and
+    gets a fresh equity, peak and drawdown budget — which is how firms reset it.
+    A breach in any phase kills the account outright; there is no retry.
+
+    This exists because the one-step number flatters every hypothesis here: the
+    second 5% step is not half the work of the first 8% one, it is a whole
+    second chance to breach, and the drawdown that has to be survived is paid
+    twice."""
+    d = daily_r.values * risk
+    n = len(d)
+    out = []
+    for s0 in range(n):
+        k, res, total_days = s0, "OPEN", 0
+        for rules in phases:
+            eq, peak, day, traded, res = 0.0, 0.0, 0, 0, "OPEN"
+            while k < n and total_days + day < max_days:
+                day += 1
+                step = d[k]; k += 1
+                if step != 0.0:
+                    traded += 1
+                if min(step, 0.0) <= -rules.daily_loss:
+                    res = "FAIL_DAILY"; break
+                low = eq + min(step, 0.0)
+                if low - peak <= -rules.max_loss or low <= -rules.max_loss:
+                    res = "FAIL_MAX"; break
+                eq += step
+                peak = max(peak, eq)
+                if eq >= rules.profit_target and traded >= rules.min_trading_days:
+                    res = "PASS"; break
+            total_days += day
+            if res != "PASS":
+                break
+        out.append((res, total_days))
     res = pd.DataFrame(out, columns=["outcome", "days"])
     p = res[res.outcome == "PASS"]
     return {

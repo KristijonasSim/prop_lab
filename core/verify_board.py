@@ -9,7 +9,7 @@ Run:  .venv/bin/python core/verify_board.py
 
 WHAT THE INPUT IS
 -----------------
-backtests/vwap/stage9_trades_2xselect.parquet holds one row per out-of-sample
+backtests/vwap/stage10_trades.parquet holds one row per out-of-sample
 trade from the quarterly walk-forward whose fold selector ranks by train PF at
 double cost. Columns:
     symbol, tf      market and timeframe
@@ -25,9 +25,9 @@ made exactly what it risked. Fees and slippage are already subtracted.
 
 THE BOOK CONSTRUCTION
 ---------------------
-The board uses the best tradeable subset found by stage 9: BTCUSDT 30m,
-BTCUSDT 4h, XAUUSD 30m and XAUUSD 5m, one blind-chosen configuration per leg,
-equal weighted on the common 2024-09+ window.
+The board uses the best tradeable subset found by stage 11 on the twelve-market
+universe: BTCUSDT 4h, ETHUSDT 1h, ETHUSDT 30m, SOLUSDT 4h and XAUUSD 5m, one
+blind-chosen configuration per leg, equal weighted on the common 2024-09+ window.
 """
 from __future__ import annotations
 
@@ -38,8 +38,8 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-TRADES = ROOT / "backtests" / "vwap" / "stage9_trades_2xselect.parquet"
-STITCHED = ROOT / "backtests" / "vwap" / "stage6_stitched_2xselect.csv"
+TRADES = ROOT / "backtests" / "vwap" / "stage10_trades.parquet"
+STITCHED = ROOT / "backtests" / "vwap" / "stage10_stitched.csv"
 
 TARGET = 0.08        # prop profit target
 MAX_LOSS = 0.08      # prop max-loss cap
@@ -47,9 +47,10 @@ DAILY_LOSS = 0.04    # prop daily-loss cap
 COMMON_START = "2024-09-01"   # first quarter every leg in the book has
 GATE = 1.20
 SELECTED_LEGS = [
-    ("BTCUSDT", "30m"),
     ("BTCUSDT", "4h"),
-    ("XAUUSD", "30m"),
+    ("ETHUSDT", "1h"),
+    ("ETHUSDT", "30m"),
+    ("SOLUSDT", "4h"),
     ("XAUUSD", "5m"),
 ]
 FLOOR = 100
@@ -127,15 +128,15 @@ def main():
 
     rule("STEP 1 — which markets are in the book, and why")
     st = pd.read_csv(STITCHED)
-    piv = st.pivot_table(index=["symbol", "tf"], columns=["floor", "topn"], values="pf")
+    piv = st.pivot_table(index=["symbol", "tf"], columns=["floor", "topn"], values="pf_2x")
     worst = piv.min(axis=1)
     survivors = [k for k in worst[worst >= GATE].index]
     print(f"{len(piv)} market x timeframe combinations were walk-forwarded.")
-    print(f"A combination is kept only if its stitched profit factor clears {GATE}")
+    print(f"A combination is kept only if its stitched 2x-COST profit factor clears {GATE}")
     print("under ALL FOUR selection rules (trade-count floor 30 or 100, top-1 or")
     print("top-10). That is the strictest of the four, not the best.")
     print(f"\n{len(survivors)} survive: {', '.join(f'{a} {b}' for a, b in survivors)}")
-    print("\nworst-of-four profit factor per survivor:")
+    print("\nworst-of-four 2x-cost profit factor per survivor:")
     for a, b in survivors:
         print(f"    {a:8s} {b:4s}  {worst.loc[(a, b)]:.3f}")
 

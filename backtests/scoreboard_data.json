@@ -4215,6 +4215,1084 @@
    ]
   },
   {
+   "id": "xsec",
+   "hid": "H-007",
+   "name": "Cross-sectional crypto ranking",
+   "tagline": "Rank the coins, buy the leaders, sell the laggards.",
+   "period": "5 coins (BTC, ETH, SOL, BNB, XRP) \u00b7 1h/4h/1d \u00b7 2020-08 \u2192 2026-08",
+   "report": "",
+   "candidate": "config re-chosen blind each quarter on 2x-cost train PF, 0.25% risk per trade",
+   "measured": {
+    "wf_pf": 1.168,
+    "wf_pf_2x": 1.063,
+    "null_margin": 0.0073,
+    "beats_null": false,
+    "consistency": 0.5,
+    "pf": 1.168,
+    "sharpe": 0.488,
+    "median_days_pass": 61.5,
+    "pass_rate": 0.0222,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "max_dd": -0.0502
+   },
+   "score": {
+    "total": 2.9,
+    "verdict": "Failing",
+    "evidence_capped": false,
+    "null_capped": false,
+    "components": [
+     {
+      "name": "speed",
+      "weight": 30,
+      "score": 0.0,
+      "points": 0.0
+     },
+     {
+      "name": "pass_rate",
+      "weight": 18,
+      "score": 0.022,
+      "points": 0.04
+     },
+     {
+      "name": "breach",
+      "weight": 12,
+      "score": 1.0,
+      "points": 1.2
+     },
+     {
+      "name": "drawdown",
+      "weight": 10,
+      "score": 0.915,
+      "points": 0.92
+     },
+     {
+      "name": "evidence",
+      "weight": 20,
+      "score": 0.274,
+      "points": 0.55
+     },
+     {
+      "name": "profit",
+      "weight": 10,
+      "score": 0.206,
+      "points": 0.21
+     }
+    ]
+   },
+   "note": "Rejected. The ranking is not noise \u2014 before costs it beats its paired null cleanly \u2014 but the edge is roughly 10% on profit factor and a round trip costs more than that. Everything that survives 2x cost is 1d with a 7-day hold and ~0.14 trades/day, which is a longer-hold idea CLAUDE.md says to log rather than build this phase, and its time-to-target is in the hundreds of days against H-002's 25. The best single null cell also still beats the best real cell. Five highly-correlated majors is the known weakness: the published version ranks hundreds of names.",
+   "headline": {
+    "pf": 1.168,
+    "pf2x": 1.063,
+    "tpd": 0.266,
+    "trades": 574,
+    "n_books": 1,
+    "tpd_per_book": 0.266,
+    "r_per_day": 0.0124,
+    "max_dd": -0.0502,
+    "pass_rate": 0.0222,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "median_days": 61.5,
+    "still_open": 0.9778,
+    "expected_days": 2770.27027027027
+   },
+   "ladder": {
+    "picked": 0.0025,
+    "note": "Risk per trade is the only lever left once the configuration is chosen blind, and it moves speed and survival in opposite directions. <strong>Click any row</strong> to score the strategy at that risk level. The recommended row is the fewest expected days to a funded account among the levels that keep the breach rate under 5% <em>and</em> the drawdown inside the 8% cap.",
+    "rows": [
+     {
+      "risk": 0.0025,
+      "pass_rate": 0.0222,
+      "fail_max": 0.0,
+      "fail_daily": 0.0,
+      "still_open": 0.9778,
+      "median_days": 61.5,
+      "p25_days": 54.0,
+      "expected_days": 2770.3,
+      "max_dd": -0.0502,
+      "score": 2.9,
+      "verdict": "Failing",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.022,
+        "points": 0.04
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 1.0,
+        "points": 1.2
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.915,
+        "points": 0.92
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.0502,
+       "pass_rate": 0.0222,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "median_days": 61.5,
+       "still_open": 0.9778,
+       "expected_days": 2770.3
+      }
+     },
+     {
+      "risk": 0.005,
+      "pass_rate": 0.0384,
+      "fail_max": 0.0,
+      "fail_daily": 0.0,
+      "still_open": 0.9616,
+      "median_days": 31.0,
+      "p25_days": 23.5,
+      "expected_days": 807.3,
+      "max_dd": -0.1004,
+      "score": 2.5,
+      "verdict": "Failing",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.038,
+        "points": 0.07
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 1.0,
+        "points": 1.2
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.497,
+        "points": 0.5
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.1004,
+       "pass_rate": 0.0384,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "median_days": 31.0,
+       "still_open": 0.9616,
+       "expected_days": 807.3
+      }
+     },
+     {
+      "risk": 0.0075,
+      "pass_rate": 0.0412,
+      "fail_max": 0.1723,
+      "fail_daily": 0.0023,
+      "still_open": 0.7842,
+      "median_days": 25.0,
+      "p25_days": 14.0,
+      "expected_days": 606.8,
+      "max_dd": -0.1506,
+      "score": 1.4,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.041,
+        "points": 0.07
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.418,
+        "points": 0.5
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.078,
+        "points": 0.08
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.1506,
+       "pass_rate": 0.0412,
+       "fail_max": 0.1723,
+       "fail_daily": 0.0023,
+       "median_days": 25.0,
+       "still_open": 0.7842,
+       "expected_days": 606.8
+      }
+     },
+     {
+      "risk": 0.01,
+      "pass_rate": 0.0579,
+      "fail_max": 0.3025,
+      "fail_daily": 0.0023,
+      "still_open": 0.6373,
+      "median_days": 24.0,
+      "p25_days": 12.0,
+      "expected_days": 414.5,
+      "max_dd": -0.2007,
+      "score": 0.9,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.058,
+        "points": 0.1
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.2007,
+       "pass_rate": 0.0579,
+       "fail_max": 0.3025,
+       "fail_daily": 0.0023,
+       "median_days": 24.0,
+       "still_open": 0.6373,
+       "expected_days": 414.5
+      }
+     },
+     {
+      "risk": 0.0125,
+      "pass_rate": 0.1038,
+      "fail_max": 0.34,
+      "fail_daily": 0.0347,
+      "still_open": 0.5215,
+      "median_days": 98.0,
+      "p25_days": 13.0,
+      "expected_days": 944.1,
+      "max_dd": -0.2509,
+      "score": 0.9,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.104,
+        "points": 0.19
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.2509,
+       "pass_rate": 0.1038,
+       "fail_max": 0.34,
+       "fail_daily": 0.0347,
+       "median_days": 98.0,
+       "still_open": 0.5215,
+       "expected_days": 944.1
+      }
+     },
+     {
+      "risk": 0.015,
+      "pass_rate": 0.1352,
+      "fail_max": 0.5521,
+      "fail_daily": 0.0801,
+      "still_open": 0.2325,
+      "median_days": 80.5,
+      "p25_days": 15.0,
+      "expected_days": 595.4,
+      "max_dd": -0.3011,
+      "score": 1.0,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.135,
+        "points": 0.24
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.3011,
+       "pass_rate": 0.1352,
+       "fail_max": 0.5521,
+       "fail_daily": 0.0801,
+       "median_days": 80.5,
+       "still_open": 0.2325,
+       "expected_days": 595.4
+      }
+     },
+     {
+      "risk": 0.0175,
+      "pass_rate": 0.164,
+      "fail_max": 0.5475,
+      "fail_daily": 0.0885,
+      "still_open": 0.2001,
+      "median_days": 68.0,
+      "p25_days": 22.75,
+      "expected_days": 414.6,
+      "max_dd": -0.3513,
+      "score": 1.0,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.164,
+        "points": 0.3
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.3513,
+       "pass_rate": 0.164,
+       "fail_max": 0.5475,
+       "fail_daily": 0.0885,
+       "median_days": 68.0,
+       "still_open": 0.2001,
+       "expected_days": 414.6
+      }
+     },
+     {
+      "risk": 0.02,
+      "pass_rate": 0.17,
+      "fail_max": 0.5679,
+      "fail_daily": 0.1042,
+      "still_open": 0.1579,
+      "median_days": 56.0,
+      "p25_days": 23.0,
+      "expected_days": 329.4,
+      "max_dd": -0.4015,
+      "score": 1.1,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.17,
+        "points": 0.31
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.4015,
+       "pass_rate": 0.17,
+       "fail_max": 0.5679,
+       "fail_daily": 0.1042,
+       "median_days": 56.0,
+       "still_open": 0.1579,
+       "expected_days": 329.4
+      }
+     },
+     {
+      "risk": 0.025,
+      "pass_rate": 0.2334,
+      "fail_max": 0.3835,
+      "fail_daily": 0.283,
+      "still_open": 0.1,
+      "median_days": 63.0,
+      "p25_days": 32.0,
+      "expected_days": 269.9,
+      "max_dd": -0.5019,
+      "score": 1.2,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.233,
+        "points": 0.42
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.5019,
+       "pass_rate": 0.2334,
+       "fail_max": 0.3835,
+       "fail_daily": 0.283,
+       "median_days": 63.0,
+       "still_open": 0.1,
+       "expected_days": 269.9
+      }
+     },
+     {
+      "risk": 0.03,
+      "pass_rate": 0.3131,
+      "fail_max": 0.3289,
+      "fail_daily": 0.3548,
+      "still_open": 0.0032,
+      "median_days": 76.0,
+      "p25_days": 37.75,
+      "expected_days": 242.7,
+      "max_dd": -0.6022,
+      "score": 1.3,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.313,
+        "points": 0.56
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.6022,
+       "pass_rate": 0.3131,
+       "fail_max": 0.3289,
+       "fail_daily": 0.3548,
+       "median_days": 76.0,
+       "still_open": 0.0032,
+       "expected_days": 242.7
+      }
+     },
+     {
+      "risk": 0.04,
+      "pass_rate": 0.365,
+      "fail_max": 0.0824,
+      "fail_daily": 0.5493,
+      "still_open": 0.0032,
+      "median_days": 76.0,
+      "p25_days": 34.0,
+      "expected_days": 208.2,
+      "max_dd": -0.803,
+      "score": 1.4,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.365,
+        "points": 0.66
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -0.803,
+       "pass_rate": 0.365,
+       "fail_max": 0.0824,
+       "fail_daily": 0.5493,
+       "median_days": 76.0,
+       "still_open": 0.0032,
+       "expected_days": 208.2
+      }
+     },
+     {
+      "risk": 0.05,
+      "pass_rate": 0.4034,
+      "fail_max": 0.0908,
+      "fail_daily": 0.5025,
+      "still_open": 0.0032,
+      "median_days": 64.0,
+      "p25_days": 34.0,
+      "expected_days": 158.7,
+      "max_dd": -1.0037,
+      "score": 1.9,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.129,
+        "points": 0.39
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.403,
+        "points": 0.73
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.274,
+        "points": 0.55
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.206,
+        "points": 0.21
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 1.168,
+       "pf2x": 1.063,
+       "tpd": 0.266,
+       "trades": 574,
+       "n_books": 1,
+       "tpd_per_book": 0.266,
+       "r_per_day": 0.0124,
+       "max_dd": -1.0037,
+       "pass_rate": 0.4034,
+       "fail_max": 0.0908,
+       "fail_daily": 0.5025,
+       "median_days": 64.0,
+       "still_open": 0.0032,
+       "expected_days": 158.7
+      }
+     }
+    ]
+   },
+   "grid": {
+    "title": "Best 12 configurations of 360, by profit factor at 2x cost",
+    "note": "The <strong>0x</strong> column is the diagnostic. The ranking does carry a little information \u2014 95% of real configs beat 1.0 before costs against 59% of null ones \u2014 but it is far too small to survive a 14bps round trip, and every cell that clears the gate is a 7-day hold.",
+    "cols": [
+     "PF 0x",
+     "PF 1x",
+     "PF 2x",
+     "trades/day"
+    ],
+    "label": "Configuration",
+    "rows": [
+     {
+      "label": "rvol 1d L3 k1 longonly H7",
+      "cols": [
+       1.583,
+       1.523,
+       1.465,
+       0.143
+      ],
+      "worst": 1.465,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L12 k1 longonly H7",
+      "cols": [
+       1.463,
+       1.413,
+       1.364,
+       0.143
+      ],
+      "worst": 1.364,
+      "clears": true
+     },
+     {
+      "label": "rvol 1d L12 k1 longonly H7",
+      "cols": [
+       1.454,
+       1.402,
+       1.352,
+       0.143
+      ],
+      "worst": 1.352,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L6 k1 spread H7",
+      "cols": [
+       1.61,
+       1.471,
+       1.344,
+       0.143
+      ],
+      "worst": 1.344,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L12 k1 spread H7",
+      "cols": [
+       1.604,
+       1.465,
+       1.339,
+       0.143
+      ],
+      "worst": 1.339,
+      "clears": true
+     },
+     {
+      "label": "rvol 1d L6 k1 longonly H7",
+      "cols": [
+       1.434,
+       1.381,
+       1.33,
+       0.143
+      ],
+      "worst": 1.33,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L12 k2 spread H7",
+      "cols": [
+       1.724,
+       1.506,
+       1.317,
+       0.143
+      ],
+      "worst": 1.317,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L6 k1 longonly H7",
+      "cols": [
+       1.414,
+       1.363,
+       1.314,
+       0.143
+      ],
+      "worst": 1.314,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L3 k1 longonly H7",
+      "cols": [
+       1.413,
+       1.362,
+       1.313,
+       0.143
+      ],
+      "worst": 1.313,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L3 k1 spread H7",
+      "cols": [
+       1.57,
+       1.429,
+       1.302,
+       0.143
+      ],
+      "worst": 1.302,
+      "clears": true
+     },
+     {
+      "label": "mom 1d L12 k2 longonly H7",
+      "cols": [
+       1.408,
+       1.351,
+       1.296,
+       0.143
+      ],
+      "worst": 1.296,
+      "clears": true
+     },
+     {
+      "label": "rvol 1d L24 k1 longonly H7",
+      "cols": [
+       1.393,
+       1.343,
+       1.296,
+       0.143
+      ],
+      "worst": 1.296,
+      "clears": true
+     }
+    ]
+   },
+   "todo": [
+    {
+     "t": "Full grid, 360 configs \u00d7 6 panels",
+     "w": "2 signals \u00d7 3 timeframes \u00d7 5 lookbacks \u00d7 2 basket sizes \u00d7 2 modes \u00d7 3 holds.",
+     "done": true
+    },
+    {
+     "t": "Paired-shuffle null, 5 seeds",
+     "w": "Read as a distribution: null cleared the 2x gate on 0/1/2/9/14 configs against the real 23.",
+     "done": true
+    },
+    {
+     "t": "Cost stress 0x/1x/2x/3x",
+     "w": "Median profit factor falls 1.10 \u2192 0.83 \u2192 0.62. Costs, not the signal, are the whole story.",
+     "done": true
+    },
+    {
+     "t": "Walk-forward",
+     "w": "Run for board parity, not because stage 1 justified it.",
+     "done": true
+    },
+    {
+     "t": "Wide universe (50+ coins)",
+     "w": "Not run. Five majors is not a cross-section; the published edge ranks hundreds of names.",
+     "done": false
+    }
+   ]
+  },
+  {
    "id": "orb",
    "hid": "H-001",
    "name": "Opening Range Breakout",
@@ -5211,6 +6289,1089 @@
     {
      "t": "US equity cross-section",
      "w": "The published edge picks the top 20 of 7,000 stocks daily. Untested, and not reproducible on a single symbol.",
+     "done": false
+    }
+   ]
+  },
+  {
+   "id": "resid",
+   "hid": "H-008",
+   "name": "Beta-residual reversion",
+   "tagline": "Strip out BTC, fade what is left.",
+   "period": "ETH/SOL/BNB/XRP against BTC \u00b7 15m-4h \u00b7 2020-08 \u2192 2026-08",
+   "report": "",
+   "candidate": "config re-chosen blind each quarter on 2x-cost train PF, 0.25% risk per trade",
+   "measured": {
+    "wf_pf": 0.851,
+    "wf_pf_2x": 0.723,
+    "null_margin": 0.0732,
+    "beats_null": false,
+    "consistency": 0.5,
+    "pf": 0.851,
+    "sharpe": -0.753,
+    "median_days_pass": null,
+    "pass_rate": 0.0,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "max_dd": -0.0841
+   },
+   "score": {
+    "total": 2.1,
+    "verdict": "Failing",
+    "evidence_capped": false,
+    "null_capped": false,
+    "components": [
+     {
+      "name": "speed",
+      "weight": 30,
+      "score": 0.0,
+      "points": 0.0
+     },
+     {
+      "name": "pass_rate",
+      "weight": 18,
+      "score": 0.0,
+      "points": 0.0
+     },
+     {
+      "name": "breach",
+      "weight": 12,
+      "score": 1.0,
+      "points": 1.2
+     },
+     {
+      "name": "drawdown",
+      "weight": 10,
+      "score": 0.633,
+      "points": 0.63
+     },
+     {
+      "name": "evidence",
+      "weight": 20,
+      "score": 0.129,
+      "points": 0.26
+     },
+     {
+      "name": "profit",
+      "weight": 10,
+      "score": 0.0,
+      "points": 0.0
+     }
+    ]
+   },
+   "note": "Rejected at stage 1. Zero of 1,152 configurations clear the gate at 2x cost and the paired-shuffle null beats the real data on every cut \u2014 more configs profitable before costs (55.4% vs 51.6%), higher median, higher best. This is the H-005 result again: a fade rule is EASIER to satisfy on shuffled data, because permuted series revert around their extremes more readily than real trending ones. The decisive diagnostic is the z-response, and it is flat \u2014 profit factor before any costs runs 1.000 / 0.997 / 1.006 / 1.013 as the entry threshold goes 1.5\u03c3 \u2192 3.0\u03c3. A three-sigma residual reverts no harder than a 1.5-sigma one, so the size of the deviation carries no information about what comes next. Nothing here is cost-limited; there is no edge to protect. Note every walk-forward fold selected a config whose TRAIN profit factor was already below 1.0 \u2014 the selector could not find a winner even in sample. Taken with H-007 this closes a family: continuation and reversion on the same relative structure, in opposite directions, both dead at retail cost.",
+   "headline": {
+    "pf": 0.851,
+    "pf2x": 0.723,
+    "tpd": 0.509,
+    "trades": 1097,
+    "n_books": 4,
+    "tpd_per_book": 0.127,
+    "r_per_day": -0.0116,
+    "max_dd": -0.0841,
+    "pass_rate": 0.0,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "median_days": null,
+    "still_open": 1.0,
+    "expected_days": null
+   },
+   "ladder": {
+    "picked": 0.0025,
+    "note": "Risk per trade is the only lever left once the configuration is chosen blind, and it moves speed and survival in opposite directions. <strong>Click any row</strong> to score the strategy at that risk level. The recommended row is the fewest expected days to a funded account among the levels that keep the breach rate under 5% <em>and</em> the drawdown inside the 8% cap.",
+    "rows": [
+     {
+      "risk": 0.0025,
+      "pass_rate": 0.0,
+      "fail_max": 0.0,
+      "fail_daily": 0.0,
+      "still_open": 1.0,
+      "median_days": null,
+      "p25_days": null,
+      "expected_days": null,
+      "max_dd": -0.0841,
+      "score": 2.1,
+      "verdict": "Failing",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 1.0,
+        "points": 1.2
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.633,
+        "points": 0.63
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.0841,
+       "pass_rate": 0.0,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "median_days": null,
+       "still_open": 1.0,
+       "expected_days": null
+      }
+     },
+     {
+      "risk": 0.005,
+      "pass_rate": 0.0,
+      "fail_max": 0.0982,
+      "fail_daily": 0.0,
+      "still_open": 0.9018,
+      "median_days": null,
+      "p25_days": null,
+      "expected_days": null,
+      "max_dd": -0.1682,
+      "score": 1.1,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.673,
+        "points": 0.81
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.1682,
+       "pass_rate": 0.0,
+       "fail_max": 0.0982,
+       "fail_daily": 0.0,
+       "median_days": null,
+       "still_open": 0.9018,
+       "expected_days": null
+      }
+     },
+     {
+      "risk": 0.0075,
+      "pass_rate": 0.0,
+      "fail_max": 0.0361,
+      "fail_daily": 0.107,
+      "still_open": 0.8568,
+      "median_days": null,
+      "p25_days": null,
+      "expected_days": null,
+      "max_dd": -0.2522,
+      "score": 0.9,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.523,
+        "points": 0.63
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.2522,
+       "pass_rate": 0.0,
+       "fail_max": 0.0361,
+       "fail_daily": 0.107,
+       "median_days": null,
+       "still_open": 0.8568,
+       "expected_days": null
+      }
+     },
+     {
+      "risk": 0.01,
+      "pass_rate": 0.0,
+      "fail_max": 0.1803,
+      "fail_daily": 0.0496,
+      "still_open": 0.7702,
+      "median_days": null,
+      "p25_days": null,
+      "expected_days": null,
+      "max_dd": -0.3363,
+      "score": 0.5,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.234,
+        "points": 0.28
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.3363,
+       "pass_rate": 0.0,
+       "fail_max": 0.1803,
+       "fail_daily": 0.0496,
+       "median_days": null,
+       "still_open": 0.7702,
+       "expected_days": null
+      }
+     },
+     {
+      "risk": 0.0125,
+      "pass_rate": 0.0301,
+      "fail_max": 0.3234,
+      "fail_daily": 0.0297,
+      "still_open": 0.6168,
+      "median_days": 347.0,
+      "p25_days": 331.0,
+      "expected_days": 11528.2,
+      "max_dd": -0.4204,
+      "score": 0.3,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.03,
+        "points": 0.05
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.4204,
+       "pass_rate": 0.0301,
+       "fail_max": 0.3234,
+       "fail_daily": 0.0297,
+       "median_days": 347.0,
+       "still_open": 0.6168,
+       "expected_days": 11528.2
+      }
+     },
+     {
+      "risk": 0.015,
+      "pass_rate": 0.0829,
+      "fail_max": 0.412,
+      "fail_daily": 0.0297,
+      "still_open": 0.4754,
+      "median_days": 300.0,
+      "p25_days": 273.5,
+      "expected_days": 3618.8,
+      "max_dd": -0.5045,
+      "score": 0.4,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.083,
+        "points": 0.15
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.5045,
+       "pass_rate": 0.0829,
+       "fail_max": 0.412,
+       "fail_daily": 0.0297,
+       "median_days": 300.0,
+       "still_open": 0.4754,
+       "expected_days": 3618.8
+      }
+     },
+     {
+      "risk": 0.0175,
+      "pass_rate": 0.1297,
+      "fail_max": 0.6057,
+      "fail_daily": 0.0269,
+      "still_open": 0.2377,
+      "median_days": 297.5,
+      "p25_days": 237.75,
+      "expected_days": 2293.8,
+      "max_dd": -0.5886,
+      "score": 0.5,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.13,
+        "points": 0.23
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.5886,
+       "pass_rate": 0.1297,
+       "fail_max": 0.6057,
+       "fail_daily": 0.0269,
+       "median_days": 297.5,
+       "still_open": 0.2377,
+       "expected_days": 2293.8
+      }
+     },
+     {
+      "risk": 0.02,
+      "pass_rate": 0.1538,
+      "fail_max": 0.4356,
+      "fail_daily": 0.2567,
+      "still_open": 0.1538,
+      "median_days": 267.5,
+      "p25_days": 203.75,
+      "expected_days": 1739.3,
+      "max_dd": -0.6726,
+      "score": 0.5,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.154,
+        "points": 0.28
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.6726,
+       "pass_rate": 0.1538,
+       "fail_max": 0.4356,
+       "fail_daily": 0.2567,
+       "median_days": 267.5,
+       "still_open": 0.1538,
+       "expected_days": 1739.3
+      }
+     },
+     {
+      "risk": 0.025,
+      "pass_rate": 0.2247,
+      "fail_max": 0.4319,
+      "fail_daily": 0.3007,
+      "still_open": 0.0426,
+      "median_days": 169.0,
+      "p25_days": 86.0,
+      "expected_days": 752.1,
+      "max_dd": -0.8408,
+      "score": 0.7,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.225,
+        "points": 0.4
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -0.8408,
+       "pass_rate": 0.2247,
+       "fail_max": 0.4319,
+       "fail_daily": 0.3007,
+       "median_days": 169.0,
+       "still_open": 0.0426,
+       "expected_days": 752.1
+      }
+     },
+     {
+      "risk": 0.03,
+      "pass_rate": 0.2479,
+      "fail_max": 0.4069,
+      "fail_daily": 0.3031,
+      "still_open": 0.0422,
+      "median_days": 117.0,
+      "p25_days": 66.0,
+      "expected_days": 472.0,
+      "max_dd": -1.0089,
+      "score": 0.7,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.248,
+        "points": 0.45
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -1.0089,
+       "pass_rate": 0.2479,
+       "fail_max": 0.4069,
+       "fail_daily": 0.3031,
+       "median_days": 117.0,
+       "still_open": 0.0422,
+       "expected_days": 472.0
+      }
+     },
+     {
+      "risk": 0.04,
+      "pass_rate": 0.2711,
+      "fail_max": 0.1487,
+      "fail_daily": 0.5769,
+      "still_open": 0.0032,
+      "median_days": 90.0,
+      "p25_days": 54.0,
+      "expected_days": 332.0,
+      "max_dd": -1.3453,
+      "score": 0.7,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.271,
+        "points": 0.49
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -1.3453,
+       "pass_rate": 0.2711,
+       "fail_max": 0.1487,
+       "fail_daily": 0.5769,
+       "median_days": 90.0,
+       "still_open": 0.0032,
+       "expected_days": 332.0
+      }
+     },
+     {
+      "risk": 0.05,
+      "pass_rate": 0.2943,
+      "fail_max": 0.1284,
+      "fail_daily": 0.5741,
+      "still_open": 0.0032,
+      "median_days": 73.0,
+      "p25_days": 40.0,
+      "expected_days": 248.0,
+      "max_dd": -1.6816,
+      "score": 0.8,
+      "verdict": "Dead",
+      "components": [
+       {
+        "name": "speed",
+        "weight": 30,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "pass_rate",
+        "weight": 18,
+        "score": 0.294,
+        "points": 0.53
+       },
+       {
+        "name": "breach",
+        "weight": 12,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "drawdown",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       },
+       {
+        "name": "evidence",
+        "weight": 20,
+        "score": 0.129,
+        "points": 0.26
+       },
+       {
+        "name": "profit",
+        "weight": 10,
+        "score": 0.0,
+        "points": 0.0
+       }
+      ],
+      "evidence_capped": false,
+      "headline": {
+       "pf": 0.851,
+       "pf2x": 0.723,
+       "tpd": 0.509,
+       "trades": 1097,
+       "n_books": 4,
+       "tpd_per_book": 0.127,
+       "r_per_day": -0.0116,
+       "max_dd": -1.6816,
+       "pass_rate": 0.2943,
+       "fail_max": 0.1284,
+       "fail_daily": 0.5741,
+       "median_days": 73.0,
+       "still_open": 0.0032,
+       "expected_days": 248.0
+      }
+     }
+    ]
+   },
+   "grid": {
+    "title": "Best 12 configurations of 1,152, by profit factor at 2x cost",
+    "note": "<strong>0x</strong> is the diagnostic column: it says whether the residual reverts at all before the spread is paid. <strong>hedged</strong> trades the coin against a beta-weighted BTC leg and crosses two spreads; <strong>naked</strong> trades the coin alone and crosses one, keeping the BTC exposure.",
+    "cols": [
+     "PF 0x",
+     "PF 1x",
+     "PF 2x",
+     "trades/day"
+    ],
+    "label": "Configuration",
+    "rows": [
+     {
+      "label": "4h beta200 L16 z3.0 H2 naked",
+      "cols": [
+       1.18,
+       1.054,
+       0.94,
+       0.23
+      ],
+      "worst": 0.94,
+      "clears": false
+     },
+     {
+      "label": "4h beta50 L16 z3.0 H2 naked",
+      "cols": [
+       1.132,
+       1.015,
+       0.91,
+       0.22
+      ],
+      "worst": 0.91,
+      "clears": false
+     },
+     {
+      "label": "4h beta100 L16 z3.0 H2 naked",
+      "cols": [
+       1.126,
+       1.009,
+       0.904,
+       0.23
+      ],
+      "worst": 0.904,
+      "clears": false
+     },
+     {
+      "label": "4h beta200 L16 z2.5 H4 naked",
+      "cols": [
+       1.041,
+       0.949,
+       0.864,
+       0.25
+      ],
+      "worst": 0.864,
+      "clears": false
+     },
+     {
+      "label": "4h beta200 L16 z3.0 H4 naked",
+      "cols": [
+       1.016,
+       0.935,
+       0.861,
+       0.11
+      ],
+      "worst": 0.861,
+      "clears": false
+     },
+     {
+      "label": "4h beta200 L16 z2.5 H2 naked",
+      "cols": [
+       1.098,
+       0.966,
+       0.85,
+       0.49
+      ],
+      "worst": 0.85,
+      "clears": false
+     },
+     {
+      "label": "4h beta200 L16 z2.0 H4 naked",
+      "cols": [
+       1.021,
+       0.919,
+       0.826,
+       0.53
+      ],
+      "worst": 0.826,
+      "clears": false
+     },
+     {
+      "label": "4h beta200 L16 z1.5 H4 naked",
+      "cols": [
+       1.022,
+       0.911,
+       0.812,
+       1.03
+      ],
+      "worst": 0.812,
+      "clears": false
+     },
+     {
+      "label": "4h beta50 L16 z2.5 H2 naked",
+      "cols": [
+       1.04,
+       0.918,
+       0.809,
+       0.49
+      ],
+      "worst": 0.809,
+      "clears": false
+     },
+     {
+      "label": "4h beta100 L16 z3.0 H4 naked",
+      "cols": [
+       0.947,
+       0.874,
+       0.806,
+       0.11
+      ],
+      "worst": 0.806,
+      "clears": false
+     },
+     {
+      "label": "4h beta50 L16 z2.5 H4 naked",
+      "cols": [
+       0.947,
+       0.863,
+       0.787,
+       0.25
+      ],
+      "worst": 0.787,
+      "clears": false
+     },
+     {
+      "label": "4h beta50 L16 z3.0 H4 naked",
+      "cols": [
+       0.933,
+       0.857,
+       0.786,
+       0.11
+      ],
+      "worst": 0.786,
+      "clears": false
+     }
+    ]
+   },
+   "todo": [
+    {
+     "t": "Full grid, 1,152 configs \u00d7 6 panels",
+     "w": "4 timeframes \u00d7 3 beta windows \u00d7 4 lookbacks \u00d7 4 z thresholds \u00d7 3 holds \u00d7 hedged/naked.",
+     "done": true
+    },
+    {
+     "t": "Paired-shuffle null, 5 seeds",
+     "w": "The decisive test \u2014 a fade rule is easier to satisfy on shuffled data, which is what killed H-005.",
+     "done": true
+    },
+    {
+     "t": "Cost stress 0x/1x/2x/3x",
+     "w": "Hedged pays two round trips, naked pays one; both priced.",
+     "done": true
+    },
+    {
+     "t": "Walk-forward",
+     "w": "Quarterly, config re-chosen blind on 2x-cost train profit factor.",
+     "done": true
+    },
+    {
+     "t": "Two-step prop simulation",
+     "w": "core/riskladder.run_accounts_two_step \u2014 8% then 5%, the structure firms actually sell.",
+     "done": false
+    },
+    {
+     "t": "NautilusTrader cross-check",
+     "w": "Independent matching engine has not verified this kernel.",
      "done": false
     }
    ]

@@ -1,0 +1,31 @@
+real grid ...
+real: 1152 configs
+null seed 0 ...
+null seed 1 ...
+null seed 2 ...
+null seed 3 ...
+null seed 4 ...
+
+======================================================================
+BEFORE COSTS (0x) — is the residual reverting at all?
+  real  median 1.002   best 1.208   >1.0: 51.6%
+  null  median 1.005   best 1.832   >1.0: 55.4%
+
+configs clearing PF 1.2 at 2x cost
+  real          0 of 1152
+  null seed 0   2 of 1152
+  null seed 1   0 of 1152
+  null seed 2   0 of 1152
+  null seed 3   0 of 1152
+  null seed 4   0 of 1152
+  null mean 0.4
+
+best real PF@2x  0.940
+best null PF@2x  1.496
+median real PF   0.565   median null PF 0.693
+
+hedged vs unhedged (real, median):
+        pf_0x     pf  pf_2x    tpd
+hedged                            
+False   0.991  0.683  0.482  2.901
+True    1.021  0.358  0.142  2.901

@@ -1141,3 +1141,130 @@ factor of eleven at stage 1 justifies the compute.
 there as the thing that worked where breakout-retest failed. On this data, with a
 null benchmark the older work did not run, it does not reproduce. Treat the old
 result as unverified rather than as evidence.
+
+### H-007 Cross-sectional crypto ranking — rejected (2026-09-01)
+
+Requested by Kris and never started; `HANDOFF.md` predicted failure on the grounds
+that time-series momentum beats cross-sectional in crypto and that coins are too
+correlated. It failed, but not for that reason, and the way it failed is worth
+keeping.
+
+**The ranking carries real information.** Before costs, 95.0% of the 360 real
+configurations beat PF 1.0 against 59.4% of the paired-null ones, median 1.096
+against 1.009. That is a clean separation from the null — cleaner than H-003 or
+H-005 ever managed. The cross-sectional ordering of five coins is not noise.
+
+**The edge is worth about 10% on profit factor and a round trip costs more.**
+Median PF by cost level: 1.096 (0x) → 0.825 (1x) → 0.618 (2x). At 14bps round
+trip on a signal this weak, the only configurations that survive are the ones
+that amortise the cost over a long hold — and sure enough, all 23 cells clearing
+PF 1.20 at 2x are 1d bars held 7 days, 0.14 trades/day, time-to-target 400–875
+days against H-002's 25. Quarterly walk-forward stitched to PF 1.168, 1.063 at
+2x, under the gate, with the best of five null seeds at 1.065 — beating it.
+
+**The generalisable finding: this hypothesis was cost-limited, not signal-limited,
+and that is a different failure from every other rejected hypothesis in this
+repo.** H-001, H-003, H-004 and H-005 all failed because the signal did not beat
+its null. H-007 beats its null before costs and loses to the spread. Those two
+failures have different cures. A signal that loses to its null is dead. A signal
+that loses to costs gets better with a wider universe, because cross-sectional
+dispersion grows with the number of names ranked while the cost per trade does
+not — which is exactly why the published versions rank 500–7,000 names and not
+five.
+
+**What was not tested, and is the only open route:** a 50–100 coin universe.
+Five high-beta majors with pairwise correlation above 0.7 is not a cross-section;
+"top 1 vs bottom 1" of five names is closer to a coin-flip on dispersion than to
+the published mechanic, and the long-only variant is close to a leveraged bet on
+whichever alt is hottest. Testing it properly needs a data download, which
+`START_HERE.md` currently forbids. Recorded here as the decision point rather
+than taken unilaterally.
+
+Caveat on the null: the spread across five shuffle seeds was wide — 0, 1, 2, 9
+and 14 gate-clearing cells against the real 23. Read as a distribution, 23 is not
+the clean win the mean of 5.2 suggests.
+
+Code: `strategies/xsec/`. Results: `backtests/xsec/`. Notes:
+`strategies/xsec/notes.md`.
+
+### H-008 Beta-residual reversion — rejected at stage 1 (2026-09-01)
+
+Built to beat H-002, on the argument that VWAP mean reversion cannot distinguish
+a liquidity move from an informed one. Strip the BTC factor out of an alt, fade
+what is left, and you fade only the part of the move with no reason to persist.
+Four alts throwing signals is also more R per day than five single-asset legs,
+and `days = maxDD_in_R / R_per_day`.
+
+It failed as completely as anything in this repo. 1,152 configurations, **0 clear
+PF 1.20 at 2x cost**, and the paired-shuffle null beats the real data on every
+single cut — more configurations profitable before costs (55.4% vs 51.6%), higher
+median before costs (1.005 vs 1.002), higher best at 2x (1.496 vs 0.940), more
+gate-clearing cells (2 vs 0). This is the H-005 result exactly: a fade rule is
+*easier* to satisfy on phase-randomised data, because shuffled series revert
+around their extremes more readily than real trending ones. The risk was named in
+the kernel docstring before the run and it is what happened.
+
+**The diagnostic worth keeping is the z-response.** Median profit factor before
+any costs, by entry threshold: z≥1.5 → 1.000, z≥2.0 → 0.997, z≥2.5 → 1.006,
+z≥3.0 → 1.013. Flat. A three-sigma residual reverts no harder than a 1.5-sigma
+one. **The size of the deviation carries no information about what happens next.**
+
+That flat z-response is a cheap test and it should be run on every future
+reversion idea before anything else is built. It costs one grid and it answers
+the only question that matters — is there a mechanism — without any reference to
+costs, fills, position sizing or walk-forward discipline. Had it been run first
+here it would have killed H-008 in ten minutes.
+
+**The hedge is real and far too small.** Hedged median PF before costs is 1.021
+against naked 0.985, so removing BTC genuinely does leave a more mean-reverting
+series. It is a 3.6% effect, and hedging crosses two spreads instead of one, so
+after costs the hedged variant is the worse of the two (0.142 vs 0.482 at 2x).
+
+**Taken with H-007, this closes a family.** H-007 ranked the majors and traded
+the spread; H-008 hedged out the factor and faded the residual — continuation and
+reversion on the same relative structure, in opposite directions. H-007 found a
+real but tiny edge, beaten by a 14bps round trip. H-008 found nothing. Between
+them they say **the relative structure of the crypto majors is not tradeable at
+retail cost**, and that should not be reopened without either a much wider
+universe or a much cheaper venue.
+
+Note what this does NOT contradict. The repo's standing pattern is that every leg
+that ever worked came from a data feed — funding, open interest, taker delta,
+long/short ratio — and not from a price pattern. H-007 and H-008 are both derived
+from price. They are the fourth and fifth price-derived hypotheses to fail here,
+against zero successes. The order-flow hypothesis (H-006) is still the best
+untested mechanism in the project and its recorder is now finally on cron.
+
+Code: `strategies/resid/`. Results: `backtests/resid/`. Notes:
+`strategies/resid/notes.md`.
+
+### Prop-firm structure: two-step, and what it costs (2026-09-01)
+
+`core/prop_rules.py` modelled a single 8% step. HANDOFF flagged that most
+no-time-limit firms are two-step (8% then 5%). `core/riskladder.run_accounts_two_step`
+now models the real structure: phase 2 starts the day after phase 1 clears, on
+the same live series, with a fresh equity, peak and drawdown budget, and a breach
+in either phase kills the account outright.
+
+H-002's board book, 5 legs, 2024-09 → 2026-08:
+
+| risk | one-step pass | one-step days | two-step pass | two-step days |
+|---|---|---|---|---|
+| 1.000% | 85.5% | 57.3 | 81.7% | 113.8 |
+| 1.500% | 89.8% | 36.7 | 85.2% | 74.0 |
+| 2.000% | 93.1% | 23.6 | 88.0% | 53.4 |
+| 2.125% | 93.9% | 21.3 | 88.3% | **49.8** |
+| 2.500% | 94.8% | 19.0 | 89.2% | 43.7 |
+
+**Two-step roughly doubles time-to-funded.** The second 5% step is not half the
+work of the first 8% one — it is a whole second chance to breach, and the
+drawdown has to be survived twice. The board's headline "24 expected days" was a
+one-step number and should be read as ~50.
+
+Firm choice: **two-step on cTrader**. `CLAUDE.md` prefers cTrader outright
+(Open API is real REST/WebSocket; MT5 is GUI-only with a Windows-only Python
+package), this box is Linux with no working MT5 bridge, and cTrader carries both
+crypto and XAUUSD — so it is the one choice that unblocks the whole book rather
+than half of it. The exact percentages, minimum trading days and consistency
+rules are NOT verified against any specific firm's current spec and must be
+confirmed before money moves; what is modelled here is the structure.
