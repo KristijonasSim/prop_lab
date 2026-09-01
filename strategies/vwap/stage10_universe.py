@@ -24,7 +24,8 @@ sys.path.insert(0, str(ROOT))
 from core import data as crypto_data                               # noqa: E402
 from core import fx_data                                           # noqa: E402
 from strategies.vwap.stage1_grid import ASSETS, OUT                # noqa: E402
-from strategies.vwap.stage3_timeframes import TFS, build_grid      # noqa: E402
+from strategies.vwap.stage3_timeframes import (TFS, build_grid,       # noqa: E402
+                                               shuffle_market_paired)
 from strategies.vwap.stage6_walkforward import (_slice_with_pad, _run, _pf,  # noqa: E402
                                                 TRAIN_MONTHS, TEST_MONTHS,
                                                 FLOORS, TOPN, CFGKEY)
@@ -51,13 +52,17 @@ def load_tf(sym, tf):
     return fx_data.load(sym, rule)
 
 
-def walk(sym, tf):
+def walk(sym, tf, shuffled=False):
     try:
         df = load_tf(sym, tf)
     except Exception:
         return [], []
     if len(df) < 5000:
         return [], []
+    if shuffled:
+        # paired: each bar keeps its own volume, so the participation filters in
+        # the grid cannot beat the null just by having a volume/return link
+        df = shuffle_market_paired(df, seed=abs(hash((sym, tf, "s10"))) % 2**31)
     fee, slip, minrisk = COSTS[sym]
     bph = TFS[tf][1]
     cfgs = build_grid(bph)
@@ -141,8 +146,10 @@ def _job(a):
 
 
 def main():
+    shuffled = "--shuffled-paired" in sys.argv
+    tag = "_shuffled_paired" if shuffled else ""
     syms = list(ASSETS) + ["ETHUSDT", "SOLUSDT", "XAGUSD"]
-    combos = [(s, tf) for s in syms for tf in TFS
+    combos = [(s, tf, shuffled) for s in syms for tf in TFS
               if not (s in CRYPTO and tf == "5m")]
     print(f"{len(combos)} combinations", flush=True)
     F, T = [], []
@@ -150,9 +157,9 @@ def main():
         futs = [ex.submit(_job, c) for c in combos]
         for fu in as_completed(futs):
             f, t = fu.result(); F.extend(f); T.extend(t)
-    fdf = pd.DataFrame(F); fdf.to_parquet(OUT / "stage10_folds.parquet", index=False)
+    fdf = pd.DataFrame(F); fdf.to_parquet(OUT / f"stage10_folds{tag}.parquet", index=False)
     tdf = pd.concat(T, ignore_index=True) if T else pd.DataFrame()
-    tdf.to_parquet(OUT / "stage10_trades.parquet", index=False)
+    tdf.to_parquet(OUT / f"stage10_trades{tag}.parquet", index=False)
     rows = []
     for (s, tf, fl, tn), g in tdf.groupby(["symbol", "tf", "floor", "topn"]):
         g = g.sort_values("exit_ts")
@@ -164,7 +171,7 @@ def main():
                      "pf_2x": round(_pf(g.r_2x.values), 3),
                      "tpd": round(len(g) / max(sp, 1e-9), 3)})
     st = pd.DataFrame(rows).sort_values("pf_2x", ascending=False)
-    st.to_csv(OUT / "stage10_stitched.csv", index=False)
+    st.to_csv(OUT / f"stage10_stitched{tag}.csv", index=False)
     print(st.head(25).to_string(index=False))
     p = st.pivot_table(index=["symbol", "tf"], columns=["floor", "topn"], values="pf_2x")
     print(f"\ncombos clearing 1.20 AT 2x under all four rules: "

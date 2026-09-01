@@ -275,6 +275,76 @@ the real figure on blind-chosen configs is 7,819.
 
 Rebuild either locally with `.venv/bin/python strategies/<orb|vwap>/build_report.py`.
 
+### STATE AT HANDOFF — 2026-09-01 evening
+
+Read this first; it supersedes the older "next job" section below.
+
+**The board is the entry point**: <https://claude.ai/code/artifact/f9ac29b6-5251-4510-81d9-ef3d5b7dd3d3>
+Rebuild it with `.venv/bin/python core/build_scoreboard.py`. It reads whatever
+`backtests/*/board.json` files exist and has no per-strategy code in it.
+
+| ID | hypothesis | score | state |
+|---|---|---|---|
+| H-002 | VWAP | **8.5** | the only survivor. Beats a paired-shuffle null 6 combos to 0 |
+| H-003 | EMA x VWAP cross | 4.0 | rejected, loses to its own null |
+| H-005 | Liquidity sweep fade | 4.0 | rejected, null clears the gate 19,062 times to 1,702 |
+| H-001 | ORB | 2.4 | rejected |
+| H-004 | Funding fade | — | tested, rejected, code deleted at Kris's request. Finding in `RESEARCH_LOG.md` |
+
+**Work in flight when this was written:**
+
+1. **`stage10_universe.py --shuffled-paired` was still running.** Stage 10 widened
+   the H-002 universe to twelve markets (added ETHUSDT, SOLUSDT, XAGUSD) and found
+   **8 combinations clearing PF 1.20 at 2x cost under all four selection rules**,
+   up from 6 — and **ETH is stronger than BTC** (ETHUSDT 1h worst-of-four 1.825 at
+   2x; best cell PF 2.835, 2.232 at 2x, 24 of 26 quarters positive). That result is
+   NOT yet on the board because its null had not finished. **Finish that run, check
+   the margin, then rebuild the board.** Do not put stage 10 on the board until the
+   null is in — comparing a new result against an old null is the exact mistake
+   this repo has already made once.
+2. **`core/feed_collector.py` is running** and should stay running. It records open
+   interest and taker buy/sell delta, which Binance only serves for ~2 days. There
+   is no way to recover missed hours. Cron line:
+   `*/15 * * * * .venv/bin/python core/feed_collector.py --once >> data/feeds/collector.log 2>&1`
+   Around 2026-10 there will be enough to test an order-flow hypothesis (H-006).
+3. **Cross-sectional crypto ranking was requested and not started.** Note the
+   research argues against it: time-series momentum beats cross-sectional in
+   crypto, and cross-sectional carries ~55% drawdowns because coins are too
+   correlated. Test it anyway — Kris asked — but expect it to fail.
+
+**Two firm-level findings that change the goalposts:**
+
+* Prop firms with **no time limit** are now standard (FundedNext, Crypto Fund
+  Trader, FundingPips, Bitfunded). The ~14-day phase constraint in `CLAUDE.md` is
+  self-imposed, not a firm rule. H-002 at ~50 days with 85% pass and 0% breach is
+  a viable business if the firm has no deadline.
+* Most are **two-step** (8% then 5%), while `core/prop_rules.py` models one step
+  at 8%. That needs updating once a firm is chosen.
+
+**Blocker for going live**: two of H-002's legs are XAUUSD and this box has no
+working MT5 bridge, so `live/paper_trade.py` runs gold in signal-only mode off
+cached data. Half the book cannot be paper-traded until that bridge exists.
+
+**Method rules added today — do not regress on these:**
+
+* **Use the paired null** (`shuffle_market_paired`). The original null permuted
+  volume independently of returns, destroying a +0.47 correlation and handing
+  every participation filter a free win.
+* **Select configurations on 2x-cost profit factor inside the fold**, not on 1x
+  with a 2x check afterwards. Selecting on 1x let four legs into the book that
+  collapse at 2x.
+* **One shuffle seed is a sample of size one.** Read the null as a distribution.
+* **Trades per day is not a plan.** A "top 10 configs x 6 legs" book is 60
+  parallel strategies. Report R earned per day, which is what sets time to pass:
+  `days = maxDD_in_R / R_per_day x (target / cap)`.
+* **Everything goes on the board as soon as it exists, pass or fail.** A rejected
+  hypothesis that is invisible is not part of the denominator.
+
+`core/verify_board.py` recomputes every headline number from the raw trade file
+importing nothing from the pipeline — hand it to anyone who wants to audit this.
+
+---
+
 ### The next job, concretely (rewritten 2026-09-01 — the walk-forward is done)
 
 The walk-forward, the null benchmark on it, and the prop simulation on its output
