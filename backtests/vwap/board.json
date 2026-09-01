@@ -1,0 +1,371 @@
+{
+ "id": "vwap",
+ "hid": "H-002",
+ "name": "VWAP",
+ "tagline": "Five model families around the volume-weighted average price.",
+ "period": "FX & metals 2023-09 -> 2026-08 \u00b7 BTC from 2017",
+ "report": "https://claude.ai/code/artifact/cb748842-7d3b-45f7-9d69-827e00ba82f4",
+ "candidate": "BTCUSDT 30m + BTCUSDT 4h + XAUUSD 30m + XAUUSD 5m, equal weight, configs chosen by 2x-cost train PF each quarter",
+ "fields": {
+  "pf": 1.646,
+  "trades": 1053,
+  "trades_per_day": 1.58,
+  "trades_per_week": 11.06,
+  "avg_hold_h": 8.28,
+  "win_rate": 0.3903,
+  "avg_r": 0.0927,
+  "total_r": 97.59,
+  "max_dd_r": -7.57,
+  "sharpe": 2.425,
+  "n_books": 4,
+  "tpd_per_book": 0.395,
+  "r_per_day": 0.1465
+ },
+ "pf_2x": 1.313,
+ "measured": {
+  "wf_pf": 1.646,
+  "wf_pf_2x": 1.313,
+  "null_margin": 1.0,
+  "beats_null": true,
+  "consistency": 0.8929,
+  "pf": 1.646,
+  "sharpe": 2.425
+ },
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.7541,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.2459,
+   "median_days": 163.0,
+   "p25_days": 128.0,
+   "expected_days": 216.2,
+   "max_dd": -0.0189
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.8486,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.1514,
+   "median_days": 92.0,
+   "p25_days": 54.25,
+   "expected_days": 108.4,
+   "max_dd": -0.0379
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.8516,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.1484,
+   "median_days": 61.0,
+   "p25_days": 34.0,
+   "expected_days": 71.6,
+   "max_dd": -0.0568
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.8576,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.1424,
+   "median_days": 45.0,
+   "p25_days": 27.0,
+   "expected_days": 52.5,
+   "max_dd": -0.0757
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.8051,
+   "fail_max": 0.1424,
+   "fail_daily": 0.0,
+   "still_open": 0.0525,
+   "median_days": 37.0,
+   "p25_days": 22.0,
+   "expected_days": 46.0,
+   "max_dd": -0.0947
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.7736,
+   "fail_max": 0.1754,
+   "fail_daily": 0.0,
+   "still_open": 0.051,
+   "median_days": 31.0,
+   "p25_days": 19.0,
+   "expected_days": 40.1,
+   "max_dd": -0.1136
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.7076,
+   "fail_max": 0.1949,
+   "fail_daily": 0.0465,
+   "still_open": 0.051,
+   "median_days": 23.0,
+   "p25_days": 13.0,
+   "expected_days": 32.5,
+   "max_dd": -0.1326
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.6927,
+   "fail_max": 0.2159,
+   "fail_daily": 0.042,
+   "still_open": 0.0495,
+   "median_days": 19.0,
+   "p25_days": 10.0,
+   "expected_days": 27.4,
+   "max_dd": -0.1515
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.7031,
+   "fail_max": 0.2159,
+   "fail_daily": 0.042,
+   "still_open": 0.039,
+   "median_days": 15.0,
+   "p25_days": 9.0,
+   "expected_days": 21.3,
+   "max_dd": -0.1894
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.6762,
+   "fail_max": 0.1844,
+   "fail_daily": 0.1019,
+   "still_open": 0.0375,
+   "median_days": 13.0,
+   "p25_days": 8.0,
+   "expected_days": 19.2,
+   "max_dd": -0.2272
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.6162,
+   "fail_max": 0.1469,
+   "fail_daily": 0.2024,
+   "still_open": 0.0345,
+   "median_days": 12.0,
+   "p25_days": 8.0,
+   "expected_days": 19.5,
+   "max_dd": -0.303
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.4813,
+   "fail_max": 0.0915,
+   "fail_daily": 0.4003,
+   "still_open": 0.027,
+   "median_days": 10.0,
+   "p25_days": 7.0,
+   "expected_days": 20.8,
+   "max_dd": -0.3787
+  }
+ ],
+ "pick": {
+  "risk": 0.01,
+  "pass_rate": 0.8576,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 0.1424,
+  "median_days": 45.0,
+  "p25_days": 27.0,
+  "expected_days": 52.5,
+  "max_dd": -0.0757
+ },
+ "grid": {
+  "title": "2x-cost selector on the current VWAP candidate set",
+  "note": "Each fold chooses the best configuration by train profit factor at double cost, then trades the next quarter blind. The board candidate is the fastest tradeable subset that still clears PF 1.20 at 2x.",
+  "cols": [
+   "floor 30 / best",
+   "floor 30 / top 10",
+   "floor 100 / best",
+   "floor 100 / top 10"
+  ],
+  "label": "Market",
+  "rows": [
+   {
+    "label": "BTCUSDT 15m",
+    "cols": [
+     1.494,
+     1.474,
+     1.623,
+     1.685
+    ],
+    "worst": 1.474,
+    "pf2x": [
+     1.08,
+     1.092,
+     1.179,
+     1.237
+    ],
+    "clears": true
+   },
+   {
+    "label": "BTCUSDT 1h",
+    "cols": [
+     1.728,
+     1.858,
+     2.059,
+     2.022
+    ],
+    "worst": 1.728,
+    "pf2x": [
+     1.362,
+     1.437,
+     1.554,
+     1.569
+    ],
+    "clears": true
+   },
+   {
+    "label": "BTCUSDT 30m",
+    "cols": [
+     1.747,
+     1.848,
+     1.946,
+     2.026
+    ],
+    "worst": 1.747,
+    "pf2x": [
+     1.302,
+     1.386,
+     1.452,
+     1.51
+    ],
+    "clears": true
+   },
+   {
+    "label": "BTCUSDT 4h",
+    "cols": [
+     2.789,
+     2.391,
+     1.621,
+     1.483
+    ],
+    "worst": 1.483,
+    "pf2x": [
+     2.346,
+     2.025,
+     1.364,
+     1.258
+    ],
+    "clears": true
+   },
+   {
+    "label": "XAGUSD 15m",
+    "cols": [
+     1.049,
+     0.893,
+     1.153,
+     0.832
+    ],
+    "worst": 0.832,
+    "pf2x": [
+     0.953,
+     0.801,
+     1.026,
+     0.74
+    ],
+    "clears": false
+   },
+   {
+    "label": "XAGUSD 1h",
+    "cols": [
+     1.613,
+     1.45,
+     1.412,
+     0.974
+    ],
+    "worst": 0.974,
+    "pf2x": [
+     1.411,
+     1.296,
+     1.173,
+     0.831
+    ],
+    "clears": false
+   },
+   {
+    "label": "XAUUSD 30m",
+    "cols": [
+     1.312,
+     1.236,
+     1.645,
+     1.436
+    ],
+    "worst": 1.236,
+    "pf2x": [
+     1.04,
+     1.012,
+     1.33,
+     1.189
+    ],
+    "clears": true
+   },
+   {
+    "label": "XAUUSD 5m",
+    "cols": [
+     1.642,
+     1.723,
+     1.686,
+     1.728
+    ],
+    "worst": 1.642,
+    "pf2x": [
+     1.426,
+     1.507,
+     1.502,
+     1.533
+    ],
+    "clears": true
+   }
+  ]
+ },
+ "todo": [
+  {
+   "t": "Fill realism",
+   "w": "Whether the result needs a limit fill nobody can guarantee.",
+   "done": true
+  },
+  {
+   "t": "Cost stress to 2x and 3x",
+   "w": "Whether the edge is bigger than the spread difference between an ECN and a prop firm.",
+   "done": true
+  },
+  {
+   "t": "Null benchmark",
+   "w": "Whether the profit factor beats what the same search finds in data with no edge in it.",
+   "done": true
+  },
+  {
+   "t": "Walk-forward",
+   "w": "Chosen blind every quarter. The 2x-cost selector is a targeted refinement, not a new family.",
+   "done": true
+  },
+  {
+   "t": "Paired-volume null",
+   "w": "Same 2x selector on shuffled return/volume pairs: 0 robust survivors.",
+   "done": true
+  },
+  {
+   "t": "Prop challenge on walk-forward output",
+   "w": "Pass and breach rates across the full risk ladder, on blind-chosen configs.",
+   "done": true
+  },
+  {
+   "t": "NautilusTrader cross-check",
+   "w": "Whether an independent matching engine agrees with the kernel.",
+   "done": false
+  },
+  {
+   "t": "Silver (XAGUSD)",
+   "w": "Tested on 15m and 1h in the 2x selector; no robust survivor.",
+   "done": true
+  }
+ ],
+ "note": null
+}

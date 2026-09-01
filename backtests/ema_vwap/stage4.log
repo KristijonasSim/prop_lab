@@ -1,0 +1,69 @@
+  BTCUSDT  4h   [8s]
+  XAUUSD   1h   [11s]
+  XAUUSD   4h   [13s]
+  BTCUSDT  1h   [13s]
+  XAUUSD   30m  [17s]
+  EURUSD   4h   [8s]
+  XAUUSD   15m  [23s]
+  BTCUSDT  30m  [24s]
+  EURUSD   1h   [12s]
+  EURUSD   30m  [18s]
+  GBPUSD   4h   [8s]
+  GBPUSD   1h   [13s]
+  GBPUSD   30m  [17s]
+  EURUSD   15m  [33s]
+  BTCUSDT  15m  [47s]
+  GBPUSD   15m  [26s]
+  USDJPY   30m  [15s]
+  USDJPY   4h   [10s]
+  EURUSD   5m   [61s]
+  USDJPY   15m  [23s]
+  USDJPY   1h   [20s]
+  GBPUSD   5m   [55s]
+  XAUUSD   5m   [76s]
+  AUDUSD   30m  [19s]
+  AUDUSD   4h   [8s]
+  EURUSD   3m   [84s]
+  XAUUSD   3m   [85s]
+  AUDUSD   1h   [19s]
+  AUDUSD   15m  [32s]
+  USDCAD   4h   [8s]
+  USDJPY   5m   [57s]
+  USDCAD   1h   [13s]
+  USDCAD   30m  [17s]
+  USDCAD   15m  [24s]
+  GBPUSD   3m   [91s]
+  USDCHF   1h   [12s]
+  USDCHF   4h   [8s]
+  USDCHF   30m  [18s]
+  USDCHF   15m  [22s]
+  USDJPY   3m   [85s]
+  AUDUSD   5m   [69s]
+  NZDUSD   30m  [15s]
+  NZDUSD   4h   [10s]
+  NZDUSD   1h   [15s]
+  NZDUSD   15m  [22s]
+  USDCAD   5m   [58s]
+  USDCHF   5m   [50s]
+  AUDUSD   3m   [93s]
+  NZDUSD   5m   [48s]
+  USDCHF   3m   [72s]
+  USDCAD   3m   [90s]
+  NZDUSD   3m   [66s]
+
+=== H-003 EMA x VWAP: paired lift on the median ===
+          lever  paired  median_off  median_on    lift  improved  best_on  kept
+   rvol1.5 + NY   13204       0.691      0.769  0.0780    0.6774    3.944 0.701
+       rvol>1.5   15399       0.700      0.776  0.0760    0.7171    3.065 0.817
+      rvol>1.25   16339       0.704      0.777  0.0730    0.7226    3.586 0.867
+       rvol>2.5   10808       0.681      0.754  0.0725    0.6705    2.914 0.574
+       rvol>1.0   16751       0.705      0.776  0.0710    0.7460    3.201 0.889
+       rvol>2.0   13585       0.693      0.761  0.0680    0.6863    3.541 0.721
+  NY open 13-17   13702       0.694      0.755  0.0610    0.6646    6.147 0.727
+   London 07-16   15804       0.708      0.754  0.0460    0.6594    3.516 0.839
+      long only   17309       0.707      0.720  0.0130    0.5527    6.579 0.919
+       NY 13-20   14953       0.698      0.704  0.0060    0.5874    6.328 0.794
+Asia only 00-07   17015       0.704      0.707  0.0030    0.5210    4.094 0.903
+           base   18840       0.711      0.711  0.0000    0.0000    2.960 1.000
+  no Asia 07-22   16639       0.708      0.702 -0.0060    0.5364    3.300 0.883
+     short only   17203       0.707      0.684 -0.0230    0.4417    2.070 0.913

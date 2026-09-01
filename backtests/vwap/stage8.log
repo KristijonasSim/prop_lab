@@ -1,0 +1,64 @@
+  XAUUSD   4h   [8s]
+  BTCUSDT  4h   [11s]
+  XAUUSD   1h   [12s]
+  BTCUSDT  1h   [13s]
+  EURUSD   30m  [21s]
+  EURUSD   4h   [11s]
+  EURUSD   1h   [14s]
+  BTCUSDT  30m  [26s]
+  GBPUSD   4h   [7s]
+  EURUSD   15m  [30s]
+  XAUUSD   15m  [30s]
+  XAUUSD   30m  [31s]
+  BTCUSDT  15m  [31s]
+  GBPUSD   30m  [19s]
+  GBPUSD   1h   [19s]
+  USDJPY   4h   [11s]
+  USDJPY   1h   [13s]
+  GBPUSD   15m  [31s]
+  AUDUSD   4h   [8s]
+  USDJPY   30m  [26s]
+  XAUUSD   5m   [62s]
+  AUDUSD   1h   [21s]
+  USDJPY   15m  [34s]
+  EURUSD   5m   [67s]
+  AUDUSD   15m  [29s]
+  USDCAD   4h   [8s]
+  USDCAD   1h   [12s]
+  AUDUSD   30m  [36s]
+  USDCAD   30m  [23s]
+  USDCHF   4h   [7s]
+  USDCAD   15m  [33s]
+  USDCHF   1h   [15s]
+  GBPUSD   5m   [75s]
+  USDCHF   30m  [22s]
+  AUDUSD   5m   [60s]
+  NZDUSD   4h   [7s]
+  NZDUSD   1h   [12s]
+  NZDUSD   30m  [20s]
+  USDCHF   15m  [36s]
+  USDJPY   5m   [80s]
+  NZDUSD   15m  [28s]
+  USDCAD   5m   [67s]
+  USDCHF   5m   [55s]
+  NZDUSD   5m   [51s]
+
+=== H-002 VWAP: paired lift on the median ===
+                lever  paired  median_off  median_on    lift  improved  best_on  kept
+             rvol>2.5   13174       0.644      0.686  0.0420    0.5341    4.323 0.853
+             rvol>2.0   14056       0.642      0.671  0.0290    0.4655    4.334 0.910
+rvol2.5 + EMA against   11803       0.648      0.666  0.0180    0.5462    4.054 0.764
+         rvol1.5 + NY   13003       0.648      0.666  0.0180    0.4984    3.975 0.842
+             rvol>1.5   14642       0.642      0.659  0.0170    0.4312    5.903 0.948
+            rvol>1.25   14961       0.640      0.653  0.0130    0.4692    4.929 0.969
+             NY 13-20   13914       0.642      0.650  0.0080    0.4990    4.676 0.901
+             rvol>1.0   15223       0.639      0.646  0.0070    0.4642    4.546 0.986
+         London 07-16   14102       0.641      0.647  0.0060    0.4983    4.465 0.913
+        NY open 13-17   13524       0.646      0.651  0.0045    0.4874    5.719 0.876
+        no Asia 07-22   15142       0.638      0.640  0.0020    0.4507    4.334 0.980
+                 base   15444       0.638      0.638  0.0000    0.0000    4.334 1.000
+           short only   15039       0.637      0.632 -0.0050    0.5151    5.507 0.974
+     EMA against VWAP   14966       0.637      0.630 -0.0070    0.4616    3.088 0.969
+      Asia only 00-07   12273       0.621      0.611 -0.0100    0.4893    4.947 0.795
+        EMA with VWAP   14853       0.636      0.624 -0.0120    0.4560    2.460 0.962
+            long only   15003       0.637      0.617 -0.0200    0.4067    3.301 0.971

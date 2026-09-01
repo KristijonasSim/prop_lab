@@ -50,6 +50,17 @@ def simulate(
     min_atr_rank,
     max_atr_rank,
     dir_mode,            # 0 both, 1 long only, 2 short only
+    ema,                 # EMA of close, for the regime filter below
+    ema_regime,          # 0 off; 1 = only trade with EMA on the same side of
+                         # VWAP as the trade; 2 = only against it.
+                         # This is H-003's mechanic used the way the literature
+                         # actually uses it - as confirmation, not as a trigger.
+                         # H-003 tested only the trigger form and it failed.
+    hour,                # UTC hour of each bar
+    hour_lo, hour_hi,    # trade only inside [lo, hi). lo == hi disables it.
+                         # H-001 established the NY cash open as the only anchor
+                         # that carries anything and Asia as the worst region;
+                         # this is the axis that tests whether that transfers.
     fee_bps,
     slip_bps,
     min_risk_bps,
@@ -186,6 +197,25 @@ def simulate(
                 continue
 
             # ---------------- filters ----------------
+            if ema_regime != 0:
+                e = ema[entry_i]
+                if e <= 0.0:
+                    i += 1
+                    continue
+                with_trend = (e > v) if side == 1 else (e < v)
+                if ema_regime == 1 and not with_trend:
+                    i += 1
+                    continue
+                if ema_regime == 2 and with_trend:
+                    i += 1
+                    continue
+            if hour_lo != hour_hi:
+                hh = hour[entry_i]
+                inside = (hour_lo <= hh < hour_hi) if hour_lo < hour_hi \
+                    else (hh >= hour_lo or hh < hour_hi)      # window wraps midnight
+                if not inside:
+                    i += 1
+                    continue
             if min_rvol > 0.0 and rvol[entry_i] < min_rvol:
                 i += 1
                 continue

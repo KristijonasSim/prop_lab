@@ -64,7 +64,8 @@ def rolling_vwap(df: pd.DataFrame, window: int):
     return vwap.values, vwstd.values, ss
 
 
-def features(df: pd.DataFrame, atr_len: int = 14, rvol_len: int = 20 * 96):
+def features(df: pd.DataFrame, atr_len: int = 14, rvol_len: int = 20 * 96,
+             ema_len: int = 200):
     h, l, c, v = df.high.values, df.low.values, df.close.values, df.volume.values
     pc = np.roll(c, 1); pc[0] = c[0]
     tr = np.maximum(h - l, np.maximum(np.abs(h - pc), np.abs(l - pc)))
@@ -77,17 +78,19 @@ def features(df: pd.DataFrame, atr_len: int = 14, rvol_len: int = 20 * 96):
     atr_rank = (pd.Series(atr, index=df.index)
                 .rolling(96 * 60, min_periods=96 * 5)
                 .rank(pct=True).shift(1).fillna(0.5).values)
-    return atr, rvol, atr_rank
+    ema = pd.Series(c).ewm(span=ema_len, adjust=False).mean().values
+    return atr, rvol, atr_rank, ema
 
 
 DEFAULTS = dict(mode=0, fill_mode=1, band_k=2.0, stop_mode=0, stop_k=1.0,
                 target_mode=0, rr=0.0, max_hold_bars=0, warmup_bars=8,
                 one_trade=0, min_rvol=0.0, min_atr_rank=0.0, max_atr_rank=0.0,
-                dir_mode=0, min_risk_bps=2.0, anchor_hour=0, anchor_minute=0)
+                dir_mode=0, min_risk_bps=2.0, anchor_hour=0, anchor_minute=0,
+                hour_lo=0, hour_hi=0, ema_regime=0)
 
 
 def run_one(df, feats, vw_cache, cfg, fee_bps, slip_bps) -> np.ndarray:
-    atr, rvol, atr_rank = feats
+    atr, rvol, atr_rank, ema = feats
     key = (int(cfg["anchor_hour"]), int(cfg["anchor_minute"]))
     if key not in vw_cache:
         # anchor_hour == -1 selects the rolling window, sized by anchor_minute
@@ -102,6 +105,9 @@ def run_one(df, feats, vw_cache, cfg, fee_bps, slip_bps) -> np.ndarray:
         float(cfg["rr"]), int(cfg["max_hold_bars"]), int(cfg["warmup_bars"]),
         int(cfg["one_trade"]), float(cfg["min_rvol"]), float(cfg["min_atr_rank"]),
         float(cfg["max_atr_rank"]), int(cfg["dir_mode"]),
+        ema, int(cfg.get("ema_regime", 0)),
+        df.index.hour.values.astype(np.int64),
+        int(cfg.get("hour_lo", 0)), int(cfg.get("hour_hi", 0)),
         float(fee_bps), float(slip_bps), float(cfg["min_risk_bps"]),
     )
 

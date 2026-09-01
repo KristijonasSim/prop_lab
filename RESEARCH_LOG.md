@@ -471,3 +471,673 @@ does not launder the selection.
 
 Silver (XAGUSD) was requested for a gold/silver pair and is still downloading; the best
 metal+crypto book found so far is BTCUSDT 1h + XAUUSD 1h + NZDUSD 4h + USDCAD 1h.
+
+### Stage 6 — walk-forward (2026-09-01)
+
+The test every H-002 number was waiting on. Quarterly folds, train on the trailing
+12 months, trade the next 3, roll. The configuration is chosen on the train slice
+only and re-chosen every fold, never carried forward. **The filter is re-chosen
+inside the fold too** — the H-002 filter set came from a study on overlapping
+data, so holding it fixed would have left that selection bias in.
+
+Two choices the ORB walk-forward did not have to make, both run rather than
+picked in advance:
+
+* **Trade-count floor.** ORB used 100 train trades. H-002's strongest
+  configurations trade 0.09-0.28 times a day, so a 100-trade floor over twelve
+  months excludes exactly what stage 3 found. Floors of 30 and 100 both run.
+* **Single best vs top ten.** Taking the highest train profit factor is the
+  highest-variance possible choice; trading the top ten equally weighted is the
+  same information with the selection noise averaged down.
+
+44 market x timeframe combinations x 4 selection rules = **176 stitched
+out-of-sample series**.
+
+#### The family result
+
+| | median PF | best | cells >=1.20 | share >1.0 | combos clearing 1.20 under all 4 rules |
+|---|---|---|---|---|---|
+| real | **0.909** | 1.832 | 41/176 | 36.4% | **4** / 44 |
+| phase-randomised | 0.756 | **2.496** | 6/176 | 11.4% | 1 / 44 |
+
+**H-002 does not survive walk-forward as a family.** The median stitched series
+loses money and only a third are above breakeven. That is the honest headline and
+it is the same shape as ORB, just less severe.
+
+The null benchmark says the survivors are not purely search noise: 41 cells clear
+the gate against 6 shuffled, and 4 combinations clear under every selection rule
+against 1 shuffled. But note the shuffled maximum — **2.496, higher than the real
+maximum of 1.832**, and produced by a combination (XAUUSD 1h) that cleared 1.20
+under all four rules on randomised data. A high walk-forward profit factor is
+still not proof on its own. The count above the null is the statistic; the
+headline is not.
+
+#### The two legs that hold up
+
+Of the four combinations clearing under all four rules, two lose money on the
+recent window and are dropped:
+
+| leg | quarters | PF | PF 2x | quarters >1 | R since 2024-09 | keep? |
+|---|---|---|---|---|---|---|
+| BTCUSDT 4h | 30 | 1.502 | 1.239 | 23/30 | +42.7 | yes |
+| XAUUSD 5m | 7 | 1.669 | 1.466 | 6/7 | +105.6 | yes |
+| BTCUSDT 30m | 30 | 1.387 | 1.006 | 19/30 | **-34.2** | no |
+| BTCUSDT 1h | 30 | 1.229 | 1.005 | 19/30 | **-47.8** | no |
+
+BTC 30m and 1h clear the gate over thirty quarters purely on pre-2024 performance.
+That is worth stating plainly: **a walk-forward that passes over a long span can
+still be describing a regime that has ended.** Splitting the stitched series by
+recency is now part of the method.
+
+**BTCUSDT 4h is the strongest result the project has produced.** Profit factor by
+calendar year, config chosen blind every quarter:
+
+| 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|
+| 2.091 | 1.473 | 1.175 | 1.099 | 1.612 | 1.549 | 1.954 | 1.554 |
+
+Positive in every year, through two bull markets and a bear market. 895 trades,
+1.239 at 2x cost, 97th percentile of the null distribution, and its own shuffled
+twin scores 0.797-0.845.
+
+**The filter the fold picked was `rvol>1.5` in 22 of 30 folds.** Nothing forced
+that; the selection was free to choose any of five filters or none. This is the
+third independent time in two repos that a participation measure is the only
+filter family that carries anything.
+
+#### What it still fails
+
+| field | BTC 4h alone | two-leg book (BTC 4h + gold 5m), 2024-09+ |
+|---|---|---|
+| PF 1x / 2x | 1.502 / 1.239 | 1.435 / 1.218 |
+| trades/day | 0.33 | 0.65 |
+| avg hold | 4.6h | — |
+| win rate | 45.4% | — |
+| avg R | +0.170 | — |
+| max DD at 0.75% risk | **-28.9%** | **-5.6%** |
+| Sharpe | 0.98 | 1.53 |
+| **days to target** | **121.7** | **128** |
+| prop pass rate @0.75% | 83% | 82% |
+| max-loss breach rate | 8% | **0%** |
+
+Two hard failures against the current phase:
+
+1. **Speed.** 119-201 days to reach 8%. The phase constraint is ~14. Nothing in
+   H-002 resolves inside a fortnight, and the arithmetic in stage 5 already said
+   why: 2.3 trades a week cannot compound to 8% quickly at a survivable risk.
+2. **Drawdown, for the single leg.** BTC 4h on its own draws down 28.9% at 0.75%
+   risk — three and a half times the 8% cap. Only the two-leg book brings it
+   inside, and it does so by halving the size of each leg.
+
+#### Stage 5's diversification result does not survive
+
+The four-leg book, rebuilt from walk-forward trades on the window every leg
+shares, scores **1.018-1.222** — against 1.435 for the two legs that actually
+hold. Adding the pre-2024-only BTC legs drags the book to breakeven. The 0.023
+leg correlation from stage 5 was real, but correlation between legs is worthless
+when two of the legs have no current edge. **Diversification improves the risk
+profile of an edge; it does not create one, and it does not launder selection.**
+
+#### Verdict
+
+H-002 is not rejected the way H-001 was, and it is not a candidate for real money
+either. One market x timeframe — BTC 4h — has a walk-forward record that beats
+its own null benchmark, holds at 2x cost, and is positive in eight consecutive
+calendar years. That is the first thing in this project to reach that bar. It is
+also one cell out of 176, too slow for the current phase by an order of magnitude,
+and too volatile to run alone under an 8% cap.
+
+Still outstanding: a NautilusTrader cross-check of the VWAP kernel, and silver
+(XAGUSD), which finished downloading overnight and has not been tested.
+
+### Correction — the risk level was chosen badly (2026-09-01)
+
+Kris queried the "102 expected days to pass" on the strategy board. The number was
+arithmetically right but the *setup* behind it was wrong, in two ways.
+
+**The risk level was arbitrary.** Stage 4 used 0.75% per trade, and the board
+inherited it without asking whether it was the right choice. It is not. Sweeping
+the two-leg walk-forward book across risk levels:
+
+| risk | pass | breach 8% | breach 4% daily | still open at 400d | median days | expected days | peak DD |
+|---|---|---|---|---|---|---|---|
+| 0.50% | 75.9% | 0.0% | 0.0% | 24% | 149 | 196 | -3.6% |
+| 0.75% | 85.0% | 0.0% | 0.0% | 15% | 81 | 95 | -5.5% |
+| **1.00%** | **85.2%** | **0.0%** | **0.0%** | 15% | **64** | **75** | **-7.3%** |
+| 1.25% | 82.8% | 2.4% | 0.0% | 15% | 53 | 64 | -9.1% |
+| 1.50% | 80.8% | 4.6% | 0.0% | 15% | 43 | 53 | -10.9% |
+| 2.00% | 73.7% | 20.2% | 0.0% | 6% | 30 | 41 | -14.6% |
+| 3.00% | 59.6% | 28.6% | 6.6% | 5% | 17 | 28 | -21.9% |
+
+**1.00% dominates 0.75% outright** — higher pass rate, 17 fewer days, same zero
+breach rate. There was no trade-off being made, just an unexamined default.
+Going faster than that is possible but is genuinely paid for: 1.50% reaches a
+funded account in 53 expected days but draws down 10.9%, past the cap it is
+supposed to respect.
+
+**The first automated pick was also wrong**, and the way it was wrong is worth
+recording. Selecting purely on fewest expected days chose 1.50% — whose equity
+curve draws down 10.9% while the simulation still reported only a 4.6% breach
+rate. Those are consistent, not contradictory: each challenge account starts on
+its own day and stops at a pass or a breach, so most accounts are finished before
+they ever meet the worst stretch of the curve. **A low breach rate on
+short-lived accounts is not evidence that the drawdown fits the cap.** The
+selector now requires peak drawdown inside 8% as well, which picks 1.00%.
+
+Board numbers are now read from `backtests/vwap/stage7_board.json`, written by
+`stage7_wf_analysis.py`. Nothing on the board is hand-copied any more — the
+84-day figure that prompted this was a literal in the collector, which is exactly
+where a stale number survives a re-run.
+
+Net effect: expected days to a funded account 102 -> 75, and H-002's board score
+7.1 -> 7.7. It still fails the ~14-day phase gate by a factor of five.
+
+### ORB re-scored on walk-forward output (2026-09-01)
+
+The strategy board was scoring H-001 on a *fitted* configuration (PF 1.019 from
+the stage 5 prop simulation) while scoring H-002 on walk-forward output. That is
+not a comparison, and it flattered ORB: the fitted config trades ~1x/day and
+produced a 9-day median time to pass, which read as "fast".
+
+Stage 12 had already walk-forwarded the filtered ORB family but discarded the
+trades, keeping only per-quarter summaries. `stage14_board.py` re-runs the
+identical folds, grid and selection rule and keeps the trade series, so both
+hypotheses are now scored on the same kind of evidence.
+
+The honest ORB numbers: **PF 1.165 over 470 trades, 0.169 trades/day, 13 of 31
+quarters above breakeven, PF 0.851 at 2x cost.** Across the risk ladder:
+
+| risk | pass | killed | unresolved at 400d | median days | expected days | peak DD |
+|---|---|---|---|---|---|---|
+| **0.25%** | 2.6% | 0% | **97%** | 202 | 7,819 | **-7.9%** |
+| 0.50% | 29.7% | 17% | 54% | 132 | 443 | -15.8% |
+| 1.00% | 42.1% | 52% | 6% | 114 | 271 | -31.5% |
+| 2.00% | 42.1% | 58% | 0% | 59 | 140 | -63.0% |
+| 4.00% | 7.5% | 92% | 0% | 27 | 358 | -126.1% |
+
+**0.25% is the only level whose drawdown fits inside the 8% cap, and at that size
+97% of accounts never resolve at all inside 400 days.** Every level fast enough
+to finish breaches the cap, most of them several times over. Board score 2.5/10.
+
+This also corrects the earlier reading that "ORB is faster than VWAP at 25
+expected days". That number came from the fitted config and was an artefact of
+enormous variance — 64% of those accounts died. On walk-forward output ORB is
+both slower and worse in every column.
+
+**Infrastructure**: risk-ladder and prop simulation now live in
+`core/riskladder.py`, and the board record is written by `core/board.py`. Hand
+either one a stitched walk-forward trade series and a hypothesis gets the same
+simulation, ladder and score as everything already on the board.
+`core/build_scoreboard.py` has no per-strategy code left — it reads whatever
+`backtests/*/board.json` files exist.
+
+## H-003 EMA × VWAP cross — rejected (2026-09-01)
+
+Kris's hypothesis, from his own gold chart: EMA200 and VWAP on the same panel,
+enter when the EMA crosses the VWAP, long on a cross up and short on a cross
+down. Exits open, timeframes 3m to 1d.
+
+### Mechanism, stated before any result
+
+VWAP is the day's volume-weighted average cost basis; the EMA is the medium-term
+average price. The EMA crossing above VWAP says the recent average has moved
+above what the day's participants actually paid, so the marginal holder is in
+profit and dips get bought. On the other side: traders short from below VWAP,
+and anyone benchmarking execution to VWAP who now has to chase.
+
+**Honest assessment of that mechanism, recorded in advance: weak.** Both lines
+are lagging averages of the same price series. The cross carries no information
+the price does not already have — it is a smoothed momentum trigger. VWAP holds
+the only real mechanism; the EMA contributes smoothing and lag.
+
+Research support was thin. The EMA/VWAP combination is used almost everywhere as
+a *confirmation filter* ("only long when price is above both"), not as a
+standalone cross trigger. No credible profit factors published; the one
+"incredibly profitable" claim found was measured on Heikin-Ashi candles, which
+are not tradeable prices.
+
+**Why it was worth testing anyway:** frequency. Every idea in this project has
+died on speed. A 3-15m EMA crossing a daily-anchored VWAP looked like the first
+mechanic that might trade 1-3 times a day.
+
+### What the screen found — 284,544 backtests
+
+All four exits, the slope filter paired on and off, seven timeframes, both VWAP
+anchors, three EMA lengths, nine markets, at 1x / 2x / 3x cost.
+
+| | configs | median PF | best | clear 1.20 |
+|---|---|---|---|---|
+| real | 39,927 | **0.705** | 2.512 | 1,231 |
+| phase-randomised | 42,723 | **0.757** | 2.478 | 981 |
+
+**The real markets score worse than randomised copies of themselves on the
+median.** Only 16 of 52 market × timeframe combinations have a real median above
+their own null.
+
+By exit — all five variants Kris asked for:
+
+| exit | median PF | best | clear 1.20 | trades/day |
+|---|---|---|---|---|
+| A — EMA crosses back through VWAP | 0.740 | 2.512 | 508 | 0.32 |
+| B — price closes back through EMA | 0.619 | 2.273 | 236 | 0.32 |
+| C — fixed R multiple | 0.699 | 2.298 | 378 | 0.30 |
+| D — session close, flat overnight | 0.754 | 2.266 | 109 | 0.30 |
+
+**Variant E, the slope filter, is negative**: paired across 16,909 configurations,
+median 0.698 → 0.674, a lift of −0.024, with only 49.2% improving. It joins
+breakeven stops and retest entries on the list of universally-recommended
+improvements that lose money here.
+
+**The frequency thesis failed, and failed backwards.** 3m does reach 0.63
+trades/day, but its median profit factor is the worst of any timeframe (0.600),
+and on gold specifically 3m real (0.689) sits *below* its own null (0.820). The
+faster the timeframe, the worse the edge. At 2x cost, **zero** configurations
+clear PF 1.20 with a trade frequency of 0.5/day or better. On 1d, no
+configuration reached even 50 trades in three years.
+
+### Walk-forward, and the null that killed it
+
+48 combinations × 4 selection rules = 192 stitched out-of-sample series, same
+shape as H-002's so the numbers are comparable.
+
+| | cells | median | best | clear 1.20 | clear at 2x | clear under all 4 rules |
+|---|---|---|---|---|---|---|
+| real | 192 | 0.808 | 2.356 | 10 | 6 | **1** |
+| phase-randomised | 198 | 0.791 | 1.760 | **17** | **9** | **2** |
+
+**The null produced more gate-clearing cells than the real data, and more
+survivors.** The two shuffled survivors are also stronger than the single real
+one: worst-across-rules 1.659 and 1.565, against 1.271.
+
+The one real survivor is gold at 1h, and on its own it looks excellent: stitched
+PF **2.356** at floor 30 / top 10, **2.117 at 2x cost**, 7 of 7 quarters above
+breakeven, 1,044 trades, 1.64 trades/day — the best trade frequency any candidate
+in this project has produced. It also beats its own shuffled twin decisively
+(2.356 against 0.596 at the identical rule).
+
+**And it is still not evidence.** One survivor out of 48 combinations is what the
+null gives you — the null gave two. There is no way to distinguish "gold 1h is
+real" from "gold 1h is the lucky cell" with this data. Compare H-002, which found
+4 real survivors against 1 shuffled, and 41 gate-clearing cells against 6. That
+is a margin; this is not.
+
+### What this changed about the scoring
+
+H-003 initially scored **7.0/10** on the board — "Strong candidate" — off gold
+1h's 2.356 profit factor and its perfect 7-of-7 quarters. That was a hole in the
+rubric: the null margin was one of four equal parts of the evidence component, so
+a strategy that **lost** to its null could still score 0.75 on evidence.
+
+Two changes, both in `core/scorecard.py`:
+
+* the null margin now carries **double** the weight of the other evidence parts;
+* a **null gate**: a hypothesis that has not beaten its own null benchmark cannot
+  score above 4.0, regardless of everything else. `beats_null` is stated
+  explicitly by each strategy rather than inferred from a margin, because
+  "measured and lost" and "never measured" both produce a margin of zero and both
+  must fail.
+
+H-003 now scores 4.0 and the board says why. H-002 is unaffected at 7.6.
+
+### Verdict
+
+**Rejected.** Add to the known-dead list: EMA × VWAP cross, all four exit rules,
+3m to 1d, nine markets — the family scores below its own null benchmark. The
+gold 1h pocket is logged as the one thing that would be worth re-testing if
+genuinely fresh out-of-sample data ever exists, but nothing should be built on it.
+
+This is the third price-geometry hypothesis to fail in this repo, after ORB and
+the breakout family. The standing pattern from `~/trading-bots` now has one more
+data point: **every leg that ever worked came from a data feed — funding, open
+interest, taker delta, long/short ratio — not from a price pattern.** H-004
+should be a data-feed idea.
+
+## Improvement pass on H-002 and H-003 (2026-09-01)
+
+Kris asked for both to be deep-improved with everything the repo has learned.
+Two levers were worth testing, both from findings already established here rather
+than from a fresh search: **participation (rvol)**, the only filter family that
+has ever lifted a median in this project, and **time of day**, since H-001 found
+the NY cash open was the only session anchor carrying anything and Asia the
+worst region. Neither had been tested on H-002 or H-003.
+
+Both were scored the only honest way: a paired lift on the MEDIAN, running the
+identical configuration family with the lever off and on.
+
+### The levers
+
+| lever | H-002 lift | improved | H-003 lift | improved |
+|---|---|---|---|---|
+| rvol > 2.5 | **+0.063** | **64.6%** | +0.073 | 67.1% |
+| rvol > 2.0 | +0.047 | 62.6% | +0.068 | 68.6% |
+| rvol > 1.5 | +0.038 | 49.8% | **+0.076** | **71.7%** |
+| rvol > 1.0 | +0.025 | 56.2% | +0.071 | 74.6% |
+| NY 13-20 | +0.010 | 51.0% | +0.006 | 58.7% |
+| London 07-16 | +0.012 | 52.0% | +0.046 | 65.9% |
+| Asia only (control) | +0.002 | 49.9% | +0.003 | 52.1% |
+| long only | -0.008 | 46.1% | +0.013 | 55.3% |
+| short only | -0.011 | 46.6% | -0.023 | 44.2% |
+
+**Participation confirmed for a fourth time, and we had been using it too
+weakly.** H-002's walk-forward grid only offered `rvol > 1.5`, which lifts the
+median but improves barely half the configurations — a coin flip. `rvol > 2.5`
+improves 64.6%. Thresholds 2.0 and 2.5 were added to the grid.
+
+**Time of day does NOT transfer from H-001.** NY windows lift +0.010 at ~51%
+improved on H-002, and the Asia-only control — which ORB said should be the worst
+region — is flat at +0.002. That finding is specific to ORB's mechanic, not a
+property of these markets. No hour filter was added to either grid.
+
+**Direction filters are negative on H-002**, so ORB's long/short asymmetry does
+not transfer either.
+
+### A null benchmark that was too weak, and the fix
+
+The first re-run showed H-002's survivors going 4 → 6 while the null's went
+1 → 0, which looked like a large improvement. It was partly an artefact **of my
+own benchmark**.
+
+`shuffle_market` permutes volume *independently* of returns. On real gold 1h the
+correlation between |return| and volume is **+0.47**; on that null it is
+**-0.003**. So the null has no volume/return relationship at all, and any
+participation filter automatically looks predictive against it — while
+participation was exactly the lever just added. The benchmark was rigged in the
+strategy's favour without anyone intending it.
+
+`shuffle_market_paired` permutes **(return, volume) as pairs**. Each bar keeps
+its own volume, so the contemporaneous relationship survives (verified: +0.4704,
+identical to real) and only the sequence is destroyed. A participation filter
+that beats this null is finding something about regime and ordering, not just
+"high-volume bars are bigger bars".
+
+It is measurably harder, as expected:
+
+| | cells >= 1.20 | at 2x | survivors under all 4 rules |
+|---|---|---|---|
+| real | **39** | **17** | **6** |
+| null, independent volume | 6 | 2 | 0 |
+| null, **paired** volume | 11 | 5 | **0** |
+
+**H-002 clears the harder benchmark.** All scoring now uses the paired null
+where it exists.
+
+### H-002 after the improvement
+
+| | before | after |
+|---|---|---|
+| survivors (all 4 selection rules) | 4 | **6** |
+| cells clearing 1.20 at 2x cost | 12 | **17** |
+| best stitched PF | 1.832 | **2.745** |
+| book | 2 legs | **6 legs** |
+| R earned per day | +0.083 | **+0.121** |
+| expected days to a funded account | 75 | **59** |
+| board score | 7.6 | **8.0** |
+
+The book is now BTC 15m/30m/1h/4h + gold 5m/30m. **All six legs are positive
+since 2024-09**, including BTC 30m and 1h, which were dropped last round for
+losing 34R and 48R on that window — with a participation filter they are among
+the strongest. The folds chose a participation filter in **498 of 536** fold
+selections, `rvol > 2.5` in 332 of them, with nothing forcing it.
+
+Still 59 days against a ~14-day phase gate.
+
+### H-003 after the improvement — still rejected
+
+The slope filter (variant E) was removed for being proven negative, and `min_rvol`
+added in its place. The result is the textbook signature of a filter that shrinks
+a sample rather than finding signal:
+
+| | before | after |
+|---|---|---|
+| cells clearing 1.20 | 10 | 15 |
+| best stitched PF | 2.356 | **4.292** |
+| **survivors under all 4 rules** | **1** | **1** |
+
+The maximum nearly doubled; the survivor count did not move. And against the null
+— the *weaker* one, which favours volume filters — the real data still loses:
+**15 real cells against 17 null cells, 1 survivor each.** The paired null was not
+run for H-003 because it can only be harder, and a result that already loses to
+the weak benchmark cannot beat the strict one.
+
+A separate guard was added while doing this: the board's "fewest expected days"
+rule had picked a **55-trade** cell whose headline profit factor was 4.292 — the
+narrowest, luckiest slice the new filter produced. Board candidates now require
+at least 150 trades.
+
+**H-003 stays rejected and is closed.**
+
+### Correction — the improvement pass broke the cost gate (2026-09-01)
+
+Kris pushed back on the board showing 23.66 trades/day with a 59-day time to
+pass, and asked for an independent recalculation. Two things came out of it, one
+a presentation failure and one a real error.
+
+**The presentation failure.** 23.66 trades/day was never a trading plan. It was
+six markets times the top TEN configurations each — sixty parallel strategies,
+each risking one sixtieth of the per-trade risk. Averaging the top ten is a
+legitimate way to damp selection noise in research, but putting it on the board
+as the headline implied a book nobody would run. The tradeable construction is
+one configuration per market.
+
+**The real error.** Leg selection required a stitched profit factor of 1.20
+under all four selection rules **at 1x cost only**. The project's gate is 1.20
+at *double* cost, because costs are an assumption until a firm is picked. Checked
+properly, four of the six legs collapse on their own at 2x:
+
+| leg | PF 1x | **PF 2x** | R/day | maxDD (R) |
+|---|---|---|---|---|
+| BTCUSDT 15m | 1.587 | **1.067** | 0.246 | 60.3 |
+| BTCUSDT 1h | 1.453 | **1.017** | 0.180 | 44.8 |
+| BTCUSDT 30m | 1.386 | **0.939** | 0.133 | 21.6 |
+| XAUUSD 30m | 1.297 | **1.025** | 0.118 | 47.2 |
+| BTCUSDT 4h | 1.504 | 1.214 | 0.064 | 10.0 |
+| XAUUSD 5m | 1.439 | 1.243 | 0.110 | 18.1 |
+
+The six-leg book scored **1.053 at 2x** — it fails the gate outright. Searching
+all 63 subsets, **only 3 hold PF 1.20 at 2x**: BTC 4h + gold 5m (1.233), BTC 4h
+alone (1.214), gold 5m alone (1.243). The best of them is the same two-leg book
+that existed *before* the improvement pass.
+
+So the widened rvol grid did not find four new legs. It found four legs whose
+edge is smaller than the cost assumption, and the 1x-only selection rule let them
+in. The board reported a faster book that was less robust, which is the wrong
+trade in this project.
+
+**Corrected board candidate**: BTCUSDT 4h + XAUUSD 5m, one configuration each,
+re-chosen blind every quarter, 1.00% risk.
+
+| | pre-improvement | wrong 6-leg book | corrected |
+|---|---|---|---|
+| PF | 1.435 | 1.441 | **1.461** |
+| PF at 2x | 1.218 | **1.053** | **1.233** |
+| parallel strategies | 20 | 60 | **2** |
+| trades/day | 6.85 | 23.66 | **0.67** |
+| expected days to funded | 75 | 59 | **61** |
+
+The rvol widening *is* a real improvement — same two legs, better configurations
+chosen inside the folds, 75 days down to 61 with a slightly better 2x figure. It
+is just far smaller than the six-leg book made it look.
+
+**The governing identity**, which is what makes trades/day irrelevant:
+
+    days to target  =  maxDD (in R) / R earned per day  x  (target / cap)
+
+Trades per day does not appear. It enters only through R per day, and splitting
+the same edge across more parallel strategies divides R per trade by exactly the
+number added. For the corrected book: 13.20 R / 0.139 R per day = 95 days at
+topn=1 across six legs; 7.5 R / 0.084 = 61 expected for the two-leg book after
+the simulation's survivorship. Passing in 14 days needs 6.8x more R per day or
+6.8x less drawdown.
+
+`core/verify_board.py` recomputes all of this from the raw trade file with no
+imports from `strategies/` or the rest of `core/`, printing every step, so the
+numbers can be checked by someone who does not trust this pipeline.
+
+**Also corrected**: the top verdict band read "Trade it" at 8.0+. That breaks the
+standing rule that nothing here is called good, ready or worth real money on a
+backtest. It now reads "Best evidence so far — still not proven live".
+
+### H-002 improvement — select by 2x cost inside the fold (2026-09-01)
+
+Kris asked to try making the three board hypotheses better. H-001 and H-003 were
+already rejected for structural reasons, so the live work went into H-002. Two
+changes were tested, both constrained by the same gates as the board:
+
+1. **Silver (XAGUSD)** was added to the VWAP universe and rebuilt from the cached
+   Dukascopy raw files at 5m/15m/30m/1h/4h. It did not help. Best silver rows:
+   XAGUSD 1h floor 30/top 10 scored PF 1.452 and PF2x 1.221, XAGUSD 15m floor
+   30/top 1 scored PF 1.365 and PF2x 1.223, but no silver timeframe cleared the
+   PF 1.20 gate under all four selection rules. The high-frequency 5m rows were
+   below breakeven. Silver is tested, not a board leg.
+2. **The fold selector now ranks configs by train PF at double cost**, not by
+   train PF at 1x cost. This directly attacks the bug that let the false six-leg
+   book in: selection was happening on a cheaper market than the acceptance gate.
+
+The 2x selector was run only on the current candidate set and the previously
+tempting faster legs: BTCUSDT 15m/30m/1h/4h, XAUUSD 5m/30m, XAGUSD 15m/1h.
+This is a targeted refinement, not a fresh 44-combo family search.
+
+**Real data result:** 6 of 8 target combinations clear PF 1.20 under all four
+selection rules: BTC 15m/30m/1h/4h and XAU 5m/30m. XAG still fails. Under the
+same 2x selector, the paired-volume null produced **0 robust survivors and 0
+cells clearing PF2x 1.20**. The improvement is not explained by the stricter
+null.
+
+Best tradeable subset, one configuration per leg, common 2024-09+ window:
+
+| | previous corrected | 2x-selector |
+|---|---|---|
+| legs | BTC 4h + XAU 5m | BTC 30m + BTC 4h + XAU 30m + XAU 5m |
+| PF | 1.461 | **1.646** |
+| PF at 2x | 1.233 | **1.313** |
+| trades/day | 0.67 | **1.58** |
+| R/day | +0.084 | **+0.146** |
+| max DD at picked risk | -7.5% | -7.6% |
+| pass rate | 85.2% | 85.8% |
+| median days | 52 | **45** |
+| expected days to funded | 61.1 | **52.5** |
+| board score | 8.0 | **8.5** |
+
+This is a real improvement: more R/day at the same drawdown envelope, better
+2x-cost robustness, and a strict paired-volume null that does not reproduce it.
+
+It still fails the phase. Fifty-two expected days is materially better than
+sixty-one, but still nearly four times the 14-day target. Getting from here to
+14 days requires another ~3.75x improvement in R/day at the same drawdown, or a
+firm/challenge structure that accepts a slower resolution. The next honest work
+is not another price-only filter; it is either a NautilusTrader execution
+cross-check of this VWAP kernel or new data-feed inputs (open interest, taker
+delta, basis) collected prospectively.
+
+## H-004 funding-rate fade — rejected (2026-09-01)
+
+First data-feed hypothesis, chosen because the standing pattern across both repos
+is that every leg that ever worked came from a feed rather than a price pattern.
+
+**Mechanism, stated before results.** Perpetual funding is a cash transfer every
+8 hours between longs and shorts. Strongly positive funding means leveraged longs
+are paying shorts to stay in: the book is crowded and impatient. Fading it means
+being paid to take the other side of stretched positioning and collecting the
+funding while waiting. Unlike a price pattern, the counterparty is named and the
+flow is observable.
+
+**Data**: BTC/ETH/SOL perps, 7,645 funding settlements from 2019-09, 61k hourly
+bars. No look-ahead — a settlement is visible only after it lands, and the
+z-score baseline is shifted so a settlement is not part of its own reference.
+Funding payments are credited into the R multiple, since ignoring them would
+understate a carry trade.
+
+**The null was built for this hypothesis specifically.** The claim is that
+*funding predicts price*, so the null permutes the funding series against real,
+untouched price: same funding distribution, same price path, relationship
+destroyed. Shuffling price instead would have been the wrong test — it would
+have destroyed the price autocorrelation the exits depend on as well.
+
+**Stage 1 — the widest margin any hypothesis here has produced:**
+
+| | configs | median PF | best | clear 1.20 |
+|---|---|---|---|---|
+| real | 34,524 | 0.827 | **1.893** | **828** |
+| null | 34,560 | 0.775 | 1.205 | **2** |
+
+828 against 2. For comparison H-002's stage 1 was 290 against 86. Cost stress
+also held better than expected: 828 at 1x, 262 at 2x, 60 at 3x.
+
+Two warnings visible even there: **826 of the 828 are BTC alone** (ETH 2, SOL 0),
+and the trade rate is 0.20/day, with **zero** configurations clearing 1.20 at 2x
+cost with a usable frequency.
+
+**Walk-forward killed it.**
+
+| | cells | median | best | clear 1.20 | at 2x | survivors |
+|---|---|---|---|---|---|---|
+| real | 12 | 0.873 | **1.126** | **0** | 0 | 0 |
+| null | 12 | 0.790 | 1.005 | 0 | 0 | 0 |
+
+Nothing clears the gate under any selection rule. The best cell is BTC 1h at
+floor 100 / top 1: PF 1.126, 14 of 23 quarters above breakeven, 0.41 trades/day.
+The real data still beats the null on both median and maximum, so there is
+*something* there — it is simply too small to trade after costs.
+
+**The lesson worth keeping: a large in-sample margin over a null is necessary but
+not sufficient.** H-004 had by far the best stage-1 null separation in the project
+and still failed the moment configurations had to be chosen blind. Walk-forward
+remains the only test that decides, and no amount of stage-1 evidence substitutes
+for it.
+
+**Verdict: rejected.** The mechanism remains the most credible one tested — which
+is the argument for collecting **open interest and taker delta** forward. Both are
+capped at roughly two days of history on Binance's public endpoint, so they cannot
+be backtested today and need a collector running before they become testable.
+
+
+**H-004 code deleted 2026-09-01** at Kris's request — the strategy, its backtests
+and the funding/perp data files are gone. The finding stays logged here and in
+`STRATEGY_LOG.md`: funding fade produced the widest stage-1 null margin in the
+project (828 gate-clearing configs against 2) and still failed walk-forward with
+0 of 12 series clearing PF 1.20. Re-downloadable in minutes from ccxt if ever
+revisited. The forward collector for open interest and taker delta is NOT part of
+this deletion and is still running.
+
+## H-005 liquidity sweep / stop-run fade — rejected at stage 1 (2026-09-01)
+
+Tested because the prior repo (`~/trading-bots`) recorded that the INVERSE of
+breakout-retest worked, and breakout-retest itself failed here at every
+timeframe. That prior was the strongest reason to test anything new.
+
+**Mechanism**: stops cluster beyond obvious swing highs and lows. Price pushing
+through one fires them as market orders — forced, price-insensitive flow. If the
+push was only the stop run and not information, price returns inside the range,
+and whoever absorbed the forced flow is paid for it. Same property that made
+funding worth testing: a compelled counterparty.
+
+Grid: 4 lookbacks, 4 pierce depths, wick-rejection required or not, 5 stop
+placements, 5 target types, 4 hold caps, 3 participation thresholds — 9,600
+configurations across 12 markets and 5 timeframes at 1x/2x/3x cost, 541,474
+backtests, each against a paired-shuffle null.
+
+| | configs | median PF | best | clear 1.20 |
+|---|---|---|---|---|
+| real | 541,474 | 0.718 | 1.929 | **1,702** |
+| paired null | 510,197 | 0.781 | **3.858** | **19,062** |
+
+**The null produced eleven times more gate-clearing configurations than the real
+markets, and its best result was twice as good.** Only 2 of 57 market x timeframe
+combinations beat their own null on the count. Cost stress is academic at that
+point: 1,702 at 1x, 465 at 2x, 114 at 3x, and exactly **one** configuration
+anywhere clears 1.20 at 1x with a trade rate of 0.5/day or better.
+
+The reason the null is so strong here is worth recording: a paired shuffle
+destroys sequence while keeping each bar's volume with its own return, and a
+shuffled series mean-reverts around its extremes more readily than a real
+trending one. A "sweep and reversion" rule is therefore *easier* to satisfy on
+randomised data than on real data. That is exactly the comparison the null exists
+to make, and this hypothesis fails it as clearly as any tested.
+
+**Verdict: rejected, no walk-forward run.** Nothing that loses to its null by a
+factor of eleven at stage 1 justifies the compute.
+
+**This also revises the prior repo's finding.** `liquidity_sweep` was recorded
+there as the thing that worked where breakout-retest failed. On this data, with a
+null benchmark the older work did not run, it does not reproduce. Treat the old
+result as unverified rather than as evidence.

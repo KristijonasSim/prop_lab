@@ -1,0 +1,499 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prop_lab Strategy Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#EEF0F3; --surface:#FFFFFF; --sunk:#E5E8EC;
+  --ink:#151A21; --muted:#5A6470; --faint:#8E97A2;
+  --line:#D3D8DE; --line-strong:#B9C1CA;
+  --accent:#A86A18; --fail:#A93B31; --pass:#1F6E59; --warn:#8A6A12;
+  --failbg:#F5E2E0; --passbg:#DDEEE8; --warnbg:#F3EAD2;
+  --track:#DCE0E6;
+  --shadow:0 1px 2px rgba(20,26,34,.06),0 8px 24px -14px rgba(20,26,34,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1218; --surface:#161B23; --sunk:#11161D;
+    --ink:#E4E8ED; --muted:#8B94A1; --faint:#697280;
+    --line:#242B35; --line-strong:#333C48;
+    --accent:#D69A45; --fail:#D96A5E; --pass:#4BA98E; --warn:#C9A24A;
+    --failbg:#2A1917; --passbg:#14261F; --warnbg:#2A2312;
+    --track:#222932;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1218; --surface:#161B23; --sunk:#11161D;
+  --ink:#E4E8ED; --muted:#8B94A1; --faint:#697280;
+  --line:#242B35; --line-strong:#333C48;
+  --accent:#D69A45; --fail:#D96A5E; --pass:#4BA98E; --warn:#C9A24A;
+  --failbg:#2A1917; --passbg:#14261F; --warnbg:#2A2312;
+  --track:#222932;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{width:100%;max-width:1060px;margin:0 auto;padding:0 22px 80px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+header{border-bottom:1px solid var(--line);background:var(--surface)}
+.mast{width:100%;max-width:1060px;margin:0 auto;padding:24px 22px 0;
+  display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-size:clamp(24px,4vw,32px);line-height:1.05;letter-spacing:0;font-weight:700}
+.lede{margin:0;color:var(--muted);font-size:15px;max-width:66ch;overflow-wrap:break-word}
+
+/* strategy switcher */
+.tabs{display:flex;gap:2px;margin-top:4px;width:100%;max-width:100%;overflow-x:auto;
+  scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;border:1px solid var(--line);border-bottom:none;background:var(--sunk);
+  color:var(--muted);font:inherit;font-size:13.5px;padding:9px 16px 10px;cursor:pointer;
+  border-radius:3px 3px 0 0;display:flex;align-items:center;gap:9px;flex:0 0 auto;
+  transition:background .12s,color .12s}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;
+  border-color:var(--line);position:relative;top:1px}
+.tab .sc{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  padding:1px 6px;border-radius:2px;background:var(--track);color:var(--muted)}
+.tab[aria-selected="true"] .sc.good{background:var(--passbg);color:var(--pass)}
+.tab[aria-selected="true"] .sc.mid{background:var(--warnbg);color:var(--warn)}
+.tab[aria-selected="true"] .sc.bad{background:var(--failbg);color:var(--fail)}
+
+/* verdict block */
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;
+  margin-top:30px;padding:22px;border:1px solid var(--line);border-radius:4px;
+  background:var(--surface);box-shadow:var(--shadow);width:100%;min-width:0}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0}
+.ring .n{font-family:"JetBrains Mono",monospace;font-size:38px;font-weight:700;line-height:1}
+.ring .d{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint)}
+.vtext h2{margin:0 0 2px;font-size:24px;letter-spacing:0;font-weight:700;
+  overflow-wrap:break-word}
+.vtext{min-width:0}
+.vtext .who{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px}
+.vtext p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:62ch;
+  overflow-wrap:break-word}
+.vtext .cand{margin-top:10px;font-size:13px;color:var(--muted);overflow-wrap:anywhere;
+  word-break:break-word}
+.vtext .cand b{color:var(--ink);font-weight:600}
+
+/* headline tiles */
+.statusbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  margin-top:16px;box-shadow:var(--shadow)}
+.statusitem{background:var(--surface);padding:12px 14px;min-width:0}
+.statusitem .k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--faint)}
+.statusitem .v{font-family:"JetBrains Mono",monospace;font-size:18px;font-weight:700;
+  line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusitem .n{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  margin-top:16px}
+.tile{background:var(--surface);padding:14px 15px 15px;display:flex;flex-direction:column;gap:5px}
+.tile .k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint)}
+.tile .v{font-family:"JetBrains Mono",monospace;font-size:25px;font-weight:700;line-height:1}
+.tile .n{font-size:11.5px;color:var(--muted)}
+.v.good{color:var(--pass)} .v.bad{color:var(--fail)} .v.mid{color:var(--warn)}
+
+section{margin-top:34px}
+.shead{display:flex;align-items:baseline;gap:12px;border-bottom:1.5px solid var(--ink);
+  padding-bottom:7px;margin-bottom:6px}
+h3{margin:0;font-size:17px;letter-spacing:0;font-weight:600;flex:1}
+.shead .aside{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint)}
+p.note{margin:8px 0 0;color:var(--muted);font-size:13.5px;max-width:76ch}
+strong{font-weight:600;color:var(--ink)}
+
+/* score breakdown */
+.bd{margin-top:14px;border:1px solid var(--line);border-radius:4px;background:var(--surface);
+  box-shadow:var(--shadow);overflow:hidden}
+.bdrow{display:grid;grid-template-columns:150px 1fr 82px;gap:14px;align-items:center;
+  padding:10px 15px;border-bottom:1px solid var(--line)}
+.bdrow:last-child{border-bottom:none}
+.bdrow .lab{font-size:13.5px}
+.bdrow .lab i{display:block;font-style:normal;font-size:11px;color:var(--faint);
+  font-family:"JetBrains Mono",monospace}
+.meter{position:relative;height:9px;background:var(--track);border-radius:2px;overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--pass);
+  transition:width .35s ease}
+.meter i.mid{background:var(--warn)} .meter i.bad{background:var(--fail)}
+.bdrow .pts{font-family:"JetBrains Mono",monospace;font-size:12.5px;text-align:right;
+  color:var(--muted);font-variant-numeric:tabular-nums}
+.bdrow .pts b{color:var(--ink);font-weight:700}
+.capnote{padding:11px 15px;background:var(--failbg);color:var(--fail);font-size:13px;
+  border-top:1px solid var(--line)}
+
+/* tables */
+.scroll{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:4px;
+  background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--sunk);
+  border-bottom:1px solid var(--line-strong)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--sunk)}
+tbody tr.ok td{background:var(--passbg)}
+tbody tr.ok:hover td{background:var(--passbg)}
+tbody tr.pick{cursor:pointer}
+tbody tr.pick:hover td{background:var(--sunk)}
+tbody tr.pick.sel td{background:var(--passbg);font-weight:600}
+tbody tr.pick.sel td:first-child{box-shadow:inset 3px 0 0 var(--pass)}
+tbody tr.pick:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.recchip{margin-left:7px;font-family:"JetBrains Mono",monospace;font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--accent);
+  border:1px solid var(--accent);border-radius:2px;padding:1px 4px;vertical-align:1px}
+.livehint{margin-top:9px;font-size:12.5px;color:var(--faint)}
+.livehint b{color:var(--accent);font-weight:600}
+td.n,th.n{text-align:right;font-family:"JetBrains Mono",monospace;
+  font-variant-numeric:tabular-nums;font-size:12.5px}
+td.name{font-weight:600}
+td.worst,th.worst{border-left:1.5px solid var(--line-strong);font-weight:700}
+td.wrap-note{white-space:normal;color:var(--muted);font-size:12.5px;min-width:280px}
+.bad{color:var(--fail);font-weight:600}
+.good{color:var(--pass);font-weight:600}
+.dim{color:var(--faint)}
+caption{caption-side:bottom;text-align:left;padding:8px 12px;color:var(--faint);
+  font-size:11.5px;border-top:1px solid var(--line)}
+.chip{display:inline-block;padding:2px 8px;border-radius:2px;font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.chip.no{background:var(--failbg);color:var(--fail)}
+.chip.yes{background:var(--passbg);color:var(--pass)}
+.chip.part{background:var(--sunk);color:var(--warn)}
+
+.more{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.more a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);
+  border-radius:3px;padding:8px 14px;color:var(--ink);text-decoration:none;font-size:13.5px;
+  background:var(--surface)}
+.more a:hover{background:var(--sunk)}
+.more span{color:var(--faint);font-size:12.5px}
+.warnbox{margin-top:14px;border:1px solid var(--line);border-left:3px solid var(--fail);
+  border-radius:2px;background:var(--surface);padding:11px 15px;color:var(--muted);
+  font-size:13.5px;max-width:78ch}
+footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;
+  color:var(--faint);font-size:12px}
+footer p{margin:0 0 6px;max-width:80ch}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:720px){
+  .verdict{grid-template-columns:1fr;gap:16px;justify-items:start}
+  .vtext h2{font-size:22px}
+  .statusbar{grid-template-columns:1fr 1fr}
+  .bdrow{grid-template-columns:120px 1fr 70px;gap:10px}
+  .wrap{padding:0 14px 60px}.mast{padding:20px 14px 0}
+}
+@media (max-width:460px){.statusbar{grid-template-columns:1fr}}
+</style>
+
+<header>
+  <div class="mast">
+    <div class="eyebrow">prop_lab &middot; strategy board</div>
+    <h1>Which of these is worth trading?</h1>
+    <p class="lede">One score per hypothesis, computed the same way for all of them.
+      Every number comes from a walk-forward or a prop simulation &mdash; never from a
+      backtest that chose its own configuration.</p>
+    <div class="tabs" id="tabs" role="tablist"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="verdict">
+    <div class="ring" id="ring"></div>
+    <div class="vtext">
+      <div class="who" id="who"></div>
+      <h2 id="verdict"></h2>
+      <p id="tagline"></p>
+      <div class="cand" id="cand"></div>
+    </div>
+  </div>
+
+  <div class="statusbar" id="statusbar"></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="warnbox" id="warnbox" hidden></div>
+
+  <section id="ladsec" hidden>
+    <div class="shead"><h3>Risk per trade: the speed/survival trade-off</h3>
+      <span class="aside" id="ladaside"></span></div>
+    <p class="note" id="ladnote"></p>
+    <div class="scroll"><table id="ladder"></table></div>
+    <div class="livehint" id="livehint"></div>
+  </section>
+
+  <section>
+    <div class="shead"><h3>Where the score comes from</h3>
+      <span class="aside" id="wsum"></span></div>
+    <p class="note">Speed is weighted heaviest because a strategy that cannot resolve
+      inside the phase window cannot be traded now, whatever else it does. Speed is
+      measured as <strong>expected days per funded account</strong> &mdash; median days to
+      pass divided by the pass rate &mdash; so an idea that blows up two accounts to get
+      one through does not read as fast.</p>
+    <div class="bd" id="bd"></div>
+  </section>
+
+  <section>
+    <div class="shead"><h3 id="gtitle"></h3></div>
+    <p class="note" id="gnote"></p>
+    <div class="scroll"><table id="grid"></table></div>
+  </section>
+
+  <section>
+    <div class="shead"><h3>What still has to happen</h3></div>
+    <div class="scroll"><table id="todo"></table></div>
+    <div class="more" id="more"></div>
+  </section>
+
+  <footer>
+    <p>Scores from <span class="mono">core/scorecard.py</span>; page from
+      <span class="mono">core/build_scoreboard.py</span>. Gates: PF &ge; 1.20 at real cost,
+      4% daily loss / 8% max loss / 8% profit target, and roughly 14 days to resolve.</p>
+    <p>Nothing here is a recommendation. A score is a summary of tests already run, not
+      evidence that the next quarter looks like the last one.</p>
+  </footer>
+</div>
+
+<script id="data" type="application/json">/*__DATA__*/</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = id => document.getElementById(id);
+const f = (v,d=3) => (v===null||v===undefined||Number.isNaN(v)) ? '—' : Number(v).toFixed(d);
+const pctf = v => (v===null||v===undefined) ? '—' : (v*100).toFixed(0)+'%';
+const band = s => s>=0.66 ? 'good' : (s>=0.34 ? 'mid' : 'bad');
+const scoreBand = t => t>=6.5 ? 'good' : (t>=3.5 ? 'mid' : 'bad');
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function table(el, cols, rows, cap, rowcls){
+  el.innerHTML = `<thead><tr>${cols.map(c=>`<th class="${c.cl||''}${c.n?' n':''}">${c.h}</th>`).join('')}</tr></thead>`
+    + `<tbody>${rows.map(r=>`<tr class="${rowcls?rowcls(r):''}">${cols.map(c=>{
+        const v = c.f ? c.f(r) : r[c.k];
+        return `<td class="${c.cl||''}${c.n?' n':''} ${c.cls?c.cls(r):''}">${v}</td>`;
+      }).join('')}</tr>`).join('')}</tbody>`
+    + (cap?`<caption>${cap}</caption>`:'');
+}
+
+function ring(total){
+  const R=58, C=2*Math.PI*R, frac=Math.max(0,Math.min(1,total/10));
+  const b=scoreBand(total);
+  const col = b==='good' ? 'var(--pass)' : (b==='mid' ? 'var(--warn)' : 'var(--fail)');
+  $('ring').innerHTML =
+    `<svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+       <circle cx="66" cy="66" r="${R}" fill="none" stroke="var(--track)" stroke-width="11"></circle>
+       <circle cx="66" cy="66" r="${R}" fill="none" stroke="${col}" stroke-width="11"
+         stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}"
+         stroke-dashoffset="${(C*(1-frac)).toFixed(1)}"></circle>
+     </svg>
+     <div class="num"><div class="n" style="color:${col}">${total.toFixed(1)}</div>
+       <div class="d">out of 10</div></div>`;
+}
+
+const selRisk={};
+
+function render(s, sel){
+  const L0=s.ladder;
+  const risk = L0 ? (sel==null ? L0.picked : sel) : null;
+  const row = L0 ? (L0.rows.find(r=>r.risk===risk) || null) : null;
+  const H = Object.assign({__risk:risk}, row ? row.headline : s.headline);
+  const SC = row ? {total:row.score, verdict:row.verdict, components:row.components,
+                    evidence_capped:row.evidence_capped} : s.score;
+  $('who').textContent = `${s.hid} · ${s.name}`;
+  $('verdict').textContent = SC.verdict;
+  $('tagline').textContent = s.tagline;
+  const cand = row ? s.candidate.replace(/[\d.]+% risk per trade/,
+      `${(row.risk*100).toFixed(2)}% risk per trade`) : s.candidate;
+  $('cand').innerHTML = `Scored on: <b>${esc(cand)}</b><br><span class="dim">${esc(s.period)}</span>`;
+  ring(SC.total);
+
+  const phaseGap = H.expected_days == null ? null : H.expected_days / D.phase_days;
+  const killed = (H.fail_max||0)+(H.fail_daily||0);
+  $('statusbar').innerHTML = [
+    {k:'Selector', v:s.candidate.includes('2x-cost')?'2x-cost fold PF':'walk-forward PF',
+     n:'chosen blind each quarter', c:'good'},
+    {k:'2x cost gate', v:H.pf2x==null?'not tested':f(H.pf2x,3),
+     n:'needs at least 1.200', c:H.pf2x>=1.2?'good':(H.pf2x>=1.0?'mid':'bad')},
+    {k:'Phase gap', v:phaseGap==null?'—':phaseGap.toFixed(1)+'x',
+     n:`vs ${D.phase_days.toFixed(0)} day target`, c:phaseGap<=1?'good':(phaseGap<=4?'mid':'bad')},
+    {k:'Risk result', v:killed<=0.0001?'0.0% killed':pctf(killed)+' killed',
+     n:`${pctf(H.pass_rate)} pass rate`, c:killed<=0.05?'good':(killed<=0.2?'mid':'bad')},
+  ].map(t=>`<div class="statusitem"><div class="k">${t.k}</div>
+    <div class="v ${t.c}">${t.v}</div><div class="n">${t.n}</div></div>`).join('');
+
+  const dd = H.max_dd==null ? null : Math.abs(H.max_dd);
+  $('tiles').innerHTML = [
+    {k:'Pass the challenge', v:pctf(H.pass_rate),
+     n:'of simulated accounts', c:H.pass_rate>=0.7?'good':(H.pass_rate>=0.5?'mid':'bad')},
+    {k:'Days to a funded account', v:H.expected_days==null?'—':Math.round(H.expected_days),
+     n:`median ${H.median_days==null?'—':Math.round(H.median_days)} d when it passes`,
+     c:H.expected_days<=D.phase_days?'good':(H.expected_days<=60?'mid':'bad')},
+    {k:'Accounts killed', v:pctf((H.fail_max||0)+(H.fail_daily||0)),
+     n:H.fail_daily ? `${pctf(H.fail_max)} on the 8% cap, ${pctf(H.fail_daily)} on the 4% daily`
+                    : `${pctf(H.fail_max)} on the 8% cap`,
+     c:((H.fail_max||0)+(H.fail_daily||0))<=0.05?'good'
+       :(((H.fail_max||0)+(H.fail_daily||0))<=0.2?'mid':'bad')},
+    {k:'Profit factor', v:f(H.pf,2),
+     n:H.pf2x==null?'never held at 2x cost':`${f(H.pf2x,2)} at 2× cost`,
+     c:H.pf>=1.2?'good':(H.pf>=1.0?'mid':'bad')},
+    {k:'Worst drawdown', v:dd==null?'—':(dd*100).toFixed(1)+'%',
+     n:'cap is 8%', c:dd<=0.08?'good':(dd<=0.16?'mid':'bad')},
+    {k:'Trades per day', v:f(H.tpd,2),
+     n:H.n_books>1
+       ? `${H.n_books} sub-strategies, ${f(H.tpd_per_book,2)}/day each`
+       : `${(H.trades||0).toLocaleString()} trades tested`,
+     c:H.tpd_per_book>=0.5?'good':(H.tpd_per_book>=0.25?'mid':'bad')},
+    {k:'R earned per day', v:(H.r_per_day>=0?'+':'')+f(H.r_per_day,3),
+     n:'what actually sets time-to-pass',
+     c:H.r_per_day>=0.15?'good':(H.r_per_day>=0.05?'mid':'bad')},
+  ].map(t=>`<div class="tile"><div class="k">${t.k}</div>
+    <div class="v ${t.c}">${t.v}</div><div class="n">${t.n}</div></div>`).join('');
+
+  const wb=$('warnbox');
+  if (s.note){ wb.hidden=false; wb.innerHTML=`<strong>Note.</strong> ${s.note}`; }
+  else wb.hidden=true;
+
+  const L=s.ladder;
+  if (L){ $('ladsec').hidden=false; $('ladnote').innerHTML=L.note; drawLadder(s, H.__risk); }
+  else $('ladsec').hidden=true;
+
+  const LAB={speed:['Speed to pass','expected days per funded account'],
+    pass_rate:['Pass rate','share of accounts that pass'],
+    breach:['Breach safety','accounts killed, either cap'],
+    drawdown:['Drawdown','peak loss against the cap'],
+    evidence:['Evidence quality','walk-forward, 2× cost, null, consistency'],
+    profit:['Raw profitability','profit factor and Sharpe']};
+  $('wsum').textContent = `${SC.total.toFixed(1)} of 10 points`;
+  $('bd').innerHTML = SC.components.map(c=>{
+    const [l,sub]=LAB[c.name]||[c.name,''];
+    return `<div class="bdrow"><div class="lab">${l}<i>${sub}</i></div>
+      <div class="meter"><i class="${band(c.score)}" style="width:${(c.score*100).toFixed(1)}%"></i></div>
+      <div class="pts"><b>${c.points.toFixed(2)}</b> / ${(c.weight/10).toFixed(1)}</div></div>`;
+  }).join('')
+    + (SC.evidence_capped
+    ? `<div class="capnote"><strong>Capped at 3.0.</strong> The walk-forward evidence is
+       effectively absent, and the project's rule is that no strategy is a candidate without
+       it &mdash; whatever it scores elsewhere. Without this cap, churning accounts quickly
+       would bank most of the speed weight on no demonstrated edge.</div>` : '')
+    + (SC.null_capped
+    ? `<div class="capnote"><strong>Capped at 4.0 &mdash; did not beat its own null.</strong>
+       The identical search run on phase-randomised data found as much or more than the real
+       markets did. Whatever the headline profit factor says, this has not been shown to
+       differ from noise, and no other column can buy its way past that.</div>` : '');
+
+  const G=s.grid;
+  $('gtitle').textContent = G.title;
+  $('gnote').innerHTML = G.note;
+  const dp = G.integer ? 0 : 3;
+  const hasPf2x = G.rows && G.rows.some(r=>Array.isArray(r.pf2x));
+  const gridCols = [{h:G.label,k:'label',cls:()=>'name'}]
+    .concat(G.cols.map((h,i)=>({h:h,n:1,f:r=>r.cols[i]==null?'—':f(r.cols[i],dp),
+      cls:r=>G.integer?(r.cols[i]?'':'dim'):(r.cols[i]>=1.2?'good':(r.cols[i]>=1?'':'bad'))})))
+    .concat([
+      {h:G.integer?'At 2×':'Worst',n:1,cl:'worst',f:r=>f(r.worst,dp),
+       cls:r=>G.integer?(r.worst?'good':'bad'):(r.worst>=1.2?'good':'bad')},
+    ]);
+  if (hasPf2x) {
+    gridCols.push({h:'Worst 2x',n:1,f:r=>{
+      const xs = r.pf2x.filter(x=>x!==null);
+      return xs.length ? f(Math.min(...xs),dp) : '—';
+    }, cls:r=>{
+      const xs = r.pf2x.filter(x=>x!==null);
+      return xs.length && Math.min(...xs)>=1.2 ? 'good' : 'bad';
+    }});
+  }
+  gridCols.push({h:'Clears the gate',f:r=>r.clears?'<span class="chip yes">yes</span>'
+    :'<span class="chip no">no</span>'});
+  table($('grid'),
+    gridCols,
+    G.rows,
+    G.integer ? 'Count of configurations clearing PF 1.20 out of 8,160 per instrument.'
+              : (hasPf2x
+                ? 'Stitched out-of-sample profit factor. Worst 2x is shown separately because the acceptance gate is double-cost robustness.'
+                : 'Stitched out-of-sample profit factor. Sorted by the worst of the four rules, not the best.'),
+    r=>r.clears?'ok':'');
+
+  table($('todo'),[
+    {h:'Test',k:'t',cls:()=>'name'},
+    {h:'What it decides',k:'w',cl:'wrap-note'},
+    {h:'Status',f:r=>r.done?'<span class="chip yes">done</span>'
+      :'<span class="chip part">pending</span>'},
+  ], s.todo);
+
+  $('more').innerHTML = `<a href="${s.report}" target="_blank" rel="noopener">Open the full ${esc(s.name)} report &rarr;</a>
+    <span>every configuration, every stage, all the workings</span>`;
+}
+
+// The page never scores anything itself: every risk level arrives from Python
+// with its scorecard already computed, so a click can only ever show a number
+// core/scorecard.py produced. Duplicating the rubric in JavaScript would let the
+// two drift apart silently.
+function drawLadder(s, risk){
+  const L=s.ladder;
+  $('ladaside').innerHTML = `scored at <b class="mono">${(risk*100).toFixed(2)}%</b> per trade`;
+  table($('ladder'),[
+    {h:'Risk / trade',n:1,cls:()=>'name',
+     f:r=>(r.risk*100).toFixed(2)+'%'+(r.risk===L.picked?'<span class="recchip">rec</span>':'')},
+    {h:'Score',n:1,cl:'worst',f:r=>r.score.toFixed(1),
+     cls:r=>r.score>=6.5?'good':(r.score>=3.5?'':'bad')},
+    {h:'Pass rate',n:1,f:r=>pctf(r.pass_rate),
+     cls:r=>r.pass_rate>=0.7?'good':(r.pass_rate>=0.5?'':'bad')},
+    {h:'Killed',n:1,f:r=>pctf(r.fail_max+r.fail_daily),
+     cls:r=>(r.fail_max+r.fail_daily)<=0.05?'good':'bad'},
+    {h:'8% cap',n:1,f:r=>pctf(r.fail_max),cls:()=>'dim'},
+    {h:'4% daily',n:1,f:r=>pctf(r.fail_daily),cls:()=>'dim'},
+    {h:'Unresolved',n:1,f:r=>pctf(r.still_open),cls:()=>'dim'},
+    {h:'Median d',n:1,f:r=>r.median_days==null?'\u2014':Math.round(r.median_days)},
+    {h:'Expected d',n:1,f:r=>r.expected_days==null?'\u2014':Math.round(r.expected_days),
+     cls:r=>r.expected_days<=D.phase_days?'good':(r.expected_days<=60?'':'bad')},
+    {h:'Peak DD',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',
+     cls:r=>Math.abs(r.max_dd)<=0.08?'good':'bad'},
+  ], L.rows,
+  'Fresh account opened every trading day, 4% daily / 8% max / 8% target, fixed risk, real breaches, no size shrinking, 400-day limit. "Killed" is both breach types together. "Unresolved" accounts neither passed nor breached inside the limit and count against the pass rate.',
+  r=>'pick'+(r.risk===risk?' sel':''));
+
+  [...$('ladder').querySelectorAll('tbody tr')].forEach((tr,i)=>{
+    const row=L.rows[i];
+    tr.tabIndex=0;
+    tr.setAttribute('role','button');
+    tr.setAttribute('aria-pressed', String(row.risk===risk));
+    tr.setAttribute('aria-label',
+      `Score this strategy at ${(row.risk*100).toFixed(2)} percent risk per trade`);
+    const go=()=>{ selRisk[s.id]=row.risk; render(s, row.risk); };
+    tr.addEventListener('click',go);
+    tr.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); }
+    });
+  });
+  $('livehint').innerHTML = (risk===L.picked)
+    ? 'Showing the <b>recommended</b> risk level. Click any row to score the strategy at that risk instead.'
+    : `Showing <b>${(risk*100).toFixed(2)}%</b> \u2014 your choice, not the recommended `
+      + `<b>${(L.picked*100).toFixed(2)}%</b>. Everything above updates with it.`;
+}
+
+const S=D.strategies;
+$('tabs').innerHTML = S.map((s,i)=>{
+  const b=scoreBand(s.score.total);
+  return `<button class="tab" role="tab" id="tab${i}" aria-selected="${i===0}"
+    aria-controls="panel"><span>${esc(s.name)}</span>
+    <span class="sc ${b}">${s.score.total.toFixed(1)}</span></button>`;
+}).join('');
+[...document.querySelectorAll('.tab')].forEach((b,i)=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true');
+    render(S[i], selRisk[S[i].id]);
+  });
+});
+render(S[0], selRisk[S[0].id]);
+</script>

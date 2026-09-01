@@ -35,12 +35,23 @@ TFS = {"5m": ("5min", 12), "15m": ("15min", 4), "30m": ("30min", 2),
        "1h": ("1h", 1), "4h": ("4h", 0.25)}
 
 ANCHORS = [(0, 0), (8, 0), (13, 30), (-1, 0)]   # rolling window sized per timeframe
+# The paired-lift study (stage 8) scored every one of these on the median across
+# all 44 market x timeframe combinations. Participation is the only family that
+# lifts it, and the lift grows with the threshold: rvol>2.5 gave +0.063 with 65%
+# of configurations improving, against +0.038 and a coin-flip 50% for rvol>1.5.
+# The higher thresholds are added here so the walk-forward can choose them.
+# Time-of-day windows were tested and did NOT transfer from H-001 (+0.010 at
+# best, ~50% improved), so no hour filter is in the grid.
 FILTERS = {"none": {}, "rvol>1.5": {"min_rvol": 1.5},
+           "rvol>2.0": {"min_rvol": 2.0}, "rvol>2.5": {"min_rvol": 2.5},
            "ATRrank>0.5": {"min_atr_rank": 0.5}, "ATRrank>0.7": {"min_atr_rank": 0.7},
            "ATRrank<0.5": {"max_atr_rank": 0.5}}
 
 
-def load_tf(sym: str, tf: str) -> pd.DataFrame:
+def load_tf(sym: str, tf: str, full_history: bool = False) -> pd.DataFrame:
+    """`full_history` keeps everything the cache holds instead of clamping to the
+    common START/END window. Only BTC has anything outside it; the FX cache
+    begins at START anyway."""
     if sym == "BTCUSDT":
         base = crypto_data.load("BTC/USDT", "15m")
         rule = TFS[tf][0]
@@ -53,6 +64,8 @@ def load_tf(sym: str, tf: str) -> pd.DataFrame:
         df = base
     else:
         df = fx_data.load(sym, TFS[tf][0])
+    if full_history:
+        return df
     return df[(df.index >= START) & (df.index < END)]
 
 
@@ -69,6 +82,41 @@ def shuffle_market(df: pd.DataFrame, seed: int) -> pd.DataFrame:
         "open": df.open.values * scale, "high": df.high.values * scale,
         "low": df.low.values * scale, "close": new_c,
         "volume": rng.permutation(df.volume.values)}, index=df.index)
+    out["high"] = out[["open", "high", "close"]].max(axis=1)
+    out["low"] = out[["open", "low", "close"]].min(axis=1)
+    return out
+
+
+def shuffle_market_paired(df: pd.DataFrame, seed: int) -> pd.DataFrame:
+    """A STRICTER null for volume-based filters.
+
+    `shuffle_market` permutes volume independently of returns, so on that null a
+    bar's volume tells you nothing about its own move. That is the right null for
+    a price-pattern strategy, but it quietly hands any participation filter a
+    free win: the filter has a real contemporaneous volume/return relationship to
+    work with on the live data and none at all on the null, so it looks
+    predictive even if all it captures is "high-volume bars are bigger bars".
+
+    This version permutes (return, volume) as PAIRS. Each bar keeps its own
+    volume, so the contemporaneous relationship survives and only the sequence is
+    destroyed. A participation filter that still beats this null is finding
+    something about regime and ordering, not just bar size.
+    """
+    rng = np.random.default_rng(seed)
+    c = df.close.values
+    v = df.volume.values
+    ret = np.diff(np.log(c))
+    perm = rng.permutation(len(ret))
+    ret = ret[perm]
+    # volume[i+1] is the volume of the bar that produced ret[i]
+    vol = np.concatenate(([v[0]], v[1:][perm]))
+
+    new_c = c[0] * np.exp(np.concatenate(([0.0], np.cumsum(ret))))
+    scale = new_c / c
+    out = pd.DataFrame({
+        "open": df.open.values * scale, "high": df.high.values * scale,
+        "low": df.low.values * scale, "close": new_c, "volume": vol},
+        index=df.index)
     out["high"] = out[["open", "high", "close"]].max(axis=1)
     out["low"] = out[["open", "low", "close"]].min(axis=1)
     return out

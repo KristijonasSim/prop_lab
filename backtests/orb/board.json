@@ -1,0 +1,275 @@
+{
+ "id": "orb",
+ "hid": "H-001",
+ "name": "Opening Range Breakout",
+ "tagline": "Range of the first N minutes after a session open, traded on the break.",
+ "period": "BTCUSDT 15m, walk-forward 2019-01 \u2192 2026-08, 31 quarters",
+ "report": "https://claude.ai/code/artifact/a38e8a90-fc1a-4133-afc1-da3a826ae370",
+ "candidate": "Filtered ORB family, config re-chosen blind every quarter",
+ "fields": {
+  "pf": 1.165,
+  "trades": 470,
+  "trades_per_day": 0.169,
+  "trades_per_week": 1.18,
+  "avg_hold_h": 2.38,
+  "win_rate": 0.4191,
+  "avg_r": 0.0902,
+  "total_r": 42.38,
+  "max_dd_r": -31.52,
+  "sharpe": 0.385,
+  "n_books": 1,
+  "tpd_per_book": 0.169,
+  "r_per_day": 0.0152
+ },
+ "pf_2x": 0.851,
+ "measured": {
+  "wf_pf": 1.165,
+  "wf_pf_2x": 0.851,
+  "null_margin": 0.0,
+  "beats_null": false,
+  "consistency": 0.4194,
+  "pf": 1.165,
+  "sharpe": 0.385
+ },
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.0259,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.9741,
+   "median_days": 202.5,
+   "p25_days": 184.75,
+   "expected_days": 7818.5,
+   "max_dd": -0.0788
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.2967,
+   "fail_max": 0.1681,
+   "fail_daily": 0.0,
+   "still_open": 0.5352,
+   "median_days": 131.5,
+   "p25_days": 79.0,
+   "expected_days": 443.2,
+   "max_dd": -0.1576
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.3858,
+   "fail_max": 0.3851,
+   "fail_daily": 0.0,
+   "still_open": 0.2292,
+   "median_days": 140.0,
+   "p25_days": 63.0,
+   "expected_days": 362.9,
+   "max_dd": -0.2364
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.421,
+   "fail_max": 0.5233,
+   "fail_daily": 0.0,
+   "still_open": 0.0557,
+   "median_days": 114.0,
+   "p25_days": 52.0,
+   "expected_days": 270.8,
+   "max_dd": -0.3152
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.4088,
+   "fail_max": 0.5524,
+   "fail_daily": 0.0,
+   "still_open": 0.0388,
+   "median_days": 95.5,
+   "p25_days": 46.0,
+   "expected_days": 233.6,
+   "max_dd": -0.394
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.4379,
+   "fail_max": 0.5233,
+   "fail_daily": 0.0216,
+   "still_open": 0.0172,
+   "median_days": 90.0,
+   "p25_days": 43.0,
+   "expected_days": 205.5,
+   "max_dd": -0.4727
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.4497,
+   "fail_max": 0.5262,
+   "fail_daily": 0.0216,
+   "still_open": 0.0025,
+   "median_days": 81.0,
+   "p25_days": 40.75,
+   "expected_days": 180.1,
+   "max_dd": -0.5515
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.4213,
+   "fail_max": 0.5374,
+   "fail_daily": 0.0388,
+   "still_open": 0.0025,
+   "median_days": 59.0,
+   "p25_days": 35.0,
+   "expected_days": 140.0,
+   "max_dd": -0.6303
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.2895,
+   "fail_max": 0.6207,
+   "fail_daily": 0.0887,
+   "still_open": 0.0011,
+   "median_days": 47.0,
+   "p25_days": 26.0,
+   "expected_days": 162.3,
+   "max_dd": -0.7879
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.2216,
+   "fail_max": 0.4483,
+   "fail_daily": 0.329,
+   "still_open": 0.0011,
+   "median_days": 45.0,
+   "p25_days": 22.0,
+   "expected_days": 203.1,
+   "max_dd": -0.9455
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.0754,
+   "fail_max": 0.005,
+   "fail_daily": 0.9192,
+   "still_open": 0.0004,
+   "median_days": 27.0,
+   "p25_days": 17.0,
+   "expected_days": 358.1,
+   "max_dd": -1.2607
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.0823,
+   "fail_max": 0.0025,
+   "fail_daily": 0.9149,
+   "still_open": 0.0004,
+   "median_days": 24.0,
+   "p25_days": 16.0,
+   "expected_days": 291.6,
+   "max_dd": -1.5758
+  }
+ ],
+ "pick": {
+  "risk": 0.0025,
+  "pass_rate": 0.0259,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 0.9741,
+  "median_days": 202.5,
+  "p25_days": 184.75,
+  "expected_days": 7818.5,
+  "max_dd": -0.0788
+ },
+ "grid": {
+  "title": "Configurations clearing PF 1.20, as cost rises",
+  "note": "Out of 8,160 per instrument. The <strong>2\u00d7</strong> column decides \u2014 costs are an assumption until a firm is picked, and nothing survives doubling them.",
+  "cols": [
+   "0x cost",
+   "1x cost",
+   "2x cost",
+   "3x cost"
+  ],
+  "label": "Instrument",
+  "rows": [
+   {
+    "label": "GBPUSD",
+    "cols": [
+     540,
+     11,
+     0,
+     0
+    ],
+    "worst": 0,
+    "clears": false
+   },
+   {
+    "label": "Gold (XAUUSD)",
+    "cols": [
+     537,
+     2,
+     0,
+     0
+    ],
+    "worst": 0,
+    "clears": false
+   },
+   {
+    "label": "Bitcoin (BTCUSDT)",
+    "cols": [
+     227,
+     0,
+     0,
+     0
+    ],
+    "worst": 0,
+    "clears": false
+   },
+   {
+    "label": "EURUSD",
+    "cols": [
+     459,
+     0,
+     0,
+     0
+    ],
+    "worst": 0,
+    "clears": false
+   }
+  ],
+  "integer": true
+ },
+ "todo": [
+  {
+   "t": "Full parameter grid",
+   "w": "13 of 32,640 clear PF 1.20 at real cost, none robust.",
+   "done": true
+  },
+  {
+   "t": "Zero-fee diagnostic",
+   "w": "Median PF 0.960 with fees stripped to zero \u2014 no edge for cheaper execution to rescue.",
+   "done": true
+  },
+  {
+   "t": "Out of sample",
+   "w": "Gold loses every winner; GBPUSD's survivors are one cluster on the worst anchor.",
+   "done": true
+  },
+  {
+   "t": "Walk-forward, 31 quarters",
+   "w": "Unfiltered PF 0.781. Filtered family reaches 1.165 \u2014 a real lift, still under the 1.20 gate.",
+   "done": true
+  },
+  {
+   "t": "8-instrument FX universe",
+   "w": "69 of 65,280 clear at 1x, zero at 2x, every best config breaches the 8% cap.",
+   "done": true
+  },
+  {
+   "t": "Prop challenge simulation",
+   "w": "Run on walk-forward output across the full risk ladder.",
+   "done": true
+  },
+  {
+   "t": "US equity cross-section",
+   "w": "The published edge picks the top 20 of 7,000 stocks daily. Untested, and not reproducible on a single symbol.",
+   "done": false
+  }
+ ],
+ "note": "Rejected. The scope of that rejection is single-symbol crypto, FX and metals \u2014 the published ORB edge is a US-equity cross-section, which no single-symbol sweep can reproduce, so it remains untested rather than disproved. The numbers here are the best honest version: the filtered family, chosen blind each quarter."
+}

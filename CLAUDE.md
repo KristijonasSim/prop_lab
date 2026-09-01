@@ -126,6 +126,16 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
 - **Larry Williams daily volatility-range breakout** — PF 0.88-1.00 everywhere at taker. Same family.
 - **VWAP trend-following / stop-and-reverse on BTC** — PF ~0.99-1.02 at ZERO fee. Asset-specific:
   the same mechanic worked on Gold/USDJPY/NAS100.
+- **EMA × VWAP cross** (H-003) — all four exits (cross-back, price/EMA, fixed R, session
+  close), 3m-1d, 9 markets, 284k backtests. Real median PF 0.705 vs a phase-randomised
+  **0.757** — worse than noise. Walk-forward: the null produced MORE gate-clearing cells
+  than the real data (17 vs 10). An EMA slope filter was negative (-0.024 paired lift).
+  Gold 1h reached walk-forward PF 2.356 but is 1 survivor in 48 where the null gave 2.
+- **Liquidity sweep / stop-run fade** (H-005) — 541k backtests, 12 markets, 5m-4h. Real
+  clears PF 1.20 on 1,702 configs; the paired-shuffle null clears **19,062**. Null best
+  3.858 vs real 1.929. Only 2 of 57 combos beat their own null. NOTE: this contradicts the
+  prior repo's `liquidity_sweep` result, which was never run against a null — treat that
+  older finding as unverified.
 - **VWAP std-band fade** — backtest PF 3.0, live ~0.7. Resting-limit backtests assume a fill on
   any wick touch. Any limit-fill strategy needs a queue-priority check before the backtest is trusted.
 

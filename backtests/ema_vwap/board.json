@@ -1,0 +1,854 @@
+{
+ "id": "ema_vwap",
+ "hid": "H-003",
+ "name": "EMA \u00d7 VWAP cross",
+ "tagline": "Enter when the EMA crosses the volume-weighted average price.",
+ "period": "FX & metals 2023-09 \u2192 2026-08 \u00b7 BTC from 2017",
+ "report": "",
+ "candidate": "XAUUSD 1h, config re-chosen blind each quarter",
+ "fields": {
+  "pf": 1.478,
+  "trades": 1843,
+  "trades_per_day": 2.891,
+  "trades_per_week": 20.23,
+  "avg_hold_h": 15.44,
+  "win_rate": 0.4379,
+  "avg_r": 0.0158,
+  "total_r": 29.14,
+  "max_dd_r": -5.76,
+  "sharpe": 1.802,
+  "n_books": 10,
+  "tpd_per_book": 0.289,
+  "r_per_day": 0.0457
+ },
+ "pf_2x": 1.274,
+ "measured": {
+  "wf_pf": 1.478,
+  "wf_pf_2x": 1.274,
+  "null_margin": 0.0,
+  "beats_null": false,
+  "consistency": 0.7143,
+  "pf": 1.478,
+  "sharpe": 1.802
+ },
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.0078,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.9922,
+   "median_days": 196.0,
+   "p25_days": 195.0,
+   "expected_days": 25128.2,
+   "max_dd": -0.0144
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.6285,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.3715,
+   "median_days": 241.0,
+   "p25_days": 137.0,
+   "expected_days": 383.5,
+   "max_dd": -0.0288
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.7226,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.2774,
+   "median_days": 170.0,
+   "p25_days": 67.0,
+   "expected_days": 235.3,
+   "max_dd": -0.0432
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.7461,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.2539,
+   "median_days": 163.5,
+   "p25_days": 59.0,
+   "expected_days": 219.1,
+   "max_dd": -0.0576
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.7853,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.2147,
+   "median_days": 150.0,
+   "p25_days": 48.0,
+   "expected_days": 191.0,
+   "max_dd": -0.072
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.8276,
+   "fail_max": 0.0376,
+   "fail_daily": 0.0,
+   "still_open": 0.1348,
+   "median_days": 142.0,
+   "p25_days": 42.75,
+   "expected_days": 171.6,
+   "max_dd": -0.0865
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.5862,
+   "fail_max": 0.3307,
+   "fail_daily": 0.0,
+   "still_open": 0.0831,
+   "median_days": 51.5,
+   "p25_days": 27.0,
+   "expected_days": 87.9,
+   "max_dd": -0.1009
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.5329,
+   "fail_max": 0.395,
+   "fail_daily": 0.0,
+   "still_open": 0.0721,
+   "median_days": 43.0,
+   "p25_days": 21.0,
+   "expected_days": 80.7,
+   "max_dd": -0.1153
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.4781,
+   "fail_max": 0.4545,
+   "fail_daily": 0.0,
+   "still_open": 0.0674,
+   "median_days": 33.0,
+   "p25_days": 16.0,
+   "expected_days": 69.0,
+   "max_dd": -0.1441
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.4765,
+   "fail_max": 0.4577,
+   "fail_daily": 0.0,
+   "still_open": 0.0658,
+   "median_days": 24.0,
+   "p25_days": 13.0,
+   "expected_days": 50.4,
+   "max_dd": -0.1729
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.3683,
+   "fail_max": 0.2774,
+   "fail_daily": 0.3072,
+   "still_open": 0.047,
+   "median_days": 15.0,
+   "p25_days": 10.0,
+   "expected_days": 40.7,
+   "max_dd": -0.2305
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.4107,
+   "fail_max": 0.1536,
+   "fail_daily": 0.431,
+   "still_open": 0.0047,
+   "median_days": 14.0,
+   "p25_days": 9.0,
+   "expected_days": 34.1,
+   "max_dd": -0.2882
+  }
+ ],
+ "pick": {
+  "risk": 0.0125,
+  "pass_rate": 0.7853,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 0.2147,
+  "median_days": 150.0,
+  "p25_days": 48.0,
+  "expected_days": 191.0,
+  "max_dd": -0.072
+ },
+ "grid": {
+  "title": "Every market \u00d7 timeframe, under all four ways of choosing",
+  "note": "The <strong>worst</strong> column is how the combination does under the least favourable of the four selection rules. Only one of 48 clears the gate that way \u2014 and the phase-randomised null produced <strong>two</strong>.",
+  "cols": [
+   "floor 30 / best",
+   "floor 30 / top 10",
+   "floor 100 / best",
+   "floor 100 / top 10"
+  ],
+  "label": "Market",
+  "rows": [
+   {
+    "label": "XAUUSD 1h",
+    "cols": [
+     4.292,
+     2.248,
+     1.271,
+     1.478
+    ],
+    "worst": 1.271,
+    "null_best": 2.038,
+    "clears": true
+   },
+   {
+    "label": "XAUUSD 5m",
+    "cols": [
+     1.312,
+     1.42,
+     1.358,
+     1.069
+    ],
+    "worst": 1.069,
+    "null_best": 1.252,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 4h",
+    "cols": [
+     1.183,
+     1.028,
+     null,
+     null
+    ],
+    "worst": 1.028,
+    "null_best": 0.722,
+    "clears": false
+   },
+   {
+    "label": "XAUUSD 15m",
+    "cols": [
+     1.073,
+     1.069,
+     0.982,
+     0.958
+    ],
+    "worst": 0.958,
+    "null_best": 2.552,
+    "clears": false
+   },
+   {
+    "label": "XAUUSD 3m",
+    "cols": [
+     0.939,
+     1.04,
+     1.046,
+     0.93
+    ],
+    "worst": 0.93,
+    "null_best": 1.563,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 4h",
+    "cols": [
+     1.027,
+     0.928,
+     null,
+     null
+    ],
+    "worst": 0.928,
+    "null_best": 0.977,
+    "clears": false
+   },
+   {
+    "label": "XAUUSD 30m",
+    "cols": [
+     2.017,
+     1.523,
+     0.907,
+     1.011
+    ],
+    "worst": 0.907,
+    "null_best": 1.055,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 4h",
+    "cols": [
+     0.89,
+     0.871,
+     null,
+     null
+    ],
+    "worst": 0.871,
+    "null_best": 1.098,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 15m",
+    "cols": [
+     0.885,
+     0.995,
+     0.863,
+     1.024
+    ],
+    "worst": 0.863,
+    "null_best": 0.914,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 3m",
+    "cols": [
+     1.112,
+     0.896,
+     0.892,
+     0.858
+    ],
+    "worst": 0.858,
+    "null_best": 0.767,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 3m",
+    "cols": [
+     0.868,
+     0.848,
+     1.105,
+     0.921
+    ],
+    "worst": 0.848,
+    "null_best": 1.003,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 30m",
+    "cols": [
+     1.055,
+     1.103,
+     1.146,
+     0.844
+    ],
+    "worst": 0.844,
+    "null_best": 0.983,
+    "clears": false
+   },
+   {
+    "label": "XAUUSD 4h",
+    "cols": [
+     0.829,
+     0.948,
+     null,
+     null
+    ],
+    "worst": 0.829,
+    "null_best": 0.84,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 1h",
+    "cols": [
+     0.862,
+     0.808,
+     0.909,
+     0.933
+    ],
+    "worst": 0.808,
+    "null_best": 0.779,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 5m",
+    "cols": [
+     0.857,
+     0.807,
+     1.03,
+     0.931
+    ],
+    "worst": 0.807,
+    "null_best": 0.991,
+    "clears": false
+   },
+   {
+    "label": "BTCUSDT 15m",
+    "cols": [
+     1.184,
+     0.987,
+     0.807,
+     0.801
+    ],
+    "worst": 0.801,
+    "null_best": 0.986,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 3m",
+    "cols": [
+     0.909,
+     0.796,
+     0.973,
+     0.92
+    ],
+    "worst": 0.796,
+    "null_best": 0.841,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 4h",
+    "cols": [
+     0.787,
+     0.899,
+     null,
+     null
+    ],
+    "worst": 0.787,
+    "null_best": 2.679,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 30m",
+    "cols": [
+     0.83,
+     1.112,
+     0.794,
+     0.787
+    ],
+    "worst": 0.787,
+    "null_best": 0.699,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 15m",
+    "cols": [
+     1.343,
+     0.873,
+     0.799,
+     0.779
+    ],
+    "worst": 0.779,
+    "null_best": 1.54,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 1h",
+    "cols": [
+     1.444,
+     0.996,
+     0.836,
+     0.778
+    ],
+    "worst": 0.778,
+    "null_best": 1.223,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 3m",
+    "cols": [
+     0.773,
+     0.814,
+     0.918,
+     0.786
+    ],
+    "worst": 0.773,
+    "null_best": 0.707,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 5m",
+    "cols": [
+     0.83,
+     0.764,
+     0.791,
+     0.783
+    ],
+    "worst": 0.764,
+    "null_best": 1.235,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 4h",
+    "cols": [
+     0.823,
+     0.758,
+     null,
+     null
+    ],
+    "worst": 0.758,
+    "null_best": 0.88,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 30m",
+    "cols": [
+     0.796,
+     0.964,
+     0.759,
+     0.758
+    ],
+    "worst": 0.758,
+    "null_best": 1.01,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 5m",
+    "cols": [
+     0.896,
+     0.743,
+     1.2,
+     1.157
+    ],
+    "worst": 0.743,
+    "null_best": 0.769,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 30m",
+    "cols": [
+     0.73,
+     0.806,
+     1.0,
+     0.937
+    ],
+    "worst": 0.73,
+    "null_best": 1.256,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 5m",
+    "cols": [
+     0.873,
+     0.904,
+     0.834,
+     0.73
+    ],
+    "worst": 0.73,
+    "null_best": 1.009,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 5m",
+    "cols": [
+     0.8,
+     0.717,
+     1.055,
+     0.809
+    ],
+    "worst": 0.717,
+    "null_best": 0.78,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 1h",
+    "cols": [
+     0.716,
+     0.968,
+     0.789,
+     0.723
+    ],
+    "worst": 0.716,
+    "null_best": 0.902,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 15m",
+    "cols": [
+     0.984,
+     1.203,
+     0.694,
+     0.817
+    ],
+    "worst": 0.694,
+    "null_best": 1.028,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 30m",
+    "cols": [
+     0.818,
+     0.735,
+     0.69,
+     0.804
+    ],
+    "worst": 0.69,
+    "null_best": 0.91,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 1h",
+    "cols": [
+     0.772,
+     0.936,
+     0.685,
+     0.795
+    ],
+    "worst": 0.685,
+    "null_best": 0.672,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 5m",
+    "cols": [
+     0.939,
+     0.703,
+     0.882,
+     0.683
+    ],
+    "worst": 0.683,
+    "null_best": 0.783,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 4h",
+    "cols": [
+     1.418,
+     1.014,
+     0.703,
+     0.682
+    ],
+    "worst": 0.682,
+    "null_best": 1.647,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 15m",
+    "cols": [
+     0.917,
+     1.141,
+     0.881,
+     0.676
+    ],
+    "worst": 0.676,
+    "null_best": 0.785,
+    "clears": false
+   },
+   {
+    "label": "BTCUSDT 30m",
+    "cols": [
+     0.736,
+     0.892,
+     0.672,
+     0.785
+    ],
+    "worst": 0.672,
+    "null_best": 0.857,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 15m",
+    "cols": [
+     0.666,
+     0.796,
+     0.863,
+     1.045
+    ],
+    "worst": 0.666,
+    "null_best": 0.886,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 30m",
+    "cols": [
+     0.727,
+     0.665,
+     0.732,
+     0.808
+    ],
+    "worst": 0.665,
+    "null_best": 0.73,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 3m",
+    "cols": [
+     0.804,
+     0.745,
+     0.66,
+     0.666
+    ],
+    "worst": 0.66,
+    "null_best": 0.958,
+    "clears": false
+   },
+   {
+    "label": "GBPUSD 15m",
+    "cols": [
+     0.643,
+     0.87,
+     0.947,
+     0.825
+    ],
+    "worst": 0.643,
+    "null_best": 1.002,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 30m",
+    "cols": [
+     0.759,
+     0.655,
+     0.638,
+     0.69
+    ],
+    "worst": 0.638,
+    "null_best": 1.199,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 1h",
+    "cols": [
+     0.571,
+     0.694,
+     0.761,
+     0.89
+    ],
+    "worst": 0.571,
+    "null_best": 0.786,
+    "clears": false
+   },
+   {
+    "label": "EURUSD 15m",
+    "cols": [
+     1.507,
+     1.105,
+     0.566,
+     0.855
+    ],
+    "worst": 0.566,
+    "null_best": 1.492,
+    "clears": false
+   },
+   {
+    "label": "USDCAD 4h",
+    "cols": [
+     0.69,
+     0.529,
+     null,
+     null
+    ],
+    "worst": 0.529,
+    "null_best": 0.743,
+    "clears": false
+   },
+   {
+    "label": "USDCHF 1h",
+    "cols": [
+     0.682,
+     0.743,
+     0.522,
+     0.756
+    ],
+    "worst": 0.522,
+    "null_best": 1.105,
+    "clears": false
+   },
+   {
+    "label": "USDJPY 1h",
+    "cols": [
+     0.771,
+     0.685,
+     0.504,
+     0.789
+    ],
+    "worst": 0.504,
+    "null_best": 0.74,
+    "clears": false
+   },
+   {
+    "label": "AUDUSD 3m",
+    "cols": [
+     0.439,
+     0.714,
+     0.867,
+     0.727
+    ],
+    "worst": 0.439,
+    "null_best": 0.83,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 3m",
+    "cols": [
+     0.436,
+     0.73,
+     0.591,
+     0.564
+    ],
+    "worst": 0.436,
+    "null_best": 0.945,
+    "clears": false
+   },
+   {
+    "label": "BTCUSDT 4h",
+    "cols": [
+     0.371,
+     0.603,
+     null,
+     null
+    ],
+    "worst": 0.371,
+    "null_best": 1.007,
+    "clears": false
+   },
+   {
+    "label": "BTCUSDT 1h",
+    "cols": [
+     0.277,
+     0.55,
+     0.67,
+     0.774
+    ],
+    "worst": 0.277,
+    "null_best": 0.913,
+    "clears": false
+   },
+   {
+    "label": "NZDUSD 5m",
+    "cols": [
+     0.185,
+     0.678,
+     0.46,
+     0.622
+    ],
+    "worst": 0.185,
+    "null_best": 1.42,
+    "clears": false
+   }
+  ]
+ },
+ "todo": [
+  {
+   "t": "Full grid, 4 exits \u00d7 slope filter",
+   "w": "All five variants. Every exit's median profit factor is below breakeven (0.62\u20130.75).",
+   "done": true
+  },
+  {
+   "t": "Cost stress to 2x and 3x",
+   "w": "At 2\u00d7 cost, zero configurations clear PF 1.20 with a usable trade frequency.",
+   "done": true
+  },
+  {
+   "t": "Null benchmark on the grid",
+   "w": "Real median 0.705 against a shuffled 0.757 \u2014 the real markets score WORSE than randomised copies.",
+   "done": true
+  },
+  {
+   "t": "Slope filter (variant E)",
+   "w": "Paired lift on the median: \u22120.024, only 49.2% of configs improved. Negative.",
+   "done": true
+  },
+  {
+   "t": "Walk-forward, all 48 combinations",
+   "w": "Median stitched 0.808. Gold 1h reaches 2.356 but is 1 survivor in 48.",
+   "done": true
+  },
+  {
+   "t": "Null benchmark on the walk-forward",
+   "w": "The null produced MORE gate-clearing cells than the real data (17 vs 10) and more survivors (2 vs 1).",
+   "done": true
+  },
+  {
+   "t": "Gold-only re-test on fresh data",
+   "w": "The only thing that could rescue the gold 1h pocket is out-of-sample data that does not exist yet.",
+   "done": false
+  }
+ ],
+ "note": "Rejected. Gold at 1h walk-forwards to 2.356 with 7 of 7 quarters positive, and beats its own shuffled twin decisively \u2014 but it is one survivor out of 48 combinations, and the phase-randomised null produced two. That is not a distinguishable edge; it is what searching 192 stitched series gives you. The mechanism was weak going in: two lagging averages of the same price series carry no information the price does not already have."
+}

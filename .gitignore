@@ -17,3 +17,6 @@ __pycache__/
 backtests/vwap/stage1_grid.csv
 backtests/vwap/stage2_paper.csv
 backtests/vwap/stage3_timeframes.csv
+
+# forward-collected feeds: appended continuously, not a reproducible artefact
+data/feeds/*.log

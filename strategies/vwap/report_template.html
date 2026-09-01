@@ -1,4 +1,4 @@
-<title>VWAP Model Board</title>
+<title>VWAP Walk-Forward Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
@@ -98,6 +98,25 @@ caption{caption-side:bottom;text-align:left;padding:8px 12px;color:var(--faint);
 .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--fail)}
 .bar i.ok{background:var(--pass)}
 .bar u{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink);opacity:.55}
+td.worst{border-left:1.5px solid var(--line-strong);font-weight:700}
+th.worst{border-left:1.5px solid var(--line-strong)}
+tr.surv td{background:var(--passbg)}
+tr.surv:hover td{background:var(--passbg);filter:brightness(.98)}
+.years{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:14px}
+.yr{background:var(--surface);padding:11px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.yr .y{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;color:var(--faint)}
+.yr .p{font-family:"JetBrains Mono",monospace;font-size:19px;font-weight:700;line-height:1;color:var(--pass)}
+.yr .t{font-size:11px;color:var(--muted)}
+.yr .bar{min-width:0}
+.callout{margin-top:14px;border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:2px;background:var(--surface);padding:12px 15px;box-shadow:var(--shadow)}
+.callout.bad{border-left-color:var(--fail)}
+.callout p{margin:0 0 8px;max-width:76ch}
+.callout p:last-child{margin-bottom:0}
+.supersede{margin-top:10px;border:1px dashed var(--line-strong);border-radius:2px;
+  padding:9px 13px;background:var(--sunk);color:var(--muted);font-size:13px;max-width:78ch}
+.supersede b{color:var(--ink);font-weight:600}
 footer{margin-top:52px;border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font-size:12px}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -108,19 +127,61 @@ a{color:var(--accent)}
     <div class="eyebrow">
       <span>prop_lab &middot; hypothesis <b>H-002</b></span>
       <span id="scope"></span>
-      <span>2023-09-01 to 2026-08-31</span>
+      <span>FX &amp; metals 2023-09 &rarr; 2026-08 &middot; BTC from 2017</span>
     </div>
     <h1>VWAP</h1>
     <p class="sub">Five model families around the volume-weighted average price:
       trend / stop-and-reverse, band fade, band breakout, VWAP reclaim and first
       pullback. Session anchors and rolling windows, five timeframes, both fill
-      assumptions.</p>
+      assumptions &mdash; then a quarterly walk-forward that re-chooses the
+      configuration blind and throws most of it away.</p>
     <div class="stamp" id="stamp" style="border-color:var(--warn);color:var(--warn)"></div>
     <div class="readout" id="readout"></div>
   </div>
 </header>
 
 <div class="wrap">
+
+<section id="wf">
+  <div class="shead"><span class="stage">WALK-FORWARD</span><h2>The only numbers with no hindsight in them</h2>
+    <span class="aside" id="wf-aside"></span></div>
+  <p class="tight">Quarterly folds: train on the trailing twelve months, trade the next three,
+    roll. The configuration <strong>and the filter</strong> are chosen on the train slice alone
+    and re-chosen every fold, so nothing on this page below saw the quarter it traded. Two
+    choices had to be made about how to pick inside a fold &mdash; a trade-count floor of 30 or
+    100, and the single best config or the top ten equally weighted &mdash; so all four run and
+    all four are reported. A real edge should not care much which is used.</p>
+  <div class="scroll"><table id="wfhead"></table></div>
+  <div class="callout bad" id="wf-note"></div>
+
+  <h3>Every combination, under all four selection rules</h3>
+  <p class="tight">The <strong>worst</strong> column is the one that matters: it is how the
+    combination does under the least favourable of the four ways of choosing. Green rows clear
+    PF 1.20 under all four.</p>
+  <div class="scroll"><table id="wfgrid"></table></div>
+
+  <h3>The survivors, and which of them still work</h3>
+  <p class="tight">A walk-forward that passes over a long span can still be describing a regime
+    that has ended. Splitting each stitched series at 2024-09 &mdash; the first quarter every
+    market in the study has &mdash; separates a live edge from a historical one.</p>
+  <div class="scroll"><table id="wflegs"></table></div>
+  <div class="callout bad" id="wflegs-note"></div>
+
+  <h3 id="btc-h3">Bitcoin 4h, year by year</h3>
+  <p class="tight">The longest blind record in the project: eight consecutive calendar years,
+    the configuration re-chosen from scratch every quarter.</p>
+  <div class="years" id="wfyears"></div>
+
+  <h3>A book of the legs that hold</h3>
+  <p class="tight">Equal weight, scored only on the window both legs share, so neither leg's
+    longer history carries the other.</p>
+  <div class="scroll"><table id="wfbook"></table></div>
+
+  <h3>The prop challenge, run on walk-forward trades</h3>
+  <p class="tight">Not on fitted configurations. A fresh account every trading day, 4% daily /
+    8% max / 8% target, fixed 0.75% risk, real breaches, no size shrinking.</p>
+  <div class="scroll"><table id="wfprop"></table></div>
+</section>
 
 <section>
   <div class="shead"><span class="stage">PROFILES</span><h2>Three ways to size the same edge</h2>
@@ -133,6 +194,9 @@ a{color:var(--accent)}
   <p class="tight">The rules behind each one:</p>
   <div class="scroll"><table id="profilecfg"></table></div>
   <div class="callout bad" id="profile-warning"></div>
+  <div class="supersede"><b>Superseded.</b> These configurations were chosen with knowledge of
+    the full period. The walk-forward above re-chooses blind every quarter and is the number to
+    read instead; this section is kept because the risk-sizing arithmetic still holds.</div>
 </section>
 
 <section>
@@ -148,6 +212,10 @@ a{color:var(--accent)}
   <p class="tight">Pairwise correlation of daily returns. Anything under about 0.2 is close
     enough to independent that the drawdowns do not stack.</p>
   <div class="scroll"><table id="corr"></table></div>
+  <div class="supersede"><b>Does not survive the walk-forward.</b> Rebuilt from walk-forward
+    trades on the window every leg shares, the four-leg book scores 1.018&ndash;1.222 against
+    1.435 for the two legs that actually hold. The 0.023 correlation is real; correlation
+    between legs is worthless when two of the legs have no current edge.</div>
 </section>
 
 <section>
@@ -191,8 +259,9 @@ a{color:var(--accent)}
 
 <section>
   <div class="shead"><span class="stage">NEXT</span><h2>What still has to happen</h2></div>
-  <p class="tight">Nothing here is a result yet. These are the tests that killed every ORB
-    candidate, in the order they will be run.</p>
+  <p class="tight">The tests that killed every ORB candidate. Four of the six have now run,
+    and H-002 is the first hypothesis in this project to come out the other side with anything
+    left. What remains is an independent engine check and one untested market.</p>
   <div class="scroll"><table id="todo"></table></div>
 </section>
 
@@ -211,9 +280,9 @@ const $ = id => document.getElementById(id);
 const f = (v,d=3) => (v===null||v===undefined||Number.isNaN(v)) ? '&mdash;' : Number(v).toFixed(d);
 const cls = pf => pf>=1.2 ? 'good' : (pf>=1.0 ? '' : 'bad');
 const pct = v => (v*100).toFixed(1)+'%';
-function table(el, cols, rows, cap){
+function table(el, cols, rows, cap, rowcls){
   el.innerHTML = `<thead><tr>${cols.map(c=>`<th class="${c.n?'n':''}">${c.h}</th>`).join('')}</tr></thead>`
-    + `<tbody>${rows.map(r=>`<tr>${cols.map(c=>{
+    + `<tbody>${rows.map(r=>`<tr class="${rowcls?rowcls(r):''}">${cols.map(c=>{
         const v = c.f ? c.f(r) : r[c.k];
         return `<td class="${c.n?'n':''} ${c.cls?c.cls(r):''}">${v}</td>`;
       }).join('')}</tr>`).join('')}</tbody>`
@@ -221,17 +290,130 @@ function table(el, cols, rows, cap){
 }
 
 const FT=D.fill_totals, S2=D.stage2, TN=D.tfnull_summary||{};
+const W=D.wf_summary, WN=D.wf_null, LEGS=D.wf_legs||[], KEEP=LEGS.filter(l=>l.keep);
 $('scope').textContent = FT.backtests.toLocaleString()+' backtests, 9 markets';
-$('stamp').textContent = 'Live \u2014 survived the cost stress, not yet validated';
-$('readout').innerHTML = [
+$('stamp').textContent = W
+  ? 'Fails as a family \u2014 one leg survives everything but the speed gate'
+  : 'Live \u2014 survived the cost stress, not yet validated';
+$('readout').innerHTML = (W ? [
+  {k:'Walk-forward median PF', v:f(W.median), n:`across all ${W.cells} stitched series`, tone:'fail'},
+  {k:'Above breakeven', v:pct(W.above1), n:'the family does not survive', tone:'fail'},
+  {k:'Clear 1.20 under all 4 rules', v:W.survivors, n:`of ${W.combos} market \u00d7 timeframe`, tone:'pass'},
+  {k:'Same on shuffled data', v:WN?WN.survivors:'\u2014', n:'what selection alone produces', tone:'fail'},
+  {k:'Legs still working now', v:KEEP.length, n:'the rest are a pre-2024 regime', tone:'pass'},
+  {k:'Days to hit 8%', v:'119\u2013201', n:'the phase gate is about 14', tone:'fail'},
+] : [
   {k:'Stage 1 gate-clearers', v:FT.limit_gate, n:'all of them on a limit-fill assumption', tone:'fail'},
   {k:'Same, honest fills', v:FT.honest_gate, n:'the limit result was an artefact', tone:'fail'},
   {k:'Stage 2 clear PF 1.20', v:S2.gate.toLocaleString(), n:'paper-faithful trend + rolling VWAP', tone:'pass'},
   {k:'Still clear at 2x cost', v:S2.gate2x, n:'ORB had zero at 2x on any market', tone:'pass'},
   {k:'Reach PF 1.60', v:S2.over16, n:'before out-of-sample testing'},
   {k:'Best a NULL search found', v:f(TN.null_best||0,2), n:'on shuffled data with no edge in it', tone:'fail'},
-].map(c=>`<div class="cell"><div class="k">${c.k}</div><div class="v ${c.tone||''}">${c.v}</div>
+]).map(c=>`<div class="cell"><div class="k">${c.k}</div><div class="v ${c.tone||''}">${c.v}</div>
   <div class="n2">${c.n}</div></div>`).join('');
+
+if (W){
+  $('wf-aside').textContent = W.combos+' combinations \u00d7 4 selection rules';
+
+  table($('wfhead'),[
+    {h:'Data',k:'kind',cls:()=>'name'},
+    {h:'Median PF',n:1,f:r=>f(r.median),cls:r=>cls(r.median)},
+    {h:'Best PF',n:1,f:r=>f(r.best),cls:r=>r.shuffled?'bad':cls(r.best)},
+    {h:'Above breakeven',n:1,f:r=>pct(r.above1)},
+    {h:'Cells clearing 1.20',n:1,f:r=>r.gate+' / '+r.cells,cls:r=>r.shuffled?'bad':'good'},
+    {h:'\u2192 still at 2x cost',n:1,f:r=>r.gate2x,cls:r=>r.shuffled?'bad':'good'},
+    {h:'Combos clearing under all 4 rules',n:1,f:r=>r.survivors,cls:r=>r.shuffled?'bad':'good'},
+  ], [Object.assign({kind:'Real markets',shuffled:false},W)]
+     .concat(WN?[Object.assign({kind:'Phase-randomised null',shuffled:true},WN)]:[]),
+   'Null = the identical walk-forward on markets whose returns have been shuffled. Every edge is destroyed by construction, so whatever survives there is what selection alone produces.');
+
+  $('wf-note').innerHTML = `<p><strong>H-002 does not survive walk-forward as a family.</strong>
+    The median stitched series loses money and only ${pct(W.above1)} are above breakeven. That
+    is the honest headline, and it is the same shape as ORB &mdash; just less severe.</p>
+    ${WN?`<p><strong>The survivors are not purely search noise.</strong> ${W.gate} real cells
+    clear the gate against ${WN.gate} shuffled, and ${W.survivors} combinations clear under
+    every selection rule against ${WN.survivors} shuffled. But note the shuffled
+    <em>maximum</em>: <strong>${f(WN.best)}</strong>, higher than the real maximum of
+    ${f(W.best)}, produced by a combination that also cleared under all four rules on data with
+    no edge in it. A headline walk-forward profit factor still proves nothing on its own. The
+    count above the null is the statistic.</p>`:''}`;
+
+  const RULES=[['r30_1','floor 30 / best'],['r30_10','floor 30 / top 10'],
+               ['r100_1','floor 100 / best'],['r100_10','floor 100 / top 10']];
+  table($('wfgrid'),[
+    {h:'Market',k:'symbol',cls:()=>'name'},{h:'TF',k:'tf'},
+    {h:'Quarters',k:'quarters',n:1},
+  ].concat(RULES.map(([k,h])=>({h:h,n:1,f:r=>f(r[k]),cls:r=>cls(r[k])})))
+   .concat([
+    {h:'Worst',n:1,f:r=>f(r.worst),cls:r=>'worst '+cls(r.worst)},
+    {h:'Null best',n:1,f:r=>r.null_best==null?'&mdash;':f(r.null_best),cls:r=>r.null_best>=1.2?'bad':'dim'},
+    {h:'Clears all 4',f:r=>r.survivor?'<span class="chip yes">yes</span>':'<span class="chip no">no</span>'},
+  ]), D.wf_grid, 'Stitched out-of-sample profit factor. Sorted by the worst of the four rules \u2014 not by the best.',
+   r=>r.survivor?'surv':'');
+
+  table($('wflegs'),[
+    {h:'Leg',f:r=>r.symbol+' '+r.tf,cls:()=>'name'},
+    {h:'Rule',k:'rule',cls:()=>'dim'},
+    {h:'Quarters',k:'quarters',n:1},
+    {h:'Quarters > 1',n:1,f:r=>r.q_above_1+' / '+r.quarters},
+    {h:'Trades',k:'trades',n:1},
+    {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+    {h:'Hold',n:1,f:r=>f(r.hold,1)+'h'},
+    {h:'Win',n:1,f:r=>pct(r.win)},
+    {h:'Avg R',n:1,f:r=>(r.avg_r>=0?'+':'')+f(r.avg_r,3),cls:r=>r.avg_r>0?'good':'bad'},
+    {h:'PF',n:1,f:r=>f(r.pf),cls:r=>cls(r.pf)},
+    {h:'PF at 2x',n:1,f:r=>f(r.pf2x),cls:r=>cls(r.pf2x)},
+    {h:'PF since 2024-09',n:1,f:r=>r.recent_pf==null?'&mdash;':f(r.recent_pf),cls:r=>cls(r.recent_pf)},
+    {h:'R since 2024-09',n:1,f:r=>r.recent_r==null?'&mdash;':(r.recent_r>=0?'+':'')+f(r.recent_r,1),cls:r=>r.recent_r>0?'good':'bad'},
+    {h:'Keep',f:r=>r.keep?'<span class="chip yes">yes</span>':'<span class="chip no">regime ended</span>'},
+  ], LEGS, 'The four combinations that clear PF 1.20 under all four selection rules, at their best rule.',
+   r=>r.keep?'surv':'');
+
+  const dropped=LEGS.filter(l=>!l.keep);
+  $('wflegs-note').innerHTML = `<p><strong>${dropped.length} of the ${LEGS.length} survivors are
+    describing a regime that has ended.</strong> ${dropped.map(l=>l.symbol+' '+l.tf).join(' and ')}
+    clear the gate over thirty quarters and lose
+    ${dropped.map(l=>f(l.recent_r,1)+'R').join(' and ')} since 2024-09 &mdash; the whole record is
+    pre-2024. Splitting a stitched series by recency is now part of the method.</p>`;
+
+  if (D.wf_btc_years){
+    const Y=D.wf_btc_years, mx=Math.max(...Y.map(y=>y.pf));
+    $('wfyears').innerHTML = Y.map(y=>`<div class="yr"><div class="y">${y.year}</div>
+      <div class="p">${f(y.pf,2)}</div>
+      <span class="bar"><i class="${y.pf>=1?'ok':''}" style="width:${Math.max(4,100*y.pf/mx).toFixed(1)}%"></i></span>
+      <div class="t">${y.trades} trades &middot; ${y.total_r>=0?'+':''}${f(y.total_r,1)}R</div></div>`).join('');
+    const worstY=Y.reduce((a,b)=>a.pf<b.pf?a:b);
+    $('btc-h3').insertAdjacentHTML('afterend',
+      `<p class="tight">Positive in every one of them, through two bull markets and a bear
+       market. The weakest year is ${worstY.year} at ${f(worstY.pf,3)}.</p>`);
+  }
+
+  if (D.wf_book){
+    table($('wfbook'),[
+      {h:'Selection rule',k:'rule',cls:()=>'name'},
+      {h:'Legs',k:'legs',n:1},
+      {h:'Trades',k:'trades',n:1},
+      {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+      {h:'PF',n:1,f:r=>f(r.pf),cls:r=>cls(r.pf)},
+      {h:'PF at 2x',n:1,f:r=>f(r.pf2x),cls:r=>cls(r.pf2x)},
+      {h:'Max DD at 0.75% risk',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',cls:r=>r.max_dd<=-0.08?'bad':'good'},
+    ], D.wf_book, (D.wf_book_legs||[]).join(' + ')+', equal weight, from 2024-09 onward.');
+  }
+
+  if (D.wf_prop){
+    table($('wfprop'),[
+      {h:'Leg',f:r=>r.symbol+' '+r.tf,cls:()=>'name'},
+      {h:'Rule',k:'rule',cls:()=>'dim'},
+      {h:'PF',n:1,f:r=>f(r.pf),cls:r=>cls(r.pf)},
+      {h:'Trades/day',n:1,f:r=>f(r.tpd,2),cls:r=>r.tpd<0.3?'bad':''},
+      {h:'CAGR',n:1,f:r=>(r.cagr*100).toFixed(1)+'%'},
+      {h:'Max DD',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',cls:r=>r.max_dd<=-0.08?'bad':'good'},
+      {h:'Pass rate',n:1,f:r=>(r.pass_rate*100).toFixed(0)+'%',cls:r=>r.pass_rate>=0.7?'good':(r.pass_rate<0.5?'bad':'')},
+      {h:'Breach 8% cap',n:1,f:r=>(r.fail_max*100).toFixed(0)+'%',cls:r=>r.fail_max>0.2?'bad':''},
+      {h:'Median days to pass',n:1,f:r=>r.median_days==null?'&mdash;':f(r.median_days,0),cls:r=>r.median_days>14?'bad':'good'},
+    ], D.wf_prop, 'Every row is measured on trades from configurations that never saw the quarter they traded. Days to pass is the phase gate.');
+  }
+}
 
 if (D.scaling){
   const S=D.scaling;
@@ -387,9 +569,11 @@ table($('todo'),[
  {t:'Fill realism', w:'Whether the result depends on a limit fill nobody can guarantee.', done:true},
  {t:'Cost stress to 2x and 3x', w:'Whether the edge is bigger than the spread difference between an ECN and a prop firm. This is what killed ORB.', done:true},
  {t:'Null benchmark', w:'Whether the profit factor beats what the same search finds in data with no edge in it.', done:true},
- {t:'Out of sample', w:'Whether the configurations that win on the fit years still win on a year nobody chose them on.', done:false},
- {t:'Walk-forward', w:'Whether a configuration chosen blind each quarter makes money. The only number that is not post-hoc.', done:false},
- {t:'Prop challenge simulation', w:'Pass rate and breach rate under 4% daily / 8% max / 8% target, fixed risk, real breaches.', done:false},
+ {t:'Out of sample', w:'Whether the configurations that win on the fit years still win on a year nobody chose them on.', done:true},
+ {t:'Walk-forward', w:'Whether a configuration chosen blind each quarter makes money. The only number that is not post-hoc. Answer: not as a family \u2014 median 0.909 \u2014 but two legs hold.', done:true},
+ {t:'Null benchmark on the walk-forward', w:'Whether four survivors out of forty-four is more than the same search finds in shuffled data. It found one.', done:true},
+ {t:'Prop challenge on walk-forward output', w:'Pass rate and breach rate under 4% daily / 8% max / 8% target, measured on blind-chosen configs rather than fitted ones.', done:true},
  {t:'NautilusTrader cross-check', w:'Whether an independent matching engine agrees with the kernel.', done:false},
+ {t:'Silver (XAGUSD)', w:'Downloaded 2026-09-01, 81,984 bars. Has not been through any stage yet.', done:false},
 ]);
 </script>

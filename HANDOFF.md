@@ -59,7 +59,7 @@ hypothesis it came from. Folders are named after the strategy, not the ID.
 | ID | Hypothesis | Verdict |
 |---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** — see `backtests/orb/report.html` |
-| H-002 | VWAP, five model families | **Live candidate**, not yet validated — `backtests/vwap/report.html` |
+| H-002 | VWAP, five model families | **Walk-forward done.** Fails as a family; one leg (BTC 4h) survives everything but the phase gate — `backtests/vwap/report.html` |
 
 ### H-001 ORB — rejected, and why it matters
 
@@ -81,11 +81,42 @@ Multi-market books work: legs are near-independent (mean daily-R correlation **0
 one market to four cuts median time-to-pass from 52 days to 28, lifts CAGR from 25% to 44%,
 **at a smaller drawdown**.
 
-**What is NOT yet done on H-002, in priority order:**
-1. **Walk-forward.** The single most important missing test. It killed every ORB candidate.
-2. Prop-challenge simulation on walk-forward output rather than fitted configs.
-3. NautilusTrader cross-check of the VWAP kernel.
-4. Silver (XAGUSD) was requested and is still downloading.
+### H-002 walk-forward — done 2026-09-01, and it changes the picture
+
+Quarterly folds, 12m train / 3m test, config **and filter** re-chosen blind every
+fold. 44 market x timeframe combinations x 4 selection rules (two trade-count
+floors x single-best vs top-ten) = 176 stitched out-of-sample series.
+
+**As a family H-002 fails: median stitched PF 0.909, only 36.4% above breakeven.**
+Against a phase-randomised null: 41/176 real cells clear 1.20 vs 6 shuffled, and 4
+combinations clear under all four selection rules vs 1 shuffled. So the survivors
+are not pure search noise — but the shuffled *maximum* was 2.496, higher than the
+real maximum of 1.832, so a headline walk-forward PF still proves nothing alone.
+
+Two of the four survivors lose money post-2024 (BTC 30m -34R, BTC 1h -48R) and are
+dropped. Two hold:
+
+| leg | quarters | PF | PF 2x | q>1 | trades/day | days to target |
+|---|---|---|---|---|---|---|
+| BTCUSDT 4h | 30 | 1.502 | 1.239 | 23/30 | 0.33 | 121.7 |
+| XAUUSD 5m | 7 | 1.669 | 1.466 | 6/7 | 3.93 | 46.6 |
+| both, equal weight, 2024-09+ | — | 1.435 | 1.218 | — | 0.65 | 128 |
+
+**BTC 4h is the strongest thing this project has produced**: positive in every
+calendar year 2019-2026 (1.099-2.091), 895 trades, 97th percentile of the null,
+its own shuffled twin scores 0.80-0.85. The fold chose the `rvol>1.5` filter in 22
+of 30 folds with nothing forcing it.
+
+It still fails two gates. **Speed**: 119-201 days to reach 8% against a ~14-day
+phase constraint. **Drawdown**: BTC 4h alone draws -28.9% at 0.75% risk, three and
+a half times the cap; only pairing it with gold brings that to -5.6%.
+
+**What is NOT yet done on H-002:**
+1. NautilusTrader cross-check of the VWAP kernel.
+2. Silver (XAGUSD) — finished downloading, `data/XAGUSD_dukascopy_15m.parquet`,
+   81,984 bars 2023-09 to 2026-08. Not yet run through any stage.
+3. The report page (`build_report.py`) has not been regenerated since stage 5, so
+   it does not show any walk-forward result.
 
 ---
 
@@ -103,6 +134,14 @@ Empirically established on this data. Treat as settled unless you have new evide
 - **Relative-volume / participation filters are the only filter family that lifts a median.**
   Consistent with the older `~/trading-bots` repo: every leg that ever worked there came from
   a data feed, not a price pattern.
+- **A walk-forward that passes over a long span can still describe a regime that
+  has ended.** BTC 30m and 1h both cleared PF 1.20 over thirty quarters and both
+  lose money since 2024-09; the whole record was pre-2024. Always split a stitched
+  series by recency before believing it.
+- **Diversification does not create an edge.** Stage 5's four-leg book (leg
+  correlation 0.023) fell to 1.018-1.222 when rebuilt from walk-forward trades,
+  against 1.435 for the two legs that actually hold. Low correlation between legs
+  is worthless when two of them have no current edge.
 - **Resting-limit fills are a trap.** Every one of the 119 configs that cleared the gate in
   VWAP stage 1 did so on a limit-fill assumption; with honest fills, zero cleared and BTC's
   best fell from 2.932 to 0.876. The old repo has a strategy that backtested at PF 3.0 and
@@ -195,37 +234,84 @@ order. `STRATEGY_LOG.md` is the one-row-per-variation ledger, pass and fail; the
 are the denominator that makes a winner believable.
 
 Published result pages (private artifacts, Kris can share them):
+- **Strategy board — start here** — <https://claude.ai/code/artifact/f9ac29b6-5251-4510-81d9-ef3d5b7dd3d3>
 - H-001 ORB — <https://claude.ai/code/artifact/a38e8a90-fc1a-4133-afc1-da3a826ae370>
 - H-002 VWAP — <https://claude.ai/code/artifact/cb748842-7d3b-45f7-9d69-827e00ba82f4>
 
+The board is the one Kris reads. It scores every hypothesis 0-10 on the same
+rubric and shows pass rate and days-to-a-funded-account first; the per-hypothesis
+pages hold the workings. **When a new hypothesis gets a walk-forward, add a
+`collect_<name>()` to `core/build_scoreboard.py`** and it joins the board.
+
+Scoring lives in `core/scorecard.py`, weights stated at the top of the file:
+speed 30, pass rate 18, breach safety 12, drawdown 10, evidence 20, raw profit 10.
+Two design points worth keeping: speed is scored on **expected days per funded
+account** (median days ÷ pass rate), because median-days-to-pass only counts
+accounts that passed and flatters a strategy that blows most of them up; and an
+**evidence gate** caps the total at 3.0 when the walk-forward record is
+effectively absent, so churn cannot buy the speed weight. Kris set the priority
+(everything counts, speed heaviest) — the exact curves are Claude's and he can
+change any of them.
+
+Rebuild the board with `.venv/bin/python core/build_scoreboard.py`.
+
+**Every hypothesis on the board has an interactive risk ladder**: the trader picks
+risk per trade and the score, verdict and headline numbers all re-compute. Each
+level's scorecard is calculated in Python and embedded, so the page never scores
+anything itself and cannot drift from `core/scorecard.py`.
+
+**Adding a hypothesis is one call.** `core/board.py::write_board` takes a stitched
+walk-forward trade series (R multiples, entry and exit timestamps, optionally the
+2x-cost series) and produces the whole board record — prop simulation across
+`core/riskladder.py`'s twelve risk levels, the mandatory reporting fields, and the
+scoring inputs. `build_scoreboard.py` then picks up any `backtests/*/board.json`
+automatically; it has no per-strategy code in it. `strategies/orb/stage14_board.py`
+is the shortest worked example.
+
+**Score a hypothesis on walk-forward output, never on a fitted configuration.**
+H-001 was briefly scored on a fitted config while H-002 was scored on walk-forward,
+which flattered ORB badly — it read as "25 expected days to a funded account" when
+the real figure on blind-chosen configs is 7,819.
+
 Rebuild either locally with `.venv/bin/python strategies/<orb|vwap>/build_report.py`.
 
-### The next job, concretely
+### The next job, concretely (rewritten 2026-09-01 — the walk-forward is done)
 
-**Walk-forward H-002.** Nothing else matters until this exists, because every H-002 number
-in the repo was chosen with hindsight and this is the one test that removes it.
+The walk-forward, the null benchmark on it, and the prop simulation on its output
+all exist now (`strategies/vwap/stage6_walkforward.py`, `stage7_wf_analysis.py`;
+results in `backtests/vwap/stage6_*` and `stage7_*`). Re-run either with
+`.venv/bin/python strategies/vwap/stage6_walkforward.py [--shuffled]`, about four
+minutes each on 14 workers.
 
-Copy `strategies/orb/stage4_walkforward.py` — it is the working template and the same shape
-applies. What it has to do:
+**Latest H-002 state:** the best board candidate is now the stage 9 2x-cost
+selector: BTCUSDT 30m + BTCUSDT 4h + XAUUSD 30m + XAUUSD 5m, one configuration
+per leg, equal weight, common 2024-09+ window. It scores PF 1.646, PF 1.313 at
+2x cost, 1.58 trades/day, 0.146 R/day, -7.6% max drawdown at 1.00% risk, 85.8%
+pass rate, 45 median days and 52.5 expected days to a funded account. Board score
+8.5. The paired-volume null for the same 2x selector produced 0 robust survivors.
 
-1. Roll quarterly over 2023-09 to 2026-08. Train on the trailing 12 months, test the next 3.
-2. Inside each fold, choose the configuration on the TRAIN slice only, by profit factor with
-   a trade-count floor. Re-choose every fold; never carry a config forward by hand.
-3. **Also re-choose the filters inside the fold.** The H-002 filter set was picked from a
-   29-filter study on overlapping data, so leaving it fixed leaves selection bias in.
-4. Trade the chosen config on the TEST slice at 1x cost and stitch the test trades together.
-5. Report on the stitched series: profit factor, trades/day, average R, max drawdown, and
-   quarters above breakeven. Compare against the fitted numbers already in `RESEARCH_LOG.md`.
+This is better than the older two-leg candidate (61 expected days) but still far
+too slow for the current phase. The genuine options are
 
-The bar to beat: ORB's stitched walk-forward was **PF 0.781** over 2,746 trades, against a
-fitted best of 1.698. If H-002's stitched walk-forward comes in near or above 1.20 with a
-usable trade frequency, it is the first real candidate this project has produced. If it
-collapses the way ORB's did, H-002 joins ORB in the log and the next hypothesis starts.
+1. **Chase frequency on the BTC 4h mechanic.** It is the only thing with a real
+   long record, but stage 9 showed BTC 30m can join the book when configs are
+   chosen by 2x-cost train PF. Getting to 14 expected days still needs roughly
+   another 3.75x R/day at the same drawdown, so this is not a small tweak.
+2. **Accept a slower challenge.** The four-leg book passes 85.8% of the time with
+   a 0% breach rate at a 45-day median / 52.5-day expectation. That breaks the
+   ~14-day phase constraint but is a real, tested result; whether the phase
+   constraint or the result gives way is Kris's call, not yours.
+3. **Log H-002 as a keeper and move to the next hypothesis.** The standing pattern
+   from both repos — every leg that ever worked came from a data feed, not a price
+   pattern — argues for spending the next block on funding, open interest or taker
+   delta rather than another price geometry.
 
-After that, in order: the prop-challenge simulation re-run on walk-forward output rather
-than fitted configs; a NautilusTrader cross-check of the VWAP kernel (`core/nautilus_setup.py`
-and `strategies/orb/stage6_nautilus.py` show the pattern); and XAGUSD, which Kris asked for
-and which may still be mid-download in `data/dukascopy_raw/XAGUSD/`.
+Whatever he picks, two pieces of unfinished work stand regardless: the
+NautilusTrader cross-check of the VWAP kernel (`core/nautilus_setup.py` and
+`strategies/orb/stage6_nautilus.py` show the pattern), and the VWAP report page:
+`build_report.py` predates stages 6-9, so the published VWAP page still shows
+only the fitted numbers. XAGUSD is no longer outstanding for H-002; it was tested
+in stage 9 and did not produce a robust leg.
 
 ### What Kris will ask you
 

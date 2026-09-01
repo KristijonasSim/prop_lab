@@ -1,0 +1,168 @@
+{
+ "floor": 100,
+ "topn": 10,
+ "legs": [
+  "BTCUSDT 4h",
+  "XAUUSD 5m"
+ ],
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.5988,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.4012,
+   "median_days": 290.0,
+   "p25_days": 252.75,
+   "expected_days": 484.3,
+   "max_dd": -0.0183
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.759,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.241,
+   "median_days": 149.0,
+   "p25_days": 109.5,
+   "expected_days": 196.3,
+   "max_dd": -0.0365
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.8503,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.1497,
+   "median_days": 81.0,
+   "p25_days": 58.75,
+   "expected_days": 95.3,
+   "max_dd": -0.0548
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.8518,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.1482,
+   "median_days": 64.0,
+   "p25_days": 41.0,
+   "expected_days": 75.1,
+   "max_dd": -0.073
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.8278,
+   "fail_max": 0.024,
+   "fail_daily": 0.0,
+   "still_open": 0.1482,
+   "median_days": 53.0,
+   "p25_days": 30.0,
+   "expected_days": 64.0,
+   "max_dd": -0.0913
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.8084,
+   "fail_max": 0.0464,
+   "fail_daily": 0.0,
+   "still_open": 0.1452,
+   "median_days": 43.0,
+   "p25_days": 25.0,
+   "expected_days": 53.2,
+   "max_dd": -0.1095
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.7141,
+   "fail_max": 0.1527,
+   "fail_daily": 0.0,
+   "still_open": 0.1332,
+   "median_days": 34.0,
+   "p25_days": 19.0,
+   "expected_days": 47.6,
+   "max_dd": -0.1278
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.7365,
+   "fail_max": 0.2021,
+   "fail_daily": 0.0,
+   "still_open": 0.0614,
+   "median_days": 30.5,
+   "p25_days": 15.0,
+   "expected_days": 41.4,
+   "max_dd": -0.1461
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.6198,
+   "fail_max": 0.3263,
+   "fail_daily": 0.0,
+   "still_open": 0.0539,
+   "median_days": 20.0,
+   "p25_days": 11.0,
+   "expected_days": 32.3,
+   "max_dd": -0.1826
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.5958,
+   "fail_max": 0.2859,
+   "fail_daily": 0.0659,
+   "still_open": 0.0524,
+   "median_days": 17.0,
+   "p25_days": 10.0,
+   "expected_days": 28.5,
+   "max_dd": -0.2191
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.5434,
+   "fail_max": 0.1527,
+   "fail_daily": 0.253,
+   "still_open": 0.0509,
+   "median_days": 12.0,
+   "p25_days": 8.0,
+   "expected_days": 22.1,
+   "max_dd": -0.2921
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.4521,
+   "fail_max": 0.1153,
+   "fail_daily": 0.3847,
+   "still_open": 0.0479,
+   "median_days": 9.5,
+   "p25_days": 7.0,
+   "expected_days": 21.0,
+   "max_dd": -0.3652
+  }
+ ],
+ "pick": {
+  "risk": 0.01,
+  "pass_rate": 0.8518,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 0.1482,
+  "median_days": 64.0,
+  "p25_days": 41.0,
+  "expected_days": 75.1,
+  "max_dd": -0.073
+ },
+ "fields": {
+  "pf": 1.447,
+  "trades": 4569,
+  "trades_per_day": 6.845,
+  "trades_per_week": 47.91,
+  "avg_hold_h": 11.61,
+  "win_rate": 0.4097,
+  "avg_r": 0.0121,
+  "max_dd_r": -7.3,
+  "max_dd_pct": -0.073,
+  "sharpe": 1.89,
+  "days_to_target": 82.4,
+  "days_to_breach": 548.9
+ },
+ "pf_2x": 1.239
+}
