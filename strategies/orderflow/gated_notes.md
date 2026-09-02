@@ -53,6 +53,31 @@ The gate keeps **55%** of trades and total R goes *up*. Two-step prop simulation
 **92.4% pass, 0% killed, 48.7 expected days** at 2.50% risk, against H-002's
 88.0% and 53.4 at 2.00%.
 
+## The cleanest comparison: the same five legs, gate the only difference
+
+The table above lets the selection rule pick a different book for each case,
+which is what stage 11 does but which mixes two effects. Holding the book fixed
+at the gated five legs and toggling only the gate, read straight from the saved
+trade file:
+
+| same 5 legs, same window | ungated | gated |
+|---|---|---|
+| trades | 1,108 | 859 |
+| profit factor | 1.721 | **2.047** |
+| at 2x cost | 1.375 | **1.651** |
+| total R | 93.2 | **97.1** |
+| max drawdown | −4.45R | **−2.82R** |
+| return / drawdown | 20.9 | **34.4** |
+| R per day | +0.140 | **+0.146** |
+
+**Total R rises on 23% fewer trades and drawdown falls by 37%.** The ungated
+column here (1.721 / 1.375 / −4.45R) is this pipeline's reconstruction of H-002,
+against its published 1.772 / 1.418 / −3.77R — within a few percent, which is
+what makes the comparison trustworthy.
+
+One check worth stating: the gate keeps 53.0% of shorts and 53.8% of longs, so
+it is not a disguised directional bias. It is conditioning on the crowd.
+
 ## The per-leg evidence, which is the strongest part
 
 | leg | PF@2x ungated | PF@2x gated | kept | maxDD ungated | maxDD gated |
