@@ -1546,3 +1546,301 @@ to pay a 28bps round trip — the H-007 shape.
    shallow ones, and higher timeframes beat lower ones. All three point the way
    the mechanism does — the bigger and more widely watched the pool, the more
    there is in it.
+
+## Notes preserved from deleted strategies (2026-09-02)
+
+The code for H-001, H-003, H-005, H-008 and H-010 was deleted on 2026-09-02
+because each is refuted at the level of its mechanism and none has a route left
+to try. Their board records are kept, so they remain part of the denominator;
+these are their strategy notes, verbatim, so the reasoning does not go with the
+code. Everything is recoverable from git history at commit 9bbc5cd.
+
+---
+
+### preserved: strategies/orb/notes.md
+
+# ORB — Opening Range Breakout
+
+## What it is
+
+Mark the high and low of the first N minutes after a session opens. Go long on a
+break above the high, short on a break below the low. Exit on a stop, an R
+multiple, or at the session close.
+
+On a 24/7 market like BTC there is no opening auction, so the "session" has to be
+picked by hand — 00:00 UTC, the London open, or the New York open. That choice is
+a free parameter, which is itself a warning sign.
+
+## Claimed mechanism (from the literature)
+
+**Zarattini, Barbon & Aziz 2024 — US equities, 7,000+ stocks, 2016-2023.**
+5-minute opening range, stop order beyond the range, stop at 10% of the 14-day
+ATR, target = end of day, 1% risk, 4x leverage cap.
+
+- Unfiltered ORB: **+29% total, 41.4% win rate, Sharpe 0.48.** Barely anything.
+- Filtered to the top 20 "stocks in play" by opening relative volume:
+  **+1,637%, 48.4% win rate, Sharpe 2.81, 12% max DD.**
+
+The stated mechanism is *not* the price pattern. It is that overnight news forces
+institutions to reprice a stock, and that repricing shows up as abnormal order
+flow concentrated into the first minutes of the single daily auction. The
+opening range is a proxy for "an informed participant is working a large order
+right now". The 56x gap between the unfiltered and filtered versions is the whole
+story: **the relative-volume filter is the edge, the breakout is just the trigger.**
+
+**Zarattini & Aziz 2025 — QQQ / TQQQ.** 5-min range, enter in the direction of the
+first candle, stop at the candle's opposite extreme, target 10R or EOD.
+QQQ +676%, **24% win rate**, Sharpe 1.13, 22% max DD. Explicitly assumes **no
+slippage**. The 24% win rate is the wrong shape for a prop challenge: the payoff
+depends on rare 10R winners, so a losing streak breaches the daily cap long
+before the big winner lands.
+
+## Why it may not transfer to BTC
+
+Who is on the other side? In equities, a market maker who has to reprice against
+informed flow at a once-a-day auction. On BTC there is:
+
+- no auction and no single open — order flow is spread across 24 hours;
+- no overnight accumulation of unexecuted orders to release at 09:30;
+- no news gap concentrated at one clock time;
+- a continuous, arbitraged, fully electronic book across dozens of venues.
+
+So the specific imbalance the papers exploit does not have a place to build up.
+What is left is "price broke a recent high, buy it" — a generic momentum trigger
+that has to pay costs on every attempt.
+
+## Prior evidence against (Kris's own earlier repo, `~/trading-bots`)
+
+- Session-anchored ORB **failed on BTC and on real Gold / Silver / Nasdaq futures**,
+  every timeframe, both NY and London sessions.
+- `session_orb` with a real London/NY clock scored **PF 0.986** and did not beat a
+  plain UTC anchor.
+- Breakout + retest failed at every timeframe 3m-4h; its *inverse* (fade the
+  breakout) is what worked.
+- Larry Williams daily range breakout: PF 0.88-1.00 at taker cost.
+
+This test is therefore a **re-examination, not a fresh idea.** It is worth
+re-running only because (a) it is being tested here with a different exit and
+sizing model, (b) the relative-volume filter — the part the literature says is the
+actual edge — is being tested explicitly, and (c) the fade variant is in the grid.
+
+## Cost reality on a 30-minute BTC range
+
+A 30-minute opening range on BTC is typically 0.3-0.5% wide. If the stop sits at
+the far side of the range, that whole width is 1R. Binance spot taker at
+0.10%/side is 0.20% round trip = **~0.5R of cost per trade**. Futures taker at
+0.05%/side is ~0.25R. This is why the base venue assumption here is the USDT-M
+perpetual, and why every result is also reported at **zero cost** — that run is
+the diagnostic that separates "no edge" from "edge eaten by fees".
+
+## Sources
+
+- <https://www.sfi.ch/en/publications/n-24-98-a-profitable-day-trading-strategy-for-the-u.s.-equity-market>
+- <https://concretumgroup.com/a-profitable-day-trading-strategy-for-the-u-s-equity-market/>
+- <https://danfin.net/opening-range-breakout-research>
+- <https://www.luxalgo.com/library/concept/opening-range-and-orb/>
+
+---
+
+### preserved: strategies/resid/notes.md
+
+# H-008 — Beta-residual reversion
+
+**Status: rejected at stage 1.** The real data reverts *less* than shuffled noise.
+This is the H-005 failure repeated, and it was predicted in the kernel docstring
+before the run.
+
+## Mechanism (stated before the results)
+
+BTC is the liquidity centre of crypto and the alts trade mostly as a beta to it.
+Strip the BTC factor out and what remains — the residual — is the coin-specific
+part of the move. The claim: a large short-horizon residual is a *liquidity*
+event, not information. Someone had to exit an illiquid book right now and paid
+whatever the book charged. Nothing about the coin changed, so once the pressure
+stops, makers refill and the residual reverts. On the other side: the trader who
+could not wait, and the maker who wants paying for unwanted inventory.
+
+**Why it should have beaten H-002.** VWAP mean reversion fades an asset from its
+own volume-weighted average and cannot tell a liquidity move from an informed
+one — if BTC drops 3% and ETH follows, VWAP sees an ETH overshoot and fades a
+move that had a perfectly good reason to happen. Removing the market factor
+first is a better-conditioned version of the same instinct: fade only the part
+with no reason to persist. Four alts throwing signals is also more R per day than
+five single-asset legs, and `days = maxDD_in_R / R_per_day`.
+
+## What was run
+
+1,152 configurations: 4 timeframes (15m/30m/1h/4h) × 3 beta windows (50/100/200)
+× 4 residual lookbacks (2/4/8/16) × 4 z thresholds (1.5/2.0/2.5/3.0) × 3 holds
+× hedged/naked, each at 0x/1x/2x/3x cost, on ETH, SOL, BNB and XRP against BTC,
+2020-08 → 2026-08. Every configuration re-run on 5 paired-shuffle null panels.
+
+Exit is **fixed-hold only** — no stop, no target. Both would need an intrabar
+"which touched first" assumption, and this repo has already been burned once by a
+fill assumption (the VWAP std-band result that backtested at PF 3.0 and traded at
+0.7). A fixed hold has no fill ambiguity. It understates the strategy; that is
+the right direction to be wrong in.
+
+## Result
+
+| | real | paired null |
+|---|---|---|
+| configs clearing PF 1.20 at 2x | **0** of 1152 | 2 / 0 / 0 / 0 / 0 |
+| best config PF at 2x | 0.940 | **1.496** |
+| median PF before costs (0x) | 1.002 | **1.005** |
+| configs beating PF 1.0 at 0x | 51.6% | **55.4%** |
+| median PF at 1x | 0.565 | **0.693** |
+
+## Reading
+
+**The residual does not revert.** Median profit factor before any costs is 1.002
+and 51.6% of configurations beat 1.0 — a coin flip. Nothing here is cost-limited;
+there is no edge to protect.
+
+**The null is better than the real data on every single cut.** More configs
+profitable before costs, higher median, higher best, more gate-clearing cells.
+This is precisely the H-005 result: a fade rule is *easier* to satisfy on
+phase-randomised data, because shuffled series revert around their extremes more
+readily than real trending ones. The kernel docstring named this as the main risk
+before the run; it is what happened.
+
+**The decisive diagnostic is the z-response, and it is flat.** Median PF before
+costs by entry threshold: z≥1.5 → 1.000, z≥2.0 → 0.997, z≥2.5 → 1.006, z≥3.0 →
+1.013. If the mechanism were real, a three-sigma residual would revert far harder
+than a 1.5-sigma one. It does not move. The size of the deviation carries no
+information about what happens next, which is as clean a refutation as this
+project has produced.
+
+**The hedge does isolate something, and it is not enough.** Hedged median PF
+before costs is 1.021 against naked 0.985 — so removing BTC genuinely does leave
+a marginally more mean-reverting series. But it is a 2% effect, and hedging
+crosses two spreads instead of one, so after costs the hedged variant is the
+worse of the two (median PF at 2x: 0.142 hedged vs 0.482 naked). Both are far
+under 1.0.
+
+## What this closes off, taken with H-007
+
+H-007 ranked the majors and traded the spread; H-008 hedged out the factor and
+faded the residual. Continuation and reversion, on the same relative structure,
+in opposite directions. H-007 found a real but tiny edge (~10% on PF, beaten by a
+14bps round trip). H-008 found nothing at all.
+
+**Together they say the relative structure of the crypto majors is not tradeable
+at retail cost.** That is a family, not a hypothesis, and it should not be
+reopened without either a much wider universe or a much cheaper venue.
+
+## Methodology note
+
+The naked variant is sized on the coin's **total** volatility, not the residual's.
+A naked trade keeps the whole BTC beta, so residual-vol sizing would divide its
+losses by less risk than it actually ran and flatter it against the hedged
+variant. The first run of this grid had that bug; it was fixed before the numbers
+above, and correcting it moved essentially nothing (0 of 1152 either way).
+
+---
+
+### preserved: strategies/vwap_mr/notes.md
+
+# H-010 — VWAP band rejection (from the TradingView "VWAP MR Scalper")
+
+Opened and rejected 2026-09-02.
+
+## The hypothesis
+
+From a published indicator: anchored VWAP with three standard-deviation bands.
+A bar reaches a band, then closes back against the move — a "rejection" — and
+the trade fades it back toward the VWAP. Volume delta must agree.
+
+**Mechanism, stated before results.** At two or three sigma from the session's
+volume-weighted consensus, the price is far from where the day's volume actually
+traded. Reversion is paid by the market makers quoting around VWAP; the
+counterparty is whoever chased. The rejection candle is evidence the push
+failed, and the delta agreeing is evidence aggressive flow has turned.
+
+## Why this needed care before it was worth running at all
+
+`CLAUDE.md` already lists **VWAP std-band fade** as dead: backtest profit factor
+3.0, live about 0.7. The cause was a backtest that filled a resting limit on any
+wick touch. So this family is not new here — it is the one that burned the trader
+before. It was worth re-testing only because the rejection formulation can be
+made fill-honest, which the original could not.
+
+A second warning was already in the data: H-002's 105 blind fold choices land on
+**trend** and **break** modes and essentially never on **fade**, and every one of
+them uses market fills rather than the limit fill. The one VWAP strategy that
+works here is not a mean-reversion strategy.
+
+## What was changed from the indicator, and why each change is not cosmetic
+
+1. **Honest fills.** Entry at the next bar's open after a closed rejection bar.
+   Never a resting limit at the band.
+2. **Real signed flow.** The indicator estimates delta as
+   `volume * sign(close - open)` — a guess about a bar it can already see.
+   Binance publishes `taker_buy_base_asset_volume`, so the true split is used.
+3. **Exits**, which the indicator has none of: revert to the VWAP, a fixed R
+   multiple, or time — always with a stop beyond the band so R is bounded.
+4. **The H-009 crowd gate**, optional: take the trade only when the long/short
+   account ratio is on the other side of it.
+5. **A direction control**: every setup also taken the other way.
+
+## Two real bugs found while building it, both of which flattered the result
+
+1. The VWAP "target" could sit **behind** the entry. If the rejection bar closed
+   back through the VWAP, a long entered above it had nowhere to revert to, and
+   the exit booked a loss as a target hit — 2,096 target hits averaging −0.8R.
+   Fixed by refusing the trade when there is no room, and by only honouring the
+   target while it is still on the profitable side.
+2. The minimum stop distance was 10bps against a **14bps round trip**, so cost
+   alone was 1.4R on the tightest trades. Early in a session the volume-weighted
+   sigma is tiny and the bands sit almost on top of each other. It became a swept
+   dimension rather than a hygiene constant.
+
+## The result — 3 coins x 4 timeframes x 2,592 configurations, 5 null seeds
+
+| cost | revert (the hypothesis) | continue (control) | **paired null** |
+|---|---|---|---|
+| 0x | 0.946 | 0.991 | **0.965** |
+| 1x | 0.792 | 0.818 | **0.845** |
+| 2x | 0.681 | 0.686 | **0.747** |
+| 3x | 0.585 | 0.577 | **0.660** |
+| clears 1.20 at 2x | 280 | 785 | **637 per seed** |
+
+**The null is better than the real market at every cost level**, and clears the
+gate more than twice as often as the hypothesis. This is the H-005 verdict again:
+a phase-randomised copy of the market satisfies these rules more easily than the
+market does, which is what a fade rule does on shuffled data.
+
+The control is equally damning — taking every setup the other way scores no worse.
+Neither side carries information.
+
+## The lever table refutes the mechanism directly
+
+Median profit factor at 2x cost, by choice:
+
+| lever | values |
+|---|---|
+| **target** | **revert to VWAP 0.500** · fixed R 0.679 · **time only 0.816** |
+| anchor | daily 0.581 · weekly 0.661 · rolling 0.759 |
+| entry band | 1σ 0.713 · 2σ 0.688 · 3σ 0.573 |
+| min stop | 25bps 0.592 · 50bps 0.671 · 100bps 0.737 |
+| flow filter | off 0.679 · on 0.682 |
+| crowd gate | off 0.659 · **on 0.712** |
+
+**Exiting at the VWAP — the whole idea — is the single most harmful choice in the
+grid, and ignoring the VWAP entirely is the best.** Deeper bands are worse, not
+better, which is the opposite of the "75-80% reversion from the 2nd or 3rd band"
+claim the indicator's write-up makes. The delta filter does nothing (0.679 to
+0.682), which is notable given it is the indicator's headline feature — though
+that is the crude `sign(close-open)` proxy replaced by the real thing, so this is
+a fair test of the idea rather than of the approximation.
+
+The best-looking configurations trade **0.018 times a day** — one every two
+months over six years, 40-46 trades. That is search noise and it fails the phase
+constraint on its own.
+
+## What is worth keeping
+
+The crowd gate lifts even this dead strategy, 0.659 to 0.712. That is a third
+independent confirmation of H-009, on a strategy with no edge of its own, which
+is the cleanest possible setting to see a filter work in.
+

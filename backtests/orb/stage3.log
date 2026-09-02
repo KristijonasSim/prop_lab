@@ -1,8 +1,0 @@
-configs 2160
-  IS cost 0x  12s
-  IS cost 1x  12s
-  IS cost 2x  11s
-  OOS cost 0x  6s
-  OOS cost 1x  6s
-  OOS cost 2x  6s
-saved 12960 rows

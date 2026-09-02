@@ -136,6 +136,27 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   3.858 vs real 1.929. Only 2 of 57 combos beat their own null. NOTE: this contradicts the
   prior repo's `liquidity_sweep` result, which was never run against a null — treat that
   older finding as unverified.
+- **Beta-residual reversion** (H-008) — strip BTC's beta out of ETH/SOL/BNB/XRP and
+  fade the residual. 1,152 configs x 6 panels: ZERO clear PF 1.20 at 2x, and the
+  null beats the real data on every cut. The decisive number is the z-response and
+  it is FLAT — PF before costs runs 1.000/0.997/1.006/1.013 as entry goes 1.5 to
+  3.0 sigma, so the size of a deviation says nothing about what follows. There is
+  no mechanism here to repair.
+- **Fading an extreme, as a family** — it has now failed twice on two different
+  definitions of "extreme": a rolling 10-100 bar high/low (H-005) and the previous
+  day/week high/low (H-011), which is the strongest level in the family. Do not
+  re-propose fading an extreme without a genuinely new ingredient.
+- **VWAP band rejection / mean-reversion scalper** (H-010) — the TradingView
+  "VWAP MR Scalper" idea rebuilt with honest fills, real taker delta and exits.
+  2,592 configs x 3 coins x 4 TFs: the paired null's median PF is HIGHER than the
+  real market's at 0x/1x/2x/3x, and it clears the gate 637 times per seed against
+  280. The control (take every setup the other way) scores no worse. Exiting at
+  the VWAP — the whole idea — is the most harmful lever in the grid (0.500 vs
+  0.816 for a time exit). Walk-forward 0.892 at 2x.
+- **Previous day/week high-low reversal** (H-011) — NOT fully dead, but not
+  tradeable: it is the only fade here that beats its paired null at every cost
+  level and beats its own control, yet walk-forward is 0.897 at 2x and 0 of 12
+  panels hold the gate. Real edge, too small for 28bps. Code kept.
 - **VWAP std-band fade** — backtest PF 3.0, live ~0.7. Resting-limit backtests assume a fill on
   any wick touch. Any limit-fill strategy needs a queue-priority check before the backtest is trusted.
 

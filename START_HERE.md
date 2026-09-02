@@ -130,6 +130,25 @@ reversion is real enough to enter on but not reliable enough to exit on** —
 targeting the level's midpoint is the worst exit in the grid (0.576) against
 exiting on time (0.862), the identical pattern H-010 showed with the VWAP.
 
+**Five strategies were deleted on 2026-09-02** — H-001 ORB, H-003 EMA x VWAP,
+H-005 liquidity sweep fade, H-008 beta-residual reversion and H-010 VWAP band
+rejection. Each is refuted at the level of its mechanism, not merely unprofitable:
+ORB loses at zero cost, H-003's null produced more survivors than the real data,
+H-005's null cleared the gate eleven times more often, H-008's z-response is flat,
+and H-010 loses to its null while its defining lever is the most harmful in its
+grid. **Their board records are kept**, so they stay in the denominator — the
+scores, verdicts, notes and grids all still render. What went is the code and
+about 250MB of raw sweep output. Their notes are preserved verbatim at the end of
+`RESEARCH_LOG.md` and every one is in the known-dead list in `CLAUDE.md`, and all
+of it is recoverable from git at `9bbc5cd`. Note the working tree is smaller but
+a clone is not: the history still carries the deleted files.
+
+Kept deliberately, despite low scores: **H-007** (2.9) beats its null BEFORE costs
+and its identified cure — a 50-100 coin universe — became feasible the moment the
+Binance archive was found. **H-011** (2.6) is the only fade here that beats its
+null at every cost level, and it produced two findings still being carried. **H-006**
+(1.3) is dead as a strategy but its kernel is what H-009 runs on.
+
 ## Continue here
 
 1. ~~**Cross-sectional crypto ranking**~~ — **done 2026-09-01, rejected.** See
