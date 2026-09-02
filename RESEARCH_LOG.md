@@ -1844,3 +1844,63 @@ The crowd gate lifts even this dead strategy, 0.659 to 0.712. That is a third
 independent confirmation of H-009, on a strategy with no edge of its own, which
 is the cleanest possible setting to see a filter work in.
 
+
+## Hypothesis X / H-012 — combining the best performers makes it SLOWER (2026-09-02)
+
+The ask: make time-to-funded shorter by combining the best pieces of different
+hypotheses. Time to funded is
+
+    days = maxDD_in_R / R_per_day x (target / cap)
+
+so the lever is drawdown, and the textbook way to cut drawdown is more
+decorrelated legs. Stage 10 had already walk-forwarded **57** market/timeframe
+combinations and H-009 uses only five of them; the other 52 were discarded for
+not clearing PF 1.20 at double cost on their own. So: widen the pool to all 57,
+apply the H-009 crowd gate wherever a feed exists, and choose the book to
+minimise expected days instead of to pass a per-leg gate.
+
+**The selection is a search, so it was held out** — book chosen on quarters up to
+2025-10-01, measured only after. That is stricter than stage 11, which chose
+H-002's book across the whole window and reported the same window.
+
+**It fails, and every variant fails:**
+
+| book, held out after 2025-10-01 | PF@2x | maxDD | R/day | est days |
+|---|---|---|---|---|
+| **H-009's five legs, equal weight** | **1.649** | **2.69R** | **+0.1613** | **16.7** |
+| greedy over 57 legs, 9 chosen | 0.898 | 3.98R | +0.0304 | 130.7 |
+| greedy capped at 5 legs | 1.046 | 4.26R | +0.0682 | 62.5 |
+| greedy restricted to legs that stand alone | 0.898 | 3.98R | +0.0304 | 130.7 |
+| H-009 + silver 5m | 1.620 | 8.00R | +0.2025 | 39.5 |
+| H-009 + three FX majors at 4h | 1.350 | 2.27R | +0.0987 | 23.0 |
+| H-009's five, inverse-volatility weighted | 1.668 | 4.65R | +0.1592 | 29.2 |
+
+In the selection window the greedy book looked 24% FASTER than H-009 (15.9 days
+against 20.8). Held out it is **7.8x slower**.
+
+**Why, and this is the useful part.** The median leg of the 57 has an R per day
+of **−0.0013** — no edge at all. H-009's five average +0.1411; all the rest
+average +0.0110. Under equal weighting every leg divides the whole book's R by
+the leg count, so adding a near-zero-edge leg is pure dilution: drawdown falls,
+but R per day falls faster, and days = maxDD / R_per_day rises. It is not a
+correlation story at all.
+
+Restricting greedy to legs that clear PF 1.20 alone changed **nothing** — it
+picked the same book — so the per-leg gate is not what saves H-009 either. What
+breaks is the objective: choosing legs by how their drawdowns offset each other
+fits a co-movement structure that does not persist.
+
+**This corrects advice I gave twice.** The "wider universe" cure proposed for
+H-006's 49.8R drawdown and quoted from H-007's rejection does not work under
+equal weighting, and inverse-volatility weighting is worse than equal weight
+here. More legs is not the lever. If widening is ever revisited it needs legs
+with real standalone edge and a weighting scheme that does not dilute, and this
+run is evidence against both being easy to find.
+
+**The valuable by-product: H-009 is not overfitted.** On data after 2025-10-01,
+never used by any selection, it does PF at 2x of **1.649** and **16.7 days**
+against 1.652 and 20.8 days in the window it was chosen on. It got faster out of
+sample. That is the strongest independent check H-009 has had, and it came from
+an experiment that failed.
+
+Code deleted; the finding is here.

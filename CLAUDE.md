@@ -157,6 +157,15 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   tradeable: it is the only fade here that beats its paired null at every cost
   level and beats its own control, yet walk-forward is 0.897 at 2x and 0 of 12
   panels hold the gate. Real edge, too small for 28bps. Code kept.
+- **Widening a book with more legs** (H-012 / "hypothesis X") — adding legs to cut
+  drawdown makes the book SLOWER, not faster. All 57 walk-forwarded legs, gated,
+  book chosen greedily for fewest days with the selection held out: in-window
+  15.9 days, held out **130.7** against H-009's 16.7. Every variant lost — capped
+  at 5 legs 62.5d, plus silver 39.5d, plus three FX majors 23.0d, inverse-vol
+  weighting 29.2d. Cause is DILUTION not correlation: the median leg has R/day
+  −0.0013, and equal weighting divides the book's R by the leg count, so a weak
+  leg costs more R per day than it saves in drawdown. Do not propose "a wider
+  universe" as a cure for drawdown without solving the weighting first.
 - **VWAP std-band fade** — backtest PF 3.0, live ~0.7. Resting-limit backtests assume a fill on
   any wick touch. Any limit-fill strategy needs a queue-priority check before the backtest is trusted.
 
