@@ -1,0 +1,444 @@
+{
+ "id": "vwap_mr",
+ "hid": "H-010",
+ "name": "VWAP band rejection",
+ "tagline": "Price stretches to a standard-deviation band, closes back, and is faded.",
+ "period": "BTC/ETH/SOL perpetuals \u00b7 15m-4h \u00b7 2020 \u2192 2026-08",
+ "report": "",
+ "candidate": "config re-chosen blind each quarter on 2x-cost train PF",
+ "fields": {
+  "pf": 1.031,
+  "trades": 2487,
+  "trades_per_day": 1.203,
+  "trades_per_week": 8.42,
+  "avg_hold_h": 35.29,
+  "win_rate": 0.2207,
+  "avg_r": 0.0022,
+  "total_r": 5.58,
+  "max_dd_r": -14.67,
+  "sharpe": 0.131,
+  "n_books": 12,
+  "tpd_per_book": 0.1,
+  "r_per_day": 0.0026
+ },
+ "pf_2x": 0.892,
+ "measured": {
+  "wf_pf": 1.031,
+  "wf_pf_2x": 0.892,
+  "null_margin": 0.0,
+  "beats_null": false,
+  "consistency": 0.3693,
+  "pf": 1.031,
+  "sharpe": 0.131
+ },
+ "structure": "two_step",
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 1.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.0367,
+   "one_step": {
+    "pass_rate": 0.0,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 1.0,
+    "median_days": null,
+    "p25_days": null,
+    "expected_days": null
+   }
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 1.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.0733,
+   "one_step": {
+    "pass_rate": 0.0102,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 0.9898,
+    "median_days": 285.0,
+    "p25_days": 275.0,
+    "expected_days": 27941.2
+   }
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.0019,
+   "fail_max": 0.0629,
+   "fail_daily": 0.0,
+   "still_open": 0.9352,
+   "median_days": 281.5,
+   "p25_days": 280.75,
+   "expected_days": 148157.9,
+   "max_dd": -0.11,
+   "one_step": {
+    "pass_rate": 0.0469,
+    "fail_max": 0.0629,
+    "fail_daily": 0.0,
+    "still_open": 0.8902,
+    "median_days": 146.0,
+    "p25_days": 49.0,
+    "expected_days": 3113.0
+   }
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.0,
+   "fail_max": 0.3835,
+   "fail_daily": 0.0,
+   "still_open": 0.6165,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -0.1467,
+   "one_step": {
+    "pass_rate": 0.0595,
+    "fail_max": 0.325,
+    "fail_daily": 0.0,
+    "still_open": 0.6156,
+    "median_days": 41.0,
+    "p25_days": 20.5,
+    "expected_days": 689.1
+   }
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.0058,
+   "fail_max": 0.4642,
+   "fail_daily": 0.0,
+   "still_open": 0.53,
+   "median_days": 24.5,
+   "p25_days": 21.75,
+   "expected_days": 4224.1,
+   "max_dd": -0.1834,
+   "one_step": {
+    "pass_rate": 0.0977,
+    "fail_max": 0.3878,
+    "fail_daily": 0.0,
+    "still_open": 0.5145,
+    "median_days": 45.0,
+    "p25_days": 23.25,
+    "expected_days": 460.6
+   }
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.0324,
+   "fail_max": 0.4831,
+   "fail_daily": 0.0,
+   "still_open": 0.4845,
+   "median_days": 74.0,
+   "p25_days": 30.5,
+   "expected_days": 2284.0,
+   "max_dd": -0.22,
+   "one_step": {
+    "pass_rate": 0.148,
+    "fail_max": 0.4231,
+    "fail_daily": 0.0,
+    "still_open": 0.4289,
+    "median_days": 53.0,
+    "p25_days": 29.0,
+    "expected_days": 358.1
+   }
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.0416,
+   "fail_max": 0.5609,
+   "fail_daily": 0.0,
+   "still_open": 0.3975,
+   "median_days": 49.5,
+   "p25_days": 29.0,
+   "expected_days": 1189.9,
+   "max_dd": -0.2567,
+   "one_step": {
+    "pass_rate": 0.1968,
+    "fail_max": 0.4869,
+    "fail_daily": 0.0,
+    "still_open": 0.3162,
+    "median_days": 64.0,
+    "p25_days": 33.0,
+    "expected_days": 325.2
+   }
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.0633,
+   "fail_max": 0.6301,
+   "fail_daily": 0.0,
+   "still_open": 0.3066,
+   "median_days": 43.0,
+   "p25_days": 27.0,
+   "expected_days": 679.3,
+   "max_dd": -0.2934,
+   "one_step": {
+    "pass_rate": 0.2108,
+    "fail_max": 0.5397,
+    "fail_daily": 0.0,
+    "still_open": 0.2495,
+    "median_days": 60.0,
+    "p25_days": 28.0,
+    "expected_days": 284.6
+   }
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.0571,
+   "fail_max": 0.8404,
+   "fail_daily": 0.0,
+   "still_open": 0.1025,
+   "median_days": 34.5,
+   "p25_days": 22.0,
+   "expected_days": 604.2,
+   "max_dd": -0.3667,
+   "one_step": {
+    "pass_rate": 0.2128,
+    "fail_max": 0.6847,
+    "fail_daily": 0.0,
+    "still_open": 0.1025,
+    "median_days": 41.0,
+    "p25_days": 20.75,
+    "expected_days": 192.7
+   }
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.0754,
+   "fail_max": 0.8298,
+   "fail_daily": 0.0,
+   "still_open": 0.0948,
+   "median_days": 57.5,
+   "p25_days": 29.75,
+   "expected_days": 762.6,
+   "max_dd": -0.44,
+   "one_step": {
+    "pass_rate": 0.2345,
+    "fail_max": 0.6707,
+    "fail_daily": 0.0,
+    "still_open": 0.0948,
+    "median_days": 49.0,
+    "p25_days": 19.0,
+    "expected_days": 209.0
+   }
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.0895,
+   "fail_max": 0.8221,
+   "fail_daily": 0.0,
+   "still_open": 0.0885,
+   "median_days": 71.0,
+   "p25_days": 37.0,
+   "expected_days": 793.3,
+   "max_dd": -0.5867,
+   "one_step": {
+    "pass_rate": 0.2602,
+    "fail_max": 0.663,
+    "fail_daily": 0.0,
+    "still_open": 0.0769,
+    "median_days": 33.0,
+    "p25_days": 15.0,
+    "expected_days": 126.8
+   }
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.1025,
+   "fail_max": 0.8162,
+   "fail_daily": 0.0034,
+   "still_open": 0.0779,
+   "median_days": 68.0,
+   "p25_days": 31.75,
+   "expected_days": 663.4,
+   "max_dd": -0.7334,
+   "one_step": {
+    "pass_rate": 0.295,
+    "fail_max": 0.6489,
+    "fail_daily": 0.0034,
+    "still_open": 0.0527,
+    "median_days": 25.0,
+    "p25_days": 12.0,
+    "expected_days": 84.7
+   }
+  }
+ ],
+ "pick": {
+  "risk": 0.0025,
+  "pass_rate": 0.0,
+  "fail_max": 0.0,
+  "fail_daily": 0.0,
+  "still_open": 1.0,
+  "median_days": null,
+  "p25_days": null,
+  "expected_days": null,
+  "max_dd": -0.0367,
+  "one_step": {
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 1.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null
+  }
+ },
+ "grid": {
+  "title": "The hypothesis against its control and its null",
+  "note": "Median profit factor across the whole grid. The null is a paired shuffle of the market, five seeds.",
+  "cols": [
+   "revert",
+   "continue",
+   "null"
+  ],
+  "label": "Cost",
+  "rows": [
+   {
+    "label": "0x cost",
+    "cols": [
+     0.9456,
+     0.9908,
+     0.9651
+    ],
+    "worst": 0.9456,
+    "clears": false
+   },
+   {
+    "label": "1x cost",
+    "cols": [
+     0.7925,
+     0.81845,
+     0.8446
+    ],
+    "worst": 0.7925,
+    "clears": false
+   },
+   {
+    "label": "2x cost",
+    "cols": [
+     0.6807,
+     0.68565,
+     0.7465
+    ],
+    "worst": 0.6807,
+    "clears": false
+   },
+   {
+    "label": "3x cost",
+    "cols": [
+     0.5851,
+     0.577,
+     0.6597
+    ],
+    "worst": 0.5851,
+    "clears": false
+   }
+  ]
+ },
+ "todo": [
+  {
+   "t": "Honest fills",
+   "w": "Market on the next open, never a resting limit at the band \u2014 the artefact that killed this family before.",
+   "done": true
+  },
+  {
+   "t": "Real taker split",
+   "w": "The exchange's own taker_buy volume, not volume x sign(close-open).",
+   "done": true
+  },
+  {
+   "t": "Direction control",
+   "w": "Every setup also taken the other way; continuation scores no better and both sit at the null.",
+   "done": true
+  },
+  {
+   "t": "Paired-shuffle null",
+   "w": "The null's median profit factor is HIGHER than the real market's at every cost level.",
+   "done": true
+  },
+  {
+   "t": "Walk-forward",
+   "w": "Run for board parity, not because stage 1 justified it.",
+   "done": true
+  }
+ ],
+ "note": "Rejected. Across 3 coins x 4 timeframes x 2,592 configurations the paired null clears PF 1.2 at double cost 637 times per seed against the hypothesis's 280, and the null's MEDIAN profit factor is higher than the real market's at 0x, 1x, 2x and 3x cost. The control is as damning: taking every setup the other way scores no worse. And the lever table refutes the mechanism directly - exiting at the VWAP, which is the whole idea, is the single most harmful choice in the grid (median 0.500) while ignoring the VWAP and exiting on time is the best (0.816). The best-looking configurations trade 0.018 times a day, one every two months, which is search noise and fails the phase constraint on its own. This is the same family as the prior repo's dead `VWAP std-band fade`, which backtested at 3.0 and traded at 0.7 on a limit-fill artefact; with honest fills it does not even reach the artefact. One positive: the H-009 crowd gate lifts even this (0.659 to 0.712), a third independent confirmation of that finding.",
+ "legs": null,
+ "markets": {
+  "traded": [
+   {
+    "sym": "BTCUSDT",
+    "tf": "15m",
+    "asset": "BTC"
+   },
+   {
+    "sym": "BTCUSDT",
+    "tf": "30m",
+    "asset": "BTC"
+   },
+   {
+    "sym": "BTCUSDT",
+    "tf": "1h",
+    "asset": "BTC"
+   },
+   {
+    "sym": "BTCUSDT",
+    "tf": "4h",
+    "asset": "BTC"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "15m",
+    "asset": "ETH"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "30m",
+    "asset": "ETH"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "1h",
+    "asset": "ETH"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "4h",
+    "asset": "ETH"
+   },
+   {
+    "sym": "SOLUSDT",
+    "tf": "15m",
+    "asset": "SOL"
+   },
+   {
+    "sym": "SOLUSDT",
+    "tf": "30m",
+    "asset": "SOL"
+   },
+   {
+    "sym": "SOLUSDT",
+    "tf": "1h",
+    "asset": "SOL"
+   },
+   {
+    "sym": "SOLUSDT",
+    "tf": "4h",
+    "asset": "SOL"
+   }
+  ],
+  "searched": "3 coins x 4 timeframes x 2,592 configurations",
+  "note": "Rebuilt from a published TradingView indicator with honest fills, the exchange's real taker split instead of a sign-of-the-bar guess, exits, and a control that takes every setup the other way."
+ }
+}

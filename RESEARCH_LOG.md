@@ -1426,3 +1426,62 @@ the ones freed capacity would have allowed. Every trade it keeps is real at a re
 price, so the book is achievable; the in-kernel version would take extra trades
 this one cannot see. Also: no TradingView port is possible, because Pine cannot
 fetch the account-ratio feed.
+
+## H-010 VWAP band rejection — rejected (2026-09-02)
+
+From a published TradingView indicator: anchored VWAP with three
+standard-deviation bands, a bar reaches a band and closes back against the move,
+and the trade fades it toward the VWAP with volume-delta confirmation.
+
+**This family was already on the dead list.** `CLAUDE.md` records `VWAP std-band
+fade` at profit factor 3.0 in backtest and about 0.7 live, on a backtest that
+filled a resting limit on any wick touch. It was worth re-testing only because
+the rejection formulation can be made fill-honest. A second warning was already
+in the data: H-002's 105 blind fold choices land on **trend** and **break** and
+essentially never on **fade**, and all of them use market fills.
+
+Five things were changed from the indicator, none cosmetic: market fills at the
+next open instead of a resting limit; the exchange's real `taker_buy_base` split
+instead of `volume * sign(close - open)`; actual exits with a stop so R is
+bounded; the H-009 crowd gate; and a direction control that takes every setup
+the other way.
+
+**Result — 3 coins x 4 timeframes x 2,592 configurations, 5 null seeds:**
+
+| cost | revert | continue (control) | **paired null** |
+|---|---|---|---|
+| 0x | 0.946 | 0.991 | **0.965** |
+| 1x | 0.792 | 0.818 | **0.845** |
+| 2x | 0.681 | 0.686 | **0.747** |
+| 3x | 0.585 | 0.577 | **0.660** |
+| clears 1.20 at 2x | 280 | 785 | **637 per seed** |
+
+The null beats the real market at every cost level and clears the gate more than
+twice as often. The control scores no worse than the hypothesis. Walk-forward for
+board parity: 2,487 out-of-sample trades, PF 1.031, **0.892 at 2x**, no risk
+level passes. Board 2.5/10.
+
+**The lever table refutes the mechanism outright.** Median profit factor at 2x by
+choice of exit: revert to the VWAP **0.500**, fixed R multiple 0.679, ignore the
+VWAP and exit on time **0.816**. Exiting at the VWAP — the entire idea — is the
+most harmful choice in the grid. Deeper bands are worse, not better (1σ 0.713,
+3σ 0.573), which is the opposite of the "75-80% reversion from the 2nd or 3rd
+band" claim made for it. The delta filter moves nothing (0.679 to 0.682) despite
+being the indicator's headline feature, and that is a fair test of the idea
+rather than of the approximation, because the crude proxy was replaced by the
+real taker split.
+
+Best-looking configurations trade **0.018 times a day** — one every two months
+over six years. Search noise, and it fails the phase constraint independently.
+
+**Two bugs were found while building it, both flattering:** the VWAP target could
+sit behind the entry and book losses as target hits (2,096 of them, averaging
+−0.8R), and the minimum stop distance was 10bps against a 14bps round trip, so
+cost alone was 1.4R on the tightest trades. Both are fixed; the second became a
+swept dimension, and it is worth remembering generally — early in a session the
+volume-weighted sigma is tiny and any band-relative stop can be narrower than
+the spread.
+
+**One thing worth keeping.** The H-009 crowd gate lifts even this dead strategy,
+0.659 to 0.712. A third independent confirmation, in the cleanest possible
+setting: a strategy with no edge of its own.

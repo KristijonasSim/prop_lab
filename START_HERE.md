@@ -30,6 +30,7 @@ board has been scored on since 2026-09-02.
 | H-003 | EMA × VWAP cross | 4.0 | rejected — loses to its own null |
 | H-005 | Liquidity sweep fade | 3.5 | rejected — null beats it 19,062 to 1,702 |
 | H-007 | Cross-sectional crypto ranking | 2.9 | rejected — real edge before costs, too small to pay the spread |
+| H-010 | VWAP band rejection | 2.5 | rejected — loses to its own null; the VWAP target is its worst lever |
 | H-001 | ORB | 2.4 | rejected |
 | H-008 | Beta-residual reversion | 2.1 | rejected — residual does not revert; null beats real on every cut |
 | H-006 | Order flow (fade the crowd) | 1.3 | **signal real, strategy dead** — see below |

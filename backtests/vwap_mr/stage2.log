@@ -1,0 +1,17 @@
+  BTCUSDT 15m: 74 out-of-sample trades PF@2x 1.009 [12s]
+  BTCUSDT 30m: 188 out-of-sample trades PF@2x 0.956 [9s]
+  BTCUSDT 1h: 400 out-of-sample trades PF@2x 0.949 [7s]
+  BTCUSDT 4h: 65 out-of-sample trades PF@2x 2.917 [6s]
+  ETHUSDT 15m: 276 out-of-sample trades PF@2x 0.625 [11s]
+  ETHUSDT 30m: 267 out-of-sample trades PF@2x 1.047 [9s]
+  ETHUSDT 1h: 275 out-of-sample trades PF@2x 0.564 [7s]
+  ETHUSDT 4h: 162 out-of-sample trades PF@2x 0.838 [5s]
+  SOLUSDT 15m: 110 out-of-sample trades PF@2x 0.725 [11s]
+  SOLUSDT 30m: 249 out-of-sample trades PF@2x 0.855 [8s]
+  SOLUSDT 1h: 157 out-of-sample trades PF@2x 0.598 [7s]
+  SOLUSDT 4h: 264 out-of-sample trades PF@2x 1.087 [5s]
+
+BOOK of 12 market/timeframes: 2487 trades  PF 1.031  PF@2x 0.892
+  wrote /home/kris/prop_lab/backtests/vwap_mr/board.json
+    VWAP band rejection: PF 1.031  2487 trades  1.203/day across 12 sub-strategies (0.1/day each)  R/day +0.0026
+    pick 0.25% risk  TWO-STEP pass 0.0%  killed 0.0%  median None d  expected None d   (one-step was None d)

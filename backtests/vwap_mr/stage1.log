@@ -1,0 +1,62 @@
+  BTCUSDT 15m: 2592 configs x 6 runs [12s]
+  BTCUSDT 30m: 2592 configs x 6 runs [7s]
+  BTCUSDT 1h: 2592 configs x 6 runs [4s]
+  BTCUSDT 4h: 2592 configs x 6 runs [2s]
+  ETHUSDT 15m: 2592 configs x 6 runs [12s]
+  ETHUSDT 30m: 2592 configs x 6 runs [7s]
+  ETHUSDT 1h: 2592 configs x 6 runs [4s]
+  ETHUSDT 4h: 2592 configs x 6 runs [2s]
+  SOLUSDT 15m: 2592 configs x 6 runs [11s]
+  SOLUSDT 30m: 2592 configs x 6 runs [6s]
+  SOLUSDT 1h: 2592 configs x 6 runs [4s]
+  SOLUSDT 4h: 2592 configs x 6 runs [2s]
+
+======================================================================================
+REVERT (the hypothesis) vs CONTINUE (the control) vs NULL
+======================================================================================
+  cost 0x   revert med 0.946 >1.0 37.6% clears 1419  |  continue med 0.991 >1.0 48.9% clears 2435  |  null med 0.965 >1.0 39.9% clears 2724.8 per seed
+  cost 1x   revert med 0.792 >1.0 13.4% clears  516  |  continue med 0.818 >1.0 25.2% clears 1240  |  null med 0.845 >1.0 20.9% clears 1324.6 per seed
+  cost 2x   revert med 0.681 >1.0  6.2% clears  280  |  continue med 0.686 >1.0 14.1% clears  785  |  null med 0.747 >1.0 10.6% clears  637.0 per seed
+  cost 3x   revert med 0.585 >1.0  3.5% clears  162  |  continue med 0.577 >1.0  9.5% clears  564  |  null med 0.660 >1.0  5.6% clears  325.0 per seed
+
+REVERT ONLY, best 12 by PF at 2x cost
+ symbol  tf anchor  entry_level  stop_k  target_mode  rr  min_risk_bps  flow_mode  crowd_mode  trades   tpd  win_rate  pf_0x  pf_1x  pf_2x  pf_3x  maxdd_r_2x
+BTCUSDT 15m      W            3     3.0            2 0.0          50.0          0           1      46 0.019    0.4783 3.4920 2.9731 2.5362 2.1862       -9.91
+BTCUSDT  4h      D            2     1.0            2 0.0         100.0          0           1      43 0.018    0.1860 2.9942 2.6981 2.4522 2.2448      -13.21
+BTCUSDT  4h      W            3     1.0            2 0.0          50.0          1           0      41 0.017    0.1463 3.2951 2.7799 2.3994 2.1067      -15.27
+BTCUSDT  4h      W            3     2.0            2 0.0         100.0          0           0      70 0.029    0.2286 2.7040 2.4655 2.2623 2.0871      -12.01
+BTCUSDT  4h      D            1     2.0            2 0.0         100.0          1           1     232 0.095    0.2241 2.5802 2.3386 2.1351 1.9612      -21.44
+BTCUSDT  4h roll96            3     2.0            1 2.0         100.0          0           0      42 0.017    0.5714 2.2191 2.1019 1.9925 1.8894       -6.06
+BTCUSDT  4h roll96            3     2.0            1 2.0          50.0          0           0      42 0.017    0.5714 2.2191 2.1019 1.9925 1.8894       -6.06
+BTCUSDT  4h roll96            3     2.0            1 2.0          25.0          0           0      42 0.017    0.5714 2.2191 2.1019 1.9925 1.8894       -6.06
+BTCUSDT  4h      W            3     3.0            2 0.0          50.0          1           0     114 0.047    0.1579 2.5761 2.2232 1.9514 1.7355      -39.20
+BTCUSDT  4h      D            1     1.0            2 0.0         100.0          1           1     115 0.047    0.1478 2.3468 2.1109 1.9156 1.7511      -25.44
+SOLUSDT  4h      W            1     3.0            2 0.0          25.0          0           1     165 0.076    0.3394 2.1160 2.0112 1.9150 1.8263      -23.79
+BTCUSDT  4h      W            3     2.0            2 0.0          25.0          1           0     130 0.053    0.1231 2.9525 2.3196 1.9049 1.6121      -54.73
+
+CONTINUE ONLY, best 12 by PF at 2x cost
+ symbol  tf anchor  entry_level  stop_k  target_mode  rr  min_risk_bps  flow_mode  crowd_mode  trades   tpd  win_rate  pf_0x  pf_1x  pf_2x  pf_3x  maxdd_r_2x
+ETHUSDT  4h roll96            3     2.0            2 0.0          50.0          0           0      43 0.018    0.4651 2.8190 2.7197 2.6257 2.5367       -3.57
+ETHUSDT  4h roll96            3     2.0            2 0.0          25.0          0           0      43 0.018    0.4651 2.8190 2.7197 2.6257 2.5367       -3.57
+ETHUSDT  4h roll96            3     2.0            2 0.0         100.0          0           0      43 0.018    0.4651 2.8190 2.7197 2.6257 2.5367       -3.57
+BTCUSDT  4h      D            2     1.0            2 0.0         100.0          0           1      46 0.019    0.1087 3.0158 2.7209 2.4769 2.2717      -24.84
+SOLUSDT  4h      W            3     1.0            2 0.0          25.0          0           0     154 0.071    0.0519 3.4995 2.8130 2.3481 2.0125      -73.41
+BTCUSDT 30m roll96            3     1.0            2 0.0          25.0          0           1      40 0.016    0.2750 3.2669 2.7140 2.2998 1.9784      -10.19
+SOLUSDT  4h      W            3     1.0            2 0.0          25.0          1           0     112 0.051    0.0357 3.4336 2.7313 2.2652 1.9334      -71.88
+ETHUSDT  1h roll96            3     1.0            2 0.0         100.0          1           0      74 0.030    0.2703 2.6768 2.4304 2.2210 2.0408      -17.68
+ETHUSDT  1h      W            3     1.0            2 0.0         100.0          1           0      47 0.019    0.2553 2.5809 2.3697 2.1870 2.0275      -12.40
+ETHUSDT  4h roll96            3     3.0            2 0.0          25.0          0           0      43 0.018    0.5116 2.2738 2.2099 2.1486 2.0896       -3.91
+ETHUSDT  4h roll96            3     3.0            2 0.0          50.0          0           0      43 0.018    0.5116 2.2738 2.2099 2.1486 2.0896       -3.91
+ETHUSDT  4h roll96            3     3.0            2 0.0         100.0          0           0      43 0.018    0.5116 2.2738 2.2099 2.1486 2.0896       -3.91
+
+WHAT EACH LEVER DOES (revert only, median PF at 2x)
+  anchor         D=0.581  W=0.661  roll96=0.759
+  entry_level    1=0.713  2=0.688  3=0.573
+  stop_k         1.0=0.64  2.0=0.69  3.0=0.711
+  target_mode    0=0.5  1=0.679  2=0.816
+  min_risk_bps   25.0=0.592  50.0=0.671  100.0=0.737
+  flow_mode      0=0.679  1=0.682
+  crowd_mode     0=0.659  1=0.712
+  tf             15m=0.647  1h=0.702  30m=0.679  4h=0.701
+
+wrote /home/kris/prop_lab/backtests/vwap_mr/stage1_real.csv
