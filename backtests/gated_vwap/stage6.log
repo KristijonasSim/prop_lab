@@ -1,0 +1,114 @@
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+rebuilt 6,936 trades across 8 legs in 1s
+gate keeps 54.9% of them
+
+====================================================================================================
+SAME SELECTION RULE STAGE 11 USED, WITH AND WITHOUT THE GATE
+====================================================================================================
+gate                                                           book  legs  trades     pf  pf_2x  total_r  maxdd_r  ret_over_dd  r_per_day    tpd  est_days
+ off               BTCUSDT 4h + ETHUSDT 1h + SOLUSDT 4h + XAUUSD 5m     4     882 1.7680 1.4582  89.8122  -3.6577      24.5541     0.1349 1.3243      27.1
+  on BTCUSDT 4h + ETHUSDT 1h + ETHUSDT 30m + SOLUSDT 4h + XAUUSD 5m     5     859 2.0466 1.6505  97.1170  -2.8213      34.4225     0.1458 1.2898      19.3
+
+chosen gated book: BTCUSDT 4h + ETHUSDT 1h + ETHUSDT 30m + SOLUSDT 4h + XAUUSD 5m
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+  null seed 0: PF@2x 1.335  ret/DD 10.7  (657 trades)  books clearing 1.2: 175
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+  null seed 1: PF@2x 1.464  ret/DD 16.1  (681 trades)  books clearing 1.2: 219
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+  null seed 2: PF@2x 1.309  ret/DD 15.7  (667 trades)  books clearing 1.2: 74
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+  null seed 3: PF@2x 1.357  ret/DD 14.2  (662 trades)  books clearing 1.2: 206
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+/home/kris/prop_lab/strategies/orderflow/stage6_gated_vwap.py:140: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  tolerance=pd.Timedelta(hours=1))
+  null seed 4: PF@2x 1.288  ret/DD 11.2  (639 trades)  books clearing 1.2: 198
+
+books clearing PF 1.2 at 2x: real 229, null median 198 (seeds [175, 219, 74, 206, 198])
+  - and that count is NOT the right statistic here. Stage 11 could use it because
+    its null phase-randomised the MARKET, so the null book had no edge at all. This
+    null shuffles only the FEED, leaving H-002's entire price edge intact, so most
+    subsets clear the gate with a shuffled gate too. The margin below is the share of
+    the gated book's 2x profit factor that the real feed accounts for, which is the
+    question the gate actually poses.
+
+real PF@2x 1.651 vs null median 1.335 / best 1.464
+beats every null seed: True
+  wrote /home/kris/prop_lab/backtests/gated_vwap/board.json
+    VWAP gated by crowd positioning: PF 2.047  859 trades  1.288/day across 5 sub-strategies (0.258/day each)  R/day +0.1457
+    pick 2.50% risk  TWO-STEP pass 92.4%  killed 0.0%  median 45.0 d  expected 48.7 d   (one-step was 22.6 d)

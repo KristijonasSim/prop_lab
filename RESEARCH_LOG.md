@@ -1368,3 +1368,61 @@ Measuring a perp signal against spot prices compares two different order books.
    later than the requested start is refetched from the beginning.
 
 Mechanism, gates and results: `strategies/orderflow/notes.md`.
+
+## H-009 — the crowd feed makes H-002 better (2026-09-02)
+
+The synthesis that had not been tried. H-002 is the one price strategy that
+survived here; H-006 established that Binance's long/short **account** ratio
+carries real directional information but cannot carry a book on its own. Putting
+the feed on top of H-002 as a veto rather than a signal is the most direct route
+to "better than H-002" available, because it starts from H-002.
+
+**The rule, fixed before the run:** keep a long only when `crowd_z <= 0` and a
+short only when `crowd_z >= 0` — that is, only take H-002's trade when retail
+positioning is on the other side of it. `crowd_z` is the account ratio z-scored
+against a shifted one-day trailing baseline, so it is point in time.
+
+**Nothing on the VWAP side is refitted.** Every configuration is the one stage 10
+chose blind for that quarter. The gate is a global rule on top, not something the
+walk-forward was allowed to select, which is stricter than letting it choose.
+
+| same selection rule as stage 11 | gate off | gate on |
+|---|---|---|
+| profit factor | 1.768 | **2.047** |
+| at 2x cost | 1.458 | **1.651** |
+| max drawdown | −3.66R | **−2.82R** |
+| return / drawdown | 24.6 | **34.4** |
+| two-step pass rate | 88.0% | **92.4%** |
+| expected days to funded | 53.4 | **48.7** |
+
+The gate keeps 55% of trades and total R rises. **It improves six of six crypto
+legs on both profit factor and drawdown, with no exception** — ETHUSDT 30m goes
+from 1.177 to 1.657 with its drawdown halved, which is what lets the book carry a
+fifth leg.
+
+**The control is what makes it a mechanism.** Inverting the gate — keeping only
+the trades the crowd agrees with — gives PF 1.137 and return/drawdown 2.9, and
+goes outright negative at a tighter threshold. Almost the whole of H-002's edge
+lives in the trades that run against retail positioning. That is a statement
+about who is on the other side, not about a filter that fit.
+
+**The null:** a block-shuffled feed driving the same gate scores 1.288 to 1.464
+at 2x against the real 1.651, and its median lift is negative. The real gate
+lifts; a shuffled one hurts.
+
+**Why the board still shows 8.3 against H-002's 8.6.** H-009 wins five of the six
+scored components and loses `evidence`, entirely on `null_margin` — and those two
+margins are not the same measurement. H-002's null phase-randomises the market, so
+its null book has no edge at all (survivors 8 against 0, margin 1.0). H-009's null
+shuffles only the feed, leaving H-002's price edge intact, so it measures the
+increment alone. The survivor-count version confirms it is the wrong statistic
+here: 229 real against a null median of 198, because most subsets clear PF 1.20
+with a shuffled gate too, carried by H-002's own edge. Settling it means re-running
+stage 10's universe sweep with the gate in the kernel against a phase-randomised
+market null — hours of compute, and the next thing to do.
+
+**Known weakness:** this is a post-filter, so it can only remove trades, never add
+the ones freed capacity would have allowed. Every trade it keeps is real at a real
+price, so the book is achievable; the in-kernel version would take extra trades
+this one cannot see. Also: no TradingView port is possible, because Pine cannot
+fetch the account-ratio feed.

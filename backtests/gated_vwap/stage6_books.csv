@@ -1,0 +1,3 @@
+gate,book,legs,trades,pf,pf_2x,total_r,maxdd_r,ret_over_dd,r_per_day,tpd,est_days
+off,BTCUSDT 4h + ETHUSDT 1h + SOLUSDT 4h + XAUUSD 5m,4,882,1.768,1.4582,89.8122,-3.6577,24.5541,0.1349,1.3243,27.1
+on,BTCUSDT 4h + ETHUSDT 1h + ETHUSDT 30m + SOLUSDT 4h + XAUUSD 5m,5,859,2.0466,1.6505,97.117,-2.8213,34.4225,0.1458,1.2898,19.3

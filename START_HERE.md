@@ -25,7 +25,8 @@ board has been scored on since 2026-09-02.
 
 | ID | hypothesis | score | verdict |
 |---|---|---|---|
-| H-002 | VWAP | **8.6** | only survivor. BTC 4h + ETH 1h + ETH 30m + SOL 4h + gold 5m |
+| H-009 | **VWAP gated by crowd positioning** | 8.3 | **the best book in the project** — beats H-002 on every trading number; read the note |
+| H-002 | VWAP | **8.6** | the base it improves on. BTC 4h + ETH 1h + ETH 30m + SOL 4h + gold 5m |
 | H-003 | EMA × VWAP cross | 4.0 | rejected — loses to its own null |
 | H-005 | Liquidity sweep fade | 3.5 | rejected — null beats it 19,062 to 1,702 |
 | H-007 | Cross-sectional crypto ranking | 2.9 | rejected — real edge before costs, too small to pay the spread |
@@ -60,6 +61,34 @@ loses to its null by **0.001** (real PF@2x 1.063, null best 1.064) — that verd
 is a coin toss and should be read as "inside the noise", not as a result. Every
 **stage-1 grid** null in `RESEARCH_LOG.md` is still on the old unreproducible
 draws and is provisional until its grid is re-run.
+
+**H-009 is the headline, 2026-09-02.** Take H-002's trades unchanged and keep
+only the ones where the crowd is positioned on the other side — a long only when
+the long/short account ratio has been falling, a short only when it has been
+rising. Same legs, same stage-10 configurations chosen blind, nothing refitted,
+gate threshold fixed at zero.
+
+| same selection rule as stage 11 | gate off | gate on |
+|---|---|---|
+| profit factor | 1.768 | **2.047** |
+| at 2x cost | 1.458 | **1.651** |
+| max drawdown | −3.66R | **−2.82R** |
+| return / drawdown | 24.6 | **34.4** |
+| two-step pass rate | 88.0% | **92.4%** |
+| expected days to funded | 53.4 | **48.7** |
+
+It keeps 55% of the trades and total R goes up. It improves **six of six** crypto
+legs on both profit factor and drawdown, none hurt. Inverting the gate — keeping
+the trades the crowd *agrees* with — gives PF 1.137 and goes negative at a tighter
+threshold, so almost all of H-002's edge is in the disagreement. It beats every
+null seed, and a shuffled gate hurts.
+
+It scores 8.3 against H-002's 8.6 only because the two `null_margin` numbers
+measure different things: H-002's null destroys the market, H-009's destroys only
+the feed and so measures the increment alone. It wins five of the six components.
+`strategies/orderflow/gated_notes.md` has the full argument and the weaknesses.
+**Next:** re-run stage 10's universe sweep with the gate in the kernel against a
+phase-randomised market null, which is the run that settles the evidence column.
 
 **H-006, opened and closed 2026-09-02 — read this before dismissing the 1.3.**
 The score is the strategy, not the signal. Binance publishes the long/short
