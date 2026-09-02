@@ -246,3 +246,27 @@ It would have killed H-008 in ten minutes.
 **Still not done:** the NautilusTrader cross-check of the VWAP kernel. Everything
 this project believes rests on one implementation that no second engine has ever
 verified.
+
+## The prop-firm page
+
+**<https://claude.ai/code/artifact/4bf02856-3a6d-45a5-82cd-27ac9cf60472>** — twelve
+firms ranked by what actually decides the choice: whether they permit a bot, then
+how far over budget, then how many days H-009 takes under their rules.
+
+The days column is simulated, not looked up. The page carries H-009's 668-day
+return series and re-runs the whole prop simulation in the browser, so editing a
+firm's target, daily loss, drawdown cap or trailing/static setting re-sizes the
+book to that cap and recomputes days, pass rate and accounts killed live. The
+budget field drives the ranking.
+
+Rebuild the data with `.venv/bin/python core/prop_firms.py`, then republish
+`backtests/propfirms/page.html` after pasting the new `data.json` into its
+`<script id="data">` block.
+
+**The finding:** nothing at $30 or under permits a bot. The three cheapest
+evaluations on the market — Maven $17, FundingPips $23, RebelsFunding $25 — all
+ban automation, and two of them would otherwise have tied for the top spot on
+rules alone. Cheapest firm that does permit one is **Velotrade at $32**.
+**Upcomers Ash has by far the best rule set** (2% target → 8 expected days against
+everyone else's 36+) and hinges entirely on whether cTrader Open API is allowed on
+a challenge account — worth one question to their support before anything else.
