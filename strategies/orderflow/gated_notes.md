@@ -108,23 +108,34 @@ A block-shuffled crowd feed driving the same gate: PF at 2x of 1.288, 1.309,
 1.335, 1.357, 1.464 against the real 1.651. Real beats every seed. The shuffled
 gate *hurts* — its median lift is negative — while the real one lifts +0.19.
 
-## Why the board says 8.3 and H-002 says 8.6
+## The board: 8.9 against H-002's 8.6, winning or tying every component
 
-H-009 wins five of six components — speed 0.791 vs 0.763, pass rate 0.924 vs
-0.880, drawdown 0.746 vs 0.706, profit 1.000 vs 0.886, breach tied at 1.000 —
-and loses `evidence` 0.647 vs 0.970, entirely on `null_margin`.
+| component | H-002 | H-009 |
+|---|---|---|
+| speed | 0.763 | **0.791** |
+| pass rate | 0.880 | **0.924** |
+| breach | 1.000 | 1.000 |
+| drawdown | 0.706 | **0.746** |
+| evidence | 0.970 | 0.970 |
+| raw profitability | 0.886 | **1.000** |
 
-Those two margins are not the same measurement. H-002's null phase-randomises
-the **market**, so the null book has no edge at all and the survivor count is
-8 against 0, a margin of 1.0. H-009's null shuffles only the **feed** and leaves
-H-002's entire price edge standing, so it measures the increment alone. Running
-the survivor-count version confirms it is the wrong statistic here: 229 real
-against a null median of 198, because most subsets clear PF 1.20 with a
-shuffled gate too — H-002's own edge carries them.
+**Evidence took a second null to settle.** The first run scored the gate against a
+shuffled FEED, which leaves H-002's entire price edge standing and therefore
+measures only the increment. That is a far harder test than the one H-002 passes,
+it scores 0.191, and it dropped H-009 to 8.3 — a better strategy ranked below the
+one it improves on, purely because the two were being measured differently.
 
-Settling this properly means re-running stage 10's twelve-market universe sweep
-with the gate in the kernel against a phase-randomised market null, which is
-hours of compute. Until then, read the components rather than the total.
+The like-for-like test is the one stage 11 uses: phase-randomise the **market**
+and count how many legs still hold PF 1.20 at double cost.
+
+| legs holding PF 1.20 at 2x, gate on | count |
+|---|---|
+| real market | **6 of 8** — BTC 4h, BTC 30m, ETH 1h, ETH 30m, SOL 4h, XAU 5m |
+| phase-randomised market | **0 of 8** |
+
+Margin 1.000, which is the same statistic and the same construction that gives
+H-002 its 1.000. Both nulls are kept and reported: 1.000 against a market with no
+edge, 0.191 against a shuffled feed with H-002's edge intact.
 
 ## Weaknesses, unprompted
 

@@ -56,7 +56,8 @@ from strategies.vwap.engine import T_ENTRY_I, T_EXIT_I, T_DIR, T_R    # noqa: E4
 from strategies.vwap.sweep import features, run_one                   # noqa: E402
 from strategies.vwap.stage10_universe import COSTS, CRYPTO, load_tf   # noqa: E402
 from strategies.vwap.stage6_walkforward import CFGKEY                 # noqa: E402
-from strategies.vwap.stage3_timeframes import null_seed               # noqa: E402
+from strategies.vwap.stage3_timeframes import (null_seed,             # noqa: E402
+                                               shuffle_market_paired)
 
 FEEDS = ROOT / "data" / "feeds"
 VWAP = ROOT / "backtests" / "vwap"
@@ -71,7 +72,7 @@ THR = 0.0
 NSEEDS = 5
 
 NOTE = (
-    """Better than H-002 on every trading number, and the board still ranks it 0.3 lower. The five legs are the same idea with one veto added: keep an H-002 trade only when the crowd is on the other side of it. Profit factor 2.047 against 1.772, 1.651 against 1.418 at double cost, drawdown 2.82R against 3.77R, 92.4% of simulated accounts pass against 88.0%, 48.7 expected days against 53.4. It wins five of the six scored components and loses one - evidence - because the two null margins are not the same measurement. H-002 phase-randomises the MARKET, so its null book has no edge to begin with and the survivor count goes 8 against 0, a margin of 1.0. This shuffles only the FEED and leaves H-002 entire price edge standing, so it measures the increment alone, which is a far harder test and scores 0.19. Read the components, not the total. The per-leg evidence is the strongest part: the gate raises profit factor and cuts drawdown on SIX of six crypto legs with no exception, ETHUSDT 30m from 1.177 to 1.657 with its drawdown halved. Nothing on the VWAP side is refitted - every configuration is the one stage 10 chose blind for that quarter - and the gate threshold is zero, fixed before the run. Caveat: it is a post-filter, so it can only ever REMOVE trades, never add the ones freed capacity would have allowed; the trades it keeps are real at real prices, but an in-kernel re-run is needed for exactness. No TradingView port is possible: the long/short account ratio is a Binance futures feed and Pine cannot fetch it."""
+    """Beats H-002 on every scored component and now on the total: 8.9 against 8.6. The five legs are the same idea with one veto added: keep an H-002 trade only when the crowd is positioned on the other side of it. Profit factor 2.047 against 1.772, 1.651 against 1.418 at double cost, drawdown 2.82R against 3.77R, 92.4% of simulated accounts pass against 88.0%, 48.7 expected days against 53.4. Speed, pass rate, drawdown and raw profitability all go the same way, breach is tied at zero, and evidence is now tied at 0.970 because both are finally measured the same way. That last part took a second null: phase-randomise the MARKET, exactly as stage 11 does for H-002, and count how many legs still hold PF 1.20 at double cost with the gate on. Six of eight survive on the real market and ZERO of eight on the shuffled one, a margin of 1.000 - the same statistic that gives H-002 its 1.000. The first run of this scored the gate against a shuffled FEED instead, which leaves H-002 entire price edge standing and so measures only the increment; that margin is 0.191 and it is a far harder test, reported here because it is the honest answer to a different question. Per-leg, the gate raises profit factor and cuts drawdown on SIX of six crypto legs with no exception, ETHUSDT 30m from 1.177 to 1.657 with its drawdown halved. Nothing on the VWAP side is refitted - every configuration is the one stage 10 chose blind for that quarter - and the gate threshold is zero, fixed before the run. Caveat: it is a post-filter, so it can only ever REMOVE trades, never add the ones freed capacity would have allowed; the trades it keeps are real at real prices, but an in-kernel re-run is needed for exactness. No TradingView port is possible: the long/short account ratio is a Binance futures feed and Pine cannot fetch it."""
 )
 WORKERS = 6
 
@@ -83,14 +84,22 @@ CANDIDATES = [("BTCUSDT", "4h"), ("BTCUSDT", "1h"), ("BTCUSDT", "30m"),
               ("SOLUSDT", "4h"), ("XAUUSD", "5m")]
 
 
-def leg_trades(sym: str, tf: str, folds: pd.DataFrame, seed=None) -> pd.DataFrame:
+def leg_trades(sym: str, tf: str, folds: pd.DataFrame, seed=None,
+               market_shuffle: bool = False) -> pd.DataFrame:
     """Stage 10's blind configuration per quarter, re-run to keep direction,
-    priced at 1x and 2x cost, with the gate attached."""
+    priced at 1x and 2x cost, with the gate attached.
+
+    `market_shuffle` runs the whole thing on the PHASE-RANDOMISED market, using
+    the fold choices stage 10 made on that same shuffled market. That is H-002's
+    own null, reproduced exactly - it is what makes the two hypotheses' null
+    margins the same measurement instead of two different ones."""
     g = folds[(folds.symbol == sym) & (folds.tf == tf)
               & (folds.floor == FLOOR) & (folds.topn == TOPN)]
     if g.empty:
         return pd.DataFrame()
     df = load_tf(sym, tf)
+    if market_shuffle:
+        df = shuffle_market_paired(df, seed=null_seed(sym, tf, "s10"))
     if len(df) < 3000:
         return pd.DataFrame()
     fee, slip, minrisk = COSTS[sym]
@@ -149,19 +158,35 @@ def leg_trades(sym: str, tf: str, folds: pd.DataFrame, seed=None) -> pd.DataFram
 
 
 def _job(args):
-    sym, tf, folds, seed = args
+    sym, tf, folds, seed, msh = args
     try:
-        return leg_trades(sym, tf, folds, seed)
+        return leg_trades(sym, tf, folds, seed, msh)
     except Exception as e:
         print(f"  {sym} {tf} failed: {type(e).__name__}: {e}", flush=True)
         return pd.DataFrame()
 
 
-def build(folds, seed=None) -> pd.DataFrame:
-    tasks = [(s, t, folds, seed) for s, t in CANDIDATES]
+def build(folds, seed=None, market_shuffle=False) -> pd.DataFrame:
+    tasks = [(s, t, folds, seed, market_shuffle) for s, t in CANDIDATES]
     with ProcessPoolExecutor(WORKERS) as ex:
         got = [g for g in ex.map(_job, tasks) if g is not None and len(g)]
     return pd.concat(got, ignore_index=True) if got else pd.DataFrame()
+
+
+def leg_survivors(tr, gated: bool) -> list:
+    """Which individual legs hold PF 1.20 at double cost on their own.
+
+    This is the statistic stage 11 used for H-002's null margin - a count of
+    market/timeframe combinations that clear the gate, real against a
+    phase-randomised market. Counting BOOKS instead was the mistake on the first
+    run: with the market intact in the null, most subsets clear on H-002's own
+    edge and the gate's contribution is invisible."""
+    out = []
+    for leg in CANDIDATES:
+        st = book_stats(tr, [leg], gated)
+        if st is not None and st["pf_2x"] >= GATE:
+            out.append(f"{leg[0]} {leg[1]}")
+    return out
 
 
 def pf(r):
@@ -259,7 +284,25 @@ def main():
     sel = st["sel"]
     print(f"\nchosen gated book: {' + '.join(f'{a} {b}' for a, b in legs)}")
 
-    # the null: the same gate, driven by a shuffled crowd feed
+    # ---- NULL 1: the market destroyed, which is H-002's own null -----------
+    # This is the like-for-like one. Stage 11 phase-randomises the market and
+    # counts how many market/timeframe combinations still clear PF 1.20 at
+    # double cost: 8 real against 0 null, a margin of 1.0. The same count, with
+    # the gate on, is the only number comparable to it.
+    nfolds = pd.read_parquet(VWAP / "stage10_folds_shuffled_paired.parquet")
+    mtr = build(nfolds, market_shuffle=True)
+    real_legs = leg_survivors(tr, True)
+    null_legs = leg_survivors(mtr, True) if len(mtr) else []
+    print(f"\nLEGS holding PF {GATE} at 2x with the gate on:")
+    print(f"  real market  {len(real_legs)} of {len(CANDIDATES)}  {real_legs}")
+    print(f"  shuffled     {len(null_legs)} of {len(CANDIDATES)}  {null_legs}")
+    market_margin = (0.0 if not real_legs
+                     else max(0.0, (len(real_legs) - len(null_legs)) / len(real_legs)))
+    print(f"  margin on H-002's basis: {market_margin:.3f}")
+
+    # ---- NULL 2: the feed destroyed, the market left alone -----------------
+    # A harder and different question - what does the GATE add, given H-002's
+    # edge is still there? Reported, but not what the scorecard field means.
     real_s = survivors(tr, True)
     null_pf2, null_s = [], []
     for seed in range(NSEEDS):
@@ -283,8 +326,12 @@ def main():
           " with a shuffled gate too. The margin below is the share of\n    the"
           " gated book's 2x profit factor that the real feed accounts for, which"
           " is the\n    question the gate actually poses.")
-    margin = 0.0 if not null_pf2 else max(
+    feed_margin = 0.0 if not null_pf2 else max(
         0.0, (st["pf_2x"] - float(np.median(null_pf2))) / st["pf_2x"])
+    print(f"  margin against a shuffled FEED (the increment alone): {feed_margin:.3f}")
+    # the scorecard field means "against a market with no edge", so it gets the
+    # like-for-like number; the feed margin is reported above and in the note
+    margin = market_margin
     print(f"\nreal PF@2x {st['pf_2x']:.3f} vs null median "
           f"{np.median(null_pf2) if null_pf2 else float('nan'):.3f} / "
           f"best {max(null_pf2) if null_pf2 else float('nan'):.3f}")

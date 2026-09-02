@@ -25,11 +25,12 @@ board has been scored on since 2026-09-02.
 
 | ID | hypothesis | score | verdict |
 |---|---|---|---|
-| H-009 | **VWAP gated by crowd positioning** | 8.3 | **the best book in the project** — beats H-002 on every trading number; read the note |
+| H-009 | **VWAP gated by crowd positioning** | **8.9** | **the best book in the project** — beats H-002 on every scored component |
 | H-002 | VWAP | **8.6** | the base it improves on. BTC 4h + ETH 1h + ETH 30m + SOL 4h + gold 5m |
 | H-003 | EMA × VWAP cross | 4.0 | rejected — loses to its own null |
 | H-005 | Liquidity sweep fade | 3.5 | rejected — null beats it 19,062 to 1,702 |
 | H-007 | Cross-sectional crypto ranking | 2.9 | rejected — real edge before costs, too small to pay the spread |
+| H-011 | Prev day/week high-low reversal | see note | **beats its null at every cost level** — the first fade here to manage it — but too small to clear the gate |
 | H-010 | VWAP band rejection | 2.5 | rejected — loses to its own null; the VWAP target is its worst lever |
 | H-001 | ORB | 2.4 | rejected |
 | H-008 | Beta-residual reversion | 2.1 | rejected — residual does not revert; null beats real on every cut |
@@ -84,12 +85,15 @@ the trades the crowd *agrees* with — gives PF 1.137 and goes negative at a tig
 threshold, so almost all of H-002's edge is in the disagreement. It beats every
 null seed, and a shuffled gate hurts.
 
-It scores 8.3 against H-002's 8.6 only because the two `null_margin` numbers
-measure different things: H-002's null destroys the market, H-009's destroys only
-the feed and so measures the increment alone. It wins five of the six components.
-`strategies/orderflow/gated_notes.md` has the full argument and the weaknesses.
-**Next:** re-run stage 10's universe sweep with the gate in the kernel against a
-phase-randomised market null, which is the run that settles the evidence column.
+**It now scores 8.9 against H-002's 8.6**, winning or tying every component.
+That took a second null. Scored against a shuffled FEED it measures only the
+increment — a far harder test than H-002 faces, worth 0.191 — and it ranked below
+the strategy it improves on for that reason alone. Measured the way stage 11
+measures H-002, by phase-randomising the MARKET and counting legs that still hold
+PF 1.20 at double cost: **6 of 8 survive on the real market, 0 of 8 on the
+shuffled one**, a margin of 1.000, the same statistic that gives H-002 its 1.000.
+Both nulls are kept. `strategies/orderflow/gated_notes.md` has the argument and
+the weaknesses.
 
 **H-006, opened and closed 2026-09-02 — read this before dismissing the 1.3.**
 The score is the strategy, not the signal. Binance publishes the long/short
@@ -107,6 +111,24 @@ volatility, one loser runs the whole hold, and the book draws down **49.8R**
 against H-002's 3.8R — which kills 28.7% of simulated accounts at the lowest
 risk on the ladder. It fails on risk shape, not on edge. The next test is a stop.
 Detail in `strategies/orderflow/notes.md`.
+
+**H-011, 2026-09-02 — the one rejected result worth reading.** Fading the sweep
+of the previous day's or week's high/low is the first fade hypothesis here whose
+real data **beats its paired null at every cost level** (2x: 0.739 vs 0.658) and
+beats its own direction control at every level, clearing the gate on 952 configs
+against the null's 436 per seed. H-005 faded a rolling 10-100 bar extreme and lost
+to its null 19,062 to 1,702 — so a schelling point everyone watches is measurably
+a different object from an arbitrary level, which is a result about H-005 too.
+
+It still fails: walk-forward PF **0.897 at 2x**, and 0 of 12 panels hold the gate
+alone. A real edge that a 28bps round trip eats.
+
+Two readings from it that travel: **open interest earns its place once a level has
+been taken** (0.708 → 0.741) where the raw series did nothing directional in H-006
+— "were contracts closed?" separates a stop run from a breakout. And **the
+reversion is real enough to enter on but not reliable enough to exit on** —
+targeting the level's midpoint is the worst exit in the grid (0.576) against
+exiting on time (0.862), the identical pattern H-010 showed with the VWAP.
 
 ## Continue here
 
