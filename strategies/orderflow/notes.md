@@ -262,3 +262,54 @@ losers still run for hours.
 So the ranking of what is left to try changes: **decorrelation, not the stop.**
 Which is the same conclusion H-007's rejection reached from the other direction,
 and the reason eight more coins were queued for download while this ran.
+
+## Stage 5 — two attempts to raise the 1.3, both of which made it worse
+
+Asked whether H-006 can be improved, the two obvious levers were tried and both
+failed out of sample. Recording them so neither is tried again.
+
+**The gap that looked real.** Stage 3 — the walk-forward that produced the board
+record — ran with **no stop at all**. Stage 4 then showed a stop helps
+monotonically in sample (median PF at 2x 1.042 with none against 1.079 at 3
+sigma, return over drawdown 0.31 against 0.90), and that result was never folded
+back into the board record. So the board appeared to be scoring a version already
+known to be inferior.
+
+**Attempt 1 — let the walk-forward choose a stop.** Added `stop_k` to the grid,
+700 configurations to 2,800.
+
+The fold selector chose **no stop in 45 of 53 folds**, because it ranks on profit
+factor and a stop converts some winners into losses — it costs profit factor
+while cutting drawdown by far more. The book got worse: PF at 2x 1.050 → 1.007.
+
+**Attempt 2 — rank folds on return over drawdown instead.** Principled rather
+than fitted: the board judges this on `days = maxDD_in_R / R_per_day`, so a
+selector blind to drawdown optimises the one quantity that is not binding, and
+stage 11 already chooses H-002's book on a drawdown-aware objective.
+
+It did change the choices — stops in 29 of 52 folds instead of 8 of 53 — and the
+book still got worse on **every** measure:
+
+| | board record | + stop, PF selector | + stop, return/DD selector |
+|---|---|---|---|
+| PF at 2x | **1.050** | 1.007 | 0.990 |
+| max drawdown | **49.8R** | — | 57.1R |
+| return / drawdown | **1.69** | — | 1.02 |
+| R per day | **+0.0445** | — | +0.0309 |
+
+**Why.** Stage 4's stop benefit was measured in sample across a focused grid.
+Which stop to use is not stable quarter to quarter, so the selector cannot pick
+it reliably, and quadrupling the configuration count mostly bought four times as
+many chances to fit the training quarter. Both changes were reverted; the code
+keeps the machinery so the test can be repeated rather than redone.
+
+**What this leaves.** H-006's value has already been extracted — as H-009, which
+takes the same signal, uses it to veto H-002's trades rather than to generate its
+own, and is the top of the board at 8.9. A signal with the wrong risk shape is
+worth more as a filter on a strategy with the right one than as a strategy.
+
+The one untried lever is the **wider universe**: the archive carries every USDT-M
+perpetual, and more coins means more trades from different crowds, which
+diversifies the drawdown rather than splitting one edge. That is the same cure
+H-007's rejection identified, and it is the only thing left that attacks the
+49.8R directly.

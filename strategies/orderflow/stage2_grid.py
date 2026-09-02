@@ -42,6 +42,14 @@ sys.path.insert(0, str(ROOT))
 from strategies.orderflow import orderflow as of                 # noqa: E402
 from strategies.vwap.stage3_timeframes import null_seed          # noqa: E402
 
+
+def vol_unit(df, hold, win=288, floor_bps=10.0):
+    """Trailing volatility of `hold`-bar returns, shifted - the unit the stop is
+    measured in and the same one stage 3 divides by to get R."""
+    lr = np.log(df.close).diff(hold)
+    v = lr.rolling(win, min_periods=win // 2).std().shift(1)
+    return v.clip(lower=floor_bps / 1e4)
+
 FEEDS = ROOT / "data" / "feeds"
 OUT = ROOT / "backtests" / "orderflow"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -65,16 +73,32 @@ WINS = (288, 864)                    # z baseline: 1 day, 3 days
 QS = (0.02, 0.05, 0.10, 0.20, 0.30)  # how far into the tail an entry needs
 BANDS = (2016, 8640)                 # trailing quantile window: 7d, 30d
 HOLDS = (96, 144, 288, 576, 864)     # 8h, 12h, 24h, 48h, 72h
+# Stage 4 showed a stop is what this hypothesis was missing - wider is better,
+# median PF at 2x 1.042 with none against 1.079 at 3 sigma, and return over
+# drawdown 0.31 against 0.90 - but stage 3 walk-forwarded the NO-STOP version and
+# that is the record the board has been scoring. So the stop is a dimension the
+# fold selector can choose blind, like every other one, rather than a separate
+# in-sample study nobody folded back in.
+# TESTED AND REVERTED, 2026-09-02. Stage 4 showed a stop helps IN SAMPLE, and it
+# does not survive blind selection. With the stop available the walk-forward book
+# went PF@2x 1.050 -> 1.007 ranking folds on profit factor, and 1.050 -> 0.990
+# with a drawdown-aware selector, while max drawdown went 49.8R -> 57.1R and
+# return over drawdown 1.69 -> 1.02. Four times as many configurations is four
+# times as many chances to fit the training quarter, and that is mostly what the
+# extra dimension bought. Left as one value so the board record stays
+# reproducible; the tuple is kept so the test can be repeated, not rerun.
+STOPS = (0.0,)                       # sigmas beyond entry; 0 = no stop
 
 
 def grid():
     for kind in of.SIGNALS:
         looks = LOOKS if kind == "dcrowd" else (0,)
         wins = (288,) if kind == "dcrowd" else WINS
-        for look, win, q, band, hold, contra in itertools.product(
-                looks, wins, QS, BANDS, HOLDS, (True, False)):
+        for look, win, q, band, hold, contra, stop in itertools.product(
+                looks, wins, QS, BANDS, HOLDS, (True, False), STOPS):
             yield {"signal": kind, "look": look, "win": win, "q": q,
-                   "band": band, "hold": hold, "contrarian": contra}
+                   "band": band, "hold": hold, "contrarian": contra,
+                   "stop_k": stop}
 
 
 def families():
@@ -92,11 +116,13 @@ def families():
     return fam
 
 
-def evaluate(df, sig, cfg, span_days, thr=None) -> dict:
+def evaluate(df, sig, cfg, span_days, thr=None, vols=None) -> dict:
     row = {**cfg}
     base = of.run_one(df, sig, hold=cfg["hold"], q=cfg["q"], band=cfg["band"],
                       fee_bps=FEE_BPS, cost_mult=0.0,
-                      contrarian=cfg["contrarian"], thr=thr)
+                      contrarian=cfg["contrarian"], thr=thr,
+                      stop_k=cfg.get("stop_k", 0.0),
+                      vol=None if vols is None else vols[cfg["hold"]])
     if len(base) < 30:
         return {}
     gross = base[:, 5]
@@ -128,16 +154,17 @@ def _job(args):
     kind, look, win, q, band = key
     sig = of.signal_series(df, kind, look, win)
     thr = of.thresholds(sig, q, band)
+    vols = {h: vol_unit(df, h).values for h in HOLDS}
     reals, nulls = [], []
     for cfg in cfgs:
-        r = evaluate(df, sig, cfg, span, thr)
+        r = evaluate(df, sig, cfg, span, thr, vols)
         if r:
             reals.append({"symbol": sym, **r})
     for seed in range(NSEEDS):
         ns = of.block_shuffle(sig, null_seed(sym, kind, look, win, seed))
         nthr = of.thresholds(ns, q, band)
         for cfg in cfgs:
-            nr = evaluate(df, ns, cfg, span, nthr)
+            nr = evaluate(df, ns, cfg, span, nthr, vols)
             if nr:
                 nulls.append({"symbol": sym, "seed": seed, **nr})
     return reals, nulls

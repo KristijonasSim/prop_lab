@@ -48,6 +48,8 @@ OUT.mkdir(parents=True, exist_ok=True)
 SYMS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
 VOL_WIN = 288          # bars for the volatility estimate: one day
 MIN_VOL_BPS = 10.0     # floor, so a quiet stretch cannot fake a huge R
+SELECTOR = "pf2x"      # "pf2x" ranks folds on profit factor, "ret_dd" on
+                       # return over drawdown - see walkforward()
 TRAIN_Q = 4            # quarters of history before the first test quarter
 MIN_TRAIN = 40         # closed trades a config needs to be eligible
 NSEEDS = 5
@@ -70,16 +72,19 @@ def vol_unit(df: pd.DataFrame, hold: int) -> pd.Series:
     return v.clip(lower=MIN_VOL_BPS / 1e4)
 
 
-def trades(df: pd.DataFrame, sig: pd.Series, cfg: dict, thr=None) -> pd.DataFrame:
+def trades(df: pd.DataFrame, sig: pd.Series, cfg: dict, thr=None,
+           vols=None) -> pd.DataFrame:
     """One configuration on one market, as R multiples at each cost level."""
+    vol = None if vols is None else vols[cfg["hold"]]
     t = of.run_one(df, sig, hold=cfg["hold"], q=cfg["q"], band=cfg["band"],
                    fee_bps=FEE_BPS, cost_mult=0.0, contrarian=cfg["contrarian"],
-                   thr=thr)
+                   thr=thr, stop_k=cfg.get("stop_k", 0.0), vol=vol)
     if len(t) < 10:
         return pd.DataFrame()
     ei = t[:, 0].astype(int)
     xi = t[:, 1].astype(int)
-    v = vol_unit(df, cfg["hold"]).values[np.maximum(ei - 1, 0)]
+    v = (vol if vol is not None else vol_unit(df, cfg["hold"]).values)[
+        np.maximum(ei - 1, 0)]
     ok = np.isfinite(v) & (v > 0)
     if ok.sum() < 10:
         return pd.DataFrame()
@@ -114,9 +119,10 @@ def _job(args):
     if seed is not None:
         sig = of.block_shuffle(sig, null_seed(sym, kind, look, win, seed, "wf"))
     thr = of.thresholds(sig, q, band)
+    vols = {h: vol_unit(df, h).values for h in {c["hold"] for c in cfgs}}
     out = []
     for cfg in cfgs:
-        t = trades(df, sig, cfg, thr)
+        t = trades(df, sig, cfg, thr, vols)
         if t.empty:
             continue
         t["symbol"] = sym
@@ -133,12 +139,34 @@ def run_all(sym: str, seed=None) -> pd.DataFrame:
     return pd.concat(got, ignore_index=True) if got else pd.DataFrame()
 
 
-CFGKEY = ["signal", "look", "win", "q", "band", "hold", "contrarian"]
+CFGKEY = ["signal", "look", "win", "q", "band", "hold", "contrarian", "stop_k"]
 
 
-def walkforward(tr: pd.DataFrame) -> tuple:
-    """Quarterly. The config for quarter Q is the best 2x-cost profit factor
-    among configs with at least MIN_TRAIN trades that CLOSED before Q."""
+def _ret_over_dd(r: np.ndarray) -> float:
+    """Total R divided by the deepest drawdown in R, on the training trades."""
+    eq = np.concatenate(([0.0], np.cumsum(r)))
+    dd = abs(float((eq - np.maximum.accumulate(eq)).min()))
+    return float(r.sum()) / dd if dd > 0 else float("nan")
+
+
+def walkforward(tr: pd.DataFrame, objective: str = SELECTOR) -> tuple:
+    """Quarterly. The config for quarter Q is chosen only on trades that CLOSED
+    before Q, at DOUBLE cost, among configs with at least MIN_TRAIN of them.
+
+    WHAT IT IS RANKED ON MATTERS, and getting it wrong is what held this
+    hypothesis down. Ranking on profit factor, the selector chose NO STOP in 45
+    of 53 folds - because a stop converts some winners into losses and so costs
+    profit factor, while cutting drawdown by far more. But the board does not
+    judge this on profit factor. It judges it on
+
+        days = maxDD_in_R / R_per_day
+
+    so a selector blind to drawdown is optimising the one quantity that is not
+    binding. `ret_dd` ranks on total R over the deepest training drawdown, which
+    is the same thing `riskladder.pick` and the board's speed component reward,
+    and the same objective stage 11 uses to choose H-002's book. Both are kept
+    and both are reported: this is a fix to a mismatch, not a search for a
+    selector that scores better."""
     if tr.empty:
         return pd.DataFrame(), pd.DataFrame()
     tr = tr.sort_values("exit_ts")
@@ -152,12 +180,15 @@ def walkforward(tr: pd.DataFrame) -> tuple:
         if train.empty or test.empty:
             continue
         g = train.groupby(CFGKEY, dropna=False)
-        stats = g.r_2x.agg(["size", of.pf_of])
-        stats.columns = ["n", "pf2x"]
+        stats = g.r_2x.agg(["size", of.pf_of, _ret_over_dd])
+        stats.columns = ["n", "pf2x", "ret_dd"]
         stats = stats[stats.n >= MIN_TRAIN]
         if stats.empty:
             continue
-        best = stats.pf2x.idxmax()
+        rank = stats.ret_dd if objective == "ret_dd" else stats.pf2x
+        if not np.isfinite(rank).any():
+            continue
+        best = rank.idxmax()
         sel = test
         for k, v in zip(CFGKEY, best):
             sel = sel[sel[k] == v]
@@ -165,7 +196,8 @@ def walkforward(tr: pd.DataFrame) -> tuple:
             continue
         out.append(sel)
         picked.append({"quarter": str(q), **dict(zip(CFGKEY, best)),
-                       "train_pf_2x": round(float(stats.pf2x.max()), 4),
+                       "train_pf_2x": round(float(stats.loc[best, "pf2x"]), 4),
+                       "train_ret_dd": round(float(stats.loc[best, "ret_dd"]), 3),
                        "train_n": int(stats.loc[best, "n"]),
                        "test_trades": len(sel),
                        "test_pf": round(of.pf_of(sel.r.values), 4),
