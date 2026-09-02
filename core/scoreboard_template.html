@@ -152,6 +152,9 @@ h1{margin:0;font-size:clamp(24px,4vw,32px);line-height:1.05;letter-spacing:0;fon
 .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;
   border-color:var(--accent)}
+.tab .hid{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  font-weight:700;letter-spacing:.02em;color:var(--faint)}
+.tab[aria-selected="true"] .hid{color:var(--accent)}
 .tab .sc{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
   padding:1px 6px;border-radius:2px;background:var(--track);color:var(--muted)}
 .tab[aria-selected="true"] .sc.good{background:var(--passbg);color:var(--pass)}
@@ -957,8 +960,13 @@ const S=D.strategies;
 S.forEach(s=>{ BASE[s.id]=s; });
 $('tabs').innerHTML = S.map((s,i)=>{
   const b=scoreBand(s.score.total);
+  // the ID goes on the chip, not just inside the panel. The tabs are ordered by
+  // SCORE, so H-009 sits first and H-006 last, and without the number on the
+  // chip there is no way to find a hypothesis by the name it is referred to by
+  // everywhere else in the repo.
   return `<button class="tab" role="tab" id="tab${i}" aria-selected="${i===0}"
-    aria-controls="panel"><span>${esc(s.name)}</span>
+    aria-controls="panel"><span class="hid">${esc(s.hid)}</span>
+    <span>${esc(s.name)}</span>
     <span class="sc ${b}">${s.score.total.toFixed(1)}</span></button>`;
 }).join('');
 [...document.querySelectorAll('.tab')].forEach((b,i)=>{
