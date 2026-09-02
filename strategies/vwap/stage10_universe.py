@@ -25,7 +25,7 @@ from core import data as crypto_data                               # noqa: E402
 from core import fx_data                                           # noqa: E402
 from strategies.vwap.stage1_grid import ASSETS, OUT                # noqa: E402
 from strategies.vwap.stage3_timeframes import (TFS, build_grid,       # noqa: E402
-                                               shuffle_market_paired)
+                                               shuffle_market_paired, null_seed)
 from strategies.vwap.stage6_walkforward import (_slice_with_pad, _run, _pf,  # noqa: E402
                                                 TRAIN_MONTHS, TEST_MONTHS,
                                                 FLOORS, TOPN, CFGKEY)
@@ -62,7 +62,7 @@ def walk(sym, tf, shuffled=False):
     if shuffled:
         # paired: each bar keeps its own volume, so the participation filters in
         # the grid cannot beat the null just by having a volume/return link
-        df = shuffle_market_paired(df, seed=abs(hash((sym, tf, "s10"))) % 2**31)
+        df = shuffle_market_paired(df, seed=null_seed(sym, tf, "s10"))
     fee, slip, minrisk = COSTS[sym]
     bph = TFS[tf][1]
     cfgs = build_grid(bph)

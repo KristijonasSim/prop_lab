@@ -27,6 +27,7 @@ from strategies.vwap.stage3_timeframes import (                    # noqa: E402
     build_grid,
     load_tf,
     shuffle_market_paired,
+    null_seed,
 )
 from strategies.vwap.stage6_walkforward import (             # noqa: E402
     BTC_FIRST_TEST,
@@ -61,7 +62,7 @@ def walk_one_2x(sym: str, tf: str, shuffled_paired: bool = False) -> tuple[list[
     if len(df) < 5000:
         return [], []
     if shuffled_paired:
-        df = shuffle_market_paired(df, seed=abs(hash((sym, tf, "stage9"))) % (2**31))
+        df = shuffle_market_paired(df, seed=null_seed(sym, tf, "stage9"))
 
     fee, slip, minrisk = ASSETS[sym]
     bph = TFS[tf][1]

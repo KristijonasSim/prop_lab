@@ -28,6 +28,15 @@ THE BOOK CONSTRUCTION
 The board uses the best tradeable subset found by stage 11 on the twelve-market
 universe: BTCUSDT 4h, ETHUSDT 1h, ETHUSDT 30m, SOLUSDT 4h and XAUUSD 5m, one
 blind-chosen configuration per leg, equal weighted on the common 2024-09+ window.
+
+THE EVALUATION STRUCTURE
+------------------------
+The firm target is a TWO-STEP evaluation (8% then 5%) on cTrader, decided
+2026-09-01. Step 2 runs the same book forward with a fresh drawdown budget and
+a breach in either step kills the account, so time-to-funded roughly doubles.
+Both structures are printed: the one-step number is kept only so older board
+figures stay comparable. The percentages are NOT verified against any signed
+firm's spec — only the structure is.
 """
 from __future__ import annotations
 
@@ -74,39 +83,57 @@ def max_drawdown_R(r):
     return float((eq - np.maximum.accumulate(eq)).min())
 
 
-def simulate_accounts(daily_r: pd.Series, risk: float, max_days: int = 400):
+# The firm structure, restated here rather than imported: this file audits the
+# repo and must not depend on it. Mirrors core/prop_rules.ONE_STEP / TWO_STEP.
+ONE_STEP = ({"target": 0.08, "daily": 0.04, "maxloss": 0.08, "mindays": 5},)
+TWO_STEP = ({"target": 0.08, "daily": 0.04, "maxloss": 0.08, "mindays": 5},
+            {"target": 0.05, "daily": 0.04, "maxloss": 0.08, "mindays": 5})
+
+
+def simulate_accounts(daily_r: pd.Series, risk: float, phases=ONE_STEP,
+                      max_days: int = 400):
     """Open a fresh challenge account on every trading day and run it forward.
 
-    Rules, applied literally:
+    Rules, applied literally, per phase:
       * equity moves by daily_R * risk each day;
-      * if a single day's loss reaches 4% -> FAIL_DAILY;
-      * if equity falls 8% below its running peak, or 8% below the start
-        -> FAIL_MAX (both readings of "max loss" enforced, the stricter one);
-      * if equity reaches +8% having traded at least 5 days -> PASS;
+      * if a single day's loss reaches the daily cap -> FAIL_DAILY;
+      * if equity falls max_loss below its running peak, or max_loss below the
+        phase start -> FAIL_MAX (both readings of "max loss", the stricter one);
+      * if equity reaches the phase target having traded at least mindays -> PASS;
       * worst case within a day: the whole day's loss lands before its gain.
+
+    With TWO_STEP the account must clear both phases in sequence on the same
+    live series. Phase 2 starts the day after phase 1 clears with a fresh
+    equity, peak and drawdown budget; a breach in either phase kills the
+    account. `days` is the total across both phases.
     """
     d = daily_r.values * risk
     n = len(d)
     out = []
     for s in range(n):
-        eq = peak = 0.0
-        day = traded = 0
-        res = "OPEN"
-        for k in range(s, min(s + max_days, n)):
-            day += 1
-            step = d[k]
-            if step != 0.0:
-                traded += 1
-            if min(step, 0.0) <= -DAILY_LOSS:
-                res = "FAIL_DAILY"; break
-            low = eq + min(step, 0.0)
-            if low - peak <= -MAX_LOSS or low <= -MAX_LOSS:
-                res = "FAIL_MAX"; break
-            eq += step
-            peak = max(peak, eq)
-            if eq >= TARGET and traded >= 5:
-                res = "PASS"; break
-        out.append((res, day))
+        k, res, total_days = s, "OPEN", 0
+        for ph in phases:
+            eq = peak = 0.0
+            day = traded = 0
+            res = "OPEN"
+            while k < n and total_days + day < max_days:
+                day += 1
+                step = d[k]; k += 1
+                if step != 0.0:
+                    traded += 1
+                if min(step, 0.0) <= -ph["daily"]:
+                    res = "FAIL_DAILY"; break
+                low = eq + min(step, 0.0)
+                if low - peak <= -ph["maxloss"] or low <= -ph["maxloss"]:
+                    res = "FAIL_MAX"; break
+                eq += step
+                peak = max(peak, eq)
+                if eq >= ph["target"] and traded >= ph["mindays"]:
+                    res = "PASS"; break
+            total_days += day
+            if res != "PASS":
+                break
+        out.append((res, total_days))
     df = pd.DataFrame(out, columns=["outcome", "days"])
     p = df[df.outcome == "PASS"]
     return {
@@ -186,24 +213,29 @@ def main():
         print(f"    risk = {MAX_LOSS:.2%} / {abs(dd):.3f} R = {risk_cap*100:.3f}% per trade")
         print(f"  At that risk the account gains {rpd*risk_cap*100:.4f}% per day,")
         print(f"  so a straight line to +{TARGET:.0%} takes "
-              f"{TARGET/(rpd*risk_cap):.0f} days.")
+              f"{TARGET/(rpd*risk_cap):.0f} days  (ONE phase; the two-step")
+        print(f"  evaluation has to do this again for +5% before funding).")
 
         print(f"\n  THE GOVERNING IDENTITY (trades per day does not appear):")
         print(f"    days = maxDD_in_R / R_per_day * (target / cap)")
         print(f"         = {abs(dd):.3f} / {rpd:.5f} * ({TARGET:.2f}/{MAX_LOSS:.2f})"
               f" = {abs(dd)/rpd*(TARGET/MAX_LOSS):.0f} days")
 
-        print(f"\n  Simulation, fresh account every trading day:")
         daily = pd.Series(r, index=sel.exit_ts).resample("1D").sum()
-        for risk in (0.005, risk_cap, 0.0125, 0.015):
-            a = simulate_accounts(daily, risk)
-            md = a["median_days"]
-            exp = md / a["pass_rate"] if a["pass_rate"] else float("nan")
-            print(f"    risk {risk*100:5.3f}%  DD {abs(dd)*risk*100:5.2f}%  "
-                  f"pass {a['pass_rate']*100:5.1f}%  killed "
-                  f"{(a['fail_max']+a['fail_daily'])*100:5.1f}%  "
-                  f"unresolved {a['still_open']*100:4.0f}%  "
-                  f"median {md:6.1f}d  expected {exp:6.1f}d")
+        for phases, label in ((ONE_STEP, "ONE-STEP 8% — the old assumption, kept for comparison"),
+                              (TWO_STEP, "TWO-STEP 8% then 5% — THE STRUCTURE THE BOARD USES")):
+            print(f"\n  Simulation, fresh account every trading day — {label}:")
+            for risk in (0.005, risk_cap, 0.0125, 0.015):
+                a = simulate_accounts(daily, risk, phases=phases)
+                md = a["median_days"]
+                exp = md / a["pass_rate"] if a["pass_rate"] else float("nan")
+                print(f"    risk {risk*100:5.3f}%  DD {abs(dd)*risk*100:5.2f}%  "
+                      f"pass {a['pass_rate']*100:5.1f}%  killed "
+                      f"{(a['fail_max']+a['fail_daily'])*100:5.1f}%  "
+                      f"unresolved {a['still_open']*100:4.0f}%  "
+                      f"median {md:6.1f}d  expected {exp:6.1f}d")
+        print("\n  The second 5% step is not half the work of the first 8% one:")
+        print("  it is another chance to breach, and the drawdown is paid twice.")
 
     rule("STEP 3 — what would be needed to pass in 14 days")
     sel = tr[(tr.floor == FLOOR) & (tr.topn == TOPN) & (tr.exit_ts >= COMMON_START)]

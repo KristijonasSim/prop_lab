@@ -58,6 +58,83 @@ def stitched_fields(r: np.ndarray, entry_ts, exit_ts, risk: float) -> dict:
     }
 
 
+def leg_payload(tr, *, picked, cap: int | None = 8, start=None,
+                tf_label: str | None = None) -> dict:
+    """Per-leg out-of-sample trades, so the board page can rebuild the book.
+
+    The one thing people misread about this board is whose profit factor they
+    are looking at: it is the whole book's, never a single market's. Shipping
+    the trades lets the page answer that directly - tick a leg off and every
+    number recomputes from the rest.
+
+    `tr` needs the columns `sym`, `tf`, `exit_ts`, `r`, `r_2x`, with `r` being
+    each leg's own R multiple, NOT yet divided by the number of legs. The page
+    divides by however many are ticked, which is what equal weight means here.
+
+    Every leg is cut to the SAME window, so any subset the trader ticks is
+    measured over identical dates. `start` fixes that window explicitly (the
+    H-002 book uses the first quarter its FX legs have); left out, it is the
+    latest first-trade across the legs, which is the earliest date on which the
+    whole set can be compared.
+
+    `cap` bounds how many legs are offered. A walk-forward over 44 combinations
+    is a wall, not a tool, and its trades run to megabytes on the page - so the
+    board's own picks are always kept and the rest are the best remaining by
+    profit factor at DOUBLE cost. Pass None to keep them all.
+    """
+    tr = tr.copy()
+    tr["exit_ts"] = pd.to_datetime(tr.exit_ts, utc=True)
+    if tf_label is not None:
+        tr["tf"] = tf_label
+    keys = list(dict.fromkeys(zip(tr.sym, tr.tf)))
+    picked = [tuple(x) for x in picked]
+
+    if cap is not None and len(keys) > cap:
+        rank = {k: pf_of(g.r_2x.values)
+                for k, g in tr.groupby(["sym", "tf"], sort=False)}
+        rest = sorted((k for k in keys if k not in picked),
+                      key=lambda k: -(rank.get(k) if rank.get(k) == rank.get(k) else -1))
+        keys = picked + rest[:max(cap - len(picked), 0)]
+
+    tr = tr[[(a, b) in keys for a, b in zip(tr.sym, tr.tf)]]
+    if start is None:
+        # Anchored on the legs the BOARD chose, not on every leg offered. Anchor
+        # it on all of them and adding one late-starting candidate silently
+        # shortens the window, so ticking the board's own book back on would
+        # print a different profit factor from the one the board reports - the
+        # page would appear to contradict itself.
+        anchor = [k for k in keys if k in picked] or keys
+        start = max(g.exit_ts.min() for k, g in tr.groupby(["sym", "tf"], sort=False)
+                    if k in anchor)
+    start = pd.Timestamp(start)
+    start = start.tz_localize("UTC") if start.tzinfo is None else start.tz_convert("UTC")
+    tr = tr[tr.exit_ts >= start].sort_values("exit_ts")
+    if tr.empty:
+        raise ValueError("no trades inside the common window")
+
+    idx = {k: i for i, k in enumerate(keys)}
+    day0 = tr.exit_ts.iloc[0].normalize()
+    days = (tr.exit_ts.dt.normalize() - day0).dt.days.astype(int)
+    items = []
+    for a, b in keys:
+        g = tr[(tr.sym == a) & (tr.tf == b)]
+        span = max((g.exit_ts.iloc[-1] - g.exit_ts.iloc[0]).days, 1) if len(g) else 1
+        items.append({"sym": a, "tf": b, "asset": a[:3], "n": int(len(g)),
+                      "pf": round(pf_of(g.r.values), 3) if len(g) else None,
+                      "pf2x": round(pf_of(g.r_2x.values), 3) if len(g) else None,
+                      "tpd": round(len(g) / span, 3)})
+    return {
+        "start": str(day0.date()), "end": str(tr.exit_ts.iloc[-1].date()),
+        "n_days": int(days.max()) + 1,
+        "keys": [f"{a} {b}" for a, b in keys], "items": items,
+        "picked": [idx[k] for k in picked if k in idx],
+        # [leg index, day index, R, R at 2x cost]
+        "trades": [[int(a), int(b), round(float(c), 4), round(float(d), 4)]
+                   for a, b, c, d in zip([idx[(x, y)] for x, y in zip(tr.sym, tr.tf)],
+                                         days, tr.r.values, tr.r_2x.values)],
+    }
+
+
 def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
                 report: str, candidate: str,
                 r: np.ndarray, entry_ts, exit_ts,
@@ -65,7 +142,8 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
                 null_margin: float = 0.0, consistency: float = 0.0,
                 beats_null: bool = False,
                 grid: dict | None = None, todo: list | None = None,
-                note: str | None = None) -> dict:
+                note: str | None = None, legs: dict | None = None,
+                markets: dict | None = None) -> dict:
     """`r` is the stitched out-of-sample trade series - walk-forward output, not
     a fitted backtest. Anything else is not comparable to what is already here
     and should not be put on the board."""
@@ -102,8 +180,23 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
             "pf": fields["pf"],
             "sharpe": fields["sharpe"],
         },
+        # Which evaluation structure the ladder's headline numbers are on.
+        # Two-step (8% then 5%) since 2026-09-01; every row also carries its
+        # one-step values under `one_step`.
+        "structure": "two_step",
         "ladder": rows, "pick": pick,
         "grid": grid or {}, "todo": todo or [], "note": note,
+        # Optional per-leg trade series, so the page can recompute the book from
+        # any subset of markets the trader picks. Only hypotheses whose book is
+        # actually several markets have one; see strategies/vwap/stage11_board.py
+        # for the shape. Without it the page shows the legs as a static list.
+        "legs": legs,
+        # What this hypothesis actually trades, stated rather than left to be
+        # inferred from a sentence. `traded` is the book the score was measured
+        # on, one entry per market/timeframe; `searched` names the universe the
+        # configuration was chosen from, which is usually far wider and is the
+        # thing that makes a single survivor unimpressive.
+        "markets": markets,
     }
     out = BT / sid / "board.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -112,7 +205,9 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
     print(f"    {name}: PF {fields['pf']}  {fields['trades']} trades  "
           f"{fields['trades_per_day']}/day across {n_books} sub-strategies "
           f"({fields['tpd_per_book']}/day each)  R/day {fields['r_per_day']:+.4f}")
-    print(f"    pick {pick['risk']*100:.2f}% risk  pass {pick['pass_rate']*100:.1f}%  "
+    one = pick.get("one_step", {})
+    print(f"    pick {pick['risk']*100:.2f}% risk  TWO-STEP pass {pick['pass_rate']*100:.1f}%  "
           f"killed {(pick['fail_max']+pick['fail_daily'])*100:.1f}%  "
-          f"median {pick['median_days']} d  expected {pick['expected_days']} d")
+          f"median {pick['median_days']} d  expected {pick['expected_days']} d"
+          f"   (one-step was {one.get('expected_days')} d)")
     return rec

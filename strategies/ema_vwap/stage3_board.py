@@ -98,6 +98,17 @@ def main():
         period="FX & metals 2023-09 → 2026-08 · BTC from 2017",
         report="",
         candidate=f"{sym} {tf}, config re-chosen blind each quarter",
+        # H-003's book is one combination, but 44 were walk-forwarded; offering
+        # the best of them lets the rejection be checked rather than taken on
+        # trust - build a book out of them and watch it still not clear the gate
+        legs=board.leg_payload(
+            tr[(tr.floor == row.floor) & (tr.topn == row.topn)]
+              .rename(columns={"symbol": "sym"}),
+            picked=[(sym, tf)], cap=8),
+        markets={"traded": [{"sym": sym, "tf": tf, "asset": sym[:3]}],
+                 "searched": "9 markets x 3m-1d, 284k backtests",
+                 "note": "One survivor in 48 market/timeframe combinations - and the "
+                         "phase-randomised null produced two."},
         r=g.r.values, r_2x=g.r_2x.values, n_books=int(row.topn),
         entry_ts=g.entry_ts, exit_ts=g.exit_ts,
         # the null produced MORE gate-clearing cells and more survivors

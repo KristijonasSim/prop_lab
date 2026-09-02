@@ -116,6 +116,13 @@ def main():
         tagline="Rank the coins, buy the leaders, sell the laggards.",
         period="5 coins (BTC, ETH, SOL, BNB, XRP) · 1h/4h/1d · 2020-08 → 2026-08",
         report="", candidate="config re-chosen blind each quarter on 2x-cost train PF",
+        markets={"traded": [{"sym": c, "tf": "1h/4h/1d", "asset": c[:3]}
+                            for c in ("BTCUSDT", "ETHUSDT", "SOLUSDT",
+                                      "BNBUSDT", "XRPUSDT")],
+                 "searched": "the same 5 coins x 1h/4h/1d, 360 configs x 6 panels",
+                 "note": "Not five separate strategies: one basket, long the top-ranked "
+                         "coins against the bottom-ranked, timeframe re-chosen blind "
+                         "each quarter."},
         r=stitched.r.values, r_2x=stitched.r_2x.values,
         entry_ts=stitched.entry_ts, exit_ts=stitched.exit_ts,
         n_books=1, null_margin=margin, beats_null=beats,

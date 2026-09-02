@@ -305,7 +305,7 @@ Rebuild it with `.venv/bin/python core/build_scoreboard.py`. It reads whatever
 2. **`core/feed_collector.py` is running** and should stay running. It records open
    interest and taker buy/sell delta, which Binance only serves for ~2 days. There
    is no way to recover missed hours. Cron line:
-   `*/15 * * * * .venv/bin/python core/feed_collector.py --once >> data/feeds/collector.log 2>&1`
+   `*/15 * * * * /home/kris/prop_lab/.venv/bin/python /home/kris/prop_lab/core/feed_collector.py --once >> /home/kris/prop_lab/data/feeds/collector.log 2>&1`
    Around 2026-10 there will be enough to test an order-flow hypothesis (H-006).
 3. **Cross-sectional crypto ranking was requested and not started.** Note the
    research argues against it: time-series momentum beats cross-sectional in
@@ -320,10 +320,20 @@ Rebuild it with `.venv/bin/python core/build_scoreboard.py`. It reads whatever
   a viable business if the firm has no deadline.
 * Most are **two-step** (8% then 5%), while `core/prop_rules.py` models one step
   at 8%. That needs updating once a firm is chosen.
+  **Closed 2026-09-01/02.** `prop_rules.TWO_STEP` and
+  `riskladder.run_accounts_two_step` model the real structure, and since
+  2026-09-02 the **board itself is scored on it** — `riskladder.ladder` puts the
+  two-step pass rate, median and expected days in the headline keys and keeps the
+  one-step values beside them under `one_step`, so every day count on the board is
+  the structure being traded. `core/verify_board.py` prints both independently.
+  The percentages are still not checked against a signed firm's spec.
 
 **Blocker for going live**: two of H-002's legs are XAUUSD and this box has no
 working MT5 bridge, so `live/paper_trade.py` runs gold in signal-only mode off
 cached data. Half the book cannot be paper-traded until that bridge exists.
+Since the firm choice is cTrader (2026-09-01), the route out is a cTrader Open
+API connector rather than an MT5 bridge — cTrader carries both crypto and
+XAUUSD. Not built; it needs firm credentials, so it is Kris's move first.
 
 **Method rules added today — do not regress on these:**
 

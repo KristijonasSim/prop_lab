@@ -1,0 +1,78 @@
+
+BTCUSDT: 630,371 bars over 2190 days, 700 configs in 70 families x 3 null seeds
+  10/70 families  [8s]
+  20/70 families  [14s]
+  30/70 families  [22s]
+  40/70 families  [28s]
+  50/70 families  [36s]
+  60/70 families  [42s]
+  70/70 families  [48s]
+  BTCUSDT done in 48s
+
+ETHUSDT: 499,537 bars over 1734 days, 700 configs in 70 families x 3 null seeds
+  10/70 families  [7s]
+  20/70 families  [12s]
+  30/70 families  [18s]
+  40/70 families  [23s]
+  50/70 families  [28s]
+  60/70 families  [33s]
+  70/70 families  [38s]
+  ETHUSDT done in 38s
+
+SOLUSDT: 498,077 bars over 1734 days, 700 configs in 70 families x 3 null seeds
+  10/70 families  [7s]
+  20/70 families  [12s]
+  30/70 families  [18s]
+  40/70 families  [23s]
+  50/70 families  [28s]
+  60/70 families  [34s]
+  70/70 families  [38s]
+  SOLUSDT done in 38s
+
+==============================================================================
+REAL vs NULL — the whole grid
+==============================================================================
+  cost 0x   real median 1.000  >1.0  50.0%  clears 1.2   396   |   null median 1.000  >1.0  50.0%  clears 1.2   219
+  cost 1x   real median 0.902  >1.0  31.2%  clears 1.2   102   |   null median 0.880  >1.0  14.5%  clears 1.2    53
+  cost 2x   real median 0.803  >1.0  14.2%  clears 1.2    37   |   null median 0.785  >1.0   5.4%  clears 1.2    16
+  cost 3x   real median 0.716  >1.0   6.7%  clears 1.2    12   |   null median 0.705  >1.0   2.2%  clears 1.2     5
+
+THE CONTROL — fading the crowd vs following it (PF at 2x cost)
+  follow the crowd   median 0.730  >1.0   4.9%  best 1.359  mean bps/trade -13.35
+  fade the crowd     median 0.882  >1.0  23.6%  best 1.480  mean bps/trade +13.35
+
+BY SIGNAL (PF at 2x cost, contrarian only)
+          count    50%    max
+signal                       
+crowd_z   300.0  0.958  1.480
+dcrowd    450.0  0.911  1.379
+disagree  300.0  0.701  1.432
+
+BY HOLD (PF at 2x cost, contrarian only)
+        n  median   best    tpd
+hold                           
+96    210   0.786  1.098  1.341
+144   210   0.841  1.261  1.043
+288   210   0.923  1.448  0.643
+576   210   0.963  1.471  0.373
+864   210   0.996  1.480  0.264
+
+TOP 15 BY PF AT 2x COST (contrarian only)
+ symbol   signal  look  win    q  band  hold  trades   tpd  avg_bps  win_rate  pf_0x  pf_1x  pf_2x  pf_3x
+SOLUSDT  crowd_z     0  864 0.02  8640   864     288 0.166   151.75    0.5590 1.6184 1.5475 1.4799 1.4152
+SOLUSDT  crowd_z     0  864 0.02  8640   576     339 0.196   121.77    0.5959 1.6495 1.5577 1.4708 1.3887
+SOLUSDT  crowd_z     0  864 0.02  8640   288     399 0.230    96.43    0.5915 1.6840 1.5617 1.4481 1.3427
+SOLUSDT disagree     0  864 0.05  2016   864     339 0.196   140.89    0.5693 1.5661 1.4977 1.4324 1.3699
+ETHUSDT   dcrowd    48  288 0.05  8640   576     577 0.333    86.77    0.5719 1.6097 1.4901 1.3793 1.2768
+SOLUSDT  crowd_z     0  864 0.10  2016   576     604 0.348   100.04    0.5662 1.5473 1.4554 1.3690 1.2877
+ETHUSDT   dcrowd    48  288 0.02  8640   576     415 0.239    83.61    0.5590 1.5782 1.4613 1.3534 1.2535
+BTCUSDT  crowd_z     0  288 0.02  8640   576     661 0.302    71.23    0.5703 1.5667 1.4342 1.3125 1.2015
+SOLUSDT  crowd_z     0  864 0.05  8640   576     473 0.273    90.14    0.5877 1.4770 1.3908 1.3094 1.2325
+SOLUSDT  crowd_z     0  864 0.05  2016   576     523 0.302    94.29    0.5488 1.4590 1.3790 1.3034 1.2321
+BTCUSDT   dcrowd   144  288 0.02  8640   576     371 0.169    71.37    0.5553 1.5332 1.4092 1.2952 1.1910
+ETHUSDT   dcrowd    48  288 0.05  8640   288     917 0.529    61.26    0.5289 1.5961 1.4316 1.2855 1.1555
+BTCUSDT  crowd_z     0  864 0.02  8640   288     498 0.227    56.61    0.5542 1.6247 1.4391 1.2758 1.1319
+BTCUSDT  crowd_z     0  288 0.10  2016   864     645 0.295    71.67    0.5240 1.4728 1.3643 1.2644 1.1723
+SOLUSDT  crowd_z     0  864 0.02  8640   144     468 0.270    58.76    0.5620 1.5609 1.4030 1.2613 1.1345
+
+wrote /home/kris/prop_lab/backtests/orderflow/stage2_real.csv and /home/kris/prop_lab/backtests/orderflow/stage2_null.csv

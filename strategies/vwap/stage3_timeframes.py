@@ -16,6 +16,7 @@ produces is the score to beat. A live result only counts if it clears the null.
 """
 from __future__ import annotations
 
+import zlib
 import sys, time
 from pathlib import Path
 
@@ -67,6 +68,23 @@ def load_tf(sym: str, tf: str, full_history: bool = False) -> pd.DataFrame:
     if full_history:
         return df
     return df[(df.index >= START) & (df.index < END)]
+
+
+def null_seed(*parts) -> int:
+    """A reproducible seed for a null draw.
+
+    Every null in this project used to be seeded with `hash((sym, tf, tag))`.
+    Python randomises string hashing per process unless PYTHONHASHSEED is set,
+    so those seeds were different on every run: no null result could be
+    reproduced or checked, and a marginal verdict flipped between two runs of
+    identical code (H-007's `beats_null` went True, then False, on the same
+    data). CRC32 over the joined parts is stable across processes and machines.
+
+    The nulls drawn before 2026-09-02 were still valid random draws - they were
+    simply not repeatable, so any figure derived from one has to be regenerated
+    before it can be audited.
+    """
+    return zlib.crc32("|".join(str(x) for x in parts).encode()) % (2 ** 31)
 
 
 def shuffle_market(df: pd.DataFrame, seed: int) -> pd.DataFrame:
@@ -173,7 +191,7 @@ def main():
             r["symbol"], r["tf"], r["kind"] = sym, tf, "real"
             real.append(r)
 
-            sh = shuffle_market(df, seed=abs(hash((sym, tf))) % (2**31))
+            sh = shuffle_market(df, seed=null_seed(sym, tf))
             rn = sweep(sh, cfgs, fee, slip, feats=features(sh))
             rn["symbol"], rn["tf"], rn["kind"] = sym, tf, "shuffled"   # not "null": pandas reads that back as NaN
             null.append(rn)

@@ -122,6 +122,16 @@ def main():
         tagline="Strip out BTC, fade what is left.",
         period="ETH/SOL/BNB/XRP against BTC · 15m-4h · 2020-08 → 2026-08",
         report="", candidate="config re-chosen blind each quarter on 2x-cost train PF",
+        # the four alts really are four sub-strategies sharing one account, so
+        # they tick on and off exactly like H-002's legs
+        legs=board.leg_payload(stitched.rename(columns={"coin": "sym"}),
+                               picked=[(c, "15m-4h") for c in COINS],
+                               cap=None, tf_label="15m-4h"),
+        markets={"traded": [{"sym": c, "tf": "15m-4h", "asset": c[:3]}
+                            for c in COINS],
+                 "searched": "4 alts against BTC x 15m-4h, 1,152 configs x 6 panels",
+                 "note": "Each alt is traded against its own BTC-hedged residual; BTC "
+                         "itself is the factor being stripped out, not a leg."},
         r=r, r_2x=r2, entry_ts=stitched.entry_ts, exit_ts=stitched.exit_ts,
         n_books=len(COINS), null_margin=margin, beats_null=beats,
         consistency=float((folds.test_pf > 1).mean()) if len(folds) else 0.0,

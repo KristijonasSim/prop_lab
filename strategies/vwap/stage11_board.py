@@ -117,6 +117,18 @@ def main():
         report="https://claude.ai/code/artifact/cb748842-7d3b-45f7-9d69-827e00ba82f4",
         candidate=(" + ".join(f"{a} {b}" for a, b in legs)
                    + ", equal weight, configs chosen by 2x-cost train PF each quarter"),
+        markets={"traded": [{"sym": a, "tf": b, "asset": a[:3]} for a, b in legs],
+                 "searched": "12 markets (BTC/ETH/SOL, XAU/XAG, 7 FX majors) x 15m-4h",
+                 "note": "Eight market/timeframe combinations cleared PF 1.20 at 2x "
+                         "cost under all four selection rules; these five are the "
+                         "fastest book among them."},
+        # every candidate leg, not just the five the board chose, so any subset
+        # the trader ticks is measured over the same window
+        legs=board.leg_payload(
+            tr[(tr.floor == floor) & (tr.topn == topn)
+               & [(a, b) in legs_all for a, b in zip(tr.symbol, tr.tf)]]
+              .rename(columns={"symbol": "sym"}),
+            picked=legs, cap=None, start=COMMON),
         r=sel.r.values / len(legs), r_2x=sel.r_2x.values / len(legs),
         entry_ts=sel.entry_ts, exit_ts=sel.exit_ts, n_books=len(legs) * topn,
         null_margin=null_margin, beats_null=(real_s > null_s),

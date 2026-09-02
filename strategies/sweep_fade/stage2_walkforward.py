@@ -167,6 +167,15 @@ def main():
         tagline="Fade the stop run: price takes out a range extreme, then closes back inside.",
         period="12 markets 5m-4h, walk-forward 2024-09 → 2026-08 (BTC 2019+)",
         report="", candidate=f"{best.symbol} {best.tf}, config re-chosen blind each quarter",
+        legs=board.leg_payload(
+            tdf[(tdf.floor == best.floor) & (tdf.topn == best.topn)]
+                .rename(columns={"symbol": "sym"}),
+            picked=[(str(best.symbol), str(best.tf))], cap=8),
+        markets={"traded": [{"sym": str(best.symbol), "tf": str(best.tf),
+                             "asset": str(best.symbol)[:3]}],
+                 "searched": "12 markets x 5m-4h, 541k backtests",
+                 "note": "Walk-forwarded for board parity only. Stage 1 had already "
+                         "failed: the null cleared the gate 19,062 times to 1,702."},
         r=g.r.values, r_2x=g.r_2x.values, entry_ts=g.entry_ts, exit_ts=g.exit_ts,
         n_books=int(best.topn), null_margin=0.0, beats_null=False,
         consistency=float((fq.test_pf > 1).mean()) if len(fq) else 0.0,

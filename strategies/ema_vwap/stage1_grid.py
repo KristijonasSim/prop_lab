@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 from core import data as crypto_data                            # noqa: E402
 from core import fx_data                                        # noqa: E402
 from strategies.vwap.stage1_grid import ASSETS                  # noqa: E402
-from strategies.vwap.stage3_timeframes import shuffle_market    # noqa: E402
+from strategies.vwap.stage3_timeframes import shuffle_market, null_seed  # noqa: E402
 from strategies.ema_vwap.sweep import build_grid, sweep, TFS    # noqa: E402
 
 OUT = ROOT / "backtests" / "ema_vwap"
@@ -68,7 +68,7 @@ def _job(args):
         c["min_risk_bps"] = minrisk
     roll = max(20, int(round(24 * 4 * bph)))          # 4 days of bars
 
-    sh = shuffle_market(df, seed=abs(hash((sym, tf, "h003"))) % (2**31))
+    sh = shuffle_market(df, seed=null_seed(sym, tf, "h003"))
     frames = []
     t0 = time.time()
     for kind, d in (("real", df), ("shuffled", sh)):

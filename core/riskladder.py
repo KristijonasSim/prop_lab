@@ -117,20 +117,34 @@ def run_accounts_two_step(daily_r: pd.Series, risk: float,
     }
 
 
+def _expected(a: dict) -> float | None:
+    md, pr = a["median_days"], a["pass_rate"]
+    return None if (md is None or not pr) else round(md / pr, 1)
+
+
 def ladder(daily_r: pd.Series, r_series: np.ndarray,
            levels=RISK_LADDER) -> list[dict]:
     """One row per risk level. `r_series` is the trade-by-trade R used for the
-    drawdown, which is the one quantity that scales linearly with risk."""
+    drawdown, which is the one quantity that scales linearly with risk.
+
+    Every row carries BOTH structures. The headline keys (`pass_rate`,
+    `median_days`, `expected_days`, the two breach rates) are the **two-step**
+    evaluation, because that is the structure the project decided to trade on
+    2026-09-01 and a board that reports the one-step number reports a fiction.
+    The one-step values are kept alongside under a `one_step` sub-dict so older
+    board figures stay comparable and the gap between the two stays visible.
+    """
     eq = np.concatenate(([0.0], np.cumsum(r_series)))
     dd_r = float((eq - np.maximum.accumulate(eq)).min())
     rows = []
     for risk in levels:
-        a = run_accounts(daily_r, risk)
-        md, pr = a["median_days"], a["pass_rate"]
+        one = run_accounts(daily_r, risk)
+        two = run_accounts_two_step(daily_r, risk)
         rows.append({
-            "risk": risk, **a,
-            "expected_days": (None if (md is None or not pr) else round(md / pr, 1)),
+            "risk": risk, **two,
+            "expected_days": _expected(two),
             "max_dd": round(dd_r * risk, 4),
+            "one_step": {**one, "expected_days": _expected(one)},
         })
     return rows
 
@@ -147,6 +161,10 @@ def pick(rows: list[dict]) -> dict:
     starts on its own day and stops at a pass or a breach, so most are finished
     before they ever meet the worst stretch of the curve. A low breach rate on
     short-lived accounts is not evidence that the drawdown fits.
+
+    Read on the two-step structure, which is what `ladder` now puts in the
+    headline keys: an account has to clear 8% and then 5%, and a level that only
+    looks affordable across one phase is not affordable.
 
     If nothing qualifies, fall back to the level with the smallest drawdown."""
     ok = [x for x in rows

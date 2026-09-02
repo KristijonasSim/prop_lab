@@ -13,7 +13,8 @@ sys.path.insert(0, str(ROOT))
 from core import data as crypto_data                                # noqa: E402
 from core import fx_data                                            # noqa: E402
 from strategies.vwap.stage1_grid import ASSETS                      # noqa: E402
-from strategies.vwap.stage3_timeframes import shuffle_market_paired  # noqa: E402
+from strategies.vwap.stage3_timeframes import (shuffle_market_paired,  # noqa: E402
+                                               null_seed)
 from strategies.sweep_fade.sweep import build_grid, sweep, TFS, features  # noqa: E402
 
 OUT = ROOT / "backtests" / "sweep_fade"
@@ -55,7 +56,7 @@ def _job(args):
         c["min_risk_bps"] = minrisk
     # paired shuffle: each bar keeps its own volume, so the rvol filter cannot
     # win against the null just by having a volume/return link the null lacks
-    sh = shuffle_market_paired(df, seed=abs(hash((sym, tf, "h005"))) % 2**31)
+    sh = shuffle_market_paired(df, seed=null_seed(sym, tf, "h005"))
     frames = []
     t0 = time.time()
     for kind, d in (("real", df), ("shuffled", sh)):

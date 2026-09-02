@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import data as crypto_data                                 # noqa: E402
-from strategies.vwap.stage3_timeframes import shuffle_market_paired  # noqa: E402
+from strategies.vwap.stage3_timeframes import (shuffle_market_paired,  # noqa: E402
+                                               null_seed)
 from strategies.xsec.xsec import panel                               # noqa: E402
 from strategies.resid import resid                                   # noqa: E402
 
@@ -49,7 +50,7 @@ def load_panels(shuffle_seed: int | None = None):
         d = crypto_data.load(ccxt_sym, "15m")
         d = d[(d.index >= START) & (d.index < END)]
         if shuffle_seed is not None:
-            d = shuffle_market_paired(d, seed=abs(hash((sym, shuffle_seed, "h008"))) % 2**31)
+            d = shuffle_market_paired(d, seed=null_seed(sym, shuffle_seed, "h008"))
         raw[sym] = d
     return {tf: panel({s: resid.resample(raw[s], rule) for s in raw})
             for tf, (rule, _bpd) in resid.TFS.items()}

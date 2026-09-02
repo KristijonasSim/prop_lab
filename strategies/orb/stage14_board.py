@@ -107,6 +107,10 @@ def main():
     board.write_board(
         sid="orb", hid="H-001", name="Opening Range Breakout",
         tagline="Range of the first N minutes after a session open, traded on the break.",
+        markets={"traded": [{"sym": "BTCUSDT", "tf": "15m", "asset": "BTC"}],
+                 "searched": "BTC 15m-4h, then 9 FX / metal / index markets",
+                 "note": "Also failed on real Gold, Silver and Nasdaq futures, on "
+                         "every timeframe and both session clocks."},
         period="BTCUSDT 15m, walk-forward 2019-01 → 2026-08, 31 quarters",
         report="https://claude.ai/code/artifact/a38e8a90-fc1a-4133-afc1-da3a826ae370",
         candidate="Filtered ORB family, config re-chosen blind every quarter",

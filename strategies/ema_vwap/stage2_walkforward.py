@@ -31,7 +31,7 @@ from strategies.ema_vwap.sweep import (build_grid, features, run_one,  # noqa: E
 from strategies.ema_vwap.engine import T_R, T_ENTRY_I, T_EXIT_I      # noqa: E402
 from strategies.ema_vwap.stage1_grid import load_tf, OUT, EMAS, ANCHORS  # noqa: E402
 from strategies.vwap.stage3_timeframes import (shuffle_market,          # noqa: E402
-                                               shuffle_market_paired)
+                                               shuffle_market_paired, null_seed)
 
 TRAIN_MONTHS, TEST_MONTHS = 12, 3
 FLOORS = (30, 100)
@@ -79,10 +79,10 @@ def walk_one(sym: str, tf: str, shuffled=False, seed_off: int = 0):
         # keeps each bar's volume with its own return, so a participation filter
         # cannot win just by having a volume/return link the null lacks
         df = shuffle_market_paired(
-            df, seed=(abs(hash((sym, tf, "h003p"))) + seed_off * 7919) % (2**31))
+            df, seed=null_seed(sym, tf, "h003p", seed_off))
     elif shuffled:
         df = shuffle_market(
-            df, seed=(abs(hash((sym, tf, "h003wf"))) + seed_off * 7919) % (2**31))
+            df, seed=null_seed(sym, tf, "h003wf", seed_off))
     fee, slip, minrisk = ASSETS[sym]
     bph = TFS[tf][1]
     base = build_grid(bph)

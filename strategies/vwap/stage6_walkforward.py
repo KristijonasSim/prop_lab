@@ -51,7 +51,7 @@ from strategies.vwap.engine import T_R, T_ENTRY_I, T_EXIT_I                   # 
 from strategies.vwap.stage1_grid import ASSETS, OUT                           # noqa: E402
 from strategies.vwap.stage3_timeframes import (load_tf, TFS, build_grid,       # noqa: E402
                                                shuffle_market,
-                                               shuffle_market_paired)
+                                               shuffle_market_paired, null_seed)
 
 TRAIN_MONTHS, TEST_MONTHS = 12, 3
 FLOORS = (30, 100)          # minimum train trades, both reported
@@ -115,9 +115,9 @@ def walk_one(sym: str, tf: str, shuffled=False) -> tuple[list[dict], list[dict]]
     if len(df) < 5000:
         return [], []
     if shuffled == "paired":
-        df = shuffle_market_paired(df, seed=abs(hash((sym, tf, "wfp"))) % (2**31))
+        df = shuffle_market_paired(df, seed=null_seed(sym, tf, "wfp"))
     elif shuffled:
-        df = shuffle_market(df, seed=abs(hash((sym, tf, "wf"))) % (2**31))
+        df = shuffle_market(df, seed=null_seed(sym, tf, "wf"))
 
     fee, slip, minrisk = ASSETS[sym]
     bph = TFS[tf][1]

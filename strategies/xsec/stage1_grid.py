@@ -19,7 +19,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import data as crypto_data                                 # noqa: E402
-from strategies.vwap.stage3_timeframes import shuffle_market_paired  # noqa: E402
+from strategies.vwap.stage3_timeframes import (shuffle_market_paired,  # noqa: E402
+                                               null_seed)
 from strategies.xsec import xsec                                     # noqa: E402
 
 OUT = ROOT / "backtests" / "xsec"
@@ -48,7 +49,7 @@ def load_panel(shuffle_seed: int | None = None) -> dict[str, dict[str, pd.DataFr
         d = crypto_data.load(ccxt_sym, "15m")
         d = d[(d.index >= START) & (d.index < END)]
         if shuffle_seed is not None:
-            d = shuffle_market_paired(d, seed=abs(hash((sym, shuffle_seed, "h006"))) % 2**31)
+            d = shuffle_market_paired(d, seed=null_seed(sym, shuffle_seed, "h006"))
         raw[sym] = d
     return {tf: xsec.panel({s: xsec.resample(raw[s], rule) for s in raw})
             for tf, (rule, _bpd) in xsec.TFS.items()}

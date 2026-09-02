@@ -1268,3 +1268,103 @@ crypto and XAUUSD — so it is the one choice that unblocks the whole book rathe
 than half of it. The exact percentages, minimum trading days and consistency
 rules are NOT verified against any specific firm's current spec and must be
 confirmed before money moves; what is modelled here is the structure.
+
+## Every null in this project was drawn on an unreproducible seed (found 2026-09-02)
+
+Eleven call sites seeded their shuffle with `abs(hash((sym, tf, tag))) % 2**31`.
+Python randomises the hash of a **string** per process unless `PYTHONHASHSEED`
+is set, so that expression returns a different number on every run. The nulls
+were therefore a different random draw each time, and nothing derived from one
+could be reproduced or checked.
+
+How it surfaced: H-007 was re-run twice today on identical code and identical
+data. The first run printed `beats every null seed: True` and scored 3.0; the
+second printed `False` and scored 2.9. The real walk-forward was 1.063 both
+times; the null's best seed moved across it.
+
+Sites affected — every hypothesis on the board:
+
+| file | null |
+|---|---|
+| `strategies/vwap/stage3_timeframes.py` | timeframe sweep |
+| `strategies/vwap/stage6_walkforward.py` | walk-forward, plain and paired |
+| `strategies/vwap/stage9_cost_robust.py` | cost-robust selection |
+| `strategies/vwap/stage10_universe.py` | twelve-market universe |
+| `strategies/ema_vwap/stage1_grid.py`, `stage2_walkforward.py` | H-003 grid and walk-forward |
+| `strategies/sweep_fade/stage1_grid.py` | H-005 grid |
+| `strategies/xsec/stage1_grid.py` | H-007 panels |
+| `strategies/resid/stage1_grid.py` | H-008 panels |
+
+**Fixed** with `stage3_timeframes.null_seed(*parts)` — CRC32 over the joined
+parts, stable across processes and machines. Verified: two separate interpreters
+now return the same seed.
+
+**What this does and does not invalidate.** A randomly-seeded shuffle is still a
+valid null draw, so no conclusion here is known to be wrong: H-002 beat its null
+by a wide margin (52 gate-clearing cells against 3) and H-005 lost to its null by
+a wider one (19,062 against 1,702). Neither verdict turns on a single seed.
+What is lost is **auditability** — none of those figures can be regenerated, so
+none can be checked. The margin that mattered is H-007's, which was inside the
+noise all along; that it flipped is the finding, not a new result.
+
+**Regenerated on deterministic seeds:** the H-007 and H-008 board records, which
+draw their nulls at board time. **Not regenerated:** every stage-1 grid null
+(H-002 stage 3/6/9/10, H-003, H-005). Those figures stand as reported but are
+not reproducible until their grids are re-run, which is hours of compute for
+H-005 and H-002. Treat any stage-1 null count in this log as provisional.
+
+## H-006 order flow — the data was never the blocker (2026-09-02)
+
+**The finding that unblocks this.** `core/feed_collector.py` exists because
+Binance's REST endpoints serve about two days of open interest and taker ratio,
+and on that basis HANDOFF deferred the order-flow hypothesis to 2026-10 while the
+collector slowly accumulated history. That was wrong.
+
+Binance publishes the same feeds as daily files at
+
+    data.binance.vision/data/futures/um/daily/metrics/<SYMBOL>/
+
+at the same 5-minute granularity, back to **2020-09-01**, free and
+unauthenticated. BTCUSDT alone is **630,659 rows covering 2020-09-01 to
+2026-09-01** — six years, downloaded in about ten minutes. The same bucket
+carries funding rate (monthly, from 2020-01) and USDT-M perpetual klines
+(monthly plus a daily tail), and the klines include
+`taker_buy_base_asset_volume`, which is a true signed taker flow rather than the
+summarised ratio.
+
+`core/binance_metrics.py` downloads all of it. The forward collector is still
+worth running — it records the live present and the archive stops at yesterday —
+but nothing has to wait for it, and H-006 is open now rather than in October.
+
+**Columns, and why they are not the same thing five times:**
+
+| column | measures | |
+|---|---|---|
+| `sum_open_interest` | contracts outstanding | is a move new risk or old risk closing? |
+| `sum_taker_long_short_vol_ratio` | who crossed the spread | aggression, not positioning |
+| `count_long_short_ratio` | long accounts / short accounts, every account equal | a headcount — a crowd gauge |
+| `count_toptrader_long_short_ratio` | the same headcount, largest accounts only | |
+| `sum_toptrader_long_short_ratio` | large accounts weighted by **position size** | money, not headcount |
+
+The count/sum split is why this feed is worth more than another oscillator: the
+exchange publishes **where the crowd stands and where size stands, separately**,
+and lets the two disagree.
+
+**Prices are the perpetual, not spot.** The repo's cached crypto bars are spot
+15m. These feeds describe the USDT-M perpetual book and that is where this would
+be traded, so the diagnostic uses matching perp 5m bars from the same archive.
+Measuring a perp signal against spot prices compares two different order books.
+
+**Two bugs found while building the loader**, both of the silent kind:
+
+1. Monthly kline files are published weeks in arrears — the newest was 2026-07
+   on 2026-09-02 — so a monthly-only fetch ends the series two months early and
+   every backtest built on it is quietly truncated. Fixed by taking the tail
+   from the daily files, with the boundary read from the data returned rather
+   than from the calendar.
+2. The resume logic skipped ahead to the end of whatever was cached. A stray
+   two-month test file therefore made a "full history" fetch return two months,
+   with the six-year hole in front of it left forever. Now a cache that starts
+   later than the requested start is refetched from the beginning.
+
+Mechanism, gates and results: `strategies/orderflow/notes.md`.

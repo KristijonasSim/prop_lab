@@ -13,7 +13,7 @@ Run in the background:
     nohup .venv/bin/python core/feed_collector.py > data/feeds/collector.log 2>&1 &
 
 Or better, from cron every 15 minutes (it exits after one pass with --once):
-    */15 * * * * .venv/bin/python core/feed_collector.py --once
+    */15 * * * * /home/kris/prop_lab/.venv/bin/python /home/kris/prop_lab/core/feed_collector.py --once >> /home/kris/prop_lab/data/feeds/collector.log 2>&1
 """
 from __future__ import annotations
 

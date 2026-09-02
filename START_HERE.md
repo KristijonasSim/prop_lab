@@ -20,24 +20,63 @@ crypto universe for H-007; see item 1 below.)
 **The board**: <https://claude.ai/code/artifact/f9ac29b6-5251-4510-81d9-ef3d5b7dd3d3>
 Rebuild locally with `.venv/bin/python core/build_scoreboard.py`.
 
+Scores below are on the **two-step** evaluation (8% then 5%), the structure the
+board has been scored on since 2026-09-02.
+
 | ID | hypothesis | score | verdict |
 |---|---|---|---|
-| H-002 | VWAP | **9.2** | only survivor. BTC 4h + ETH 1h + ETH 30m + SOL 4h + gold 5m |
+| H-002 | VWAP | **8.6** | only survivor. BTC 4h + ETH 1h + ETH 30m + SOL 4h + gold 5m |
 | H-003 | EMA × VWAP cross | 4.0 | rejected — loses to its own null |
+| H-005 | Liquidity sweep fade | 3.5 | rejected — null beats it 19,062 to 1,702 |
 | H-007 | Cross-sectional crypto ranking | 2.9 | rejected — real edge before costs, too small to pay the spread |
-| H-008 | Beta-residual reversion | 2.1 | rejected — residual does not revert; null beats real on every cut |
-| H-005 | Liquidity sweep fade | 4.0 | rejected — null beats it 19,062 to 1,702 |
 | H-001 | ORB | 2.4 | rejected |
+| H-008 | Beta-residual reversion | 2.1 | rejected — residual does not revert; null beats real on every cut |
+| H-006 | Order flow (fade the crowd) | 1.3 | **signal real, strategy dead** — see below |
 | H-004 | Funding fade | — | rejected, code deleted. Finding kept in `RESEARCH_LOG.md` |
 
 H-002 as it stands: PF 1.772, **1.418 at 2x cost**, 5 positions at 0.33 trades/day
 each. ETH is the strongest single market, ahead of BTC.
 
-**Corrected 2026-09-01 — the "24 days" was a one-step number.** Firms are two-step
-(8% then 5%), now modelled in `core/riskladder.run_accounts_two_step`. On the real
-structure the same book is **88.3% pass, 0% killed, ~50 expected days** at 2.125%
-risk. The second step is not half the work of the first: it is another chance to
-breach, and the drawdown gets paid twice.
+**The "24 days" was a one-step number, and it is gone from the board.** Firms are
+two-step (8% then 5%). Since 2026-09-02 `core/riskladder.ladder` scores every
+hypothesis on `run_accounts_two_step` and keeps the one-step value beside it for
+comparison only, so the board no longer reports a structure nobody trades. H-002
+on the real structure: **88% pass, 0% killed, 53 expected days** at 2.00% risk
+(the verifier's 49.8 at 2.125% is the same curve on a finer risk step). The
+second step is not half the work of the first: it is another chance to breach,
+and the drawdown gets paid twice.
+
+Two scores moved when the structure changed — H-002 9.2 → **8.6**, H-005
+4.0 → **3.5** — and H-005, H-007 and H-008 now have **no finite time to a funded
+account at all**: at every allowed risk level, zero simulated accounts clear both
+phases.
+
+**Null seeds were not reproducible until 2026-09-02.** Eleven sites seeded their
+shuffle with `hash()` over a string tuple, which Python randomises per process,
+so every null was a fresh random draw and none could be checked. Fixed with
+`stage3_timeframes.null_seed` (CRC32). It surfaced because H-007 flipped
+`beats_null` between two runs of identical code. On the now-fixed seeds H-007
+loses to its null by **0.001** (real PF@2x 1.063, null best 1.064) — that verdict
+is a coin toss and should be read as "inside the noise", not as a result. Every
+**stage-1 grid** null in `RESEARCH_LOG.md` is still on the old unreproducible
+draws and is provisional until its grid is re-run.
+
+**H-006, opened and closed 2026-09-02 — read this before dismissing the 1.3.**
+The score is the strategy, not the signal. Binance publishes the long/short
+**account** ratio — a headcount of who is positioned which way — and fading it
+works: quintile response +25.0 / +21.8 / +13.5 / −0.9 / −13.2 bps over the next
+24h, monotone, same sign in 6 of 7 years, and the walk-forward beats every null
+seed after costs (**PF 1.050 at 2x against a null best of 0.984**). Following the
+crowd instead of fading it loses 13.35bps a trade, so the direction is not
+arbitrary. Open interest on its own predicts **nothing** directional — both
+tails are +17bps, which is a volatility read. It is positioning that pays, not
+leverage and not aggression.
+
+It scores 1.3 because it has **no stop**: R is a return over trailing
+volatility, one loser runs the whole hold, and the book draws down **49.8R**
+against H-002's 3.8R — which kills 28.7% of simulated accounts at the lowest
+risk on the ladder. It fails on risk shape, not on edge. The next test is a stop.
+Detail in `strategies/orderflow/notes.md`.
 
 ## Continue here
 
@@ -49,16 +88,27 @@ breach, and the drawdown gets paid twice.
    route is a 50–100 coin universe — dispersion grows with the number of names
    ranked while cost per trade does not — and that needs a data download, which the
    line below forbids. **Kris's call.**
-2. ~~**Keep `core/feed_collector.py` running.**~~ **Cron installed 2026-09-01** —
+2. ~~**Keep `core/feed_collector.py` running.**~~ **Cron installed 2026-09-02** —
    it had never been on a schedule, so `data/feeds/` held ~2 days, not a year.
    The clock starts now, which pushes H-006 out from 2026-10. Verify with
    `crontab -l` and check `data/feeds/collector.log` is growing.
+   **2026-09-02:** the 2026-09-01 entry was not on this box — `crontab -l` showed
+   only the unrelated `trading-bots` job and the feeds had a 10h hole, backfilled
+   from Binance's ~2-day window before it closed. The line below is what is now
+   installed. Every path in it is absolute: cron runs from `$HOME`, so the relative
+   form printed here before would have failed silently into the log.
+   **2026-09-02: the reason for waiting was wrong.** Binance publishes these
+   same feeds as daily files at `data.binance.vision/data/futures/um/daily/metrics/`,
+   5-minute granularity, back to **2020-09-01**, free. Six years were available
+   the whole time; H-006 does not have to wait for 2026-10 and is open now.
+   `core/binance_metrics.py` downloads them. Keep the collector running anyway —
+   it records the live present and the archive stops at yesterday.
    Original note: It records open interest and taker
    buy/sell delta, which Binance only serves for ~2 days — missed hours are gone
    forever. Around 2026-10 there is enough history for an order-flow hypothesis
    (H-006), which has the best mechanism of anything untested.
    ```
-   */15 * * * * .venv/bin/python core/feed_collector.py --once >> data/feeds/collector.log 2>&1
+   */15 * * * * /home/kris/prop_lab/.venv/bin/python /home/kris/prop_lab/core/feed_collector.py --once >> /home/kris/prop_lab/data/feeds/collector.log 2>&1
    ```
 3. **NautilusTrader cross-check of the VWAP kernel** — never done. See
    `core/nautilus_setup.py` and `strategies/orb/stage6_nautilus.py`.

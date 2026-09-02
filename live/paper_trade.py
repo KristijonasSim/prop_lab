@@ -5,11 +5,12 @@ features from live data, and writes any signal to a log. It deliberately places
 no orders - the point is to compare live signals against the backtest before a
 cent is at risk.
 
-BLOCKER, stated up front: two of the four legs are XAUUSD, and this box has no
+BLOCKER, stated up front: one of the five legs is XAUUSD, and this box has no
 working MT5 bridge (the pip package is Windows-only; ~/.mt5 is a wine install
-needing an mt5linux-style shim). Gold legs therefore run in SIGNAL-ONLY mode off
-the cached Dukascopy data, which is not live. Only the BTC legs are wired to a
-live feed. Half the book cannot be paper-traded until that bridge exists.
+needing an mt5linux-style shim). The gold leg therefore runs in SIGNAL-ONLY mode
+off the cached Dukascopy data, which is not live. The four crypto legs (BTC, ETH
+x2, SOL) are on a live Binance feed. Since the firm choice is cTrader, the route
+out is a cTrader connector rather than an MT5 bridge - it carries gold too.
 
 Run:  .venv/bin/python live/paper_trade.py            one pass
       .venv/bin/python live/paper_trade.py --loop     every 5 minutes
@@ -29,8 +30,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from strategies.vwap.sweep import features, run_one          # noqa: E402
-from strategies.vwap.stage1_grid import ASSETS               # noqa: E402
 from strategies.vwap.stage3_timeframes import TFS            # noqa: E402
+# The twelve-market universe, not stage 1's ten: the board's book contains
+# ETHUSDT and SOLUSDT, which stage 1 never priced. COSTS is stage 1's ASSETS
+# plus those, so importing it is what keeps the paper trader on the same costs
+# the walk-forward used.
+from strategies.vwap.stage10_universe import COSTS, CRYPTO   # noqa: E402
 
 OUT = ROOT / "live" / "paper"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -45,7 +50,11 @@ def current_legs() -> list[dict]:
     b = json.loads(BOARD.read_text())
     legs = [tuple(x.split()) for x in b["candidate"].split(", equal")[0].split(" + ")]
     folds = None
-    for name in ("stage9_folds_2xselect.parquet", "stage6_folds.parquet"):
+    # stage 10 first: it is the walk-forward the board's five-leg book comes
+    # from. Stage 9 was the four-leg BTC+XAU book and has no ETH or SOL folds,
+    # so reading it silently dropped three of five legs.
+    for name in ("stage10_folds.parquet", "stage9_folds_2xselect.parquet",
+                 "stage6_folds.parquet"):
         p = ROOT / "backtests" / "vwap" / name
         if p.exists():
             folds = pd.read_parquet(p)
@@ -64,17 +73,17 @@ def current_legs() -> list[dict]:
         cfg = {k: last[k] for k in CFGKEY if k in last}
         out.append({"symbol": sym, "tf": tf, "cfg": cfg,
                     "chosen_in": str(last.quarter),
-                    "live": sym == "BTCUSDT"})
+                    "live": sym in CRYPTO})
     return out
 
 
 def load_live(sym: str, tf: str) -> pd.DataFrame:
-    """BTC comes from the exchange. Gold has no live feed on this box."""
-    if sym == "BTCUSDT":
+    """Crypto comes from the exchange. Gold has no live feed on this box."""
+    if sym in CRYPTO:
         import ccxt
         ex = ccxt.binance({"enableRateLimit": True})
         rule = {"5m": "5m", "15m": "15m", "30m": "30m", "1h": "1h", "4h": "4h"}[tf]
-        o = ex.fetch_ohlcv("BTC/USDT", rule, limit=1000)
+        o = ex.fetch_ohlcv(CRYPTO[sym], rule, limit=1000)
         d = pd.DataFrame(o, columns=["ts", "open", "high", "low", "close", "volume"])
         d.index = pd.to_datetime(d.ts, unit="ms", utc=True)
         return d[["open", "high", "low", "close", "volume"]]
@@ -87,7 +96,7 @@ def scan(leg: dict) -> dict | None:
     df = load_live(sym, tf)
     if len(df) < 300:
         return None
-    fee, slip, minrisk = ASSETS[sym]
+    fee, slip, minrisk = COSTS[sym]
     cfg.setdefault("min_risk_bps", minrisk)
     cfg.setdefault("one_trade", 0)
     cfg.setdefault("dir_mode", 0)

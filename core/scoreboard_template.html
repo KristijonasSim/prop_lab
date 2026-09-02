@@ -35,16 +35,99 @@
   --track:#222932;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
 }
+/* Asset identity. One hue per instrument, so a book reads as a set of markets
+   at a glance instead of a run-on sentence. The FX majors deliberately share a
+   single blue: on this board the distinction that matters is crypto vs metal vs
+   FX, not EUR vs GBP. */
+:root{
+  --as-BTC:#B4661A; --as-ETH:#4B4FC4; --as-SOL:#127A63; --as-XAU:#8A6D12;
+  --as-XAG:#5C6673; --as-FX:#2F6795; --as-DEF:#5A6470;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --as-BTC:#E39A4A; --as-ETH:#9295F0; --as-SOL:#45C2A0; --as-XAU:#D5B450;
+    --as-XAG:#A4AEBA; --as-FX:#79ACDE; --as-DEF:#8B94A1;
+  }
+}
+:root[data-theme="dark"]{
+  --as-BTC:#E39A4A; --as-ETH:#9295F0; --as-SOL:#45C2A0; --as-XAU:#D5B450;
+  --as-XAG:#A4AEBA; --as-FX:#79ACDE; --as-DEF:#8B94A1;
+}
+
+/* the book: what the score was actually measured on */
+.book{margin-top:14px;border:1px solid var(--line);border-radius:11px;
+  background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.bookhd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;
+  gap:8px 16px;padding:11px 15px;background:var(--sunk);
+  border-bottom:1px solid var(--line)}
+.bookhd .t{font-weight:600;font-size:13.5px;letter-spacing:.01em}
+.bookhd .s{font-size:12px;color:var(--muted)}
+.bookhd .n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--accent);font-weight:600}
+.oneacct{padding:9px 15px;border-bottom:1px solid var(--line);
+  font-size:12.5px;color:var(--muted);line-height:1.45}
+.oneacct b{color:var(--ink);font-weight:600}
+.legs{list-style:none;margin:0;padding:0;max-height:520px;overflow-y:auto}
+.leg{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;
+  gap:12px;padding:9px 15px;border-top:1px solid var(--line)}
+.legs .leg:first-child{border-top:0}
+.leg .id{display:flex;align-items:center;gap:9px;min-width:0}
+.leg .sw{width:9px;height:9px;border-radius:2.5px;background:var(--a);flex:none}
+.leg .sym{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:700;
+  font-size:13px;color:var(--a);letter-spacing:.01em}
+.leg .tfp{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  padding:1px 7px;border-radius:999px;border:1px solid var(--line-strong);
+  color:var(--muted);background:var(--bg)}
+.leg .num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.leg .num b{color:var(--ink);font-weight:600}
+/* The native checkbox renders as a filled grey square when UNCHECKED in a dark
+   theme, which reads as "on" - the first person to use this thought an unticked
+   book was still being measured. Explicit states: hollow when off, filled in the
+   asset's own colour with a tick when on. */
+.leg .box{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0;
+  flex:none;cursor:pointer;border:1.5px solid var(--line-strong);border-radius:5px;
+  background:var(--bg);display:grid;place-content:center;transition:background .12s,border-color .12s}
+.leg .box:hover{border-color:var(--a)}
+.leg .box:checked{background:var(--a);border-color:var(--a)}
+.leg .box:checked::after{content:"";width:9px;height:5px;
+  border:2px solid var(--surface);border-top:0;border-right:0;
+  transform:rotate(-45deg) translateY(-1px)}
+.leg .box:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.leg .state{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+  border:1px solid var(--line);border-radius:999px;padding:1px 7px}
+.leg.pick{cursor:pointer}
+.leg.pick:hover{background:var(--sunk)}
+.leg.off{background:var(--sunk)}
+.leg.off .sym,.leg.off .num,.leg.off .num b{color:var(--faint)}
+.leg.off .tfp{color:var(--faint);border-color:var(--line)}
+.searched{padding:9px 15px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--muted);line-height:1.45}
+.searched b{color:var(--ink);font-weight:600}
+.bookft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:8px 14px;padding:10px 15px;border-top:1px solid var(--line);background:var(--sunk)}
+.bookft .msg{font-size:12px;color:var(--muted)}
+.bookft .msg b{color:var(--accent)}
+.rebtn{font:inherit;font-size:12px;padding:5px 11px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.rebtn:hover{border-color:var(--accent);color:var(--accent)}
+.rebtn:disabled{opacity:.45;cursor:default;border-color:var(--line)}
+.rebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:560px){
+  .leg{grid-template-columns:auto 1fr;row-gap:4px}
+  .leg .num{grid-column:2;text-align:left}
+}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
   font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{width:100%;max-width:1060px;margin:0 auto;padding:0 22px 80px}
+.wrap{width:100%;max-width:1340px;margin:0 auto;padding:0 28px 80px}
 .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
 header{border-bottom:1px solid var(--line);background:var(--surface)}
-.mast{width:100%;max-width:1060px;margin:0 auto;padding:24px 22px 0;
+.mast{width:100%;max-width:1340px;margin:0 auto;padding:24px 28px 0;
   display:flex;flex-direction:column;gap:16px}
 .eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--muted)}
@@ -236,6 +319,7 @@ a{color:var(--accent)}
     </div>
   </div>
 
+  <div class="book" id="book"></div>
   <div class="statusbar" id="statusbar"></div>
   <div class="tiles" id="tiles"></div>
   <div class="warnbox" id="warnbox" hidden></div>
@@ -248,14 +332,17 @@ a{color:var(--accent)}
     <div class="livehint" id="livehint"></div>
   </section>
 
-  <section>
+  <section id="bdsec">
     <div class="shead"><h3>Where the score comes from</h3>
       <span class="aside" id="wsum"></span></div>
     <p class="note">Speed is weighted heaviest because a strategy that cannot resolve
       inside the phase window cannot be traded now, whatever else it does. Speed is
       measured as <strong>expected days per funded account</strong> &mdash; median days to
       pass divided by the pass rate &mdash; so an idea that blows up two accounts to get
-      one through does not read as fast.</p>
+      one through does not read as fast. Every day count on this page is the
+      <strong>two-step</strong> evaluation the project targets (8% then 5% on cTrader,
+      decided 2026-09-01). The second step is not half the work of the first: it is a
+      second chance to breach, and the drawdown is paid twice.</p>
     <div class="bd" id="bd"></div>
   </section>
 
@@ -300,9 +387,11 @@ function table(el, cols, rows, cap, rowcls){
 }
 
 function ring(total){
-  const R=58, C=2*Math.PI*R, frac=Math.max(0,Math.min(1,total/10));
+  const none = (total===null || total===undefined);
+  const R=58, C=2*Math.PI*R, frac=none?0:Math.max(0,Math.min(1,total/10));
   const b=scoreBand(total);
-  const col = b==='good' ? 'var(--pass)' : (b==='mid' ? 'var(--warn)' : 'var(--fail)');
+  const col = none ? 'var(--line-strong)'
+    : (b==='good' ? 'var(--pass)' : (b==='mid' ? 'var(--warn)' : 'var(--fail)'));
   $('ring').innerHTML =
     `<svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
        <circle cx="66" cy="66" r="${R}" fill="none" stroke="var(--track)" stroke-width="11"></circle>
@@ -310,8 +399,8 @@ function ring(total){
          stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}"
          stroke-dashoffset="${(C*(1-frac)).toFixed(1)}"></circle>
      </svg>
-     <div class="num"><div class="n" style="color:${col}">${total.toFixed(1)}</div>
-       <div class="d">out of 10</div></div>`;
+     <div class="num"><div class="n" style="color:${col}">${none?'&mdash;':total.toFixed(1)}</div>
+       <div class="d">${none?'not scored':'out of 10'}</div></div>`;
 }
 
 const selRisk={};
@@ -319,7 +408,6 @@ const selRisk={};
 // Pine Script copy. The source ships inside the page, so this never fetches.
 // navigator.clipboard is unavailable in some embedded contexts, hence the
 // execCommand fallback — without it the button silently does nothing there.
-let PINE_SRC = null;
 
 function copyText(t){
   if (navigator.clipboard && window.isSecureContext) {
@@ -344,28 +432,326 @@ function legacyCopy(t){
 
 function renderPine(s){
   const bar = $('pinebar');
-  PINE_SRC = s.pine || null;
-  if (!PINE_SRC){
+  // Two ports per hypothesis. The strategy gives Strategy Tester numbers to
+  // check our backtest against; the indicator draws the same levels and signals
+  // and is the one to leave on a chart - TradingView will not run two
+  // strategies on one chart, but it will run any number of indicators.
+  const ports = [
+    {k:'ind',  src:s.pine_indicator, label:'Copy indicator',
+     note:'draws the levels and marks the signals'},
+    {k:'strat', src:s.pine, label:'Copy strategy',
+     note:'adds orders, exits and Strategy Tester numbers'},
+  ].filter(x=>x.src);
+  if (!ports.length){
     bar.innerHTML = '<span class="pinenote">No TradingView port for this hypothesis yet.</span>';
     return;
   }
-  const lines = PINE_SRC.split('\n').length;
-  bar.innerHTML = `<button class="pinebtn" id="pinebtn" type="button">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="5.5" y="5.5" width="8" height="9" rx="1.5"></rect>
-        <path d="M10.5 5.5V3A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v8A1.5 1.5 0 0 0 4 12.5h1.5"></path>
-      </svg><span id="pinelabel">Copy Pine Script</span></button>
-    <span class="pinenote">Pine v6 &middot; ${lines} lines &middot; paste into the TradingView Pine Editor</span>`;
-  $('pinebtn').addEventListener('click', ()=>{
-    copyText(PINE_SRC).then(ok=>{
-      const b = $('pinebtn'), l = $('pinelabel');
-      l.textContent = ok ? 'Copied' : 'Press Ctrl+C';
-      b.dataset.done = ok ? '1' : '0';
-      if (!ok) { /* selection is left in place so the user can copy manually */ }
-      setTimeout(()=>{ l.textContent='Copy Pine Script'; b.dataset.done='0'; }, 2000);
+  const clip = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="5.5" y="5.5" width="8" height="9" rx="1.5"></rect>
+    <path d="M10.5 5.5V3A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v8A1.5 1.5 0 0 0 4 12.5h1.5"></path>
+  </svg>`;
+  bar.innerHTML = ports.map(x=>
+      `<button class="pinebtn" id="pine_${x.k}" type="button"
+         title="Pine v6, ${x.src.split('\n').length} lines - ${x.note}">
+         ${clip}<span id="lab_${x.k}">${x.label}</span></button>`).join('')
+    + `<span class="pinenote">Pine v6 &middot; paste into the TradingView Pine Editor.
+       The indicator has no exits, and exits are part of the edge.</span>`;
+  ports.forEach(x=>{
+    const b = $('pine_' + x.k), l = $('lab_' + x.k);
+    b.addEventListener('click', ()=>{
+      copyText(x.src).then(ok=>{
+        l.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+        b.dataset.done = ok ? '1' : '0';
+        setTimeout(()=>{ l.textContent = x.label; b.dataset.done='0'; }, 2000);
+      });
     });
   });
+}
+
+/* ---------------------------------------------------------------------------
+   The book: which markets a score was measured on, and what it costs to drop one
+
+   The one thing people misread on this page is whose profit factor they are
+   looking at. It is never a single market's. Every hypothesis is scored as ONE
+   account holding every leg at equal weight, sharing one drawdown, so the legs
+   are listed vertically and coloured by instrument instead of run together in a
+   sentence. Where per-leg trades shipped with the record the list is tickable:
+   untick gold and every number on the page recomputes from the legs that are
+   left, over the same dates, under the rules core/riskladder.py uses - which
+   arrive in D.prop rather than being restated here, so the two cannot drift.
+--------------------------------------------------------------------------- */
+const PROP = D.prop || null;
+const FXA = new Set(['EUR','GBP','USD','AUD','NZD','CAD','CHF','JPY']);
+const bookSel = {};                       // id -> Set of leg indices, or absent
+const BASE = {};                          // id -> the board's own record
+
+function assetVar(a){
+  if (a==='BTC'||a==='ETH'||a==='SOL'||a==='XAU'||a==='XAG') return 'var(--as-'+a+')';
+  return FXA.has(a) ? 'var(--as-FX)' : 'var(--as-DEF)';
+}
+
+// "BTCUSDT 4h + ETHUSDT 1h, equal weight, ..." -> legs and the rest
+const LEGRE = /^[A-Z]{3,8} \d+[a-z]+$/;
+function candLegs(cand){
+  const cut = cand.indexOf(', ');
+  const head = cut < 0 ? cand : cand.slice(0, cut);
+  const rest = cut < 0 ? '' : cand.slice(cut + 2);
+  const parts = head.split(' + ');
+  return parts.every(x => LEGRE.test(x)) ? {legs: parts, rest: rest}
+                                         : {legs: [], rest: cand};
+}
+
+/* Everything the tiles need, rebuilt from whichever legs are ticked. Each leg's
+   R is divided by the number of legs ticked, which is what equal weight means
+   here: the account risks one unit, split across the book. */
+function bookStats(LG, chosen){
+  if (!chosen.size) return null;
+  const n = chosen.size;
+  const daily = new Float64Array(LG.n_days);
+  let win=0, los=0, w2=0, l2=0, cnt=0, nw=0, tot=0, eq=0, peak=0, dd=0;
+  let first=null, last=null;
+  for (let i=0;i<LG.trades.length;i++){
+    const t = LG.trades[i];
+    if (!chosen.has(t[0])) continue;
+    const r = t[2]/n, r2 = t[3]/n;
+    cnt++; if (r>0){ win+=r; nw++; } else los-=r;
+    if (r2>0) w2+=r2; else l2-=r2;
+    tot+=r; daily[t[1]]+=r;
+    eq+=r; if (eq>peak) peak=eq; if (eq-peak<dd) dd=eq-peak;
+    if (first===null) first=t[1];
+    last=t[1];
+  }
+  const span = Math.max(last-first, 1);
+  return {n:cnt, n_legs:n, span:span, first:first, last:last, daily:daily,
+          pf: los>0 ? win/los : null, pf2x: l2>0 ? w2/l2 : null,
+          win_rate: cnt?nw/cnt:0, total_r:tot, max_dd_r:dd,
+          tpd: cnt/span, tpd_per_book: cnt/span/n, r_per_day: tot/span};
+}
+
+/* The same simulation as core/riskladder.run_accounts / run_accounts_two_step:
+   a fresh account every day, fixed risk, real breaches, the whole day's loss
+   assumed to land before its gain, and every phase cleared in sequence. */
+function simulate(daily, risk, phases, maxDays){
+  const N = daily.length;
+  let pass=0, fmax=0, fday=0, open=0;
+  const days = [];
+  for (let s0=0; s0<N; s0++){
+    let k=s0, res='OPEN', total=0;
+    for (let pi=0; pi<phases.length; pi++){
+      const ph = phases[pi];
+      let eq=0, peak=0, day=0, traded=0;
+      res='OPEN';
+      while (k<N && total+day<maxDays){
+        day++;
+        const step = daily[k]*risk; k++;
+        if (step!==0) traded++;
+        const neg = Math.min(step, 0);
+        if (neg <= -ph.daily){ res='FAIL_DAILY'; break; }
+        const low = eq+neg;
+        if (low-peak <= -ph.maxloss || low <= -ph.maxloss){ res='FAIL_MAX'; break; }
+        eq += step; if (eq>peak) peak=eq;
+        if (eq >= ph.target && traded >= ph.mindays){ res='PASS'; break; }
+      }
+      total += day;
+      if (res!=='PASS') break;
+    }
+    if (res==='PASS'){ pass++; days.push(total); }
+    else if (res==='FAIL_MAX') fmax++;
+    else if (res==='FAIL_DAILY') fday++;
+    else open++;
+  }
+  days.sort((a,b)=>a-b);
+  const m = days.length;
+  const med = m ? (m%2 ? days[(m-1)/2] : (days[m/2-1]+days[m/2])/2) : null;
+  const pr = pass/N;
+  return {pass_rate:pr, fail_max:fmax/N, fail_daily:fday/N, still_open:open/N,
+          median_days:med, expected_days: (med===null||!pr) ? null : med/pr};
+}
+
+function customLadder(st){
+  const d = st.daily.subarray(st.first, st.last+1);
+  return PROP.risk_ladder.map(risk=>{
+    const two = simulate(d, risk, PROP.two_step, PROP.max_days);
+    const one = simulate(d, risk, PROP.one_step, PROP.max_days);
+    return Object.assign({risk:risk, max_dd:st.max_dd_r*risk, one_step:one}, two);
+  });
+}
+
+function customPick(rows){
+  const ok = rows.filter(r => r.fail_max<=PROP.max_breach && r.fail_daily<=PROP.max_breach
+                           && Math.abs(r.max_dd)<=PROP.dd_cap && r.expected_days!==null);
+  const pool = ok.length ? ok : rows;
+  return ok.length ? pool.reduce((a,b)=> a.expected_days<=b.expected_days ? a : b)
+                   : pool.reduce((a,b)=> Math.abs(a.max_dd)<=Math.abs(b.max_dd) ? a : b);
+}
+
+/* A strategy record for a book the trader assembled, shaped exactly like the
+   board's own so render() cannot tell the difference - except that it carries
+   no score. Scoring stays in core/scorecard.py: duplicating the rubric in
+   JavaScript is how a page and its source quietly stop agreeing. */
+function customStrategy(s, chosen){
+  const LG = s.legs, st = bookStats(LG, chosen);
+  if (!st) return null;
+  const rows = customLadder(st);
+  const pk = customPick(rows);
+  const head = r => ({
+    pf:st.pf, pf2x:st.pf2x, tpd:st.tpd, trades:st.n, n_books:st.n_legs,
+    tpd_per_book:st.tpd_per_book, r_per_day:st.r_per_day, max_dd:r.max_dd,
+    pass_rate:r.pass_rate, fail_max:r.fail_max, fail_daily:r.fail_daily,
+    median_days:r.median_days, still_open:r.still_open,
+    expected_days:r.expected_days,
+    expected_days_one_step:r.one_step.expected_days,
+  });
+  const names = [...chosen].sort((a,b)=>a-b).map(i=>LG.keys[i]).join(' + ');
+  return Object.assign({}, s, {
+    custom:true, stats:st,
+    candidate:`${names}, equal weight, ${(pk.risk*100).toFixed(2)}% risk per trade`,
+    headline:head(pk),
+    ladder:{picked:pk.risk, note:s.ladder ? s.ladder.note : '',
+            rows:rows.map(r=>Object.assign({}, r, {headline:head(r)}))},
+  });
+}
+
+function pickedSet(s){
+  const LG = s.legs;
+  const cur = bookSel[s.id];
+  if (cur) return cur;
+  return new Set(LG ? LG.picked : []);
+}
+
+function isBoardBook(s, chosen){
+  const p = s.legs.picked;
+  return chosen.size===p.length && p.every(i=>chosen.has(i));
+}
+
+function renderBook(base, shown){
+  const el = $('book'), LG = base.legs, MK = base.markets;
+  const chosen = LG ? pickedSet(base) : null;
+  let items, interactive = false;
+  if (LG){
+    interactive = true;
+    items = LG.items.map((it,i)=>({
+      key:LG.keys[i], sym:it.sym, tf:it.tf, asset:it.asset, on:chosen.has(i), i:i,
+      num:`PF <b>${f(it.pf2x,2)}</b> at 2x &middot; ${it.n} trades &middot; ${f(it.tpd,2)}/day`,
+    }));
+  } else if (MK && MK.traded && MK.traded.length){
+    items = MK.traded.map((m,i)=>({key:`${m.sym} ${m.tf}`, sym:m.sym, tf:m.tf,
+      asset:m.asset || m.sym.slice(0,3), on:true, i:i, num:''}));
+  } else {
+    const cl = candLegs(base.candidate);
+    if (!cl.legs.length){ el.hidden = true; el.innerHTML = ''; return; }
+    items = cl.legs.map((k,i)=>{
+      const q = k.split(' ');
+      return {key:k, sym:q[0], tf:q[1], asset:q[0].slice(0,3), on:true, i:i, num:''};
+    });
+  }
+  el.hidden = false;
+  const nOn = items.filter(x=>x.on).length;
+  const win = LG ? `${LG.start} &rarr; ${LG.end}` : esc(base.period);
+  const custom = LG && !isBoardBook(base, chosen);
+  const one = nOn===1;
+  // n_books is how many sub-strategies run at once. One book across several
+  // markets is a basket - it ranks them against each other - and it has no
+  // per-market result to read off, which is a different thing from a book of
+  // independent legs sharing an account.
+  const nb = (base.headline && base.headline.n_books) || 1;
+  const basket = !one && nb === 1;
+
+  const word = n => n===1 ? 'leg' : 'legs';
+  const head = interactive
+    ? `${custom ? 'Your book' : 'The board&rsquo;s book'} &mdash; ${nOn} ${word(nOn)}`
+      + (nOn > 1 ? ', one account' : '')
+    : one ? 'The market it trades'
+    : basket ? `One strategy across ${nOn} markets`
+    : `The book &mdash; ${nOn} legs, one account`;
+  const blurb = interactive
+    ? (nOn===1
+       ? `Ticked: <b>one leg</b>. Everything below is that single market on its own &mdash;
+          not the book. Tick more legs back on to rebuild it.`
+       : `Every number on this page is <b>these ${nOn} legs traded as one account</b>, equal
+          weight, sharing one 8% drawdown budget. None of it is any single market&rsquo;s
+          result. Tick legs off and on &mdash; same dates, same rules, recomputed as you go.`)
+    : one
+    ? `Everything on this page is <b>this one market on this one timeframe</b>, with the
+       configuration re-chosen blind each quarter.`
+    : basket
+    ? `These markets are <b>not separate strategies</b>. They are ranked against each
+       other and traded as one long/short basket, so there is no per-market number to
+       read off &mdash; every figure on this page is the basket.`
+    : `Every number on this page is <b>this whole book traded as one account</b>:
+       ${nOn} legs at equal weight, sharing one 8% drawdown budget. None of it is any
+       single market&rsquo;s result.`;
+
+  el.innerHTML =
+    `<div class="bookhd">
+       <span class="t">${head}</span>
+       <span class="s mono">${interactive
+         ? `<span class="n">${nOn} of ${items.length} ticked</span> &middot; ${win}` : win}</span>
+     </div>
+     <div class="oneacct">${blurb}</div>
+     <ul class="legs">${items.map(x=>`
+       <li class="leg${interactive?' pick':''}${x.on?'':' off'}" style="--a:${assetVar(x.asset)}"
+           ${interactive?`data-i="${x.i}"`:''}>
+         ${interactive
+           ? `<input class="box" type="checkbox" ${x.on?'checked':''}
+                aria-label="Include ${esc(x.key)} in the book">`
+           : `<span class="sw"></span>`}
+         <span class="id"><span class="sym">${esc(x.sym)}</span>
+           <span class="tfp">${esc(x.tf)}</span>${
+           interactive && !x.on ? '<span class="state">out</span>' : ''}</span>
+         <span class="num">${x.num}</span>
+       </li>`).join('')}</ul>${
+    MK && MK.searched ? `<div class="searched"><b>Chosen from</b> ${esc(MK.searched)}.${
+       MK.note ? ' ' + esc(MK.note) : ''}</div>` : ''}${
+    interactive ? `<div class="bookft">
+       <span class="msg" id="bookmsg">${custom
+         ? '<b>Your book</b> &mdash; measured live, not scored. The rest of the page has recomputed'
+           + ' over the window above, so every subset is compared on identical dates.'
+         : 'This is the book the board scored. Tick any leg to rebuild it.'}</span>
+       <button class="rebtn" id="resetbook" type="button" ${custom?'':'disabled'}>Back to the board&rsquo;s book</button>
+     </div>`
+    : `<div class="bookft"><span class="msg">${one
+         ? 'One market on one timeframe &mdash; there is nothing to tick off.'
+         : basket
+         ? 'One basket, not separate legs. Dropping a coin changes what the others'
+           + ' are ranked against, so it cannot be done on the page &mdash; it needs the'
+           + ' ranking re-run.'
+         : 'No per-leg trades were kept for this hypothesis, so its book cannot be'
+           + ' rebuilt here.'}</span></div>`}`;
+
+  if (!interactive) return;
+  [...el.querySelectorAll('.leg.pick')].forEach(li=>{
+    const i = Number(li.dataset.i);
+    li.addEventListener('click', e=>{
+      if (e.target.tagName !== 'INPUT') e.preventDefault();
+      const nx = new Set(pickedSet(base));
+      if (nx.has(i)) nx.delete(i); else nx.add(i);
+      if (!nx.size){                        // a book with no legs is not a book
+        const m = $('bookmsg');
+        if (m){ m.innerHTML = '<b>A book needs at least one leg.</b> There is nothing to '
+                            + 'measure with none ticked &mdash; not a zero, an undefined.';
+                li.querySelector('input').checked = true; }
+        return;
+      }
+      bookSel[base.id] = nx;
+      paint(base);
+    });
+  });
+  const rb = $('resetbook');
+  if (rb) rb.addEventListener('click', ()=>{ delete bookSel[base.id]; paint(base); });
+}
+
+/* Every path into the page goes through here: tab, ladder row, leg tick. */
+function paint(base){
+  const LG = base.legs;
+  let s = base;
+  if (LG){
+    const chosen = pickedSet(base);
+    if (!isBoardBook(base, chosen)) s = customStrategy(base, chosen) || base;
+  }
+  render(s, selRisk[base.id]);
+  renderBook(base, s);
 }
 
 function render(s, sel){
@@ -373,15 +759,22 @@ function render(s, sel){
   const risk = L0 ? (sel==null ? L0.picked : sel) : null;
   const row = L0 ? (L0.rows.find(r=>r.risk===risk) || null) : null;
   const H = Object.assign({__risk:risk}, row ? row.headline : s.headline);
-  const SC = row ? {total:row.score, verdict:row.verdict, components:row.components,
-                    evidence_capped:row.evidence_capped} : s.score;
+  const custom = !!s.custom;
+  const SC = custom ? null
+    : (row ? {total:row.score, verdict:row.verdict, components:row.components,
+              evidence_capped:row.evidence_capped, null_capped:row.null_capped}
+           : s.score);
   $('who').textContent = `${s.hid} · ${s.name}`;
-  $('verdict').textContent = SC.verdict;
+  $('verdict').textContent = custom ? 'Your own book — measured, not scored' : SC.verdict;
   $('tagline').textContent = s.tagline;
   const cand = row ? s.candidate.replace(/[\d.]+% risk per trade/,
       `${(row.risk*100).toFixed(2)}% risk per trade`) : s.candidate;
-  $('cand').innerHTML = `Scored on: <b>${esc(cand)}</b><br><span class="dim">${esc(s.period)}</span>`;
-  ring(SC.total);
+  // the markets themselves are listed, vertically and by colour, in the book
+  // card below; this line carries only how the configuration was chosen
+  const how = candLegs(cand).rest || cand;
+  $('cand').innerHTML = `${custom ? 'Measured on' : 'Scored on'}: <b>${esc(how)}</b>`
+    + `<br><span class="dim">${esc(s.period)}</span>`;
+  ring(custom ? null : SC.total);
 
   const phaseGap = H.expected_days == null ? null : H.expected_days / D.phase_days;
   const killed = (H.fail_max||0)+(H.fail_daily||0);
@@ -402,7 +795,7 @@ function render(s, sel){
     {k:'Pass the challenge', v:pctf(H.pass_rate),
      n:'of simulated accounts', c:H.pass_rate>=0.7?'good':(H.pass_rate>=0.5?'mid':'bad')},
     {k:'Days to a funded account', v:H.expected_days==null?'—':Math.round(H.expected_days),
-     n:`median ${H.median_days==null?'—':Math.round(H.median_days)} d when it passes`,
+     n:`two-step 8%+5%; median ${H.median_days==null?'—':Math.round(H.median_days)} d when it passes`,
      c:H.expected_days<=D.phase_days?'good':(H.expected_days<=60?'mid':'bad')},
     {k:'Accounts killed', v:pctf((H.fail_max||0)+(H.fail_daily||0)),
      n:H.fail_daily ? `${pctf(H.fail_max)} on the 8% cap, ${pctf(H.fail_daily)} on the 4% daily`
@@ -433,14 +826,15 @@ function render(s, sel){
   if (L){ $('ladsec').hidden=false; $('ladnote').innerHTML=L.note; drawLadder(s, H.__risk); }
   else $('ladsec').hidden=true;
 
+  $('bdsec').hidden = custom;
   const LAB={speed:['Speed to pass','expected days per funded account'],
     pass_rate:['Pass rate','share of accounts that pass'],
     breach:['Breach safety','accounts killed, either cap'],
     drawdown:['Drawdown','peak loss against the cap'],
     evidence:['Evidence quality','walk-forward, 2× cost, null, consistency'],
     profit:['Raw profitability','profit factor and Sharpe']};
-  $('wsum').textContent = `${SC.total.toFixed(1)} of 10 points`;
-  $('bd').innerHTML = SC.components.map(c=>{
+  $('wsum').textContent = custom ? '' : `${SC.total.toFixed(1)} of 10 points`;
+  $('bd').innerHTML = custom ? '' : SC.components.map(c=>{
     const [l,sub]=LAB[c.name]||[c.name,''];
     return `<div class="bdrow"><div class="lab">${l}<i>${sub}</i></div>
       <div class="meter"><i class="${band(c.score)}" style="width:${(c.score*100).toFixed(1)}%"></i></div>
@@ -512,8 +906,8 @@ function drawLadder(s, risk){
   table($('ladder'),[
     {h:'Risk / trade',n:1,cls:()=>'name',
      f:r=>(r.risk*100).toFixed(2)+'%'+(r.risk===L.picked?'<span class="recchip">rec</span>':'')},
-    {h:'Score',n:1,cl:'worst',f:r=>r.score.toFixed(1),
-     cls:r=>r.score>=6.5?'good':(r.score>=3.5?'':'bad')},
+    {h:'Score',n:1,cl:'worst',f:r=>r.score==null?'\u2014':r.score.toFixed(1),
+     cls:r=>r.score==null?'dim':(r.score>=6.5?'good':(r.score>=3.5?'':'bad'))},
     {h:'Pass rate',n:1,f:r=>pctf(r.pass_rate),
      cls:r=>r.pass_rate>=0.7?'good':(r.pass_rate>=0.5?'':'bad')},
     {h:'Killed',n:1,f:r=>pctf(r.fail_max+r.fail_daily),
@@ -524,10 +918,13 @@ function drawLadder(s, risk){
     {h:'Median d',n:1,f:r=>r.median_days==null?'\u2014':Math.round(r.median_days)},
     {h:'Expected d',n:1,f:r=>r.expected_days==null?'\u2014':Math.round(r.expected_days),
      cls:r=>r.expected_days<=D.phase_days?'good':(r.expected_days<=60?'':'bad')},
+    {h:'1-step d',n:1,
+     f:r=>(r.one_step&&r.one_step.expected_days!=null)?Math.round(r.one_step.expected_days):'\u2014',
+     cls:()=>'dim'},
     {h:'Peak DD',n:1,f:r=>(r.max_dd*100).toFixed(1)+'%',
      cls:r=>Math.abs(r.max_dd)<=0.08?'good':'bad'},
   ], L.rows,
-  'Fresh account opened every trading day, 4% daily / 8% max / 8% target, fixed risk, real breaches, no size shrinking, 400-day limit. "Killed" is both breach types together. "Unresolved" accounts neither passed nor breached inside the limit and count against the pass rate.',
+  'Fresh account opened every trading day, TWO-STEP evaluation: 8% target then 5%, 4% daily / 8% max loss in both, phase 2 starting the day after phase 1 clears with a fresh drawdown budget. Fixed risk, real breaches, no size shrinking, 400-day limit across both phases. "Killed" is both breach types together, in either phase. "Unresolved" accounts neither passed nor breached inside the limit and count against the pass rate. "1-step d" is the old single-8%-step number, shown only so the gap is visible \u2014 it is not the structure being traded.',
   r=>'pick'+(r.risk===risk?' sel':''));
 
   [...$('ladder').querySelectorAll('tbody tr')].forEach((tr,i)=>{
@@ -537,7 +934,7 @@ function drawLadder(s, risk){
     tr.setAttribute('aria-pressed', String(row.risk===risk));
     tr.setAttribute('aria-label',
       `Score this strategy at ${(row.risk*100).toFixed(2)} percent risk per trade`);
-    const go=()=>{ selRisk[s.id]=row.risk; render(s, row.risk); };
+    const go=()=>{ selRisk[s.id]=row.risk; paint(BASE[s.id] || s); };
     tr.addEventListener('click',go);
     tr.addEventListener('keydown',e=>{
       if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); }
@@ -550,6 +947,7 @@ function drawLadder(s, risk){
 }
 
 const S=D.strategies;
+S.forEach(s=>{ BASE[s.id]=s; });
 $('tabs').innerHTML = S.map((s,i)=>{
   const b=scoreBand(s.score.total);
   return `<button class="tab" role="tab" id="tab${i}" aria-selected="${i===0}"
@@ -560,8 +958,8 @@ $('tabs').innerHTML = S.map((s,i)=>{
   b.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
     b.setAttribute('aria-selected','true');
-    render(S[i], selRisk[S[i].id]);
+    paint(S[i]);
   });
 });
-render(S[0], selRisk[S[0].id]);
+paint(S[0]);
 </script>
