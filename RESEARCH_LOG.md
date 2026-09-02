@@ -2030,3 +2030,77 @@ that worked reads where the crowd *is*.
 - **Overnight drift** (NY Fed SR-917: ~100% of the US equity premium in the
   02:00–03:00 ET hour) — the same authors published *"The Disappearing Overnight
   Drift"* in July 2026. Close to zero since 2021.
+
+## H-015 systemic crowd positioning — a real improvement to H-009 (2026-09-02)
+
+Opened straight after H-013 was rejected, on the transferable finding from that
+rejection: **pricing does not pay here, positioning does.** H-004 (funding) and
+H-013 (premium) both tried to trade what the crowd is *charged* and both failed;
+H-009, the top of the board, reads where the crowd *is*.
+
+**The gap nobody had looked at.** Eleven coins of Binance metrics have been on
+disk since the archive pull, and every crowd signal in this repo is single-coin.
+H-009 gates BTC's trades on BTC's crowd and ETH's on ETH's. But a coin's account
+ratio is one noisy measurement of something that is not per-coin — the same
+retail is long everything, margined against the same collateral. The claim is an
+estimator claim: *the crowd's position across eleven coins estimates "the crowd
+is offside" better than the position in one.*
+
+**Stage 1 — true, at one horizon.** Mean |IC| across 11 coins, hourly-thinned:
+at 8h the complex reading scores **0.0207 against the coin's own 0.0159**, beats
+its block-shuffle null in **82% of cells against 55%**, spread 24bps against
+16bps. At 1h, 4h and 24h it does not win. The advantage is real and narrow.
+
+The informative negative is `idio` — a coin's crowding *beyond* the complex —
+which is the weakest feature in the table (IC 0.0093, beats its null 36% of the
+time). Idiosyncratic crowding predicts nothing. The crowding that pays is
+market-wide, which is the mechanism surviving its own test.
+
+**Stage 2 — stacking, not replacing.** On H-009's own trades, common window
+2021-12 → 2026-06, threshold fixed at zero:
+
+| book | PF@2x | maxDD | R/day | ret/DD | maxDD/R_day |
+|---|---|---|---|---|---|
+| H-002 ungated | 1.487 | −86.1R | 1.020 | 19.78 | 84.5 |
+| H-009 | 1.767 | −59.0R | 1.060 | 29.97 | 55.7 |
+| H-009 + sys | 1.724 | −34.2R | 0.792 | **38.74** | **43.1** |
+| H-009 + dsys_144 | 1.912 | −30.8R | 0.784 | **42.53** | **39.3** |
+
+R per day falls and it does not matter, because drawdown falls faster and the
+board scores `days = maxDD_R / R_per_day`. That is exactly the test H-013 failed
+three hours earlier: it raised profit factor and made this number worse.
+
+**Stage 3 — null and control pass, the split does not.** Both gates beat all
+five block-shuffled seeds (38.74 vs a null best of 22.06; 42.53 vs 26.77). The
+control — keeping the trades the complex *agrees* with — collapses to 13.85 and
+13.02 against a 29.97 baseline, so direction carries it.
+
+Then the honest part. Split the window in half:
+
+| gate | first half | second half |
+|---|---|---|
+| sys | +5.5% | +2.8% |
+| dsys_144 | **−6.4%** | +74.9% |
+
+Neither half reproduces the headline, because **maximum drawdown is not
+additive** — much of the full-window lift is the gate cutting one large drawdown
+that spans the split. `dsys_144`'s +41.9% is largely a single episode and it hurt
+in the first half.
+
+**Verdict: keep `sys`, discard `dsys_144`, and quote +3-6%, not +29%.** `sys` is
+positive in both halves, beats every null seed, fails its control correctly, and
+is the parameter-free feature — a plain cross-sectional mean with no lookback to
+choose — so preferring it is a prior rather than a fit.
+
+**What it is not.** Not a new strategy: stage 1's 8h spread of 24bps does not
+clear a 28bps round trip at 2x, so systemic crowding cannot generate its own
+entries. Its value is as a filter on a book that already works, which is the same
+shape as H-006 → H-009. And it is not board-eligible: the feature was chosen once
+over the whole window, never re-chosen blind each quarter. **H-004 is the
+standing reminder that nothing before a walk-forward decides** — it had the
+widest stage-1 null margin in the project, 828 gate-clearing configurations
+against 2, and produced zero survivors the moment selection went blind.
+
+**Next, concretely:** walk-forward the `sys` gate quarter by quarter alongside
+H-009's own, and if it holds, put it on the board with `core/board.py::write_board`.
+Until then it is a measured improvement, not a score.
