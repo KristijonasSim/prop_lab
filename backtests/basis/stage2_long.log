@@ -1,0 +1,82 @@
+H-013 stage 2: 1408 configs x 3 symbols x (1 real + 3 null)
+
+BTCUSDT: 88 families ...
+  BTCUSDT: 10/88 families
+  BTCUSDT: 20/88 families
+  BTCUSDT: 30/88 families
+  BTCUSDT: 40/88 families
+  BTCUSDT: 50/88 families
+  BTCUSDT: 60/88 families
+  BTCUSDT: 70/88 families
+  BTCUSDT: 80/88 families
+
+ETHUSDT: 88 families ...
+  ETHUSDT: 10/88 families
+  ETHUSDT: 20/88 families
+  ETHUSDT: 30/88 families
+  ETHUSDT: 40/88 families
+  ETHUSDT: 50/88 families
+  ETHUSDT: 60/88 families
+  ETHUSDT: 70/88 families
+  ETHUSDT: 80/88 families
+
+SOLUSDT: 88 families ...
+  SOLUSDT: 10/88 families
+  SOLUSDT: 20/88 families
+  SOLUSDT: 30/88 families
+  SOLUSDT: 40/88 families
+  SOLUSDT: 50/88 families
+  SOLUSDT: 60/88 families
+  SOLUSDT: 70/88 families
+  SOLUSDT: 80/88 families
+
+============================================================================================
+GATE COUNTS — configs clearing PF 1.20, contrarian only
+============================================================================================
+  1x cost:  real   292 of  2112    null    294.3 per seed    real best 2.097  null best 2.589
+  2x cost:  real   196 of  2112    null    203.0 per seed    real best 2.048  null best 2.546
+  3x cost:  real   139 of  2112    null    145.7 per seed    real best 2.000  null best 2.503
+
+THE CONTROL — same setups taken the other way (median PF at 2x)
+  contrarian  0.9667
+  with-trend  0.9506
+
+BY SIGNAL (contrarian, median PF at 2x, and gate count)
+        median_pf2x  best_pf2x  clears    n  median_tpd
+signal                                                 
+dprem        0.9527     1.5625      31  576      0.2115
+gap          0.9696     1.8822      62  576      0.1745
+lead         0.9670     2.0484      63  576      0.2070
+prem_z       0.9712     1.6951      40  384      0.2125
+
+BY HOLD (contrarian, median PF at 2x)
+hold
+864     0.9134
+1728    0.9538
+2880    1.0107
+4032    1.0292
+
+TOP 20 BY PF AT 2x COST (contrarian, >= 200 trades)
+ symbol signal  look  win    q  band  hold  stop_k  trades   tpd  avg_bps  win_rate  pf_1x  pf_2x  pf_3x
+SOLUSDT    gap    48    0 0.20  8640  4032     2.0     327 0.150   355.62    0.3119 1.9445 1.8822 1.8231
+SOLUSDT    gap   144    0 0.05  8640  4032     2.0     283 0.130   306.61    0.2686 1.7865 1.7288 1.6741
+SOLUSDT   lead    48    0 0.02  8640  4032     2.0     328 0.151   262.47    0.2652 1.6866 1.6299 1.5763
+BTCUSDT    gap    48    0 0.05  8640  2880     0.0     228 0.094   200.21    0.6404 1.6786 1.6158 1.5552
+SOLUSDT   lead    12    0 0.20  2016  2880     0.0     215 0.099   389.82    0.5535 1.6328 1.6029 1.5735
+SOLUSDT prem_z     0  288 0.10  8640  4032     2.0     364 0.167   254.51    0.2582 1.6217 1.5701 1.5212
+BTCUSDT  dprem   144    0 0.05  8640  2880     0.0     237 0.097   173.90    0.5696 1.6102 1.5441 1.4808
+ETHUSDT    gap    12    0 0.02  8640  2880     0.0     226 0.093   232.12    0.5664 1.5680 1.5232 1.4797
+SOLUSDT  dprem   144    0 0.10  8640  2880     0.0     211 0.097   332.98    0.5403 1.5479 1.5180 1.4886
+SOLUSDT prem_z     0  864 0.10  2016  4032     2.0     382 0.175   240.36    0.2382 1.5557 1.5079 1.4626
+SOLUSDT    gap   144    0 0.02  8640  4032     2.0     232 0.107   226.84    0.2543 1.5562 1.5058 1.4580
+SOLUSDT   lead   144    0 0.02  2016  2880     0.0     208 0.096   312.47    0.5240 1.5179 1.4877 1.4582
+ETHUSDT   lead   144    0 0.05  8640  4032     2.0     396 0.163   163.75    0.2727 1.5559 1.4856 1.4202
+SOLUSDT   lead   144    0 0.10  8640  2880     2.0     477 0.219   210.68    0.2809 1.5306 1.4797 1.4315
+ETHUSDT   lead   144    0 0.10  2016  1728     0.0     400 0.164   168.66    0.5575 1.5315 1.4731 1.4169
+SOLUSDT   lead    12    0 0.10  2016  2880     0.0     215 0.099   300.27    0.5814 1.4978 1.4686 1.4399
+BTCUSDT prem_z     0  864 0.02  8640  2880     0.0     233 0.096   167.48    0.5622 1.5220 1.4645 1.4092
+SOLUSDT  dprem    12    0 0.02  8640  2880     0.0     201 0.092   286.69    0.5871 1.4822 1.4527 1.4239
+SOLUSDT   lead   144    0 0.20  2016  4032     2.0     389 0.179   192.87    0.2468 1.4765 1.4272 1.3805
+ETHUSDT    gap   144    0 0.02  8640  2880     2.0     334 0.137   130.58    0.2964 1.4976 1.4199 1.3482
+
+wrote stage2_grid_long.csv in /home/kristijonas/prop_lab_gh/backtests/basis

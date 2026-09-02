@@ -1904,3 +1904,129 @@ sample. That is the strongest independent check H-009 has had, and it came from
 an experiment that failed.
 
 Code deleted; the finding is here.
+
+## H-013 perp-versus-spot premium — rejected (2026-09-02)
+
+Asked for a hypothesis that is not VWAP and not a variation on one, and that
+could plausibly beat H-009's 8.9.
+
+**Mechanism, stated before results.** A perpetual has no expiry, so nothing pulls
+it back to spot except basis arbitrageurs and the funding transfer that bills the
+crowded side. Neither cares about direction; both care that the gap closes. So
+the claim is narrower than "price reverts" and it names its victim: *a move paid
+for with leverage rather than cash has to be unwound, because the people holding
+it are being charged to hold it.*
+
+**The data was free and had been there the whole time.** `premiumIndexKlines`
+gives `(mark − index)/index` at 5-minute resolution back to 2020-01 for every
+USDT-M symbol, and the spot archive carries `taker_buy_base`, so cash-side
+aggression can be set against the perp's. 699,230 premium bars and 701,106 spot
+bars per major. Every flow feature in this repo before today was perp-only, so
+nothing here could distinguish a move the cash market was paying for from one it
+was not. `core/basis_data.py` fetches both.
+
+**Why this was not H-004 again.** Funding is a clamped 8-hour TWAP of the
+premium. H-004 tested the summary at 7,645 settlements and died at 0.20
+trades/day. This tested the underlying quantity at ~100x the resolution — the
+only honest reason to reopen a rejected family.
+
+**Why this was not H-006/H-009 again, measured rather than assumed.** Positioning
+is who holds the risk; the premium is what they pay for it. Spearman correlation
+between `prem_z` and `crowd_z`: **−0.05 (BTC), −0.12 (ETH), −0.16 (SOL)**.
+
+### Stage 1 said yes, and said it more cleanly than H-006 ever did
+
+Same construction, same gates and the same block-shuffle null as
+`strategies/orderflow/stage1_ic.py`, imported rather than reimplemented.
+
+| feature | mean abs IC | mean abs spread | beats null | stable |
+|---|---|---|---|---|
+| **prem_z** | **0.023** | 10.9bps | **15 of 15** | 0.90 |
+| lead_4h | 0.016 | 9.7bps | 15 of 15 | 0.88 |
+| dprem_4h | 0.014 | 8.1bps | 15 of 15 | 0.88 |
+| *crowd_z (H-006's best)* | *0.022* | *19.6bps* | *53%* | *—* |
+
+The tail is monotone in **both** tail depth and horizon — 5.0bps at the 20% tail
+over 4h to 51.4bps at the 5% tail over 48h — which is precisely the shape H-008
+was killed for lacking. On eight further coins `prem_z` beats its null in **40 of
+40** cells.
+
+**A correction that matters.** The first tail pass reported t-statistics of 6–23.
+Those were computed on 5-minute observations with 24-hour forward windows, which
+overlap 288-fold; the honest non-overlapping figures are **1.0–2.9**, because six
+years contains only ~122–486 independent 48-hour windows. The effect is real and
+consistently signed, but the error bars are wide.
+
+**The confound was ruled out, and this is the part worth keeping.** The premium
+spikes when price moves fast, so `prem_z` could have been short-term price
+reversal wearing a costume — and this project has rejected five price patterns
+against zero successes. Controlling for recent returns does not touch it:
+
+| horizon | IC(prem_z) | IC(ret_4h) | partial IC given ret_1h, ret_4h |
+|---|---|---|---|
+| 8h | −0.0323 | −0.0207 | **−0.0331** |
+| 24h | −0.0353 | −0.0167 | **−0.0356** |
+| 48h | −0.0326 | +0.0007 | **−0.0325** |
+
+Not merely surviving — *unchanged*, and twice the strength of price reversal on
+its own. The double sort agrees: the q1−q5 premium spread is positive inside all
+five recent-return buckets.
+
+### Stage 2 said no, twice
+
+| holds | real clears PF 1.20 @2x | null per seed | real best | null best |
+|---|---|---|---|---|
+| 8h–72h | 3 of 2112 | 2.0 | 1.245 | **1.280** |
+| 72h–14d | 196 of 2112 | **203.0** | 2.048 | **2.546** |
+
+The null clears the gate as often as the real signal and its best configuration
+scores higher, at every cost level. The direction control barely separates
+(0.967 contrarian against 0.951 with-trend).
+
+The second row exists because every winner in the first grid sat at `hold=864`,
+the boundary, with median PF rising monotonically down the column — the signature
+of a grid cutting off its own answer, which this repo has hit before. Extending
+the holds outward once, in one direction, did not rescue it: long holds flatter
+the real data and the shuffled data equally, because both ride the same drift.
+
+### Stage 3 — not even usable as a gate
+
+H-006's resolution was to stop being a strategy and become a veto on H-002, which
+produced H-009. The same was tried here, threshold fixed at zero, on H-009's own
+3,808 trades.
+
+| gate | PF@2x | maxDD | R/day | **return/drawdown** |
+|---|---|---|---|---|
+| none | 1.806 | −51.4R | 0.901 | **37.3** |
+| `lead` | 1.946 | −36.7R | 0.520 | 30.1 |
+| `dprem` | 1.936 | −33.2R | 0.496 | 31.8 |
+| `prem_z` | 1.751 | −25.9R | 0.393 | 32.3 |
+
+Profit factor and drawdown both improve and it does not matter: R per day halves,
+so return over drawdown *falls*, and that is the quantity in
+`days = maxDD_R / R_per_day`. H-009's crowd gate moved the same number from 24.6
+to 34.4. And `prem_z` fails its own sanity check — what it discards (PF 1.853)
+outperforms what it keeps (1.751).
+
+**Verdict: rejected.** Signal real, orthogonal to price and to positioning,
+universal across ten coins — and too small to survive a round trip, in the same
+way H-004, H-007 and H-011 were. **The transferable finding: pricing does not pay
+here, positioning does.** H-006 concluded "it is positioning that pays, not
+leverage and not aggression"; H-013 adds the perp's own price to that list. Every
+attempt to trade what the crowd is *charged* has now failed, while the one thing
+that worked reads where the crowd *is*.
+
+### Four candidates killed from the literature before any code was written
+
+- **Liquidation cascades** — the cleanest forced-seller mechanism in crypto, and
+  unavailable: Binance has removed `liquidationSnapshot` from `data.binance.vision`.
+  The bucket listing returns an empty result for that prefix while `metrics`,
+  `bookDepth`, `bookTicker` and `aggTrades` all return keys.
+- **Order-book / queue imbalance** — edge below 10bps at 10-second horizons
+  against a 28bps round trip. Cost-limited by construction.
+- **Quarter-hour effect** (arXiv 2607.09426, six Binance perps, 2021–2024) — the
+  paper's own verdict: ~0.5bps, "one twentieth of a round trip", not tradeable
+  standalone.
+- **Overnight drift** (NY Fed SR-917: ~100% of the US equity premium in the
+  02:00–03:00 ET hour) — the same authors published *"The Disappearing Overnight
+  Drift"* in July 2026. Close to zero since 2021.

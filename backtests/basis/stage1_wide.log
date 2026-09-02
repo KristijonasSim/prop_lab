@@ -1,0 +1,74 @@
+
+BNBUSDT: 687,168 bars  2020-02-10 -> 2026-09-01  (16 features)
+
+XRPUSDT: 695,789 bars  2020-01-06 -> 2026-08-31  (16 features)
+
+DOGEUSDT: 643,836 bars  2020-07-10 -> 2026-09-01  (16 features)
+
+ADAUSDT: 690,038 bars  2020-01-31 -> 2026-09-01  (16 features)
+
+AVAXUSDT: 622,261 bars  2020-09-23 -> 2026-09-01  (16 features)
+
+LINKUSDT: 694,062 bars  2020-01-17 -> 2026-09-01  (16 features)
+
+DOTUSDT: 631,477 bars  2020-08-22 -> 2026-09-01  (16 features)
+
+LTCUSDT: 695,213 bars  2020-01-09 -> 2026-09-01  (16 features)
+
+================================================================================================
+STRONGEST FEATURE x HORIZON, by |bucket spread| in basis points
+================================================================================================
+  symbol feature horizon       ic  null_best  beats_null  spread_bps  monotone  same_sign_years  clears_2x
+DOGEUSDT    prem     24h -0.00047    0.01262       False       69.27      0.75             0.71       True
+DOGEUSDT  gap_4h     24h -0.00530    0.01528       False      -42.77      0.75             0.57       True
+DOGEUSDT  ret_4h     24h -0.01568    0.00845        True       40.91      0.50             0.86       True
+DOGEUSDT  ret_4h     12h -0.01198    0.01686       False       35.53      0.75             0.71       True
+AVAXUSDT    prem     24h  0.01376    0.01974       False       34.94      0.50             0.14       True
+ XRPUSDT  gap_4h     24h -0.02985    0.02923        True      -29.93      0.50             1.00       True
+ ADAUSDT  prem_z     24h -0.02637    0.00934        True      -29.00      1.00             1.00       True
+DOGEUSDT    prem     12h -0.00855    0.01828       False       28.57      0.50             0.71       True
+LINKUSDT  ret_4h     24h -0.02239    0.01633        True      -24.71      0.75             1.00      False
+ DOTUSDT    prem     24h  0.01326    0.01132        True       23.99      0.50             0.14      False
+ BNBUSDT  prem_z     24h -0.01981    0.01659        True      -22.46      1.00             0.71      False
+LINKUSDT  prem_z     24h -0.01385    0.00803        True      -21.49      1.00             0.71      False
+ ADAUSDT  prem_z     12h -0.02710    0.00681        True      -20.91      1.00             1.00      False
+AVAXUSDT  gap_1h     24h  0.01396    0.00636        True       20.79      0.50             0.86      False
+ XRPUSDT  gap_1h     24h -0.01915    0.01916       False      -20.35      0.75             0.86      False
+ DOTUSDT  ret_4h     24h -0.02235    0.01531        True      -19.86      0.75             0.86      False
+ DOTUSDT  prem_z     24h -0.02088    0.00821        True      -19.62      0.50             0.71      False
+AVAXUSDT  gap_4h     24h  0.01356    0.00978        True       19.37      0.50             0.86      False
+LINKUSDT  prem_z      8h -0.02149    0.00454        True      -19.35      1.00             0.86      False
+LINKUSDT  prem_z     12h -0.01646    0.01335        True      -19.23      1.00             0.86      False
+
+================================================================================================
+THE THREE GATES  (14bps at 1x, 28bps at 2x)
+================================================================================================
+  beats its own null         363 of 640  ( 56.7%)
+  spread clears 1x cost       43 of 640  (  6.7%)
+  all four conditions          1 of 640  (  0.2%)
+
+BY FEATURE, averaged over symbols and horizons (H-006's best was crowd_z at 19.6bps / 53% / 20%):
+          mean_abs_ic  mean_abs_spread  beats_null  clears_2x  stable
+feature                                                              
+prem_z          0.019            9.704       1.000      0.025   0.875
+prem            0.008            9.486       0.325      0.075   0.686
+ret_4h          0.029            8.837       0.850      0.050   0.904
+gap_4h          0.009            7.682       0.350      0.050   0.699
+lead_4h         0.011            6.852       0.875      0.000   0.756
+dprem_4h        0.011            5.971       0.925      0.000   0.796
+ret_1h          0.024            5.619       0.975      0.000   0.936
+gap_1h          0.007            5.585       0.300      0.000   0.668
+lead_1h         0.007            5.056       1.000      0.000   0.807
+dprem_1h        0.007            4.256       1.000      0.000   0.840
+cash_4h         0.006            3.065       0.300      0.000   0.678
+cash_1h         0.003            2.777       0.175      0.000   0.621
+gap             0.003            2.765       0.375      0.000   0.685
+lev_4h          0.003            2.748       0.100      0.000   0.617
+lev_1h          0.003            1.893       0.300      0.000   0.667
+gap_z           0.002            1.358       0.225      0.000   0.631
+
+SURVIVORS — worth a grid:
+ symbol feature horizon       ic  null_best  beats_null  spread_bps  monotone  clears_1x  clears_2x  years  same_sign_years      n
+ADAUSDT  prem_z     24h -0.02637    0.00934        True       -29.0       1.0       True       True      7              1.0 689605
+
+wrote stage1_ic_BNB-XRP-DOG-ADA-AVA-LIN-DOT-LTC.csv and stage1_response_BNB-XRP-DOG-ADA-AVA-LIN-DOT-LTC.csv in /home/kristijonas/prop_lab_gh/backtests/basis

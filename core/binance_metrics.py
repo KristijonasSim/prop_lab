@@ -210,9 +210,13 @@ def klines(sym: str, tf: str = "5m", first: str = "2020-01") -> pd.DataFrame:
     def frame(raw: list) -> pd.DataFrame:
         df = pd.concat(raw, ignore_index=True)
         ts = df.open_time.astype("int64")
-        # the archive switched from millisecond to microsecond stamps in 2025
-        unit = "us" if ts.max() > 10 ** 15 else "ms"
-        df["ts"] = pd.to_datetime(ts, unit=unit, utc=True)
+        # The archive switched from millisecond to microsecond stamps during
+        # 2025, and a batch spanning the switch carries BOTH. Deciding the unit
+        # from the batch maximum reads every millisecond row as microseconds and
+        # dates it to 1970 - which is exactly what happened to the spot series
+        # in core/basis_data.py before this was fixed there. Test per row.
+        us = ts > 10 ** 15
+        df["ts"] = pd.to_datetime(ts.where(us, ts * 1000), unit="us", utc=True)
         return df.set_index("ts")[["open", "high", "low", "close", "volume",
                                    "quote_volume", "trades", "taker_buy_base"]
                                   ].astype("float64")

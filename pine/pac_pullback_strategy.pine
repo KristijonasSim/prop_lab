@@ -1,0 +1,389 @@
+//@version=6
+// =============================================================================
+// H-014 · PAC Pullback Scalper  —  UNTESTED, and the family's record here is bad
+// prop_lab · https://github.com/KristijonasSim/prop_lab
+//
+// Rebuilt from "Scalping PullBack Tool R1.1" by JustUncleL (Pine v4, study).
+// The original is an ALERT TOOL: it has no exit, so nothing about it can be
+// scored. This is the strategy form, which is the only form in which the word
+// "accurate" means anything.
+//
+// READ THIS BEFORE YOU BELIEVE ANY NUMBER IT PRODUCES.
+//
+// This is a price pattern. In this project price patterns are 0 for 5:
+//   H-001 ORB              lost at ZERO cost, so there was no edge to protect
+//   H-003 EMA x VWAP       real median PF 0.705 vs a phase-randomised 0.757 -
+//                          WORSE than noise, and the null produced more
+//                          gate-clearing walk-forward cells than the real data
+//   H-005 sweep fade       null cleared the gate 19,062 times to 1,702
+//   H-008 resid reversion  z-response flat: 3-sigma reverts no harder than 1.5
+//   H-010 VWAP band fade   null's median PF higher than the real market's
+// The only thing that has ever worked here came from a data feed, not from a
+// price pattern, and "breakout + retest" - which is structurally what a pullback
+// continuation entry is - is already on the known-dead list in CLAUDE.md.
+//
+// That is not a reason to refuse to test it. It IS the reason every control in
+// this file exists. Run the control modes before you run the optimiser.
+// =============================================================================
+
+strategy("H-014 PAC Pullback Scalper · prop_lab", shorttitle="PAC PULLBACK",
+     overlay=true, initial_capital=100000,
+     default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+     commission_type=strategy.commission.percent, commission_value=0.05,
+     slippage=2, pyramiding=0, calc_on_every_tick=false,
+     process_orders_on_close=false)
+
+// -----------------------------------------------------------------------------
+// GUARD: the single biggest way this strategy can lie to you.
+//
+// On a Heikin Ashi (or Renko, Kagi, Range) chart TradingView fills orders at the
+// SYNTHETIC price, not at a price anyone could trade. HA close is an average of
+// four numbers; it is not a price. A backtest run on an HA chart is fiction, and
+// it is fiction that looks excellent, because HA smooths away exactly the noise
+// that stops you out. The `useHA` input below computes Heikin Ashi INTERNALLY
+// for the signal while every fill stays on the real candle, which is the only
+// honest way to have both.
+// -----------------------------------------------------------------------------
+if barstate.isfirst and not chart.is_standard
+    runtime.error("Run this on a STANDARD candle chart. On Heikin Ashi / Renko / " +
+      "Kagi / Range charts orders fill at synthetic prices and the Strategy " +
+      "Tester result is not real. Use the 'Heikin Ashi for signals' input instead.")
+
+// === INPUTS ==================================================================
+gS = "1 · Structure"
+HiLoLen  = input.int(34,  "PAC channel length",  minval=2, group=gS)
+fastLen  = input.int(89,  "Fast EMA",            minval=2, group=gS)
+medLen   = input.int(200, "Medium EMA",          minval=2, group=gS)
+slowLen  = input.int(600, "Slow EMA",            minval=2, group=gS)
+lookback = input.int(3,   "Pullback lookback (bars since PAC centre cross)",
+                     minval=1, group=gS)
+useHA    = input.bool(true, "Heikin Ashi for signals (fills stay on real prices)",
+                      group=gS)
+
+gF = "2 · Filters — every one OFF by default, so each can be scored as a paired lift"
+useSlow   = input.bool(false, "Regime: price on the correct side of the slow EMA", group=gF)
+useHTF    = input.bool(false, "Higher-timeframe trend must agree", group=gF)
+htfTF     = input.timeframe("240", "Higher timeframe", group=gF)
+htfLen    = input.int(50, "Higher-timeframe EMA", minval=2, group=gF)
+useRVol   = input.bool(false, "Relative volume on the trigger bar", group=gF)
+rvolLen   = input.int(50, "Relative-volume baseline", minval=5, group=gF)
+rvolMin   = input.float(1.2, "Minimum relative volume", minval=0.1, step=0.1, group=gF)
+useExt    = input.bool(false, "Cap how far price is extended from the medium EMA", group=gF)
+maxExtATR = input.float(3.0, "Max |close - medium EMA| in ATR", minval=0.5, step=0.5, group=gF)
+useDepth  = input.bool(false, "Pullback must not break the medium EMA", group=gF)
+useStr    = input.bool(false, "Trigger bar must close strong (REAL candle)", group=gF)
+minStr    = input.float(0.6, "Min close position within the bar's range",
+                     minval=0.0, maxval=1.0, step=0.05, group=gF)
+useADX    = input.bool(false, "Trend strength (ADX)", group=gF)
+adxLen    = input.int(14, "ADX length", minval=2, group=gF)
+adxMin    = input.float(20.0, "Minimum ADX", minval=0, step=1, group=gF)
+useSess   = input.bool(false, "Session window", group=gF)
+sess      = input.session("1330-2000", "Session, exchange time", group=gF)
+
+gR = "3 · Risk and exits"
+atrLen    = input.int(14, "ATR length", minval=1, group=gR)
+stopMode  = input.string("ATR", "Stop placement",
+                         options=["ATR", "Structure", "Wider of the two"], group=gR)
+stopATR   = input.float(1.5, "Stop distance in ATR", minval=0.1, step=0.1, group=gR)
+rr        = input.float(1.5, "Target, in R", minval=0.1, step=0.1, group=gR)
+minRiskBp = input.float(10.0, "Minimum stop distance, bps of price",
+                     minval=0.0, step=1.0, group=gR)
+exitOnPac = input.bool(true, "Also exit when price closes back through the PAC centre",
+                       group=gR)
+maxBars   = input.int(0, "Time stop, bars (0 = off)", minval=0, group=gR)
+
+gC = "4 · Control — run these BEFORE you optimise anything"
+mode  = input.string("Normal", "Signal mode",
+                     options=["Normal", "Inverted", "Random"], group=gC)
+rseed = input.int(1, "Random seed", minval=1, group=gC)
+
+gT = "5 · Reporting"
+showTable = input.bool(true, "Show the report table", group=gT)
+costBps   = input.float(14.0, "Round-trip cost for the table, bps",
+                     minval=0.0, step=1.0, group=gT)
+showPlots = input.bool(true, "Draw the PAC, ribbon and bar colours", group=gT)
+showFrac  = input.bool(true, "Draw fractals", group=gT)
+
+// === SERIES ==================================================================
+// One source series, used EVERYWHERE the signal is computed. The original had a
+// real inconsistency here: it offered "use Heikin Ashi in algo calculations" but
+// its fractal functions read raw `high`/`low` regardless, so half the tool
+// ignored the switch.
+haT = ticker.heikinashi(syminfo.tickerid)
+o_ = useHA ? request.security(haT, timeframe.period, open)  : open
+h_ = useHA ? request.security(haT, timeframe.period, high)  : high
+l_ = useHA ? request.security(haT, timeframe.period, low)   : low
+c_ = useHA ? request.security(haT, timeframe.period, close) : close
+
+pacC = ta.ema(c_, HiLoLen)
+pacL = ta.ema(l_, HiLoLen)
+pacU = ta.ema(h_, HiLoLen)
+fastEMA = ta.ema(c_, fastLen)
+medEMA  = ta.ema(c_, medLen)
+slowEMA = ta.ema(c_, slowLen)
+
+trend = fastEMA > medEMA and pacL > medEMA ?  1 :
+      fastEMA < medEMA and pacU < medEMA ? -1 : 0
+
+// ATR is deliberately computed on the REAL candle even when signals use Heikin
+// Ashi. It sizes a stop that will be hit by real prices; an HA range is smaller
+// than the real one, so an HA-derived stop is systematically too tight and the
+// backtest fills it at a price the market never printed.
+atr = ta.atr(atrLen)
+
+// === FILTERS =================================================================
+slowOKL = not useSlow or close > slowEMA
+slowOKS = not useSlow or close < slowEMA
+
+// Non-repainting higher timeframe: the [1] is INSIDE the request, so it returns
+// the last CLOSED higher-timeframe bar rather than the one still forming.
+htfSrc() =>
+    up = close > ta.ema(close, htfLen)
+    up[1]
+htfUp = request.security(syminfo.tickerid, htfTF, htfSrc(),
+                         lookahead=barmerge.lookahead_off)
+htfOKL = not useHTF or htfUp
+htfOKS = not useHTF or not htfUp
+
+vBase = ta.sma(volume, rvolLen)
+rvol  = vBase > 0 ? volume / vBase : na
+// Many FX and metals feeds carry no real volume. A filter that silently blocks
+// every trade on those symbols would look like "no signal", not like a broken
+// filter, so an absent feed passes rather than fails.
+volOK = not useRVol or na(rvol) or rvol >= rvolMin
+
+extOK = not useExt or (atr > 0 and math.abs(close - medEMA) / atr <= maxExtATR)
+
+// A pullback that trades through the medium EMA is not a pullback, it is the
+// trend ending. Measured on the real low/high, over the window the entry rule
+// itself looks back across.
+depthOKL = not useDepth or ta.lowest(low,   lookback + 2) > medEMA
+depthOKS = not useDepth or ta.highest(high, lookback + 2) < medEMA
+
+// Close strength on the REAL candle, never on Heikin Ashi: an HA bar in a trend
+// closes near its extreme BY CONSTRUCTION, so this filter measured on HA would
+// score the smoothing rather than the market.
+rng  = high - low
+posC = rng > 0 ? (close - low) / rng : 0.5
+strOKL = not useStr or posC >= minStr
+strOKS = not useStr or (1.0 - posC) >= minStr
+
+[diP, diM, adxV] = ta.dmi(adxLen, adxLen)
+adxOK = not useADX or adxV >= adxMin
+
+inSess = not useSess or not na(time(timeframe.period, sess))
+
+// === SIGNAL ==================================================================
+// Pullback recovery: the bar opens inside the channel and closes outside it,
+// having been on the far side of the channel centre within `lookback` bars.
+pacExitU = o_ < pacU and c_ > pacU and ta.barssince(c_ < pacC) <= lookback
+pacExitL = o_ > pacL and c_ < pacL and ta.barssince(c_ > pacC) <= lookback
+
+baseOK  = inSess and volOK and extOK and adxOK
+rawLong  = trend ==  1 and pacExitU and baseOK and slowOKL and htfOKL and depthOKL and strOKL
+rawShort = trend == -1 and pacExitL and baseOK and slowOKS and htfOKS and depthOKS and strOKS
+
+// One signal per pullback: the state resets only when price closes back through
+// the channel centre, so a bar that keeps poking out cannot re-fire.
+var int td = 0
+td := td ==  1 and c_ < pacC ? 0 :
+      td == -1 and c_ > pacC ? 0 :
+      td ==  0 and rawLong   ?  1 :
+      td ==  0 and rawShort  ? -1 : td
+
+longSig  = td ==  1 and nz(td[1]) == 0
+shortSig = td == -1 and nz(td[1]) == 0
+
+// --- the control -------------------------------------------------------------
+// "Inverted" takes every setup the other way. If that also makes money, the
+// pattern is selecting volatile bars, not informative ones, and the mechanism
+// story is wrong. "Random" fires at the SAME historical rate as the real signal
+// but at unrelated times - a null benchmark you can run without leaving
+// TradingView. A real edge must beat both.
+var int nL = 0
+var int nS = 0
+if longSig
+    nL := nL + 1
+if shortSig
+    nS := nS + 1
+pL = nL * 1.0 / math.max(bar_index, 1)
+pS = nS * 1.0 / math.max(bar_index, 1)
+rnd = math.random(0.0, 1.0, rseed)
+
+goLong  = mode == "Normal" ? longSig  : mode == "Inverted" ? shortSig : rnd < pL
+goShort = mode == "Normal" ? shortSig : mode == "Inverted" ? longSig  :
+          (rnd >= pL and rnd < pL + pS)
+
+// === RISK ====================================================================
+structL = close - ta.lowest(low,   lookback + 2)
+structS = ta.highest(high, lookback + 2) - close
+atrRisk = stopATR * atr
+// A stop placed at a level price has already grazed divides by roughly zero and
+// manufactures 25R "winners". prop_lab hit exactly that bug once; the floor is
+// not optional.
+floorD  = close * minRiskBp / 10000.0
+riskL = math.max(stopMode == "ATR" ? atrRisk :
+                 stopMode == "Structure" ? structL : math.max(atrRisk, structL), floorD)
+riskS = math.max(stopMode == "ATR" ? atrRisk :
+                 stopMode == "Structure" ? structS : math.max(atrRisk, structS), floorD)
+
+// === ORDERS ==================================================================
+var float pendRisk = na
+flat = strategy.position_size == 0
+
+if flat and not goLong and not goShort
+    pendRisk := na
+
+if goLong and flat
+    pendRisk := riskL
+    strategy.entry("L", strategy.long)
+if goShort and flat
+    pendRisk := riskS
+    strategy.entry("S", strategy.short)
+
+// Brackets are attached from the ACTUAL fill, not from the signal bar's close.
+// The entry fills at the next bar's open, which is routinely a different price,
+// and pricing the stop off the close quietly changes R on every trade.
+if strategy.position_size != 0 and not na(pendRisk) and pendRisk > 0
+    e = strategy.position_avg_price
+    if strategy.position_size > 0
+        strategy.exit("Lx", from_entry="L", stop=e - pendRisk, limit=e + rr * pendRisk)
+    else
+        strategy.exit("Sx", from_entry="S", stop=e + pendRisk, limit=e - rr * pendRisk)
+
+if exitOnPac and strategy.position_size > 0 and c_ < pacC
+    strategy.close("L", comment="PAC")
+if exitOnPac and strategy.position_size < 0 and c_ > pacC
+    strategy.close("S", comment="PAC")
+
+if maxBars > 0 and strategy.opentrades > 0
+    if bar_index - strategy.opentrades.entry_bar_index(0) >= maxBars
+        strategy.close_all(comment="time")
+
+// NOTE, deliberately absent: there is no move-to-breakeven option. On this
+// project's data a breakeven stop cost -0.078 median profit factor at 0.5R and
+// -0.015 at 1.0R across 5,760 paired configurations, and only 5-8% of configs
+// improved. Retest entries were negative at every setting too. Both are the most
+// commonly recommended "improvements" for this kind of system and both are
+// measurably harmful here.
+
+// === REPORT ==================================================================
+// The Strategy Tester applies ONE commission. This project's gate is profit
+// factor at 1x, 2x and 3x cost, because the venue is not chosen yet - the best
+// ORB result went from 1.439 to 0.553 at 2x. So the table recomputes the whole
+// record in R multiples at three cost levels from the closed-trade list.
+var float eRisk = na
+var float ePx   = na
+var int   eDir  = 0
+var float firstTime = na
+var float w1 = 0.0
+var float l1 = 0.0
+var float w2 = 0.0
+var float l2 = 0.0
+var float w3 = 0.0
+var float l3 = 0.0
+var float cum  = 0.0
+var float peak = 0.0
+var float ddR  = 0.0
+var int   nT   = 0
+var int   nWin = 0
+var float sumR = 0.0
+
+f_pf(w, l) => l > 0 ? w / l : na
+
+f_row(tbl, i, k, v) =>
+    table.cell(tbl, 0, i, k, text_color=color.silver, text_size=size.small,
+               text_halign=text.align_left)
+    table.cell(tbl, 1, i, v, text_color=color.white, text_size=size.small,
+               text_halign=text.align_right)
+
+justOpened = strategy.position_size != 0 and strategy.position_size[1] == 0
+justClosed = strategy.position_size == 0 and strategy.position_size[1] != 0
+
+if justOpened
+    ePx   := strategy.position_avg_price
+    eRisk := pendRisk
+    eDir  := strategy.position_size > 0 ? 1 : -1
+    firstTime := na(firstTime) ? time : firstTime
+
+if justClosed and strategy.closedtrades > 0 and not na(eRisk) and eRisk > 0
+    xp = strategy.closedtrades.exit_price(strategy.closedtrades - 1)
+    gross = (xp - ePx) * eDir / eRisk                 // R before any cost
+    costR = (costBps / 10000.0) * ePx / eRisk         // one round trip, in R
+    r1 = gross - costR
+    r2 = gross - 2.0 * costR
+    r3 = gross - 3.0 * costR
+    w1 := w1 + math.max(r1,  0.0)
+    l1 := l1 + math.max(-r1, 0.0)
+    w2 := w2 + math.max(r2,  0.0)
+    l2 := l2 + math.max(-r2, 0.0)
+    w3 := w3 + math.max(r3,  0.0)
+    l3 := l3 + math.max(-r3, 0.0)
+    nT   := nT + 1
+    nWin := nWin + (r2 > 0 ? 1 : 0)
+    sumR := sumR + r2
+    cum  := cum + r2
+    peak := math.max(peak, cum)
+    ddR  := math.min(ddR, cum - peak)
+
+var table rpt = na
+if showTable and barstate.islast
+    days = na(firstTime) ? na : (time - firstTime) / 86400000.0
+    tpd  = na(days) or days <= 0 ? na : nT * 1.0 / days
+    rpd  = na(days) or days <= 0 ? na : sumR / days
+    // The phase gate, at 1% risk per trade so 1R = 1%: days to move +8%.
+    // An estimate off this strategy's own R per day, not a prop simulation.
+    d2t  = na(rpd) or rpd <= 0 ? na : 8.0 / rpd
+    rpt := table.new(position.top_right, 2, 11, border_width=1,
+                     bgcolor=color.new(color.black, 15), frame_color=color.gray)
+    f_row(rpt, 0,  "mode", mode + (useHA ? " · HA signals" : " · real candles"))
+    f_row(rpt, 1,  "trades", str.tostring(nT))
+    f_row(rpt, 2,  "trades / day", na(tpd) ? "-" : str.tostring(tpd, "#.###"))
+    f_row(rpt, 3,  "win rate",
+          nT > 0 ? str.tostring(nWin * 100.0 / nT, "#.#") + "%" : "-")
+    f_row(rpt, 4,  "avg R (2x cost)",
+          nT > 0 ? str.tostring(sumR / nT, "#.###") : "-")
+    f_row(rpt, 5,  "PF 1x cost", str.tostring(f_pf(w1, l1), "#.###"))
+    f_row(rpt, 6,  "PF 2x cost  <- the gate", str.tostring(f_pf(w2, l2), "#.###"))
+    f_row(rpt, 7,  "PF 3x cost", str.tostring(f_pf(w3, l3), "#.###"))
+    f_row(rpt, 8,  "max drawdown, R", str.tostring(ddR, "#.##"))
+    f_row(rpt, 9,  "total R (2x)", str.tostring(sumR, "#.#"))
+    f_row(rpt, 10, "est. days to +8% @1%", na(d2t) ? "-" : str.tostring(d2t, "#"))
+
+// === PLOTTING ================================================================
+pl = plot(showPlots ? pacL : na, "PAC low",   color=color.new(color.gray, 50))
+pu = plot(showPlots ? pacU : na, "PAC high",  color=color.new(color.gray, 50))
+plot(showPlots ? pacC : na, "PAC centre", color=color.new(color.red, 0), linewidth=2)
+fill(pl, pu, color=color.new(color.gray, 90), title="PAC fill")
+
+plot(showPlots ? fastEMA : na, "Fast EMA",   color=color.new(color.green, 20), linewidth=2)
+plot(showPlots ? medEMA  : na, "Medium EMA", color=color.new(color.blue, 20),  linewidth=3)
+plot(showPlots and useSlow ? slowEMA : na, "Slow EMA",
+     color=color.new(color.orange, 20), linewidth=2)
+
+barcolor(showPlots ? (c_ > pacU ? color.blue : c_ < pacL ? color.red : color.gray) : na)
+bgcolor(showPlots ? color.new(trend == 1 ? color.green :
+      trend == -1 ? color.red : color.yellow, 92) : na)
+
+// Fractals, now reading the SAME series as the rest of the tool. They are drawn
+// only - nothing in the entry logic uses them - and they are confirmed two bars
+// late, which for a scalper on a 5m chart is ten minutes of hindsight. Do not
+// build an entry on them without accounting for that.
+isTopF = h_[4] < h_[2] and h_[3] <= h_[2] and h_[2] >= h_[1] and h_[2] > h_[0]
+isBotF = l_[4] > l_[2] and l_[3] >= l_[2] and l_[2] <= l_[1] and l_[2] < l_[0]
+plotshape(showFrac and isTopF, "Top fractal", shape.triangledown,
+          location.abovebar, color.new(color.red, 0), offset=-2, size=size.tiny)
+plotshape(showFrac and isBotF, "Bottom fractal", shape.triangleup,
+          location.belowbar, color.new(color.lime, 0), offset=-2, size=size.tiny)
+
+plotshape(goLong,  "Buy",  shape.triangleup,   location.belowbar,
+          color.new(color.green, 0), size=size.small)
+plotshape(goShort, "Sell", shape.triangledown, location.abovebar,
+          color.new(color.maroon, 0), size=size.small)
+
+// === ALERTS ==================================================================
+// The original delayed the ARROWS to bar close but left `alertcondition` firing
+// intrabar, so the chart and the alert could disagree. Set the TradingView alert
+// to "Once Per Bar Close" and these fire exactly when the arrows are drawn.
+alertcondition(goLong,  "PAC pullback BUY",  "PAC pullback BUY {{ticker}} {{interval}}")
+alertcondition(goShort, "PAC pullback SELL", "PAC pullback SELL {{ticker}} {{interval}}")
