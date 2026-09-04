@@ -204,3 +204,119 @@ legs, and every added leg shrinks the trade.
   selection have nulls.
 - H-009's 48.7 board figure comes from a longer, easier window; on the common
   window it is 178-237. Comparisons across windows here are worthless.
+
+---
+
+# Stage 16/17 — Kris was right, and the sizing rule was hiding it (2026-09-04)
+
+Kris rejected the 73-trades-a-day book outright: four trades a day, $50 risk
+each on a $10k account, is what a real book looks like, and his own N5
+strategy ran 17 legs at 5-7 trades a day.
+
+**His figure matches this data exactly.** The top-1 legs here average 0.42
+trades a day, so seventeen of them is 5.5 a day. The 73 was an artefact of
+carrying a top-10 configuration book inside every leg: 200 parallel
+sub-strategies, each trade **1/200** of the risk budget - about **$1.56** of
+risk, not $50.
+
+He also sent a second AI's arithmetic showing 73 trades a day at PF 1.6 and $50
+a trade would make 45-65% a WEEK. That arithmetic is correct and does not apply
+here: it assumes 73 trades each risking a full $50, which is **$3,650 of risk
+per day on a $10k account - 36.5%**, breaching the 4% daily loss limit several
+times over before lunch. Its own conclusion says as much: an edge producing 50%
+a week cannot exist, so an input is wrong. The wrong input was the sizing.
+
+## Stage 16 — his configuration, run literally
+
+One configuration per leg, legs ranked on a held-out first half, **flat 0.50%
+($50) risk per trade, no rescaling and no dividing by the leg count**:
+
+| legs | trades/day | PF@2x | avg R | $/trade | $/day | curve DD |
+|---|---|---|---|---|---|---|
+| 6 | 1.98 | **1.832** | 0.4887 | $24.43 | $48 | −18.6% |
+| 8 | 2.75 | 1.748 | 0.4772 | $23.86 | $66 | −27.7% |
+| 12 | 3.72 | 1.726 | 0.4657 | $23.28 | $87 | −41.6% |
+| **17** | **5.48** | 1.644 | 0.4344 | **$21.72** | **$119** | −54.9% |
+
+Risk 50, make 21.72 on average, five times a day. That is the shape he
+described and it is what the data actually contains.
+
+## The risk sweep — where `pick` was wrong
+
+17 legs, 5.48 trades/day, PF@2x 1.644:
+
+| risk | $/trade | pass | killed | **median days** | expected days |
+|---|---|---|---|---|---|
+| 0.25% | $10.86 | 72.5% | 22.1% | 28 | 34.6 |
+| **0.50%** | **$21.72** | **50.0%** | 56.3% | **15** | 35.3 |
+| 0.75% | $32.58 | 20.0% | 80.1% | 12 | 65.3 |
+| 1.00% | $43.44 | 11.2% | 88.4% | 12 | 112.4 |
+
+**`riskladder.pick` had refused every one of these levels.** It requires the
+whole six-year equity curve to fit inside the 8% cap on top of the account-level
+breach test, and at 0.50% that curve draws down 54.9%. So every book in this
+project has been reported at a risk level chosen by the more conservative of
+two tests, and the fast configurations were never visible.
+
+`CLAUDE.md` is explicit that this is the wrong thing to hide behind: *"clean
+PASS/FAIL with fixed risk per trade and real breaches... if it fails, it fails;
+accounts are cheap."* **A 56% kill rate is a price, not a disqualification.**
+
+## Stage 17 — the price, in dollars and days
+
+Evaluation fee $32 (Velotrade, the cheapest firm that permits a bot at all).
+Sequential: buy, fail, buy again; a failed account ends early so the wasted
+days are its own lifetime, not a full cycle.
+
+| risk | $/trade | pass | median days | accounts bought | fee cost | **days to funded** |
+|---|---|---|---|---|---|---|
+| 0.25% | $10.86 | 72.5% | 28 | 1.4 | $44 | 35 |
+| **0.50%** | **$21.72** | **50.0%** | **15** | **2.0** | **$64** | **23** |
+| 0.75% | $32.58 | 20.0% | 12 | 5.0 | $160 | 37 |
+| 1.00% | $43.44 | 11.2% | 12 | 8.9 | $284 | 51 |
+
+**0.50% is the optimum: a median of 15 days for an account that passes, 23 days
+including the expected retry, at $64 of evaluation fees.**
+
+Running several at once, staggered a week apart (median days to the first
+funded / share of start dates where any passed):
+
+| risk | N=1 | N=3 | N=5 | N=10 |
+|---|---|---|---|---|
+| 0.25% | 28 d / 72% | 27 d / 86% | 30 d / 95% | 32 d / 100% |
+| 0.50% | 15 d / 50% | 18 d / 72% | 22 d / 90% | 24 d / 100% |
+
+Read the pair, never the median alone: a column with a higher hit rate includes
+harder periods the lower one skipped, which is why the medians rise with N.
+**Five accounts at 0.50% ($160) fund at least one within 22 days on 90% of
+start dates.**
+
+## Where the goal now stands
+
+| | median days | days incl. retries |
+|---|---|---|
+| H-009, the incumbent | — | 48.7 |
+| **H-017 at 0.50% risk** | **15** | **23** |
+| Kris's target | 7-14 | — |
+
+**The 14-day target is met on the median and missed on the all-in figure.**
+The gap between 15 and 23 is entirely the 50% of accounts that die.
+
+What stage 8's Sharpe map said still holds and is not contradicted: a
+*reliable* 14 days - high pass rate, not a coin flip - needs annualised Sharpe
+10-15. What changed is that Kris never asked for reliable. He asked for fast,
+on cheap accounts, and at a 50% pass rate that is a different and much easier
+problem.
+
+## Caveats on the 15 days
+
+- **Half the accounts die.** At $32 a go that is fine; it is not fine if a firm
+  limits retries or if the fee is $100+.
+- The curve's own drawdown at this sizing is **−54.9%**. A FUNDED account run at
+  0.50% would eventually be destroyed - this risk level is for passing an
+  evaluation, not for trading the funded seat afterwards. Those need different
+  sizing and that has not been worked out.
+- 17 legs across 11 crypto perps, costs assumed at 14bps round trip, never
+  paper-traded.
+- Held-out on an earlier half, but leg count and risk level were both chosen by
+  looking at this table. The 0.50% optimum is a selected maximum.
