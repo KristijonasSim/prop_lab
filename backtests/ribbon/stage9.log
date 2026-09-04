@@ -1,0 +1,55 @@
+1. GRID vs PAIRED NULL — same 660 configs, 3 shuffle seeds
+
+  market     tf  best PF@2x  clears: real  null/seed    median real/null
+  XAGUSD    15m       2.862            60         24     0.915 / 0.915   <-- beats null
+  XAGUSD    30m       1.858            95         56     0.972 / 0.958   <-- beats null
+  XAGUSD     1h       1.609           127         71     1.034 / 0.966   <-- beats null
+  XAGUSD     4h       1.614            93         30     1.061 / 0.864   <-- beats null
+  SPX500    15m       1.335             4         18     0.727 / 0.761
+  SPX500    30m       1.291             6         19     0.779 / 0.829
+  SPX500     1h       2.581             6         28     0.873 / 0.845
+  SPX500     4h       1.197             0         49     0.864 / 0.963
+  US30      15m       1.151             0          2     0.710 / 0.721
+  US30      30m       1.416            10          9     0.773 / 0.762   <-- beats null
+  US30       1h       1.426            15         28     0.810 / 0.849
+  US30       4h       1.382            27         40     0.948 / 0.951
+  NAS100    15m       2.279             5         16     0.811 / 0.854
+  NAS100    30m       6.933            31         17     0.903 / 0.872   <-- beats null
+  NAS100     1h       2.159            42         77     0.942 / 0.876
+  NAS100     4h         inf            21         16     0.894 / 0.925   <-- beats null
+
+
+2. WALK-FORWARD, LAST 2 YEARS, vs BUY AND HOLD
+   Config chosen blind on the 12 months before each test quarter.
+   Both sides levered so worst drawdown exactly fills the 8% cap.
+
+   window 2024-08-30 -> 2026-08-30
+
+                            trades  PF@2x    maxDD  size@cap   RETURN   days     vs hold
+  --------------------------------------------------------------------------------------------
+  XAUUSD 15m top10            1568  1.356   -2.00R     3.99%    84.5%     69         WIN
+  XAUUSD 1h top10             1239  1.461   -2.35R     3.40%    64.0%     91         WIN
+  XAUUSD 15m single            120  1.870   -4.45R     1.80%    65.2%     90         WIN
+    BUY AND HOLD XAUUSD          -      -   -28.8%     0.28x    21.4%    272      (raw +77.1%)
+
+  XAGUSD 15m top10            1400  1.211   -3.93R     2.04%    24.9%    235         WIN
+  XAGUSD 1h top10              826  1.110   -4.43R     1.81%     5.2%   1129        lose
+  XAGUSD 15m single            126  1.471   -5.32R     1.51%    29.8%    196         WIN
+    BUY AND HOLD XAGUSD          -      -   -54.0%     0.15x    19.8%    295      (raw +133.6%)
+
+  SPX500 15m top10            1670  0.761  -19.53R     0.41%    -7.7%    nan        lose
+  SPX500 1h top10             1211  0.798  -12.98R     0.62%    -6.8%    nan        lose
+  SPX500 15m single            129  0.815  -14.54R     0.55%    -6.0%    nan        lose
+    BUY AND HOLD SPX500          -      -   -21.4%     0.37x    13.8%    423      (raw +37.0%)
+
+  US30 15m top10              1701  0.838  -20.10R     0.40%    -5.5%    nan        lose
+  US30 1h top10               1016  0.924   -5.72R     1.40%    -4.1%    nan        lose
+  US30 15m single              126  0.909  -18.88R     0.42%    -2.0%    nan        lose
+    BUY AND HOLD US30            -      -   -18.5%     0.43x    12.6%    462      (raw +29.2%)
+
+  NAS100 15m top10            1883  0.871  -11.95R     0.67%    -7.5%    nan        lose
+  NAS100 1h top10             1060  0.843   -9.44R     0.85%    -5.2%    nan        lose
+  NAS100 15m single            158  0.853  -18.35R     0.44%    -5.2%    nan        lose
+    BUY AND HOLD NAS100          -      -   -26.2%     0.30x    15.5%    377      (raw +50.8%)
+
+wrote /home/kris/prop_lab/backtests/ribbon/stage9_indices.csv

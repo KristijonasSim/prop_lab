@@ -1,0 +1,202 @@
+  [    0s] AVAXUSDT 4h: no folds
+  [    0s] BNBUSDT 4h: no folds
+  [    0s] ADAUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   35s] BTCUSDT 1h: 7883 trades, PF2x 1.471
+  [   36s] BTCUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   38s] AVAXUSDT 1h: 6396 trades, PF2x 1.785
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   39s] BNBUSDT 1h: 6988 trades, PF2x 1.342
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   39s] ADAUSDT 1h: 7403 trades, PF2x 1.840
+  [   39s] DOGEUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   67s] AVAXUSDT 30min: 8204 trades, PF2x 1.822
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   73s] BTCUSDT 30min: 11859 trades, PF2x 1.430
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   75s] DOGEUSDT 1h: 6673 trades, PF2x 1.511
+  [   75s] DOTUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   84s] ADAUSDT 30min: 9637 trades, PF2x 1.465
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [   91s] BNBUSDT 30min: 9669 trades, PF2x 1.365
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  114s] DOTUSDT 1h: 6406 trades, PF2x 2.096
+  [  114s] ETHUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  114s] DOGEUSDT 30min: 7414 trades, PF2x 1.335
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  128s] ETHUSDT 1h: 8365 trades, PF2x 1.982
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  138s] DOTUSDT 30min: 9484 trades, PF2x 1.568
+  [  138s] LINKUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  153s] BTCUSDT 15min: 13375 trades, PF2x 1.027
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  157s] AVAXUSDT 15min: 11038 trades, PF2x 1.439
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  163s] ETHUSDT 30min: 10438 trades, PF2x 1.844
+  [  163s] LTCUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  169s] LINKUSDT 1h: 6749 trades, PF2x 1.750
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  173s] DOGEUSDT 15min: 10595 trades, PF2x 1.235
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  191s] LINKUSDT 30min: 9799 trades, PF2x 1.499
+  [  191s] SOLUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  195s] LTCUSDT 1h: 6372 trades, PF2x 1.584
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  203s] DOTUSDT 15min: 8901 trades, PF2x 1.065
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  210s] SOLUSDT 1h: 7373 trades, PF2x 1.700
+  [  210s] XRPUSDT 4h: no folds
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  229s] ETHUSDT 15min: 14347 trades, PF2x 1.345
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  231s] LTCUSDT 30min: 8315 trades, PF2x 1.515
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  238s] SOLUSDT 30min: 9912 trades, PF2x 1.669
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  241s] XRPUSDT 1h: 7619 trades, PF2x 1.790
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  242s] BNBUSDT 15min: 9777 trades, PF2x 1.052
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  258s] ADAUSDT 15min: 11379 trades, PF2x 1.272
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  268s] XRPUSDT 30min: 11145 trades, PF2x 1.503
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  273s] LTCUSDT 15min: 7882 trades, PF2x 1.094
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  278s] SOLUSDT 15min: 13266 trades, PF2x 1.506
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  287s] LINKUSDT 15min: 13022 trades, PF2x 1.317
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:98: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta("5min"),
+/home/kris/prop_lab/strategies/xpos/stage10_wide.py:103: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+  [  303s] XRPUSDT 15min: 12542 trades, PF2x 1.323
+
+33 legs, 303s
+  symbol    tf  trades  pf_2x  total_r  max_dd_r   tpd       K
+ DOTUSDT    1h    6406  2.096   374.92    -10.25 3.707 0.02116
+LINKUSDT    1h    6749  1.750   230.28     -5.78 3.532 0.02086
+ ETHUSDT    1h    8365  1.982   518.12    -15.65 4.366 0.01728
+AVAXUSDT 30min    8204  1.822   436.77    -15.93 4.778 0.01597
+ ADAUSDT    1h    7403  1.840   248.96     -9.62 3.884 0.01358
+ ETHUSDT 30min   10438  1.844   688.05    -27.09 5.451 0.01326
+ SOLUSDT 30min    9912  1.669   286.08    -12.87 5.726 0.01284
+ SOLUSDT    1h    7373  1.700   187.87     -9.01 4.257 0.01203
+ SOLUSDT 15min   13266  1.506   252.05    -12.91 7.659 0.01127
+AVAXUSDT    1h    6396  1.785   234.17    -12.18 3.725 0.01119
+LINKUSDT 30min    9799  1.499   370.15    -21.12 5.114 0.00915
+ ADAUSDT 30min    9637  1.465   236.55    -15.35 5.056 0.00809
+ DOTUSDT 30min    9484  1.568   288.09    -20.82 5.479 0.00799
+ BTCUSDT    1h    7883  1.471   218.91    -15.34 4.127 0.00747
+DOGEUSDT    1h    6673  1.511   169.20    -14.76 3.851 0.00661
+ XRPUSDT    1h    7619  1.790   339.07    -26.89 3.995 0.00661
+ BTCUSDT 30min   11859  1.430   247.31    -21.55 6.193 0.00599
+AVAXUSDT 15min   11038  1.439   353.75    -34.34 6.406 0.00598
+ XRPUSDT 30min   11145  1.503   325.65    -29.12 5.829 0.00585
+ LTCUSDT    1h    6372  1.584   192.72    -17.38 3.334 0.00580
+
+legs with PF@2x >= 1.20: 29 of 33
+median leg K: 0.00599

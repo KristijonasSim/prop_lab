@@ -1,0 +1,7 @@
+book,strict_risk,strict_days,loose_risk,loose_days,loose_curve_dd,gain_pct,strict_pass,loose_pass,loose_fail_max,loose_fail_daily
+H-003 EMA × VWAP cross,0.0125,269.9,0.015,245.1,0.0865,9.2,,,,
+H-009 VWAP gated by crowd positioning,0.025,48.7,0.03,43.2,0.0846,11.3,,,,
+H-001 Opening Range Breakout,0.0025,535000.0,0.0025,535000.0,0.0788,0.0,,,,
+H-016 Trend-following MA ribbon,0.04,126.8,0.04,126.8,0.0764,0.0,,,,
+H-002 VWAP,0.02,53.4,0.02,53.4,0.0753,0.0,,,,
+H-009 book (normalised),0.02,156.8,0.03,111.3,0.12,29.0,0.931,0.9432,0.0404,0.0

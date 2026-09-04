@@ -1,0 +1,20 @@
+  XAUUSD   15m   7 folds   single PF2x 1.881 (105t)  top10 PF2x 1.369 (1365t)
+  XAUUSD   30m   7 folds   single PF2x 1.623 (95t)  top10 PF2x 1.162 (1165t)
+  XAUUSD   1h    7 folds   single PF2x 2.113 (103t)  top10 PF2x 1.575 (1077t)
+  XAUUSD   4h    7 folds   single PF2x 0.902 (76t)  top10 PF2x 1.055 (685t)
+  XAGUSD   30m   7 folds   single PF2x 1.344 (96t)  top10 PF2x 1.179 (1030t)
+  XAGUSD   1h    7 folds   single PF2x 0.736 (69t)  top10 PF2x 1.007 (724t)
+  XAGUSD   4h    7 folds   single PF2x 1.231 (67t)  top10 PF2x 1.067 (679t)
+  BTCUSDT  30m  31 folds   single PF2x 0.986 (520t)  top10 PF2x 1.065 (5647t)
+  BTCUSDT  1h   31 folds   single PF2x 1.185 (461t)  top10 PF2x 1.067 (4632t)
+  BTCUSDT  4h   31 folds   single PF2x 1.122 (312t)  top10 PF2x 1.151 (3176t)
+  ETHUSDT  1h   25 folds   single PF2x 1.003 (368t)  top10 PF2x 1.073 (3543t)
+  ETHUSDT  4h   25 folds   single PF2x 1.040 (267t)  top10 PF2x 1.083 (2628t)
+  SOLUSDT  1h   19 folds   single PF2x 1.118 (273t)  top10 PF2x 1.136 (2696t)
+  SOLUSDT  4h   19 folds   single PF2x 0.882 (234t)  top10 PF2x 1.059 (2261t)
+  EURUSD   1h    7 folds   single PF2x 0.776 (96t)  top10 PF2x 0.759 (1035t)
+  AUDUSD   1h    7 folds   single PF2x 0.653 (80t)  top10 PF2x 0.663 (950t)
+
+32 stitched series, 20s
+median stitched PF at 2x: 1.070
+clearing 1.20: 7 of 32

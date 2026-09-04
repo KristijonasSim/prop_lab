@@ -1,0 +1,30 @@
+walk-forward on the metals legs ...
+
+  XAUUSD  15m single    105 trades  PF@2x 1.881  quarters>1 5/7
+  XAUUSD  15m  top10   1365 trades  PF@2x 1.369  quarters>1 6/7
+  XAUUSD  30m single     95 trades  PF@2x 1.623  quarters>1 5/7
+  XAUUSD  30m  top10   1165 trades  PF@2x 1.162  quarters>1 5/7
+  XAUUSD   1h single    103 trades  PF@2x 2.113  quarters>1 5/7
+  XAUUSD   1h  top10   1077 trades  PF@2x 1.575  quarters>1 5/7
+  XAUUSD   4h single     76 trades  PF@2x 0.902  quarters>1 3/7
+  XAUUSD   4h  top10    685 trades  PF@2x 1.055  quarters>1 3/7
+  XAGUSD  15m single    112 trades  PF@2x 1.586  quarters>1 5/7
+  XAGUSD  15m  top10   1235 trades  PF@2x 1.219  quarters>1 4/7
+  XAGUSD  30m single     96 trades  PF@2x 1.344  quarters>1 4/7
+  XAGUSD  30m  top10   1030 trades  PF@2x 1.179  quarters>1 3/7
+  XAGUSD   1h single     69 trades  PF@2x 0.736  quarters>1 3/7
+  XAGUSD   1h  top10    724 trades  PF@2x 1.007  quarters>1 3/7
+  XAGUSD   4h single     67 trades  PF@2x 1.231  quarters>1 5/7
+  XAGUSD   4h  top10    679 trades  PF@2x 1.067  quarters>1 4/7
+
+null benchmark: identical walk-forward on phase-randomised metals
+  survivors clearing PF 1.2 at 2x: real 9/16, null 5.3/16 (seeds [2, 7, 7])
+
+book: 4 legs, PF@2x 1.765, 47 days by the cheap estimate
+    XAGUSD 30m single
+    XAUUSD 15m single
+    XAUUSD 1h single
+    XAUUSD 30m single
+  wrote /home/kris/prop_lab/backtests/ribbon/board.json
+    Trend-following MA ribbon: PF 1.84  394 trades  0.631/day across 4 sub-strategies (0.158/day each)  R/day +0.0404
+    pick 4.00% risk  TWO-STEP pass 75.7%  killed 0.0%  median 96.0 d  expected 126.8 d   (one-step was 58.1 d)

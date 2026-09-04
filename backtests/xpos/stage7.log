@@ -1,0 +1,39 @@
+H-009: 3,808 trades, 8 legs, 2129 calendar days
+
+MEDIAN DAYS UNTIL THE FIRST ACCOUNT IS FUNDED
+  (accounts opened 3 days apart; 'split' gives each its own leg)
+
+    risk   deploy      N=1      N=3      N=5     N=10     N=20
+   0.50%   pooled      293      293      293      293      298
+   0.50%    split        -        -      310      310      311
+   1.00%   pooled      240      242      246      248      248
+   1.00%    split        -      232      190      184      184
+   1.50%   pooled      185      186      186      186      186
+   1.50%    split      324      201      163      141      141
+   2.00%   pooled      147      145      143      142      140
+   2.00%    split      332      187      128      110      109
+   3.00%   pooled      105      101      101       98       98
+   3.00%    split      242      175      100       94       94
+   4.00%   pooled       84       79       77       76       70
+   4.00%    split      206      171       89       80       81
+
+
+MEDIAN DAYS UNTIL THREE ACCOUNTS ARE FUNDED
+
+    risk   deploy      N=1      N=3      N=5     N=10     N=20
+   0.50%   pooled        -      300      300      300      305
+   0.50%    split        -        -        -        -        -
+   1.00%   pooled        -      240      246      249      249
+   1.00%    split        -        -        -      274      274
+   1.50%   pooled        -      188      188      189      189
+   1.50%    split        -        -      330      252      228
+   2.00%   pooled        -      154      153      149      147
+   2.00%    split        -        -      309      276      187
+   3.00%   pooled        -      114      112      106      105
+   3.00%    split        -        -      226      215      142
+   4.00%   pooled        -       87       87       85       85
+   4.00%    split        -        -      295      183      130
+
+FASTEST TO ONE FUNDED ACCOUNT: 70 days at 4.00% risk, pooled, N=20
+
+wrote /home/kris/prop_lab/backtests/xpos/stage7_parallel.csv

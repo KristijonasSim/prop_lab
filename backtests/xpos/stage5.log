@@ -1,0 +1,89 @@
+  building the eleven-coin panel ...
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:99: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  obs = pd.DataFrame({"ts": sd.index + pd.Timedelta(lag),
+/home/kris/prop_lab/strategies/xpos/stage5_gatestack.py:104: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  direction="backward", tolerance=pd.Timedelta(days=1))
+
+  4993 trades on the common window 2021-12-02 -> 2026-06-30
+
+BASELINES
+  H-002 ungated    18.25 ret/DD
+  H-009 (crowd)    29.97 ret/DD  K 0.01795  PF2x 1.767  2.144/day  EXPECTED 57.3 days
+
+EACH GATE ALONE, stacked on H-009, with its direction control
+  gate        trades   PF2x  ret/DD        K  expected days   control ret/DD
+  sys           2435  1.918   33.62  0.02013           89.6   21.39
+  oi            2103  1.887   30.42  0.01822          102.1   29.15
+  premium       1868  1.655   17.87  0.01070          129.1   33.16
+  flowgap       2250  1.834   31.88  0.01909          101.0   30.14
+
+EVERY STACK of the four, on top of H-009's own crowd gate
+  stack                         trades   PF2x  ret/DD        K  expected days
+  sys+oi                          1572  1.992   34.24  0.02052          147.1
+  sys+premium                     1269  1.899   17.04  0.01020          178.4
+  sys+flowgap                     1699  2.116   34.95  0.02093          121.0
+  oi+premium                      1141  1.823   14.54  0.00871          193.7
+  oi+flowgap                      1489  2.017   31.65  0.01897          143.3
+  premium+flowgap                 1230  1.726   14.38  0.00861          231.7
+  sys+oi+premium                   868  1.995   16.06  0.00962          272.6
+  sys+oi+flowgap                  1236  2.234   27.81  0.01684          153.3
+  sys+premium+flowgap              936  2.128   20.00  0.01197          242.1
+  oi+premium+flowgap               866  1.914   11.81  0.00710          279.0
+  sys+oi+premium+flowgap           733  2.152   12.54  0.00760          278.4
+
+BEST STACK: sys+flowgap -> 121.0 expected days (H-009 is 57.3, goal is 14)
+  first half   baseline ret/DD  26.82 -> gated  28.37  (+5.8%)
+  second half  baseline ret/DD  11.12 -> gated  13.66  (+22.8%)
+
+  null: the same stack driven by BLOCK-SHUFFLED feeds
+    real 34.95 vs null 18.92 +/- 5.29 (best seed 27.49)
+
+wrote /home/kris/prop_lab/backtests/xpos/stage5_gates.csv

@@ -1,0 +1,43 @@
+  loaded ADAUSDT: 499,825 bars 2021-12 -> 2026-09
+  loaded AVAXUSDT: 499,766 bars 2021-12 -> 2026-09
+  loaded BNBUSDT: 499,819 bars 2021-12 -> 2026-09
+  loaded BTCUSDT: 630,371 bars 2020-09 -> 2026-08
+  loaded DOGEUSDT: 499,825 bars 2021-12 -> 2026-09
+  loaded DOTUSDT: 499,825 bars 2021-12 -> 2026-09
+  loaded ETHUSDT: 499,537 bars 2021-12 -> 2026-08
+  loaded LINKUSDT: 499,822 bars 2021-12 -> 2026-09
+  loaded LTCUSDT: 498,337 bars 2021-12 -> 2026-09
+  loaded SOLUSDT: 498,077 bars 2021-12 -> 2026-08
+  loaded XRPUSDT: 498,096 bars 2021-12 -> 2026-08
+
+feature        form    h       IC  Q5-Q1 bps  net of 28bps          n
+dcrowd_1h      raw    24  -0.0121      -5.99        -22.01    463,108
+crowd_z        raw    24  -0.0167      -5.39        -22.61    462,938
+dcrowd_6h      raw    24  -0.0116      -4.52        -23.48    462,986
+dcrowd_1h      raw    12  -0.0104      -4.41        -23.59    463,126
+dcrowd_15m     raw    24  -0.0063      -4.35        -23.65    463,169
+disagree       raw    24   0.0138       4.17        -23.83    383,833
+dcrowd_15m     raw    12  -0.0103      -3.72        -24.28    463,187
+crowd_z        raw    12  -0.0142      -3.33        -24.67    462,956
+dcrowd_6h      raw    12  -0.0099      -2.97        -25.03    463,004
+premium_z      raw     6  -0.0192      -2.75        -25.25    467,214
+premium_z      raw    24  -0.0107      -2.75        -25.25    467,176
+premium_z      raw    12  -0.0121      -2.61        -25.39    467,194
+taker_ratio_z  raw    24   0.0070       2.56        -25.44    434,235
+doi_1h         raw    24  -0.0107      -2.45        -25.55    468,176
+dcrowd_15m     raw     6  -0.0072      -2.35        -25.65    463,207
+premium_z      xs     24  -0.0086      -2.33        -25.67    467,176
+disagree       raw    12   0.0113       2.32        -25.68    383,845
+imb_z          raw     6  -0.0123      -2.10        -25.90    468,427
+premium_z      xs      6  -0.0135      -2.03        -25.97    467,214
+doi_z          raw    24  -0.0073      -2.00        -26.00    468,040
+imb_z          raw     3  -0.0153      -1.98        -26.02    468,431
+premium_z      xs     12  -0.0098      -1.92        -26.08    467,194
+imb_z          raw    12  -0.0078      -1.90        -26.10    468,407
+doi_1h         raw    12  -0.0133      -1.74        -26.26    468,194
+dcrowd_1h      raw     6  -0.0046      -1.72        -26.28    463,146
+
+features clearing a 28bps long-short round trip: 0 of 130
+clearing a 14bps directional round trip: 0 of 130
+
+wrote /home/kris/prop_lab/backtests/xpos/stage2_shorthorizon.csv

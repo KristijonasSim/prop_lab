@@ -1,0 +1,7 @@
+  seed 0: best PF@2x inf  (79s)
+  seed 1: best PF@2x inf  (153s)
+  seed 2: best PF@2x inf  (227s)
+  seed 3: best PF@2x inf  (300s)
+  seed 4: best PF@2x inf  (372s)
+
+wrote /home/kris/prop_lab/backtests/ribbon/stage3_null.csv  188,100 rows

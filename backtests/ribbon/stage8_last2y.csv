@@ -1,0 +1,7 @@
+leg,kind,trades,pf_2x,total_r,maxdd_r,risk_pct_at_cap,capped_return_pct,days_to_target,ret_at_1pct_risk,dd_at_1pct_risk,time_in_market,maxdd_pct,leverage_at_cap
+XAUUSD 15m top10,strategy,1568.0,1.356,21.16,-2.0,3.99,84.5,69.0,21.2,-2.0,,,
+XAUUSD 1h top10,strategy,1239.0,1.461,18.85,-2.35,3.4,64.0,91.0,18.8,-2.4,,,
+XAUUSD 15m single,strategy,120.0,1.87,36.29,-4.45,1.8,65.2,90.0,36.3,-4.5,0.944,,
+XAUUSD 1h single,strategy,122.0,1.912,31.44,-5.24,1.53,48.0,122.0,31.4,-5.2,0.891,,
+XAUUSD 30m single,strategy,112.0,1.632,17.91,-5.27,1.52,27.2,215.0,17.9,-5.3,0.936,,
+buy and hold gold,hold,,,,,,21.4,272.0,77.1,-28.8,1.0,-28.76,0.28

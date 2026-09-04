@@ -46,6 +46,20 @@ POINT = {
     "CHFJPY": 1e3, "CADJPY": 1e3, "NZDJPY": 1e3,
     # metals
     "XAUUSD": 1e3, "XAGUSD": 1e3,
+    # cash index CFDs. Verified against a live day rather than assumed: the
+    # raw integers decode to S&P ~7667, Dow ~53543, NDX ~29141 at 1e3, which
+    # are the right order of magnitude and wrong at every other scale.
+    "SPX500": 1e3, "US30": 1e3, "NAS100": 1e3, "GER40": 1e3,
+    # energy
+    "WTI": 1e3, "BRENT": 1e3,
+}
+
+#: Our name -> Dukascopy's datafeed path segment. FX and metals are identical
+#: on both sides; the indices are not.
+DUKAS_SYM = {
+    "SPX500": "USA500IDXUSD", "US30": "USA30IDXUSD",
+    "NAS100": "USATECHIDXUSD", "GER40": "DEUIDXEUR",
+    "WTI": "LIGHTCMDUSD", "BRENT": "BRENTCMDUSD",
 }
 TICK = struct.Struct(">IIIff")          # ms, ask, bid, askvol, bidvol
 CANDLE = struct.Struct(">Iiiiif")       # sec-from-midnight, O, C, L, H as ints scaled
@@ -62,7 +76,8 @@ def _fetch(sym: str, ts: datetime, retries: int = 6) -> bytes | None:
     cache = RAW_DIR / sym / f"{ts:%Y%m%d}.bi5"
     if cache.exists():
         return cache.read_bytes()
-    url = URL.format(sym=sym, y=ts.year, m=ts.month - 1, d=ts.day)
+    url = URL.format(sym=DUKAS_SYM.get(sym, sym), y=ts.year, m=ts.month - 1,
+                     d=ts.day)
     for i in range(retries):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=45) as r:

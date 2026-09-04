@@ -1,0 +1,17 @@
+hid,name,r_per_day,max_dd_r,K,expected_days,trades_per_day,avg_r,pf
+H-003,EMA × VWAP cross,0.0457,-5.76,0.00793,269.9,2.891,0.0158,1.478
+H-009,VWAP gated by crowd positioning,0.1457,-2.82,0.05167,48.7,1.288,0.1131,2.047
+H-001,Opening Range Breakout,0.0143,-31.52,0.00045,535000.0,0.169,0.0845,1.154
+H-006,Order flow,0.0445,-49.81,0.00089,,0.674,0.066,1.143
+H-011,Previous day/week high-low reversal,0.0005,-13.16,4e-05,,1.085,0.0005,1.008
+H-008,Beta-residual reversion,-0.0116,-33.63,-0.00034,,0.509,-0.0227,0.851
+H-016,Trend-following MA ribbon,0.0404,-1.91,0.02115,126.8,0.631,0.064,1.84
+H-005,Liquidity sweep fade,0.0751,-16.33,0.0046,,0.288,0.2609,1.345
+H-002,VWAP,0.1488,-3.77,0.03947,53.4,1.659,0.0897,1.772
+H-010,VWAP band rejection,0.0026,-14.67,0.00018,,1.203,0.0022,1.031
+H-007,Cross-sectional crypto ranking,0.0124,-20.07,0.00062,,0.266,0.0466,1.168
+TARGET,7 days,,,0.23214,7.0,,,
+TARGET,14 days,,,0.11607,14.0,,,
+TARGET,21 days,,,0.07738,21.0,,,
+TARGET,30 days,,,0.05417,30.0,,,
+TARGET,48.7 days,,,0.03337,48.7,,,
