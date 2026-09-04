@@ -320,3 +320,77 @@ problem.
   paper-traded.
 - Held-out on an earlier half, but leg count and risk level were both chosen by
   looking at this table. The 0.50% optimum is a selected maximum.
+
+---
+
+# Stage 18/19 — the nested holdout, and the honest number
+
+Stage 16/17 ranked the LEGS on a held-out half, which is right, but then chose
+the leg COUNT (17) and the RISK LEVEL (0.50%) by reading the second-half table.
+Two more parameters fitted on the window they were reported on. HANDOFF's rule
+— *rank candidates on the fit window only, then report every number on the
+window they were not chosen on* — was half-applied, and the 15-day figure was a
+selected maximum.
+
+Applied fully: legs, leg count and risk level are all chosen inside the fit
+window (2021-04 to 2023-11), then that one configuration is run blind on the
+test half (2023-11 to 2026-06).
+
+**Chosen blind: 14 legs at 0.50% risk** (fit-window all-in 17.7 days).
+
+| on the test half | trades | trades/day | PF@2x | $/trade | pass | median | all-in |
+|---|---|---|---|---|---|---|---|
+| **H-017 real** | 4,323 | 4.51 | **1.631** | **$20.71** | 50.0% | **19.5 d** | **30.3 d** |
+| null: shuffled gate | — | — | — | — | 40.5% | 23 d | 52.3 d |
+| null: random legs | — | — | — | — | 43.5% | 24 d | 43.3 d |
+
+**The 15 days was optimistic; the honest blind figure is a median of 19.5 days
+and 30.3 all-in.** The hindsight premium was about 30%. The 17-legs-at-0.50%
+cell does give 23 days on the test surface, but it was chosen by looking at it.
+
+**The nulls.** The book beats a block-shuffled crowd feed clearly (30.3 against
+52.3) and a random draw of the same number of legs less clearly (30.3 against
+43.3, but that null's **best seed reaches 29.0**). So the crowd gate is doing
+real work and **leg selection is only weakly better than picking at random** —
+the thinnest margin in this hypothesis and the one to attack next.
+
+## Stage 19 — on the board
+
+At the ladder's own conservative sizing, which requires the whole equity curve
+to fit the 8% cap and therefore refuses 0.50%:
+
+| | risk | pass | killed | median | **expected days** |
+|---|---|---|---|---|---|
+| **H-017** | 0.25% | **91.1%** | 6.3% | 26 | **28.5** |
+| H-009 | 2.50% | 92.4% | 0% | 45 | 48.7 |
+
+**28.5 against 48.7 — a 1.7x improvement, blind, on the project's own default
+sizing rule.** PF 2.061, 4.51 trades/day across 14 sub-strategies (0.32 each),
+and **11 of 11 test quarters above breakeven**.
+
+**Board score 7.8/10, third behind H-009 (8.9) and H-002 (8.6).**
+
+## Where the goal ends up
+
+| | median days | all-in / expected |
+|---|---|---|
+| H-009, the incumbent | 45 | 48.7 |
+| **H-017 at 0.25% (board sizing)** | 26 | **28.5** |
+| **H-017 at 0.50% (blind choice)** | **19.5** | 30.3 |
+| Kris's target | 7-14 | — |
+
+**The target is missed.** 19.5 days at the median against 14, and the all-in
+figure is twice the target. What was gained is real and large — the fastest
+book in the project, 1.7x the incumbent, chosen with no hindsight — but it is
+not a week.
+
+Stage 8's map is not contradicted: a *reliable* 14 days needs annualised Sharpe
+10-15, and nothing here is above 4.
+
+## What would have to change
+
+The one shape never found: **5-10 trades a day on a SINGLE market** with a real
+edge. Every fast book here is fast only by adding legs, and every added leg
+shrinks the per-trade size, because the 8% cap is on the book and not the
+trade. That constraint is what stands between 28 days and 14, and no amount of
+searching this universe relaxes it.

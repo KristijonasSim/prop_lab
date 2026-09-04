@@ -1,0 +1,382 @@
+{
+ "id": "xpos",
+ "hid": "H-017",
+ "name": "Wide crowd-gated VWAP",
+ "tagline": "H-002's kernel on all eleven coins the Binance metrics archive covers, one configuration per leg, each gated by H-009's crowd rule. Chosen blind on an earlier half; the fastest book here, and still short of the target.",
+ "period": "2023-11 to 2026-06, walk-forward, everything chosen on an earlier half",
+ "report": "strategies/xpos/notes.md",
+ "candidate": "fastest in the project but half the accounts die, and nothing here has been paper-traded",
+ "fields": {
+  "pf": 2.061,
+  "trades": 4323,
+  "trades_per_day": 4.511,
+  "trades_per_week": 31.58,
+  "avg_hold_h": 4.68,
+  "win_rate": 0.4404,
+  "avg_r": 0.5859,
+  "total_r": 2532.71,
+  "max_dd_r": -78.54,
+  "sharpe": 4.858,
+  "n_books": 14,
+  "tpd_per_book": 0.322,
+  "r_per_day": 2.643
+ },
+ "pf_2x": 1.631,
+ "measured": {
+  "wf_pf": 2.061,
+  "wf_pf_2x": 1.631,
+  "null_margin": 0.3002,
+  "beats_null": true,
+  "consistency": 1.0,
+  "pf": 2.061,
+  "sharpe": 4.858
+ },
+ "structure": "two_step",
+ "ladder": [
+  {
+   "risk": 0.0025,
+   "pass_rate": 0.9114,
+   "fail_max": 0.0,
+   "fail_daily": 0.0626,
+   "still_open": 0.0261,
+   "median_days": 26.0,
+   "p25_days": 19.0,
+   "expected_days": 28.5,
+   "max_dd": -0.1963,
+   "one_step": {
+    "pass_rate": 0.9479,
+    "fail_max": 0.0,
+    "fail_daily": 0.0448,
+    "still_open": 0.0073,
+    "median_days": 13.0,
+    "p25_days": 8.0,
+    "expected_days": 13.7
+   }
+  },
+  {
+   "risk": 0.005,
+   "pass_rate": 0.6757,
+   "fail_max": 0.0323,
+   "fail_daily": 0.2795,
+   "still_open": 0.0125,
+   "median_days": 16.0,
+   "p25_days": 13.0,
+   "expected_days": 23.7,
+   "max_dd": -0.3927,
+   "one_step": {
+    "pass_rate": 0.8206,
+    "fail_max": 0.0198,
+    "fail_daily": 0.1522,
+    "still_open": 0.0073,
+    "median_days": 8.0,
+    "p25_days": 6.0,
+    "expected_days": 9.7
+   }
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.3942,
+   "fail_max": 0.0886,
+   "fail_daily": 0.5068,
+   "still_open": 0.0104,
+   "median_days": 13.0,
+   "p25_days": 11.0,
+   "expected_days": 33.0,
+   "max_dd": -0.589,
+   "one_step": {
+    "pass_rate": 0.6413,
+    "fail_max": 0.0542,
+    "fail_daily": 0.2982,
+    "still_open": 0.0063,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 9.4
+   }
+  },
+  {
+   "risk": 0.01,
+   "pass_rate": 0.3128,
+   "fail_max": 0.0521,
+   "fail_daily": 0.6246,
+   "still_open": 0.0104,
+   "median_days": 13.0,
+   "p25_days": 11.0,
+   "expected_days": 41.6,
+   "max_dd": -0.7854,
+   "one_step": {
+    "pass_rate": 0.537,
+    "fail_max": 0.0428,
+    "fail_daily": 0.415,
+    "still_open": 0.0052,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 11.2
+   }
+  },
+  {
+   "risk": 0.0125,
+   "pass_rate": 0.1992,
+   "fail_max": 0.0355,
+   "fail_daily": 0.755,
+   "still_open": 0.0104,
+   "median_days": 13.0,
+   "p25_days": 12.0,
+   "expected_days": 65.3,
+   "max_dd": -0.9817,
+   "one_step": {
+    "pass_rate": 0.4546,
+    "fail_max": 0.0271,
+    "fail_daily": 0.513,
+    "still_open": 0.0052,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 13.2
+   }
+  },
+  {
+   "risk": 0.015,
+   "pass_rate": 0.17,
+   "fail_max": 0.025,
+   "fail_daily": 0.7946,
+   "still_open": 0.0104,
+   "median_days": 13.0,
+   "p25_days": 11.0,
+   "expected_days": 76.5,
+   "max_dd": -1.178,
+   "one_step": {
+    "pass_rate": 0.3973,
+    "fail_max": 0.0146,
+    "fail_daily": 0.5829,
+    "still_open": 0.0052,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 15.1
+   }
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.1147,
+   "fail_max": 0.0219,
+   "fail_daily": 0.853,
+   "still_open": 0.0104,
+   "median_days": 12.0,
+   "p25_days": 10.0,
+   "expected_days": 104.6,
+   "max_dd": -1.3744,
+   "one_step": {
+    "pass_rate": 0.3368,
+    "fail_max": 0.0156,
+    "fail_daily": 0.6423,
+    "still_open": 0.0052,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 17.8
+   }
+  },
+  {
+   "risk": 0.02,
+   "pass_rate": 0.0813,
+   "fail_max": 0.0063,
+   "fail_daily": 0.9082,
+   "still_open": 0.0042,
+   "median_days": 13.0,
+   "p25_days": 11.0,
+   "expected_days": 159.9,
+   "max_dd": -1.5707,
+   "one_step": {
+    "pass_rate": 0.2753,
+    "fail_max": 0.0063,
+    "fail_daily": 0.7143,
+    "still_open": 0.0042,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 21.8
+   }
+  },
+  {
+   "risk": 0.025,
+   "pass_rate": 0.0469,
+   "fail_max": 0.0073,
+   "fail_daily": 0.9416,
+   "still_open": 0.0042,
+   "median_days": 13.0,
+   "p25_days": 11.0,
+   "expected_days": 277.2,
+   "max_dd": -1.9634,
+   "one_step": {
+    "pass_rate": 0.2065,
+    "fail_max": 0.0052,
+    "fail_daily": 0.7842,
+    "still_open": 0.0042,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 29.1
+   }
+  },
+  {
+   "risk": 0.03,
+   "pass_rate": 0.0188,
+   "fail_max": 0.0104,
+   "fail_daily": 0.9666,
+   "still_open": 0.0042,
+   "median_days": 11.5,
+   "p25_days": 10.0,
+   "expected_days": 611.7,
+   "max_dd": -2.3561,
+   "one_step": {
+    "pass_rate": 0.1502,
+    "fail_max": 0.0083,
+    "fail_daily": 0.8373,
+    "still_open": 0.0042,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 39.9
+   }
+  },
+  {
+   "risk": 0.04,
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 1.0,
+   "still_open": 0.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -3.1414,
+   "one_step": {
+    "pass_rate": 0.0657,
+    "fail_max": 0.0,
+    "fail_daily": 0.9343,
+    "still_open": 0.0,
+    "median_days": 5.0,
+    "p25_days": 5.0,
+    "expected_days": 76.1
+   }
+  },
+  {
+   "risk": 0.05,
+   "pass_rate": 0.0,
+   "fail_max": 0.0,
+   "fail_daily": 1.0,
+   "still_open": 0.0,
+   "median_days": null,
+   "p25_days": null,
+   "expected_days": null,
+   "max_dd": -3.9268,
+   "one_step": {
+    "pass_rate": 0.0574,
+    "fail_max": 0.0,
+    "fail_daily": 0.9426,
+    "still_open": 0.0,
+    "median_days": 6.0,
+    "p25_days": 5.0,
+    "expected_days": 104.5
+   }
+  }
+ ],
+ "pick": {
+  "risk": 0.0025,
+  "pass_rate": 0.9114,
+  "fail_max": 0.0,
+  "fail_daily": 0.0626,
+  "still_open": 0.0261,
+  "median_days": 26.0,
+  "p25_days": 19.0,
+  "expected_days": 28.5,
+  "max_dd": -0.1963,
+  "one_step": {
+   "pass_rate": 0.9479,
+   "fail_max": 0.0,
+   "fail_daily": 0.0448,
+   "still_open": 0.0073,
+   "median_days": 13.0,
+   "p25_days": 8.0,
+   "expected_days": 13.7
+  }
+ },
+ "grid": {},
+ "todo": [
+  "Median 19.5 days blind against a 7-14 day target - not met.",
+  "Half the accounts die at this sizing; fine at $32 a go, not fine if a firm limits retries.",
+  "The random-leg null reaches 43.3 days all-in with a best seed of 29.0 against the real 30.3 - leg SELECTION is only weakly better than picking at random, and that is the thinnest margin here.",
+  "The curve draws over 50% at 0.50% risk, so this sizing passes an evaluation and would destroy the funded seat afterwards. Post-funding sizing is unsolved.",
+  "Crypto perps only, 14bps round trip assumed, never paper-traded."
+ ],
+ "note": "The ladder below sizes so the whole equity curve fits the 8% cap. At 0.50% risk - the level chosen blind in the fit window, which the ladder refuses because the curve draws 50% - the test half gives 50% pass, a median of 19.5 days and 30.3 days all-in including retries, against H-009's 48.7. Kris's objection to the earlier 200-sub-strategy version was correct and is what produced this one: one configuration per leg, 4.5 trades a day, $20.71 average on $50 risked.",
+ "legs": null,
+ "markets": {
+  "traded": [
+   {
+    "sym": "XRPUSDT",
+    "tf": "1h",
+    "asset": "XRP"
+   },
+   {
+    "sym": "DOTUSDT",
+    "tf": "1h",
+    "asset": "DOT"
+   },
+   {
+    "sym": "SOLUSDT",
+    "tf": "30min",
+    "asset": "SOL"
+   },
+   {
+    "sym": "LTCUSDT",
+    "tf": "1h",
+    "asset": "LTC"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "30min",
+    "asset": "ETH"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "1h",
+    "asset": "ETH"
+   },
+   {
+    "sym": "XRPUSDT",
+    "tf": "30min",
+    "asset": "XRP"
+   },
+   {
+    "sym": "ADAUSDT",
+    "tf": "1h",
+    "asset": "ADA"
+   },
+   {
+    "sym": "AVAXUSDT",
+    "tf": "1h",
+    "asset": "AVA"
+   },
+   {
+    "sym": "AVAXUSDT",
+    "tf": "30min",
+    "asset": "AVA"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "2h",
+    "asset": "ETH"
+   },
+   {
+    "sym": "AVAXUSDT",
+    "tf": "15min",
+    "asset": "AVA"
+   },
+   {
+    "sym": "ETHUSDT",
+    "tf": "15min",
+    "asset": "ETH"
+   },
+   {
+    "sym": "BTCUSDT",
+    "tf": "30min",
+    "asset": "BTC"
+   }
+  ],
+  "searched": "11 USDT-M perps x 5 timeframes x 7,776 configurations, walk-forward, then leg count and risk chosen inside the fit window"
+ }
+}
