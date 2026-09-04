@@ -52,13 +52,18 @@ COINS = ["ADAUSDT", "AVAXUSDT", "BNBUSDT", "BTCUSDT", "DOGEUSDT", "DOTUSDT",
          "ETHUSDT", "LINKUSDT", "LTCUSDT", "SOLUSDT", "XRPUSDT"]
 #: 5m and 2h added after stage 12: the wide book's speed comes from leg count
 #: and these are the only two clocks left that the 5-minute feed supports.
-TFS = {"5min": 12.0, "15min": 4.0, "30min": 2.0, "1h": 1.0, "2h": 0.5,
-       "4h": 0.25}
+TFS = {"15min": 4.0, "30min": 2.0, "1h": 1.0, "2h": 0.5, "4h": 0.25}
 AGG = {"open": "first", "high": "max", "low": "min", "close": "last",
        "volume": "sum"}
 #: A Binance USDT-M perp round trip, the same figure H-006 and H-009 use.
 FEE, SLIP, MINRISK = 5.0, 2.0, 10.0
-FLOOR, TOPN = 100, 10
+FLOOR = 100
+#: Kris's objection, and it was right. A top-10 config book divides every
+#: trade's R by ten BEFORE the legs are equal-weighted, so the wide book's
+#: average trade fell to 0.031R against H-009's 0.113R - 66 trades a day each
+#: worth almost nothing. Saved at three widths so the trade-off between
+#: per-trade edge and trade count is measured rather than assumed.
+TOPNS = (1, 3, 10)
 
 
 def _run_dir(df, feats, n_pad, cfg, fee, slip, vw_cache):
@@ -147,27 +152,34 @@ def _panel(args):
         el = np.flatnonzero((cnt >= FLOOR) & np.isfinite(pfs))
         if not el.size:
             continue
-        pick = el[np.argsort(-pfs[el])][:TOPN]
+        order = el[np.argsort(-pfs[el])]
 
-        v1, v2, ex, en, ds = {}, {}, [], [], []
-        rs, r2s = [], []
-        for ci in pick:
-            r1c, e1, n1, d1 = _run_dir(test, f_te, p_te, cfgs[ci], FEE, SLIP, v1)
-            r2c, _, _, _ = _run_dir(test, f_te, p_te, cfgs[ci], FEE * 2,
-                                    SLIP * 2, v2)
-            if not len(r1c) or len(r2c) != len(r1c):
+        v1, v2, cache = {}, {}, {}
+        for topn in TOPNS:
+            pick = order[:topn]
+            ex, en, ds, rs, r2s = [], [], [], [], []
+            for ci in pick:
+                if ci not in cache:
+                    a = _run_dir(test, f_te, p_te, cfgs[ci], FEE, SLIP, v1)
+                    b, _, _, _ = _run_dir(test, f_te, p_te, cfgs[ci], FEE * 2,
+                                          SLIP * 2, v2)
+                    cache[ci] = (a, b)
+                (r1c, e1, n1, d1), r2c = cache[ci]
+                if not len(r1c) or len(r2c) != len(r1c):
+                    continue
+                rs.append(r1c / len(pick)); r2s.append(r2c / len(pick))
+                ex.append(e1); en.append(n1); ds.append(d1)
+            if not rs:
                 continue
-            rs.append(r1c / len(pick)); r2s.append(r2c / len(pick))
-            ex.append(e1); en.append(n1); ds.append(d1)
-        if not rs:
-            continue
-        r1 = np.concatenate(rs); r2 = np.concatenate(r2s)
-        e = np.concatenate(ex); n = np.concatenate(en); dv = np.concatenate(ds)
-        o = np.argsort(e, kind="stable")
-        out.append(pd.DataFrame({
-            "symbol": sym, "tf": tf, "quarter": str(t0.date()),
-            "entry_ts": test.index[n[o]], "exit_ts": test.index[e[o]],
-            "direction": dv[o], "r": r1[o], "r_2x": r2[o]}))
+            r1 = np.concatenate(rs); r2 = np.concatenate(r2s)
+            e = np.concatenate(ex); n = np.concatenate(en)
+            dv = np.concatenate(ds)
+            o = np.argsort(e, kind="stable")
+            out.append(pd.DataFrame({
+                "symbol": sym, "tf": tf, "topn": topn,
+                "quarter": str(t0.date()),
+                "entry_ts": test.index[n[o]], "exit_ts": test.index[e[o]],
+                "direction": dv[o], "r": r1[o], "r_2x": r2[o]}))
 
     if not out:
         return None, f"{sym} {tf}: no folds"
@@ -199,26 +211,30 @@ def main() -> int:
             print(f"  [{time.time()-t0:5.0f}s] {msg}", flush=True)
 
     tr = pd.concat(frames, ignore_index=True)
-    tr.to_parquet(OUT / "stage10_trades.parquet")
+    tr.to_parquet(OUT / "stage14_trades.parquet")
 
     rows = []
-    for (s, tf), g in tr.groupby(["symbol", "tf"]):
+    for (s, tf, topn), g in tr.groupby(["symbol", "tf", "topn"]):
         r = g.r_2x.values
         eq = np.concatenate(([0.0], np.cumsum(r)))
         dd = float((eq - np.maximum.accumulate(eq)).min())
         span = max((g.exit_ts.max() - g.entry_ts.min()).days, 1)
-        rows.append({"symbol": s, "tf": tf, "trades": len(g),
+        rows.append({"symbol": s, "tf": tf, "topn": topn, "trades": len(g),
                      "pf_2x": round(_pf(r), 3), "total_r": round(r.sum(), 2),
                      "max_dd_r": round(dd, 2),
                      "tpd": round(len(g) / span, 3),
+                     "avg_r": round(float(r.mean()), 4),
                      "K": round((r.sum() / span) / abs(dd), 5)
                      if dd < 0 and r.sum() > 0 else np.nan})
     legs = pd.DataFrame(rows).sort_values("K", ascending=False)
-    legs.to_csv(OUT / "stage10_legs.csv", index=False)
+    legs.to_csv(OUT / "stage14_legs.csv", index=False)
     print(f"\n{len(legs)} legs, {time.time()-t0:.0f}s")
     print(legs.head(20).to_string(index=False))
-    print(f"\nlegs with PF@2x >= 1.20: {(legs.pf_2x >= 1.2).sum()} of {len(legs)}")
-    print(f"median leg K: {legs.K.median():.5f}")
+    for tn in TOPNS:
+        d = legs[legs.topn == tn]
+        print(f"\n  topn={tn}: {(d.pf_2x >= 1.2).sum()}/{len(d)} clear PF 1.20 "
+              f"| median avg_R {d.avg_r.median():.4f} | median t/day "
+              f"{d.tpd.median():.2f} | median K {d.K.median():.5f}")
     return 0
 
 
