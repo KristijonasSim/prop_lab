@@ -2104,3 +2104,216 @@ against 2, and produced zero survivors the moment selection went blind.
 **Next, concretely:** walk-forward the `sys` gate quarter by quarter alongside
 H-009's own, and if it holds, put it on the board with `core/board.py::write_board`.
 Until then it is a measured improvement, not a score.
+
+### preserved: strategies/xsec/notes.md
+
+*Code and results deleted 2026-09-04 (H-007, board score 2.9 — below the 6.0 keep line). Recoverable at commit b946606.*
+
+# H-007 — Cross-sectional crypto ranking
+
+**Status: rejected (board 3.0/10).** Requested by Kris; HANDOFF predicted it would
+fail, and it did, though not for the reason that was predicted.
+
+## Mechanism (stated before the results)
+
+At any moment some coins are the ones flows are going into and others are being
+left behind. The claim is that the *relative ordering* carries information the
+individual price series does not, and that trading top-minus-bottom strips out
+the market factor — if the whole complex rips, both sides move together and only
+dispersion is left. On the other side: index-style and headline-driven buyers,
+against liquidity providers who end up holding the laggard.
+
+Two ranking signals, because they are two different hypotheses:
+
+- `mom` — L-bar log return. The literal "rank coins, trade the spread" ask.
+- `rvol` — volume over its own rolling median. This is the signal the equity ORB
+  paper actually used (top 20 of 7,000 by opening relative volume), and
+  `RESEARCH_LOG.md` lists the crypto analogue as next-candidate #2. It is the one
+  with a mechanism rather than a pattern.
+
+## What was run
+
+`stage1_grid.py` — 360 configurations: 2 signals × {1h, 4h, 1d} × lookbacks
+{3,6,12,24,48} × top/bottom k ∈ {1,2} × {spread, long-only} × 3 hold lengths,
+each priced at 0x / 1x / 2x / 3x cost (Binance spot taker 5bps + 2bps slippage
+per side). Every configuration is run again on 5 paired-shuffle null panels.
+
+`stage2_walkforward.py` — quarterly walk-forward for board parity. The config for
+quarter Q is chosen only on trades closed before Q, and chosen on **2x-cost**
+profit factor, never 1x.
+
+No lookahead: signal and volatility at bar t use bars up to and including t,
+entry is the open of t+1, exit the open of t+1+H, and rebalances are
+non-overlapping so trades never share a window.
+
+## Result
+
+| | real | paired null |
+|---|---|---|
+| configs clearing PF 1.20 at 2x | **23** of 360 | 0 / 1 / 2 / 9 / 14 (mean 5.2) |
+| best config PF at 2x | 1.465 | **1.502** |
+| median PF before costs (0x) | **1.096** | 1.009 |
+| configs beating PF 1.0 at 0x | **95.0%** | 59.4% |
+| walk-forward stitched PF | 1.168 | — |
+| walk-forward PF at 2x | 1.063 | 0.833 / 1.059 / **1.065** / 0.962 / 0.985 |
+
+## Reading
+
+**The ranking is not noise.** Before costs it beats its paired null cleanly —
+95% of real configurations are profitable against 59% of null ones, and the
+median is 1.096 against 1.009. Something about the cross-sectional ordering is
+real. That is the one genuinely interesting line here.
+
+**It is far too small to trade.** The edge is worth roughly 10% on profit factor.
+A round trip costs 14bps. Median PF falls 1.096 → 0.825 → 0.618 as cost goes
+0x → 1x → 2x. Costs, not the signal, are the entire story.
+
+**Everything that survives cost is a 7-day hold.** All 23 gate-clearing cells are
+1d bars with H=7, ~0.14 trades/day, 301 trades over six years. `CLAUDE.md` says
+longer-hold ideas are logged as future candidates, not built this phase — and
+time-to-target is 400–875 days against H-002's 25.
+
+**It does not beat its own null where it counts.** The best single null cell
+(1.502) beats the best real cell (1.465), and in the walk-forward the best null
+seed (1.065) beats the real stitched result (1.063). Cell counts favour the real
+data; the extremes do not. One shuffle seed is a sample of size one, which is why
+five were run — and the spread across them, 0 to 14 gate-clearing cells, is wide
+enough that 23 is not the clean separation it looks like at first.
+
+## The known weakness, unprompted
+
+Five coins is not a cross-section. The published edge ranks 500–7,000 names; here
+the "top vs bottom" of five high-beta majors with pairwise correlation above 0.7
+is close to a coin-flip on dispersion, and the spread is close to a leveraged bet
+on whichever alt is hottest. This is a fair test of *what is committed to the
+repo*, not a fair test of the published hypothesis.
+
+**The one thing that would change the answer:** a 50–100 coin universe. That
+needs a data download, which `START_HERE.md` says not to do. It is the only open
+route, and the 0x-cost result is the only reason it might be worth taking —
+a real-but-tiny edge across five names could be a tradeable edge across a hundred,
+because dispersion rises with universe size while the cost per trade does not.
+
+### preserved: strategies/pdhl/notes.md
+
+*Code and results deleted 2026-09-04 (H-011, board score 2.6 — below the 6.0 keep line). Recoverable at commit b946606.*
+
+# H-011 — previous day/week high-low reversal
+
+Opened 2026-09-02.
+
+## The hypothesis, and how it differs from the rejected H-005
+
+Price takes out the previous day's high or low, the stops sitting there fire, and
+once they are gone the forced flow is finished — so the move gives back.
+
+**H-005 is already rejected and this is adjacent to it.** H-005 faded the extreme
+of the last 10 to 100 **bars**: a rolling level, moving every bar, depending on a
+lookback nobody agreed on, and watched by nobody. Its paired null cleared the
+1.20 gate 19,062 times against the real market's 1,702.
+
+The previous day's and week's extremes are a different kind of object. They are a
+**schelling point** — printed identically on every platform, fixed for the whole
+session. The claim is not "price reverts from extremes", which is dead; it is
+that a level everyone agrees on collects resting orders in a way an arbitrary
+one does not.
+
+Two things H-005 had no way to check are in the grid:
+
+- **open interest across the sweep.** Contracts *closing* while the level is
+  taken is the fingerprint of stops running. Contracts *opening* is a real
+  breakout wearing the same clothes. H-006 showed open interest carries nothing
+  directional on its own — conditioned on a level being taken out, it separates
+  two events that look identical on price.
+- **the H-009 crowd gate.**
+
+Plus, always: a **control** that takes every setup the other way for the same
+risk, and a **paired-shuffle null**, five seeds.
+
+## Stage 1 — 3 coins x 4 timeframes x 3,840 configurations
+
+| cost | revert (the hypothesis) | continue (control) | paired null |
+|---|---|---|---|
+| 0x | **1.052** (60.9% > 1.0) | 0.867 (24.8%) | 0.926 (36.2%) |
+| 1x | **0.872** (25.7%) | 0.707 (9.5%) | 0.774 (13.8%) |
+| 2x | **0.739** (12.2%) | 0.592 (5.5%) | 0.658 (6.7%) |
+| 3x | **0.627** (6.8%) | 0.500 (3.8%) | 0.567 (3.7%) |
+| clears 1.20 at 2x | **952** | 469 | **436 per seed** |
+
+**The real market beats its null at every cost level, and the fade beats its own
+control at every cost level.** That is the first time any fade hypothesis in this
+project has managed it — H-005's null beat it elevenfold, H-010's null had a
+higher median than the real market. Something about the schelling-point version
+is genuinely different from the rolling-lookback version.
+
+It is still a median of 0.739 at double cost. Only 12.2% of configurations are
+above 1.0 there. A real edge that costs mostly eat — the H-007 shape.
+
+## What the levers say
+
+Median profit factor at 2x cost, by choice:
+
+| lever | values |
+|---|---|
+| confirmation | none 0.708 · flow 0.718 · **oi 0.741** · **crowd 0.772** · crowd+oi 0.767 |
+| exit | revert to the mid **0.576** · fixed R 0.766 · **time only 0.862** |
+| minimum stop | 25bps 0.661 · **100bps 0.794** |
+| level | previous day 0.730 · **previous week 0.755** |
+| timeframe | 15m 0.684 · 30m 0.723 · 1h 0.738 · **4h 0.818** |
+| sweep depth | ≥0 0.732 · ≥0.25 ATR 0.740 · ≥0.5 ATR 0.744 |
+
+Four things worth reading off that table:
+
+1. **The crowd gate lifts it again** (0.708 to 0.772) — a fourth independent
+   confirmation of H-009, now on a fourth unrelated strategy.
+2. **Open interest earns its place here** (0.708 to 0.741), which it did not in
+   H-006. Conditioned on a level being taken out, "were contracts closed?" is
+   informative in a way that the raw series is not.
+3. **Targeting the reversion is the worst exit again**, exactly as in H-010.
+   Exiting on time beats exiting at the level's midpoint by a wide margin. Both
+   of these hypotheses are named after a target that hurts them.
+4. **The weekly level beats the daily one**, and the deeper the sweep the better,
+   and the higher the timeframe the better — all three point the same way the
+   mechanism does: the bigger and more widely watched the pool, the more there is
+   to be had.
+
+## Stage 2 — the walk-forward, and where it fails
+
+Configuration re-chosen blind every quarter on 2x-cost train profit factor,
+12 market/timeframe panels, 2,241 out-of-sample trades.
+
+| | |
+|---|---|
+| profit factor | 1.008 |
+| **at 2x cost** | **0.897** |
+| max drawdown | −13.2R |
+| panels holding PF 1.20 at 2x on their own | **0 of 12** |
+
+Best single panel is BTCUSDT 15m at 1.126. Nothing reaches the gate.
+
+**So the verdict is: real, and too small.** The stage-1 null margin is not an
+artefact — it is consistent across cost levels, it is mirrored by the control,
+and it points the way the mechanism does. It is simply not worth 28bps a round
+trip. That is the same shape as H-007, which also carried genuine information
+that the spread ate.
+
+## What to carry forward
+
+1. **A schelling point is not the same as an arbitrary level.** H-005 fading a
+   rolling extreme lost to its null elevenfold; this, fading a level everyone
+   sees identically, beats its null at every cost level. That is a result about
+   H-005 as much as about H-011, and it says the family died for the right
+   reason but not quite the reason recorded.
+2. **Open interest becomes informative once a level has been taken.** Raw open
+   interest carried nothing directional in H-006 — both tails of its quintile
+   response were positive, a volatility reading. Conditioned on a sweep it lifts
+   the median from 0.708 to 0.741, because "were contracts closed?" separates a
+   stop run from a breakout, and those look identical on price alone.
+3. **The reversion is real enough to enter on and not reliable enough to exit
+   on.** Exiting at the level's midpoint is the worst choice in this grid (0.576)
+   against exiting on time (0.862) — the identical pattern H-010 found with the
+   VWAP target. Two mean-reversion hypotheses in a row have been hurt most by the
+   target they are named after.
+4. **The crowd gate lifts a fourth unrelated strategy** (0.708 to 0.772). It has
+   now improved a VWAP book, a dead band fade, an order-flow book and a level
+   sweep. That is the most reliable single finding in this project.

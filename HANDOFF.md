@@ -56,6 +56,47 @@ Each idea gets an ID — **H-001**, **H-002** and so on, in the order Kris broug
 The ID tags every row in `STRATEGY_LOG.md`, so any number can be traced back to the
 hypothesis it came from. Folders are named after the strategy, not the ID.
 
+### PRUNE, 2026-09-04 — the board is now keepers only
+
+Kris set a keep line at **board score 6.0**. Everything below it was deleted from the
+working tree: code, results and Pine scripts. Eight hypotheses went.
+
+| ID | Hypothesis | Score | What was deleted |
+|---|---|---|---|
+| H-003 | EMA x VWAP cross | 4.0 | `backtests/ema_vwap/`, 2 Pine scripts |
+| H-005 | Liquidity sweep fade | 3.5 | `backtests/sweep_fade/`, 2 Pine scripts |
+| H-007 | Cross-sectional crypto ranking | 2.9 | `strategies/xsec/`, `backtests/xsec/`, 2 Pine scripts |
+| H-011 | Previous day/week high-low reversal | 2.6 | `strategies/pdhl/`, `backtests/pdhl/` |
+| H-010 | VWAP band rejection | 2.5 | `backtests/vwap_mr/` |
+| H-001 | Opening Range Breakout | 2.4 | `backtests/orb/`, 2 Pine scripts (code was already gone) |
+| H-008 | Beta-residual reversion | 2.1 | `backtests/resid/`, 2 Pine scripts (code was already gone) |
+| H-006 | Order flow | 1.3 | `backtests/orderflow/`, `stage3_walkforward.py`, `stage4_stop.py` |
+
+Survivors: **H-009** 8.9, **H-002** 8.6, **H-017** 7.8, **H-016** 6.5.
+
+**Read this before you go looking for something that is missing:**
+
+* **Nothing is lost.** Every deleted file is in git at commit `b946606`. Recover one with
+  `git show b946606:<path>`, or the lot with `git checkout b946606 -- <path>`.
+* **`strategies/orderflow/` survived the deletion of H-006.** That folder is not the
+  H-006 hypothesis — it holds the shared crowd feed (`orderflow.py`, `stage1_ic.py`,
+  `stage2_grid.py`) that gates H-009, H-016 and H-017, and it holds **H-009 itself**
+  (`stage5_vwap_lift.py`, `stage6_gated_vwap.py`, `stage8_volscale.py`, `gated_notes.md`).
+  Deleting the folder wholesale would take the top-scoring book on the board with it.
+  `notes.md` stays because it is the crowd feed's validation record, which H-009 rests on.
+* **`strategies/basis/` and `strategies/breadth/` were left alone.** Neither has a board
+  record, so neither has a score and neither was in scope. `breadth` is also a live
+  dependency of `strategies/xpos/stage5_gatestack.py`.
+* H-007 and H-011 notes were appended to `RESEARCH_LOG.md` under `### preserved:`, the
+  convention already used for H-001, H-008 and H-010.
+
+**The cost of this, stated plainly.** `CLAUDE.md`'s rule is that everything goes on the
+board pass or fail, because a rejected hypothesis that is invisible is not part of the
+denominator. The board now shows 4 of 17 ideas and reads far better than the research
+actually went. The written record in `STRATEGY_LOG.md` and `RESEARCH_LOG.md` was left
+complete on purpose — that is where the denominator now lives. Do not quote a board hit
+rate off the scoreboard.
+
 | ID | Hypothesis | Verdict |
 |---|---|---|
 | H-001 | Opening Range Breakout | **Rejected** — see `backtests/orb/report.html` |

@@ -12,7 +12,7 @@ the answer is a single SQLite file, not a server.
 walk-forward trade series and it produces the board record - prop simulation,
 full risk ladder, mandatory fields, all identical to what is already here. This
 script then picks it up automatically; there is nothing per-strategy in this
-file. See `strategies/orb/stage14_board.py` for the shortest example.
+file. See `strategies/ribbon/stage10_board.py` for the shortest example.
 
 Run: .venv/bin/python core/build_scoreboard.py
 """
