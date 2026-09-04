@@ -394,3 +394,103 @@ edge. Every fast book here is fast only by adding legs, and every added leg
 shrinks the per-trade size, because the 8% cap is on the book and not the
 trade. That constraint is what stands between 28 days and 14, and no amount of
 searching this universe relaxes it.
+
+---
+
+# Stage 20/21/22 — closing the last three routes (2026-09-04)
+
+Three things were still untried after stage 19, and all three are now closed.
+
+## Non-crypto legs — they do not exist
+
+H-017 was **entirely crypto perps**, which is a poor way to spend a
+diversification exponent of 0.441: eleven coins all trade the same risk
+appetite, while HANDOFF records the crypto/gold leg correlation at **0.023**.
+So the identical kernel, walk-forward and widths were run on gold, silver, oil,
+SPX500, US30, NAS100 and six FX majors across five timeframes.
+
+**4 of 52 top-1 legs clear PF 1.20 over the full span, and ZERO clear it inside
+the fit window.** The median non-crypto leg has a *negative* average R
+(−0.1396). Best is XAGUSD 15m at K 0.0049 against crypto's best of 0.0212.
+
+Stage 21 then offered the combined universe to a fully nested holdout — ranking
+criterion (K / daily Sharpe / total R), universe, leg count and risk all chosen
+on the fit window. It chose **crypto only, ranked by K, 14 legs at 0.50%**, and
+**0 of the 14 chosen legs are non-crypto.** The VWAP kernel earns nothing
+outside crypto and the book stays as it is.
+
+That run also strengthened stage 18's nulls by using more seeds:
+
+| test half | all-in days | best seed |
+|---|---|---|
+| **H-017 real** | **30.3** | — |
+| null: random legs (8 seeds) | 45.2 | 33.2 |
+| null: shuffled crowd gate (5 seeds) | 39.5 | 33.3 |
+
+**The real book now beats both nulls' means AND both their best seeds.** Stage
+18 had reported a random-leg best seed of 29.0, inside the real result; on
+eight seeds instead of five that becomes 33.2. The margin is thin but it is on
+the right side, and leg selection is better than chance after all.
+
+## Blending with H-016 — it earns zero weight
+
+The one combination never tested under a holdout. The blend weight was chosen
+on the fit window over a coarse grid. **It chose w(H-016) = 0.00.** H-016 alone
+on the same window passes 25% of accounts against H-017's 100%. The metals
+trend book adds nothing to the crypto positioning book.
+
+*(The overlap between the two is only 635 days, so the account horizon had to
+be cut from 400 days to 180 for this test to run at all, and both books were
+normalised to a common drawdown first. Its absolute day counts are therefore
+not comparable with the rest of these notes — only the chosen weight is.)*
+
+## Recency — no decay, the opposite
+
+HANDOFF warns that a walk-forward passing over a long span can describe a
+regime that has ended. Split the out-of-sample half into thirds:
+
+| out-of-sample third | trades | PF@2x | avg R | total R |
+|---|---|---|---|---|
+| 2023-11 → 2024-09 | 1,530 | 1.450 | +0.285 | +436 |
+| 2024-09 → 2025-08 | 1,538 | 1.533 | +0.322 | +495 |
+| **2025-08 → 2026-06** | 1,254 | **1.915** | **+0.684** | **+857** |
+
+**The most recent period is the strongest**, and 11 of 11 test quarters are
+above breakeven. Whatever else is wrong with H-017, it is not a dead regime.
+
+# FINAL VERDICT ON THE GOAL
+
+**Target: a funded account in 7 days, 14 worst case. Not met.**
+
+| | median days | all-in / expected |
+|---|---|---|
+| H-009, the incumbent | 45 | 48.7 |
+| **H-017 at 0.25% (board sizing)** | 26 | **28.5** |
+| **H-017 at 0.50% (blind choice)** | **19.5** | 30.3 |
+| target | 7-14 | — |
+
+Everything tried, each closed with a number:
+
+| route | result |
+|---|---|
+| wider crypto universe | **worked — 1.7x, the whole gain** |
+| non-crypto legs | 0 of 52 clear the fit window |
+| blending H-016 | chosen weight 0.00 |
+| more feed gates on H-009 | every one makes the account slower |
+| selecting folds on K not PF | no gain; K too noisy to rank by |
+| a fast crypto book | 0 of 130 flow cells clear 14bps below 8h |
+| cheap markets on a fast clock | only 2 of 26 legs clear |
+| parallel accounts | 84 → 70 days |
+| looser sizing policy | +5-11% |
+
+And the goal priced directly: **a reliable 14-day median needs annualised
+Sharpe 10-15.** H-009 is 3.73, H-002 3.67, H-016 2.69. Nothing in this project
+or this data is within a factor of three of that, and Sharpe 10 is
+market-making territory that the known-dead list already rules out on fill
+realism.
+
+**The structural reason, and it is the thing to attack if this is reopened:**
+the 8% cap binds the BOOK, not the trade. Speed comes from trade count, trade
+count comes from adding legs, and each added leg shrinks the size of every
+trade. Nothing found here has 5-10 trades a day on a single market at a real
+edge, which is the only shape that escapes the trade-off.

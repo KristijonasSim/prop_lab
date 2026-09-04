@@ -1,0 +1,88 @@
+  [    0s] XAUUSD 4h: no folds
+  [    0s] XAGUSD 4h: no folds
+  [    0s] EURUSD 4h: no folds
+  [   10s] XAGUSD 2h: 174 top-1 trades, PF2x 1.058
+  [   11s] XAUUSD 1h: 242 top-1 trades, PF2x 1.242
+  [   11s] XAUUSD 2h: 149 top-1 trades, PF2x 1.227
+  [   11s] GBPUSD 4h: no folds
+  [   14s] EURUSD 2h: 216 top-1 trades, PF2x 0.873
+  [   15s] XAGUSD 1h: 206 top-1 trades, PF2x 0.800
+  [   19s] GBPUSD 30min: 229 top-1 trades, PF2x 0.661
+  [   20s] EURUSD 30min: 241 top-1 trades, PF2x 0.714
+  [   20s] USDJPY 4h: no folds
+  [   20s] GBPUSD 2h: 280 top-1 trades, PF2x 0.783
+  [   21s] EURUSD 1h: 271 top-1 trades, PF2x 0.836
+  [   21s] GBPUSD 1h: 182 top-1 trades, PF2x 0.861
+  [   27s] XAUUSD 30min: 191 top-1 trades, PF2x 1.423
+  [   27s] AUDUSD 4h: no folds
+  [   29s] USDJPY 2h: 196 top-1 trades, PF2x 0.693
+  [   35s] AUDUSD 1h: 202 top-1 trades, PF2x 0.787
+  [   35s] AUDUSD 2h: 214 top-1 trades, PF2x 0.899
+  [   36s] USDJPY 30min: 201 top-1 trades, PF2x 0.946
+  [   36s] USDCAD 4h: no folds
+  [   36s] EURUSD 15min: 255 top-1 trades, PF2x 0.767
+  [   36s] USDJPY 1h: 257 top-1 trades, PF2x 0.687
+  [   37s] XAGUSD 30min: 191 top-1 trades, PF2x 0.792
+  [   39s] GBPUSD 15min: 291 top-1 trades, PF2x 0.917
+  [   39s] USDCHF 4h: no folds
+  [   40s] XAGUSD 15min: 211 top-1 trades, PF2x 1.276
+  [   41s] AUDUSD 30min: 213 top-1 trades, PF2x 0.621
+  [   46s] USDCAD 2h: 211 top-1 trades, PF2x 0.435
+  [   48s] USDCHF 2h: 268 top-1 trades, PF2x 0.805
+  [   48s] NZDUSD 4h: no folds
+  [   51s] USDCHF 1h: 202 top-1 trades, PF2x 0.752
+  [   54s] USDCAD 30min: 255 top-1 trades, PF2x 0.631
+  [   56s] NZDUSD 2h: 256 top-1 trades, PF2x 0.844
+  [   57s] NZDUSD 1h: 223 top-1 trades, PF2x 0.568
+  [   57s] SPX500 4h: no folds
+  [   57s] USDCAD 1h: 263 top-1 trades, PF2x 0.450
+  [   58s] AUDUSD 15min: 271 top-1 trades, PF2x 0.902
+  [   60s] USDCHF 30min: 248 top-1 trades, PF2x 1.033
+  [   69s] SPX500 2h: 208 top-1 trades, PF2x 0.863
+  [   69s] US30 4h: no folds
+  [   69s] SPX500 1h: 197 top-1 trades, PF2x 1.044
+  [   70s] USDCAD 15min: 221 top-1 trades, PF2x 0.635
+  [   70s] XAUUSD 15min: 228 top-1 trades, PF2x 1.051
+  [   70s] US30 1h: 255 top-1 trades, PF2x 0.692
+  [   70s] NAS100 4h: no folds
+  [   75s] SPX500 30min: 565 top-1 trades, PF2x 0.871
+  [   80s] NZDUSD 15min: 227 top-1 trades, PF2x 0.829
+  [   80s] US30 2h: 213 top-1 trades, PF2x 0.982
+  [   81s] US30 30min: 304 top-1 trades, PF2x 0.637
+  [   82s] NAS100 2h: 215 top-1 trades, PF2x 0.780
+  [   82s] NZDUSD 30min: 269 top-1 trades, PF2x 0.517
+  [   84s] NAS100 1h: 224 top-1 trades, PF2x 0.756
+  [   85s] WTI 4h: no folds
+  [   86s] USDJPY 15min: 318 top-1 trades, PF2x 0.601
+  [   90s] USDCHF 15min: 272 top-1 trades, PF2x 0.574
+  [   91s] WTI 2h: 284 top-1 trades, PF2x 0.902
+  [   93s] WTI 1h: 205 top-1 trades, PF2x 0.898
+  [   97s] SPX500 15min: 235 top-1 trades, PF2x 0.540
+  [   98s] NAS100 30min: 211 top-1 trades, PF2x 0.662
+  [   99s] WTI 30min: 241 top-1 trades, PF2x 0.917
+  [  102s] US30 15min: 238 top-1 trades, PF2x 0.664
+  [  105s] NAS100 15min: 223 top-1 trades, PF2x 0.623
+  [  106s] WTI 15min: 234 top-1 trades, PF2x 0.799
+
+156 leg x width rows, 106s
+  topn=1: 4/52 clear PF 1.20 | median avg_R -0.1396 | median K 0.00091
+  topn=3: 3/52 clear PF 1.20 | median avg_R -0.0464 | median K 0.00242
+  topn=10: 4/52 clear PF 1.20 | median avg_R -0.0132 | median K 0.00427
+
+best top-1 non-crypto legs by K:
+symbol    tf  topn  trades  pf_2x   avg_r   tpd  max_dd_r       K
+XAGUSD 15min     1     211  1.276  0.2445 0.334    -16.70 0.00490
+XAUUSD 30min     1     191  1.423  0.3320 0.302    -29.52 0.00339
+XAUUSD    2h     1     149  1.227  0.1727 0.240    -28.64 0.00145
+XAUUSD    1h     1     242  1.242  0.1351 0.381    -36.55 0.00141
+XAGUSD    2h     1     174  1.058  0.0490 0.273    -32.87 0.00041
+XAUUSD 15min     1     228  1.051  0.0450 0.362    -41.19 0.00040
+SPX500    1h     1     197  1.044  0.0273 0.309    -22.86 0.00037
+USDCHF 30min     1     248  1.033  0.0302 0.389    -42.76 0.00027
+AUDUSD 15min     1     271  0.902 -0.0941 0.425    -89.17     NaN
+AUDUSD    1h     1     202  0.787 -0.1300 0.318    -27.15     NaN
+AUDUSD    2h     1     214  0.899 -0.0565 0.341    -20.01     NaN
+AUDUSD 30min     1     213  0.621 -0.3464 0.334    -74.58     NaN
+EURUSD 15min     1     255  0.767 -0.1751 0.400    -56.13     NaN
+EURUSD    1h     1     271  0.836 -0.1207 0.425    -41.27     NaN
+EURUSD    2h     1     216  0.873 -0.0393 0.340    -15.75     NaN
