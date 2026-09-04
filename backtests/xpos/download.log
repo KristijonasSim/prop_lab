@@ -1,0 +1,44 @@
+30 coins to fetch, 6 at a time (8 threads each)
+
+  UNIUSDT: fetching 1738 days ...  BCHUSDT: fetching 1738 days ...
+
+  MATICUSDT: fetching 1738 days ...  ATOMUSDT: fetching 1738 days ...
+
+  ETCUSDT: fetching 1738 days ...
+  FILUSDT: fetching 1738 days ...
+    BCHUSDT 2021-12 .. 2022-05  51,833 rows cached
+    MATICUSDT 2021-12 .. 2022-05  51,833 rows cached
+    ATOMUSDT 2021-12 .. 2022-05  51,832 rows cached
+    FILUSDT 2021-12 .. 2022-05  51,833 rows cached
+    UNIUSDT 2021-12 .. 2022-05  51,833 rows cached
+    ETCUSDT 2021-12 .. 2022-05  51,833 rows cached
+    UNIUSDT 2022-05 .. 2022-11  103,673 rows cached
+    MATICUSDT 2022-05 .. 2022-11  103,673 rows cached
+    ATOMUSDT 2022-05 .. 2022-11  103,672 rows cached
+    ETCUSDT 2022-05 .. 2022-11  103,673 rows cached
+    BCHUSDT 2022-05 .. 2022-11  103,673 rows cached
+    FILUSDT 2022-05 .. 2022-11  103,673 rows cached
+    UNIUSDT 2022-11 .. 2023-05  155,513 rows cached
+    MATICUSDT 2022-11 .. 2023-05  155,513 rows cached
+    ATOMUSDT 2022-11 .. 2023-05  155,512 rows cached
+    BCHUSDT 2022-11 .. 2023-05  155,476 rows cached
+    ETCUSDT 2022-11 .. 2023-05  155,376 rows cached
+    FILUSDT 2022-11 .. 2023-05  155,513 rows cached
+    ETCUSDT 2023-05 .. 2023-11  207,213 rows cached
+    BCHUSDT 2023-05 .. 2023-11  207,313 rows cached
+    MATICUSDT 2023-05 .. 2023-11  207,350 rows cached
+    UNIUSDT 2023-05 .. 2023-11  207,350 rows cached
+    FILUSDT 2023-05 .. 2023-11  207,062 rows cached
+    ATOMUSDT 2023-05 .. 2023-11  207,349 rows cached
+    MATICUSDT 2023-11 .. 2024-05  259,055 rows cached
+    BCHUSDT 2023-11 .. 2024-05  259,028 rows cached
+    UNIUSDT 2023-11 .. 2024-05  259,056 rows cached
+    ETCUSDT 2023-11 .. 2024-05  258,928 rows cached
+    FILUSDT 2023-11 .. 2024-05  258,777 rows cached
+    ATOMUSDT 2023-11 .. 2024-05  259,064 rows cached
+    MATICUSDT 2024-05 .. 2024-11  290,281 rows cached
+    UNIUSDT 2024-05 .. 2024-11  310,894 rows cached
+    ETCUSDT 2024-05 .. 2024-11  310,766 rows cached
+    BCHUSDT 2024-05 .. 2024-11  310,866 rows cached
+    FILUSDT 2024-05 .. 2024-11  310,615 rows cached
+    ATOMUSDT 2024-05 .. 2024-11  310,902 rows cached
