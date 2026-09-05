@@ -1,0 +1,59 @@
+BTCUSDT 4h: 6,576 bars, 5760 configs x 4 regimes x 2 cost levels
+BTCUSDT 1h: 26,304 bars, 5760 configs x 4 regimes x 2 cost levels
+BTCUSDT 30m: 52,608 bars, 5760 configs x 4 regimes x 2 cost levels
+   4h A_board      1x  median PF 0.560  best 12.919  clears 1.2:  466/5760
+   1h A_board      1x  median PF 0.517  best  2.073  clears 1.2:  356/5760
+   4h A_board      2x  median PF 0.373  best  9.971  clears 1.2:  374/5760
+   30m A_board      1x  median PF 0.502  best  2.337  clears 1.2:  391/5760
+   1h A_board      2x  median PF 0.327  best  1.705  clears 1.2:   92/5760
+   4h B_limit@tkr  1x  median PF 0.390  best 75.512  clears 1.2:  971/5760
+   4h B_limit@tkr  2x  median PF 0.231  best 48.934  clears 1.2:  686/5760
+   1h B_limit@tkr  1x  median PF 0.377  best 10.791  clears 1.2:  413/5760
+   4h C_mixed      1x  median PF 0.464  best 91.309  clears 1.2: 1128/5760
+   30m A_board      2x  median PF 0.299  best  1.647  clears 1.2:   44/5760
+   4h C_mixed      2x  median PF 0.332  best 65.899  clears 1.2:  877/5760
+   1h B_limit@tkr  2x  median PF 0.231  best  7.156  clears 1.2:  132/5760
+   4h D_maker      1x  median PF 0.554  best 113.797  clears 1.2: 1270/5760
+   1h C_mixed      1x  median PF 0.458  best 12.407  clears 1.2:  586/5760
+   30m B_limit@tkr  1x  median PF 0.360  best  7.602  clears 1.2:  311/5760
+   4h D_maker      2x  median PF 0.485  best 95.155  clears 1.2: 1152/5760
+   1h C_mixed      2x  median PF 0.326  best  9.634  clears 1.2:  284/5760
+   30m B_limit@tkr  2x  median PF 0.215  best  3.778  clears 1.2:   59/5760
+   1h D_maker      1x  median PF 0.540  best 14.248  clears 1.2:  806/5760
+   1h D_maker      2x  median PF 0.473  best 12.756  clears 1.2:  630/5760
+   30m C_mixed      1x  median PF 0.433  best  9.378  clears 1.2:  539/5760
+   30m C_mixed      2x  median PF 0.310  best  6.373  clears 1.2:  176/5760
+   30m D_maker      1x  median PF 0.543  best 11.489  clears 1.2:  885/5760
+   30m D_maker      2x  median PF 0.455  best  9.771  clears 1.2:  602/5760
+
+========================================================================================
+PAIRED LIFT AT 2x COST — same configs, 14400 of them
+========================================================================================
+mode                  n   A board  B lim@tkr   C mixed   D maker      D-A  %better
+fade               6480     0.310      0.421     0.585     0.843    0.549    89.2%
+pullback           1440     0.445      0.445     0.589     0.794    0.343   100.0%
+break(control)     6480     0.287      0.012     0.019     0.030   -0.061    10.8%
+
+-- configs clearing PF 1.2 at 2x cost, by mode and regime --
+regime          A_board  B_limit@tkr  C_mixed  D_maker
+fade                  6          792     1209     2146
+break(control)      419            0        0        0
+pullback             85           85      128      238
+
+-- best config per mode+regime at 2x cost (PF, trades/day, maxDD_R) --
+                                pf  trades_per_day  max_dd_r  total_r   tf
+mode           regime                                                     
+fade           A_board       1.490           0.038     -7.58    10.04   4h
+               B_limit@tkr  48.934           0.068     -0.23    27.32   4h
+               C_mixed      65.899           0.068     -0.18    29.22   4h
+               D_maker      95.155           0.068     -0.15    31.12   4h
+break(control) A_board       9.971           0.019     -0.51     9.28   4h
+               B_limit@tkr   0.978           0.139    -19.07    -1.69   4h
+               C_mixed       1.053           0.406    -50.80    16.97   1h
+               D_maker       1.190           0.485    -29.94    70.97  30m
+pullback       A_board       9.333           0.023     -2.32    75.39   4h
+               B_limit@tkr   9.333           0.023     -2.32    75.39   4h
+               C_mixed      10.786           0.023     -2.20    79.48   4h
+               D_maker      12.602           0.023     -2.09    83.56   4h
+
+wrote /home/kristijonas/prop_lab_gh/backtests/queue/stage13_maker.parquet

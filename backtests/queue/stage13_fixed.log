@@ -1,0 +1,50 @@
+BTCUSDT 4h: 6,576 bars, 5760 configs x 4 regimes x 2 cost levels
+BTCUSDT 1h: 26,304 bars, 5760 configs x 4 regimes x 2 cost levels
+   4h A_board      1x  median PF 0.560  best 12.919  clears 1.2:  466/5760
+   1h A_board      1x  median PF 0.517  best  2.073  clears 1.2:  356/5760
+   4h A_board      2x  median PF 0.373  best  9.971  clears 1.2:  374/5760
+   4h B_limit@tkr  1x  median PF 0.445  best 11.465  clears 1.2:  306/5760
+   1h A_board      2x  median PF 0.327  best  1.705  clears 1.2:   92/5760
+   4h B_limit@tkr  2x  median PF 0.320  best  9.333  clears 1.2:  232/5760
+   1h B_limit@tkr  1x  median PF 0.443  best  2.073  clears 1.2:  131/5760
+   4h C_mixed      1x  median PF 0.511  best 12.409  clears 1.2:  335/5760
+   4h C_mixed      2x  median PF 0.414  best 10.786  clears 1.2:  293/5760
+   1h B_limit@tkr  2x  median PF 0.294  best  1.518  clears 1.2:   34/5760
+   4h D_maker      1x  median PF 0.637  best 13.398  clears 1.2:  369/5760
+   1h C_mixed      1x  median PF 0.519  best  2.355  clears 1.2:  201/5760
+   4h D_maker      2x  median PF 0.536  best 12.602  clears 1.2:  338/5760
+   1h C_mixed      2x  median PF 0.389  best  1.886  clears 1.2:   93/5760
+   1h D_maker      1x  median PF 0.654  best  2.703  clears 1.2:  286/5760
+   1h D_maker      2x  median PF 0.539  best  2.418  clears 1.2:  221/5760
+
+========================================================================================
+PAIRED LIFT AT 2x COST — same configs, 8640 of them
+========================================================================================
+mode                  n   A board  B lim@tkr   C mixed   D maker      D-A  %better
+fade               3888     0.329      0.340     0.434     0.587    0.266    95.3%
+pullback            864     0.468      0.468     0.607     0.792    0.317   100.0%
+break(control)     3888     0.311      0.151     0.207     0.294    0.008    55.1%
+
+-- configs clearing PF 1.2 at 2x cost, by mode and regime --
+regime          A_board  B_limit@tkr  C_mixed  D_maker
+fade                  6            1        6       36
+break(control)      375          180      264      356
+pullback             85           85      116      167
+
+-- best config per mode+regime at 2x cost (PF, trades/day, maxDD_R) --
+                                pf  trades_per_day  max_dd_r  total_r  tf
+mode           regime                                                    
+fade           A_board       1.490           0.038     -7.58    10.04  4h
+               B_limit@tkr   1.260           0.374     -7.25    33.88  4h
+               C_mixed       1.540           0.374     -6.10    63.74  4h
+               D_maker       1.877           0.374     -5.36    93.60  4h
+break(control) A_board       9.971           0.019     -0.51     9.28  4h
+               B_limit@tkr   2.550           0.078    -23.15   107.31  4h
+               C_mixed       2.975           0.078    -19.79   121.47  4h
+               D_maker       3.522           0.078    -16.43   135.63  4h
+pullback       A_board       9.333           0.023     -2.32    75.39  4h
+               B_limit@tkr   9.333           0.023     -2.32    75.39  4h
+               C_mixed      10.786           0.023     -2.20    79.48  4h
+               D_maker      12.602           0.023     -2.09    83.56  4h
+
+wrote /home/kristijonas/prop_lab_gh/backtests/queue/stage13_maker.parquet
