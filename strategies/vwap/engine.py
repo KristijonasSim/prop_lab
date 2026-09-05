@@ -127,13 +127,30 @@ def simulate(
 
             elif mode == MODE_FADE:
                 if fill_mode == FILL_LIMIT:
-                    # resting limit AT the band. Optimistic: assumes a wick touch fills.
-                    if h[i] >= upper:
-                        side = -1
-                        entry = upper
-                    elif l[i] <= lower:
-                        side = 1
-                        entry = lower
+                    # Resting limit AT the band. The band level is computed on
+                    # CLOSED bar i, so the order can only work during bar i+1 -
+                    # it fills if THAT bar reaches it, never bar i.
+                    #
+                    # This used to read h[i]/l[i] and leave entry_i at i, which
+                    # booked the fill on the same bar whose extreme decided it
+                    # and then ran the stop/target scan over that same bar: a
+                    # same-bar look-ahead that let a trade enter at a price only
+                    # knowable once the bar had closed. It inflated exactly the
+                    # short-hold configs (PF 27-95, Sharpe 15, max drawdown
+                    # 1.17R over 1,660 trades - not believable numbers).
+                    # No board result was affected: every fold config on the
+                    # board is fill_mode=1. Fixed 2026-09-05.
+                    if i + 1 < stop_bar:
+                        if h[i + 1] >= upper:
+                            side = -1
+                            # a gap through the limit fills at the open, which
+                            # for a resting sell is a better price, not worse
+                            entry = upper if o[i + 1] < upper else o[i + 1]
+                            entry_i = i + 1
+                        elif l[i + 1] <= lower:
+                            side = 1
+                            entry = lower if o[i + 1] > lower else o[i + 1]
+                            entry_i = i + 1
                 else:
                     if c[i] > upper and i + 1 < stop_bar:
                         side = -1
@@ -146,12 +163,21 @@ def simulate(
 
             elif mode == MODE_BREAK:
                 if fill_mode == FILL_LIMIT:
-                    if h[i] >= upper:
-                        side = 1
-                        entry = upper if o[i] < upper else o[i]
-                    elif l[i] <= lower:
-                        side = -1
-                        entry = lower if o[i] > lower else o[i]
+                    # A breakout entry is a STOP order above the market, not a
+                    # resting limit - it has to cross the spread, so this mode
+                    # can never be a maker fill. It is kept as the falsification
+                    # control for stage 13 and carries the same i+1 correction:
+                    # the level comes off closed bar i, the order works bar i+1.
+                    if i + 1 < stop_bar:
+                        if h[i + 1] >= upper:
+                            side = 1
+                            # gapping through a buy stop fills WORSE, at the open
+                            entry = upper if o[i + 1] < upper else o[i + 1]
+                            entry_i = i + 1
+                        elif l[i + 1] <= lower:
+                            side = -1
+                            entry = lower if o[i + 1] > lower else o[i + 1]
+                            entry_i = i + 1
                 else:
                     if c[i] > upper and i + 1 < stop_bar:
                         side = 1
@@ -197,8 +223,19 @@ def simulate(
                 continue
 
             # ---------------- filters ----------------
+            # READ AT `i`, NOT `entry_i`. The decision is made at the close of
+            # bar i and the order fills at the open of bar i+1, so a filter is
+            # only allowed to see bar i. Reading rvol/atr/ema at entry_i asked
+            # the entry bar's own completed volume, range and close - none of
+            # which exist when the order is placed. On the board's most-selected
+            # BTCUSDT 4h config that inflated PF at 2x cost from 0.627 to 2.765
+            # under rvol>2.5, and it manufactured the monotone "participation
+            # lifts it" pattern in CLAUDE.md: a tighter threshold selects harder
+            # for bars that turned out to be busy, and busy bars are the ones
+            # that moved. `atr_rank` was already correct - it is built with an
+            # explicit .shift(1) - and is left as it was. Fixed 2026-09-05.
             if ema_regime != 0:
-                e = ema[entry_i]
+                e = ema[i]
                 if e <= 0.0:
                     i += 1
                     continue
@@ -216,10 +253,10 @@ def simulate(
                 if not inside:
                     i += 1
                     continue
-            if min_rvol > 0.0 and rvol[entry_i] < min_rvol:
+            if min_rvol > 0.0 and rvol[i] < min_rvol:
                 i += 1
                 continue
-            ar = atr_rank[entry_i]
+            ar = atr_rank[entry_i]      # already .shift(1)ed at construction
             if min_atr_rank > 0.0 and ar < min_atr_rank:
                 i += 1
                 continue
@@ -231,7 +268,7 @@ def simulate(
             if stop_mode == 0:
                 d = stop_k * sd
             else:
-                a = atr[entry_i]
+                a = atr[i]              # the stop is sized when the order is placed
                 d = stop_k * (a if a > 0.0 else sd)
             stop = entry - d if side == 1 else entry + d
             risk = d
