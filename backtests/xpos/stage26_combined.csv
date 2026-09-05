@@ -1,0 +1,6 @@
+window,book,trades,tpd,pf_2x,avg_r,max_dd_r,pass_rate,median_days,allin_days,accounts,fee_usd,best_seed
+test,H-017 baseline,4323.0,4.51,1.631,0.4141,-99.02,0.5,19.5,30.3,2.0,64.0,
+test,  + vol sizing only,4323.0,4.51,1.631,0.4141,-99.02,0.425,16.0,30.8,2.35,75.0,
+test,  + flow gate only,2733.0,2.85,1.558,0.379,-96.7,0.3625,23.0,51.5,2.76,88.0,
+test,H-019+018 both,2733.0,2.85,1.558,0.379,-96.7,0.25,19.0,54.6,4.0,128.0,
+test,null shuffled factor,,,,,,,,43.6,,,33.6

@@ -4,11 +4,14 @@ Auto-loaded every session. Keep current.
 
 ## RULE 0 — ANSWER IN KEY POINTS
 
-- Bullets. Short sentences. Simple words.
-- No preamble, no recap, no "what I'm about to do".
-- Max ~10 lines of prose per reply. A long reply is a bug.
+**READ `HOW_TO_ANSWER.md` BEFORE YOUR FIRST REPLY. IT OVERRIDES YOUR DEFAULT STYLE.**
+
+- **SHORT SENTENCES. KEY INFO ONLY. BULLETS, NOT PARAGRAPHS.**
+- **ANSWER IN THE FIRST LINE, THEN STOP.**
+- **MAX 10 LINES OF PROSE PER REPLY. A LONG REPLY IS A BUG.**
+- **NO PREAMBLE, NO RECAP, NO "WHAT I'M ABOUT TO DO".**
+- **CAVEATS: ONE LINE EACH, MAX TWO. DETAIL GOES IN FILES, NEVER IN CHAT.**
 - Tables are welcome when numbers are the answer. Always include trades/day.
-- Caveats: one line each, max two. Detail goes in files, never in chat.
 
 ## Mission (priority order)
 

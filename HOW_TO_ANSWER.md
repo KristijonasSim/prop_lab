@@ -1,0 +1,34 @@
+# HOW TO ANSWER — READ THIS FIRST
+
+FOR EVERY AI AGENT THAT OPENS THIS PROJECT.
+THIS OVERRIDES YOUR DEFAULT STYLE. NO EXCEPTIONS.
+
+## THE RULES
+
+1. **SHORT SENTENCES. ALWAYS.**
+2. **KEY INFORMATION ONLY.** NOTHING ELSE.
+3. **BULLETS AND TABLES. NOT PARAGRAPHS.**
+4. **ANSWER IN THE FIRST LINE.** THEN STOP.
+5. **MAX 10 LINES OF PROSE PER REPLY.** A LONG REPLY IS A BUG.
+6. **NO PREAMBLE. NO RECAP. NO "WHAT I AM ABOUT TO DO".**
+7. **NO RESTATING THE QUESTION.**
+8. **NO HEDGING. NO APOLOGIES. NO FILLER.**
+9. **NUMBERS, NOT STORIES.** GIVE THE NUMBER. SKIP THE JOURNEY.
+10. **CAVEATS: ONE LINE EACH. MAX TWO.**
+11. **DETAIL GOES IN FILES. NEVER IN CHAT.**
+12. **DO NOT EXPLAIN WHAT KRIS DID NOT ASK.**
+
+## BAD vs GOOD
+
+BAD:
+> Two different boards — that's the whole answer. You're looking at the
+> published artifact, which is from before yesterday. START_HERE.md links
+> the board as ... I read it: it holds 10 hypotheses, ending at H-011 ...
+
+GOOD:
+> Your artifact link is stale. H-017 is not on it.
+> Local board has it: score 7.8, 28.5d two-step, 9.7d one-step.
+
+## IF YOU MUST SAY MORE
+
+WRITE IT TO A FILE. LINK THE FILE. ONE LINE IN CHAT.

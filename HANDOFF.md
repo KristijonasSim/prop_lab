@@ -353,6 +353,28 @@ Rebuild it with `.venv/bin/python core/build_scoreboard.py`. It reads whatever
    crypto, and cross-sectional carries ~55% drawdowns because coins are too
    correlated. Test it anyway — Kris asked — but expect it to fail.
 
+**FIRM SELECTION IS NOW THE BIGGEST SINGLE LEVER (measured 2026-09-04).**
+`strategies/xpos/stage28_targets.py` swept the profit target on the blind test
+half, risk re-chosen in the fit window for each structure:
+
+| structure | pass | median days | all-in days |
+|---|---|---|---|
+| one-step 5% | 71.2% | 7 | **9.7** |
+| one-step 6% | 70.0% | 8 | **11.2** |
+| one-step 8% | 68.8% | 8 | **11.4** |
+| two-step 8% + 5% | 50.0% | 20 | **30.3** |
+
+Raising the target from 5% to 8% costs **1.7 days**. Adding a second phase costs
+**19**. The size of the target is nearly irrelevant; the number of phases is
+almost the whole number. Cross-checked against `board.json`'s own ladder, which
+independently reports one-step expected 9.7 days at 0.50% risk.
+
+So **a one-step firm is worth ~2.7x**, which is more than every strategy
+improvement tested in this project put together. When shopping firms, one-step
+beats a lower target, and both beat a slightly better spread. This does not
+change the board - it is still scored two-step, which is the honest thing to do
+until a firm is signed - but it changes what to sign.
+
 **Two firm-level findings that change the goalposts:**
 
 * Prop firms with **no time limit** are now standard (FundedNext, Crypto Fund
@@ -377,6 +399,14 @@ API connector rather than an MT5 bridge — cTrader carries both crypto and
 XAUUSD. Not built; it needs firm credentials, so it is Kris's move first.
 
 **Method rules added today — do not regress on these:**
+
+* **Shift a feed forward one bar before joining it to a trade.** A plain
+  backward search (`searchsorted(..., 'right') - 1`) returns the 5m bar the
+  trade ENTERS on, and that bar has not closed. `stage10_wide.asof` gets this
+  right by adding 5 minutes to the feed index first; a new join written on
+  2026-09-04 did not, and manufactured a 30.3 -> 23.4 day improvement that
+  reversed to 30.3 -> 51.5 once corrected. Use
+  `strategies/xpos/stage24_commonflow.attach`, which shifts.
 
 * **Use the paired null** (`shuffle_market_paired`). The original null permuted
   volume independently of returns, destroying a +0.47 correlation and handing

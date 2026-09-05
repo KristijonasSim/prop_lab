@@ -1,0 +1,9 @@
+structure,book,risk,pass_rate,median_days,p25_days,p75_days,allin_days,accounts
+one-step 5%,H-017 baseline,0.005,0.7125,7.0,6.0,11.0,9.7,1.4
+one-step 5%,H-018 vol-managed,0.005,0.6,6.5,6.0,8.0,10.1,1.67
+one-step 6%,H-017 baseline,0.005,0.7,8.0,6.0,12.25,11.2,1.43
+one-step 6%,H-018 vol-managed,0.005,0.6,7.0,6.0,8.0,10.6,1.67
+one-step 8%,H-017 baseline,0.005,0.6875,8.0,6.0,14.0,11.4,1.45
+one-step 8%,H-018 vol-managed,0.0075,0.4625,6.0,5.0,7.0,10.0,2.16
+two-step 8%+5% (board),H-017 baseline,0.005,0.5,19.5,14.75,27.5,30.3,2.0
+two-step 8%+5% (board),H-018 vol-managed,0.005,0.375,15.0,11.5,19.75,28.0,2.67

@@ -20,3 +20,7 @@ backtests/vwap/stage3_timeframes.csv
 
 # forward-collected feeds: appended continuously, not a reproducible artefact
 data/feeds/*.log
+
+# tick archive for the maker fill check (1.6GB, re-downloadable from
+# data.binance.vision via strategies/vwap/stage12_queue.py)
+data/ticks/

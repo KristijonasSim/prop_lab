@@ -1,0 +1,4 @@
+window,book,trades,tpd,pf_2x,pass_rate,median_days,allin_days,accounts,fee_usd,best_seed
+test,H-017 baseline,4323.0,4.51,1.631,0.5,19.5,30.3,2.0,64.0,
+test,H-020 + relative volume,3375.0,3.52,1.595,0.4125,23.0,42.8,2.42,78.0,
+test,null shuffled rel volume,,,,,,39.4,,,33.2

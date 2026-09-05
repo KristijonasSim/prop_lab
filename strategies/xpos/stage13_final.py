@@ -194,7 +194,7 @@ def main() -> int:
     r1 = sel.r.values * ww * (TARGET_DD_R / abs(dd))
     board.write_board(
         sid="xpos", hid="H-017",
-        name="Wide crowd-gated VWAP",
+        name="VWAP mean reversion / breakout",
         tagline="H-002's kernel on all eleven coins the Binance metrics "
                 "archive covers, each leg gated by H-009's crowd rule. Nearly "
                 "four times faster to a funded account than H-009 on the same "

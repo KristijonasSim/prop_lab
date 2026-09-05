@@ -76,7 +76,7 @@ def main() -> int:
 
     board.write_board(
         sid="xpos", hid="H-017",
-        name="Wide crowd-gated VWAP",
+        name="VWAP mean reversion / breakout",
         tagline="H-002's kernel on all eleven coins the Binance metrics "
                 "archive covers, one configuration per leg, each gated by "
                 "H-009's crowd rule. Chosen blind on an earlier half; the "

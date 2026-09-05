@@ -1,0 +1,5 @@
+window,book,risk,pass_rate,median_days,allin_days,accounts,fee_usd,best_seed
+test,H-017 baseline,0.005,0.5,19.5,30.3,2.0,64.0,
+test,H-018 vol-managed,0.005,0.375,15.0,28.0,2.67,85.0,
+test,null shuffled multiplier,,,,36.1,,,29.5
+test,NULL constant multiplier,0.005,0.2625,15.0,41.5,3.81,122.0,
