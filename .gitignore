@@ -24,3 +24,9 @@ data/feeds/*.log
 # tick archive for the maker fill check (1.6GB, re-downloadable from
 # data.binance.vision via strategies/vwap/stage12_queue.py)
 data/ticks/
+
+# bookDepth aggregates (424MB across 11 coins, re-downloadable from
+# data.binance.vision via core/binance_depth.py). Same reasoning as data/ticks/:
+# fully reproducible from a script that is committed. Reverse this if the
+# rebuild time (~4 min/coin) turns out to matter more than the repo size.
+data/feeds/*_depth_5m.parquet

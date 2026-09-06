@@ -1,0 +1,96 @@
+  BTCUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  ETHUSDT: 382,519 bars, 20,133 sampled  2023-01..2026-09
+  SOLUSDT: 381,656 bars, 20,088 sampled  2023-01..2026-09
+  XRPUSDT: 381,944 bars, 20,103 sampled  2023-01..2026-09
+  DOGEUSDT: 382,196 bars, 20,116 sampled  2023-01..2026-09
+  ADAUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  AVAXUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  LINKUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  DOTUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  LTCUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+  BNBUSDT: 382,231 bars, 20,118 sampled  2023-01..2026-09
+
+================================================================================================
+ONE-WAY MARKET IMPACT, median bps, uniform-in-band (the repo assumes 2bps slippage a side)
+================================================================================================
+clip_usd  1000     10000    50000    250000   1000000  5000000
+sym                                                           
+ADAUSDT     0.020    0.196    0.979    4.894   19.305   94.452
+AVAXUSDT    0.028    0.279    1.394    6.972   27.212  110.989
+BNBUSDT     0.009    0.086    0.430    2.151    8.605   43.478
+BTCUSDT     0.000    0.004    0.018    0.092    0.368    1.839
+DOGEUSDT    0.010    0.095    0.476    2.378    9.513   46.143
+DOTUSDT     0.030    0.299    1.495    7.475   29.501  136.694
+ETHUSDT     0.001    0.009    0.044    0.218    0.872    4.358
+LINKUSDT    0.021    0.215    1.074    5.372   21.377  109.076
+LTCUSDT     0.019    0.185    0.927    4.635   18.501   93.064
+SOLUSDT     0.003    0.035    0.174    0.870    3.481   17.284
+XRPUSDT     0.007    0.075    0.374    1.868    7.471   35.521
+
+-- pessimistic bound (all liquidity at the far edge of its band) --
+clip_usd  1000     10000    50000    250000   1000000  5000000
+sym                                                           
+ADAUSDT     100.0    100.0    100.0    100.0    100.0  144.961
+AVAXUSDT    100.0    100.0    100.0    100.0    100.0  161.672
+BNBUSDT     100.0    100.0    100.0    100.0    100.0  100.000
+BTCUSDT     100.0    100.0    100.0    100.0    100.0  100.000
+DOGEUSDT    100.0    100.0    100.0    100.0    100.0  100.000
+DOTUSDT     100.0    100.0    100.0    100.0    100.0  188.672
+ETHUSDT     100.0    100.0    100.0    100.0    100.0  100.000
+LINKUSDT    100.0    100.0    100.0    100.0    100.0  158.914
+LTCUSDT     100.0    100.0    100.0    100.0    100.0  145.900
+SOLUSDT     100.0    100.0    100.0    100.0    100.0  100.000
+XRPUSDT     100.0    100.0    100.0    100.0    100.0  100.000
+
+-- share of bars where the clip is fillable inside 5% --
+clip_usd  1000     10000    50000    250000   1000000  5000000
+sym                                                           
+ADAUSDT       1.0      1.0      1.0      1.0      1.0   0.9138
+AVAXUSDT      1.0      1.0      1.0      1.0      1.0   0.6278
+BNBUSDT       1.0      1.0      1.0      1.0      1.0   0.9999
+BTCUSDT       1.0      1.0      1.0      1.0      1.0   1.0000
+DOGEUSDT      1.0      1.0      1.0      1.0      1.0   0.9999
+DOTUSDT       1.0      1.0      1.0      1.0      1.0   0.6852
+ETHUSDT       1.0      1.0      1.0      1.0      1.0   1.0000
+LINKUSDT      1.0      1.0      1.0      1.0      1.0   0.9200
+LTCUSDT       1.0      1.0      1.0      1.0      1.0   0.9905
+SOLUSDT       1.0      1.0      1.0      1.0      1.0   0.9997
+XRPUSDT       1.0      1.0      1.0      1.0      1.0   1.0000
+
+-- ROUND TRIP impact at the p99 bar (the bad minute), uniform --
+clip_usd  1000     10000    50000    250000   1000000  5000000
+sym                                                           
+ADAUSDT      0.08     0.85     4.23    21.13    80.40   385.77
+AVAXUSDT     0.15     1.51     7.57    36.02   130.23   408.05
+BNBUSDT      0.03     0.35     1.73     8.66    34.63   196.92
+BTCUSDT      0.00     0.02     0.08     0.39     1.56     7.78
+DOGEUSDT     0.04     0.41     2.06    10.31    41.20   249.41
+DOTUSDT      0.14     1.40     7.01    32.64   113.28   420.94
+ETHUSDT      0.00     0.03     0.16     0.82     3.27    16.35
+LINKUSDT     0.09     0.93     4.63    23.12    85.56   382.76
+LTCUSDT      0.09     0.92     4.58    22.81    84.90   409.93
+SOLUSDT      0.05     0.54     2.69    13.45    53.79   302.15
+XRPUSDT      0.04     0.39     1.94     9.72    38.88   208.92
+
+-- the same, restricted to bars that carry the 0.2% band (2026-01-15 onward, where the book is resolved 5x finer) --
+clip_usd  1000     10000    50000    250000   1000000  5000000
+sym                                                           
+ADAUSDT     0.022    0.219    1.094    5.468   20.381   85.442
+AVAXUSDT    0.038    0.379    1.893    9.463   31.413  138.633
+BNBUSDT     0.007    0.066    0.328    1.641    6.566   37.158
+BTCUSDT     0.000    0.003    0.014    0.072    0.288    1.438
+DOGEUSDT    0.009    0.085    0.426    2.129    8.516   39.184
+DOTUSDT     0.045    0.450    2.251   11.204   36.579  133.115
+ETHUSDT     0.001    0.006    0.032    0.162    0.650    3.248
+LINKUSDT    0.028    0.275    1.377    6.883   25.576  111.719
+LTCUSDT     0.028    0.278    1.389    6.944   25.829  111.609
+SOLUSDT     0.003    0.026    0.130    0.650    2.600   13.039
+XRPUSDT     0.005    0.052    0.261    1.307    5.229   26.110
+
+wrote /home/kristijonas/prop_lab_gh/backtests/depth/stage2_cost.csv
+
+Read this against the repo's standing assumption: 5bps taker fee +
+2bps slippage per side = 14bps round trip. The fee is published and
+real. This file measures only the impact component of the slippage;
+the bid-ask spread is NOT measured here because bookTicker stopped in
+2024-03.

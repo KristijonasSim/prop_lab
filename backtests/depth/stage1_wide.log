@@ -1,0 +1,80 @@
+
+BTCUSDT: 380,791 bars  2023-01-01 -> 2026-08-31  (17 features)
+  85 feature x horizon cells
+
+ETHUSDT: 381,079 bars  2023-01-01 -> 2026-08-31  (17 features)
+  85 feature x horizon cells
+
+SOLUSDT: 380,216 bars  2023-01-01 -> 2026-08-31  (17 features)
+  85 feature x horizon cells
+
+XRPUSDT: 380,504 bars  2023-01-01 -> 2026-08-31  (17 features)
+  85 feature x horizon cells
+
+DOGEUSDT: 381,044 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+ADAUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+AVAXUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+LINKUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+DOTUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+LTCUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+BNBUSDT: 381,079 bars  2023-01-01 -> 2026-09-01  (17 features)
+  85 feature x horizon cells
+
+========================================================================================================
+TOP CELLS BY |SPREAD| (bps). Cost gates: taker1x 14.0  taker2x 28.0  mixed 9.0  maker2x 8.0
+========================================================================================================
+sym       feature          hz        q1      q5   spread  mono    null   yrs  gates
+DOGEUSDT  depz_0.2         4h      -8.9     1.7     10.6  0.75    14.6   1/1   Mm
+ADAUSDT   depz_0.2         4h     -11.4    -0.8     10.6  0.75    15.9   1/1   Mm
+SOLUSDT   imbz_0.2         4h       1.6    -8.5    -10.1  0.75     7.6*  1/1   Mm
+DOGEUSDT  depz_0.2         2h      -6.5     2.7      9.3  0.50     6.8*  1/1   Mm
+ADAUSDT   depz_0.2         2h      -8.5     0.6      9.2  0.75    10.4   1/1   Mm
+AVAXUSDT  depz_0.2         4h      -0.8    -9.7     -9.0  1.00    10.6   1/1   m
+LINKUSDT  depz_0.2         2h      -5.7     2.6      8.3  1.00    10.6   1/1   m
+SOLUSDT   imbz_5           4h      -0.3     7.6      7.9  1.00     2.9*  3/4   
+LINKUSDT  dimb_0.2_4h      2h       2.6    -5.3     -7.9  1.00     6.9*  1/1   
+LINKUSDT  dimb_0.2_4h      4h       0.6    -7.3     -7.8  0.75     7.8*  1/1   
+DOTUSDT   depz_0.2         2h      -5.9     1.9      7.7  0.75     7.4*  1/1   
+DOGEUSDT  depz_1           4h       2.9    -4.7     -7.6  0.75     2.9*  4/4   
+ADAUSDT   depz_2           4h       3.8    -3.7     -7.5  0.75     7.0*  3/4   
+DOTUSDT   depz_0.2         4h      -7.7    -0.2      7.4  0.75    20.6   1/1   
+SOLUSDT   imbz_5           2h      -1.3     6.0      7.3  1.00     3.7*  3/4   
+BNBUSDT   imbz_0.2         4h       2.0    -5.2     -7.2  0.75     5.6*  1/1   
+SOLUSDT   imbz_0.2         2h       1.8    -5.3     -7.1  1.00     7.1*  1/1   
+ADAUSDT   depz_5           4h       2.8    -3.8     -6.6  1.00     9.9   3/4   
+XRPUSDT   imbxthin_0.2     4h      -8.0    -1.5      6.5  0.50    10.2   1/1   
+LINKUSDT  depz_0.2         4h      -5.1     1.1      6.2  0.75     5.9*  1/1   
+ADAUSDT   depz_1           4h       2.9    -3.1     -6.1  1.00     4.5*  3/4   
+SOLUSDT   hollowz          4h       4.9    -1.1     -6.0  0.75     5.4*  3/4   
+DOTUSDT   imbz_5           4h       2.4    -3.5     -6.0  0.75    10.6   3/4   
+SOLUSDT   depz_1           4h       7.4     1.6     -5.9  0.75     5.0*  3/4   
+XRPUSDT   imbz_5           4h      -3.7     2.1      5.7  0.50     6.9   3/4   
+
+-- how many cells clear each gate (of 935), and how many of those also beat their null --
+  taker1x   >  14.0bps :     0 cells,     0 beat null
+  taker2x   >  28.0bps :     0 cells,     0 beat null
+  mixed     >   9.0bps :     5 cells,     2 beat null
+  maker2x   >   8.0bps :     7 cells,     2 beat null
+
+-- by feature family, median |spread| and share beating null --
+          cells  med_abs  max_abs   beat
+family                                  
+imbz        220    1.239   10.111  0.327
+depz        220    0.913   10.645  0.236
+imbxthin    110    0.857    6.480  0.245
+hollowz      55    0.817    6.036  0.182
+dimb        330    0.757    7.890  0.255
+
+wrote /home/kristijonas/prop_lab_gh/backtests/depth/stage1_response.csv
