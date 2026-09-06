@@ -171,6 +171,38 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   universe" as a cure for drawdown without solving the weighting first.
 - **VWAP std-band fade** — backtest PF 3.0, live ~0.7. Resting-limit backtests assume a fill on
   any wick touch. Any limit-fill strategy needs a queue-priority check before the backtest is trusted.
+- **VWAP mean reversion / breakout on CRYPTO** (H-002 / H-009 / H-017) — killed
+  2026-09-06 by the engine fix, not by a new test. Three look-aheads were found in
+  `strategies/vwap/engine.py`; on the corrected kernel the walk-forward cells clearing
+  PF 1.20 at 2x went **11 → 0 on BTCUSDT** (best cell 2.305 → 0.882) and the wide
+  11-coin book clears **1 of 132 legs**. The board's 28.5d / 9.7d numbers came from
+  the bug. **Gold and EURUSD are the only survivors.** Any pre-2026-09-06 crypto
+  board number is an artifact — check `SESSION_2026-09-06.md` before quoting one.
+- **Power of Three / AMD** (H-026) — accumulation, manipulation, distribution, four
+  session clocks, five feed conditioners. The sweep-reversal **loses gross** on BTC
+  (−3.1 to −8.5bps) and ETH (−8.2 to −17.1) and wins on SOL (+7.8 to +14.6) at
+  ~1,500 events each. A sign that flips across three coins is no effect. Only 3 of
+  24 conditioner cells beat a permutation null. Caveat: tested with a fixed hold to
+  the session close and **no stop and no target** — a stop-and-target version is
+  untested and Kris trades one.
+- **Book depth imbalance** (H-024) — real, monotone, beats its null, stable across
+  years, and **0 of 935 cells across 11 coins clear a 14bps taker round trip**. Best
+  honest cell 7.9bps. Also settles the cap-curve question: the small-cap edge in the
+  microstructure literature is a **3-second** effect and does not reach 15m-4h.
 
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
+As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have
+now died here, and the one crypto book that looked alive died to a look-ahead fix.
+
+**Measured, not assumed (2026-09-06, `strategies/depth/stage2_cost.py`):** market
+impact at prop clip sizes is **0.018bps one-way on BTC** and 1.5bps on DOT for a
+$50k clip — around a hundredth of the 2bps/side this repo assumes. **The 14bps round
+trip is fee plus spread, not impact.** Impact only bites above ~$1M, or on thin coins
+in bad minutes (DOT $50k pays 7.0bps round trip at the p99 bar). The spread itself is
+still unmeasured — `bookTicker` stopped in 2024-03.
+
+**Every feed in `data/feeds/` and what it costs to believe:** `metrics` (OI, taker,
+crowd) 2020-09→; `premium` 2019-12→ (H-013, dead); `funding` 2020-01→; `depth`
+2023-01→ (H-024, this session); `dvol` 2021-04→ (H-025, this session). The ±0.2%
+depth band exists only from **2026-01-15**.
