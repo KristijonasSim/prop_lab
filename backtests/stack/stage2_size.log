@@ -1,0 +1,92 @@
+
+BTCUSDT: 630,371 bars  2020-09-01 -> 2026-08-31
+
+ETHUSDT: 499,537 bars  2021-12-01 -> 2026-08-31
+
+SOLUSDT: 498,077 bars  2021-12-01 -> 2026-08-31
+
+XRPUSDT: 498,096 bars  2021-12-01 -> 2026-08-31
+
+DOGEUSDT: 499,825 bars  2021-12-01 -> 2026-09-01
+
+ADAUSDT: 499,825 bars  2021-12-01 -> 2026-09-01
+
+AVAXUSDT: 499,766 bars  2021-12-01 -> 2026-09-01
+
+LINKUSDT: 499,822 bars  2021-12-01 -> 2026-09-01
+
+DOTUSDT: 499,825 bars  2021-12-01 -> 2026-09-01
+
+LTCUSDT: 498,337 bars  2021-12-01 -> 2026-09-01
+
+BNBUSDT: 499,819 bars  2021-12-01 -> 2026-09-01
+
+================================================================================================================
+EVERY CELL THAT CLEARS 14bps AND BEATS ALL THREE BLOCK NULLS
+================================================================================================================
+sym       feature    hz         q1       q5   spread  mono    yrs     n1d     n1w    n1mo
+BTCUSDT   crowd_z    24h      29.7    -14.0    -43.7  1.00  5/7      26.2    24.1    32.6
+BTCUSDT   disagree   24h      -9.1     29.5     38.6  0.75  6/7      32.1    23.9    24.9
+BTCUSDT   dcrowd_4h  24h      25.0    -13.1    -38.1  1.00  6/7      14.3    19.4    24.2
+LINKUSDT  disagree   8h      -17.1     14.8     31.9  0.75  6/6      17.4    19.4    16.0
+LTCUSDT   disagree   8h      -13.5     14.6     28.2  1.00  5/6      14.9    17.4    22.2
+ETHUSDT   dcrowd_4h  24h       9.6    -18.4    -28.0  1.00  5/6      19.0    24.1    25.1
+BTCUSDT   dcrowd_4h  8h       14.4    -12.2    -26.6  1.00  7/7       7.4     8.7     9.8
+LINKUSDT  crowd_z    8h       11.9    -14.1    -26.0  0.75  6/6      19.8    14.7    15.4
+BTCUSDT   crowd_z    8h       15.4     -9.6    -25.0  1.00  6/7      10.4    14.7    13.4
+BTCUSDT   disagree   8h       -7.6     13.8     21.3  0.75  6/7       8.5    13.2    10.4
+ETHUSDT   crowd_z    8h        7.4    -13.7    -21.1  0.75  5/6      14.1    20.9    17.4
+ETHUSDT   dcrowd_4h  8h        5.3    -14.2    -19.6  0.75  6/6      13.3    12.6    16.6
+AVAXUSDT  disagree   4h       -9.3      8.4     17.8  1.00  5/6      16.8     9.1    17.6
+LINKUSDT  disagree   4h       -9.9      7.6     17.5  1.00  6/6      12.0    11.0    12.7
+BTCUSDT   dcrowd_4h  4h        9.0     -8.3    -17.3  1.00  7/7       4.5     4.9     4.5
+BTCUSDT   crowd_z    4h       10.4     -5.9    -16.2  1.00  7/7       6.8     5.3     6.7
+ETHUSDT   crowd_z    4h        6.9     -9.2    -16.1  1.00  6/6      11.4     5.2     9.1
+LINKUSDT  crowd_z    4h        6.6     -9.5    -16.0  0.75  6/6      12.9    12.7     9.8
+SOLUSDT   disagree   4h       -6.8      8.8     15.6  0.75  5/6      10.5     8.5    13.1
+
+-- `size_z` across every coin and horizon --
+horizon    1h   24h   2h    4h    8h
+sym                                 
+ADAUSDT   0.3  22.8 -0.3  -1.8   1.5
+AVAXUSDT  0.4   1.2  1.2   3.1   2.8
+BNBUSDT  -0.8  -4.5 -1.6  -2.4  -3.9
+BTCUSDT  -1.6  -5.0 -2.6  -3.3  -3.8
+DOGEUSDT -1.9  11.4 -2.8  -2.7  -1.2
+DOTUSDT   0.2  21.4  0.7  -1.4  -0.4
+ETHUSDT  -0.4 -11.9  0.0   2.6   2.9
+LINKUSDT  2.3  41.6  4.0   9.5  14.2
+LTCUSDT   2.0  25.4  4.7  11.5  20.1
+SOLUSDT   0.8  -3.5  1.8   5.1   5.6
+XRPUSDT  -0.5 -33.0 -1.4  -1.5  -6.6
+
+  ... and whether it beats all three nulls:
+horizon    1h  24h   2h   4h   8h
+sym                              
+ADAUSDT   0.0  0.0  0.0  0.0  0.0
+AVAXUSDT  0.0  0.0  0.0  0.0  0.0
+BNBUSDT   0.0  0.0  0.0  0.0  0.0
+BTCUSDT   0.0  0.0  0.0  0.0  0.0
+DOGEUSDT  0.0  0.0  0.0  0.0  0.0
+DOTUSDT   0.0  0.0  0.0  0.0  0.0
+ETHUSDT   0.0  0.0  0.0  0.0  0.0
+LINKUSDT  0.0  0.0  0.0  0.0  0.0
+LTCUSDT   0.0  0.0  0.0  0.0  0.0
+SOLUSDT   0.0  0.0  0.0  0.0  0.0
+XRPUSDT   0.0  0.0  0.0  0.0  0.0
+
+-- how many cells clear each gate (of 220), and how many of those beat ALL THREE nulls --
+  taker1x   >  14.0bps :   50 cells,   19 survive
+  taker2x   >  28.0bps :   11 cells,    5 survive
+  mixed     >   9.0bps :   79 cells,   30 survive
+  maker2x   >   8.0bps :   90 cells,   32 survive
+
+-- by feature: median |spread| and share surviving all nulls --
+           cells  med_abs  max_abs  survive
+feature                                    
+crowd_z       55    8.056   43.750    0.273
+dcrowd_4h     55    6.246   38.141    0.273
+disagree      55    6.773   42.089    0.273
+size_z        55    2.572   41.646    0.000
+
+wrote /home/kristijonas/prop_lab_gh/backtests/stack/stage2_size.csv

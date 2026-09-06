@@ -1,0 +1,35 @@
+  XAUUSD: sampling 720 hours across 120 days ...
+  EURUSD: sampling 720 hours across 120 days ...
+  XAGUSD: sampling 720 hours across 120 days ...
+  120: sampling 720 hours across 120 days ...
+  120: nothing downloaded
+
+========================================================================================
+MEASURED SPREAD vs THE ASSUMPTION IT REPLACES (bps of mid)
+========================================================================================
+sym        hours   median     mean      p90     half   assumed  verdict
+EURUSD       495    0.274    0.271    0.428    0.137      0.75  assumption is CONSERVATIVE
+XAGUSD       330    9.108    9.197    9.448    4.554      2.25  assumption is TOO LOW
+XAUUSD       478    1.621    1.617    1.784    0.810      1.50  assumption is CONSERVATIVE
+
+-- median spread by UTC hour (bps of mid) --
+hour       1      5      9      13     17     21
+sym                                             
+EURUSD  0.281  0.291  0.259  0.258  0.256  1.183
+XAGUSD  9.256  9.202  9.054  9.007  8.882  9.866
+XAUUSD  1.677  1.661  1.571  1.610  1.567  1.569
+
+-- median spread by year (bps of mid) --
+year      2023    2024   2025   2026
+sym                                 
+EURUSD   0.276   0.186  0.370  0.260
+XAGUSD  12.989  12.546  8.696  7.170
+XAUUSD   1.647   1.610  1.794  1.454
+
+The repo charges fee + slippage per SIDE. Half the round-trip
+spread is the part a market order pays on each side, so compare the
+'half' column against 'assumed'. Commission is on top of both and is
+a published number: cTrader raw is about $6 round turn per lot,
+which on a 100oz gold lot at $4,000 is 0.15bps round trip.
+
+wrote /home/kristijonas/prop_lab_gh/backtests/propfirms/fx_spread_measured.csv

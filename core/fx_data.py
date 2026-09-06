@@ -1,13 +1,28 @@
-"""Dukascopy tick loader for FX and metals, aggregated to 15m bars.
+"""Dukascopy loader for FX and metals, aggregated to 15m bars.
 
-Dukascopy publishes one LZMA-compressed file per instrument per hour. Each tick
-is 20 bytes big-endian: ms offset into the hour, ask, bid (both integers scaled
-by the instrument's point value), then ask and bid volume as float32.
+Dukascopy publishes one LZMA-compressed file per instrument per DAY of 1-minute
+candles, and separate hourly TICK files that carry both sides of the book. This
+module reads the daily candle files.
 
-Bars are built from the MID price, and the mean half-spread of each bar is kept
-alongside it. That means the cost model for FX and gold is measured from the
-data rather than assumed, which matters: the BTC result died on costs, so a
-guessed spread would decide the FX answer by itself.
+WHAT THE BARS ACTUALLY ARE — corrected 2026-09-06. This docstring previously
+claimed bars were built from the MID price with the mean half-spread kept
+alongside, and concluded that "the cost model for FX and gold is measured from
+the data rather than assumed". **That was never true of this code.** It fetches
+`BID_candles_min_1.bi5` and the cached parquets carry exactly
+`open, high, low, close, volume`. There is no spread column.
+
+So, plainly:
+
+  * bars are **BID**, not mid. A long entry is filled at the ask, so the entry
+    price a backtest reads off these bars is optimistic by the full spread on
+    the buy side.
+  * the FX and metals cost model is an **assumption**, set per symbol in
+    `strategies/vwap/stage1_grid.py:ASSETS` (XAUUSD 1.00bps fee + 0.50bps
+    slippage per side), exactly as the crypto one is.
+
+This matters because after the 2026-09-06 engine fix, gold is the only market
+left on the board. `core/fx_spread.py` measures the real spread from the hourly
+tick files so the assumption can be checked rather than trusted.
 """
 
 from __future__ import annotations
