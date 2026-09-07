@@ -302,7 +302,7 @@
   "The curve draws over 50% at 0.50% risk, so this sizing passes an evaluation and would destroy the funded seat afterwards. Post-funding sizing is unsolved.",
   "Crypto perps only, 14bps round trip assumed, never paper-traded."
  ],
- "note": "The ladder below sizes so the whole equity curve fits the 8% cap. At 0.50% risk - the level chosen blind in the fit window, which the ladder refuses because the curve draws 50% - the test half gives 50% pass, a median of 19.5 days and 30.3 days all-in including retries, against H-009's 48.7. Kris's objection to the earlier 200-sub-strategy version was correct and is what produced this one: one configuration per leg, 4.5 trades a day, $20.71 average on $50 risked.",
+ "note": "<strong style='color:var(--fail)'>SUPERSEDED 2026-09-07 \u2014 SCORED ON A BROKEN KERNEL.</strong> Three look-aheads were found in strategies/vwap/engine.py on 2026-09-05 and every number on this tab predates the fix. On the corrected kernel BTCUSDT went from 11 walk-forward cells clearing PF 1.20 at 2x to ZERO, and the wide 11-coin rebuild clears 1 of 132 legs. Treat every figure here as an ARTIFACT OF THE BUG until it is re-run. See SESSION_2026-09-06.md. The 28.5-day two-step and 9.7-day one-step headlines came from the bug. The ladder below sizes so the whole equity curve fits the 8% cap. At 0.50% risk - the level chosen blind in the fit window, which the ladder refuses because the curve draws 50% - the test half gives 50% pass, a median of 19.5 days and 30.3 days all-in including retries, against H-009's 48.7. Kris's objection to the earlier 200-sub-strategy version was correct and is what produced this one: one configuration per leg, 4.5 trades a day, $20.71 average on $50 risked.",
  "legs": null,
  "markets": {
   "traded": [

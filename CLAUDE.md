@@ -190,6 +190,20 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   honest cell 7.9bps. Also settles the cap-curve question: the small-cap edge in the
   microstructure literature is a **3-second** effect and does not reach 15m-4h.
 
+- **Order flow / fade the crowd** (H-006) — the crowd long/short ACCOUNT ratio ranks
+  forward returns monotonically, beats every block-shuffle null, and holds PF 1.227
+  at 2x on BTC out of sample. It still fails, on **risk shape**: no stop means R is
+  a return over trailing vol, so the book draws down 63.5R against H-002's 3.8R and
+  needs 548 days. Closed 2026-09-07 on a kill criterion set in advance: shortening
+  the hold does NOT cut the drawdown, it raises it, monotonically — median maxDD at
+  2x is 2,810R at a 2h hold against 184R at 72h, and median PF 0.41 against 0.92.
+  The walk-forward at a fixed 4h hold scores **PF@2x 0.646** with **negative** R/day
+  and funds zero accounts, while still beating every null seed (median 0.477). The
+  edge is a slow drift that cannot pay 28bps in four hours. Adding a stop was also
+  tested and reverted: the fold selector picks no stop in 37 of 52 folds.
+  `strategies/orderflow/orderflow.py` is KEPT — it is the shared feed loader for
+  twelve other hypotheses, not H-006's strategy.
+
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have
