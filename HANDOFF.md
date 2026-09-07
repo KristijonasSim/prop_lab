@@ -1,5 +1,12 @@
 # HANDOFF — read this before doing anything
 
+> **HISTORICAL — DO NOT QUOTE A NUMBER FROM THIS FILE.**
+> Superseded 2026-09-07. The findings and method rules here are still
+> good; every "current state" section is stale. For where the project
+> actually stands read **`README.md`**, then **`NEXT.md`**, then the
+> newest `SESSION_*.md`.
+
+
 You are picking up a live research project. This file tells you what it is for, what has
 already been settled, and the mistakes that have already been made so you do not repeat
 them. `CLAUDE.md` holds the standing rules; this file holds the state.

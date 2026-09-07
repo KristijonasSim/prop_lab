@@ -1,5 +1,12 @@
 # START HERE
 
+> **HISTORICAL — DO NOT QUOTE A NUMBER FROM THIS FILE.**
+> Superseded 2026-09-07. The findings and method rules here are still
+> good; every "current state" section is stale. For where the project
+> actually stands read **`README.md`**, then **`NEXT.md`**, then the
+> newest `SESSION_*.md`.
+
+
 Short version for whoever picks this up next. Full detail is in `HANDOFF.md`.
 
 ## Clone and set up

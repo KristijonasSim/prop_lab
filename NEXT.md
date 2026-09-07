@@ -1,143 +1,165 @@
-# What to do next — written 2026-09-06
+# What to do next — rewritten 2026-09-07
 
-Read `SESSION_2026-09-06.md` first for why. This file is only the plan.
+Read `SESSION_2026-09-07.md` first for why. This file is only the plan.
 
-## Where the project actually stands
-
-One real edge exists, and it is **gold**. It is the only thing here that has ever
-beaten a paired null on a walk-forward: XAUUSD clears PF 1.20 at 2x on 11 of 20
-cells against the null's **0 of 20**, and the null's best cell (1.178) does not
-even reach the gate.
-
-At the cost we now MEASURE rather than assume it is PF **1.879**, 3.8 trades a
-day, 78% pass rate — and **173 median days to funded** against a 45-day target.
-
-**The problem is no longer signal. It is pace.** That is a different problem from
-the one the last three weeks have been working on, and the plan below reflects
-that.
-
-Two facts that should shape every decision from here:
-
-- **Crypto cannot get there at 14bps.** The screening spec (`core/target_spec.py`)
-  says a strategy needs 8-20bps NET per trade depending on frequency. The best
-  verified crypto signal is `crowd_z`@4h at ~17bps GROSS, which nets ~3bps. The
-  gap is 4-7x, not a tuning problem.
-- **A coin flip funds an account.** With zero edge, one account passes 40.2% of
-  the time (57.1% if the firm's max loss is static rather than trailing). Pass
-  rate alone means almost nothing; what matters is the lift over that line and
-  keeping the account afterwards.
+**Standing instruction from Kris, 2026-09-07: no new hypotheses until items 1–3
+are done.** The project keeps producing results and then invalidating them weeks
+later. That stops before anything else is built.
 
 ---
 
-## Tomorrow, in order
+## Where the project stands in five lines
 
-### 1. `crowd_z` at a 4-hour hold, with a stop — the cheapest shot at PACE
-
-The single most promising untested thing in the repo, and it is cheap.
-
-**Why.** `strategies/stack/stage2_size.py` found 19 of 220 cells clear 14bps AND
-beat 1d / 1w / 1mo block nulls. At 4h: BTC `dcrowd_4h` −17.3bps monotone 1.00
-**7/7 years**; BTC `crowd_z` −16.2bps **7/7 years**; ETH and LINK the same at
-6/6. H-006 only ever tested this family at **8-72h holds with no stop**, and it
-died of **drawdown** (63.5R, 548 days) — its own log says "the killer is
-drawdown, not profit factor". A 4h hold is 2-18x shorter and nobody has run it.
-
-**Do.** Take `strategies/orderflow/orderflow.py`'s kernel, fixed 4h hold, stop at
-1.5-3.0 trailing sigma (stage 4 showed wide stops help, tight ones destroy it),
-walk-forward quarterly, config chosen blind on 2x-cost train PF. Score on
-**days-to-funded**, not PF — H-017 stage 5/6 already showed gates can raise PF
-and make the book slower.
-
-**Kill criterion.** If the 4h hold does not cut drawdown by roughly the ratio of
-the hold lengths, the drawdown is not coming from hold length and this family is
-finished. Say so and stop.
-
-### 2. Nautilus cross-check of the GOLD legs
-
-**Why.** The only independent-engine check ever run covers **one config, one
-market: BTCUSDT 4h MODE_BREAK**. Gold is now the entire book and has never been
-cross-checked. Three look-aheads were found in this kernel three weeks ago. Gold's
-numbers are exactly as unverified today as crypto's were before they collapsed.
-
-**Do.** `strategies/vwap/stage15_nautilus.py` is already faithful (commit
-`0342772`). Point it at XAUUSD 5m floor100 top10 and the 1h cell. Entry bars must
-match exactly; exit-price gaps are a finding, not a failure.
-
-**This is the highest-risk item on the list.** If gold does not survive it, the
-project has nothing.
-
-### 3. Close the pace gap on gold, or decide it cannot close
-
-173 median days must become ~45. Options, in the order I would try them:
-
-- **Combine the gold cells.** 5m, 1h and 4h cells all clear and are different
-  holds on the same instrument. They were scored separately; as one book their
-  drawdowns may not coincide. Cheap to test, and H-012's dilution warning applies
-  — weight by signal-to-cost, not equally.
-- **Re-price EVERYTHING at measured cost.** Only XAUUSD and EURUSD have been
-  re-priced so far. The correction was worth 0.33 of profit factor and 60 days on
-  gold. Every other board number is still on an assumption.
-- **Raise risk deliberately.** The ladder picked 0.25-0.5%. With a real edge and a
-  78% pass rate there may be room, and the daily-loss limit — not the max-loss
-  limit — is what binds first.
-
-**If none of these reach ~45 days, say so plainly.** A real edge that is four
-times too slow is a legitimate answer, and it points at a different firm structure
-rather than more research.
-
-### 4. Confirm the actual firm spec — it is worth 17 points
-
-**Why.** `core/prop_rules.py` enforces the max loss BOTH static and trailing, as
-the stricter reading. Under a **static-only** rule a zero-edge strategy passes
-57.1% instead of 40.2%. That is a bigger effect than most edges in this repo.
-
-Also fix the code defect: `PropRules.trailing` and `.static` are documented as
-configurable but `core/riskladder.run_accounts` ORs both conditions and reads
-neither flag. Since `peak >= 0` the trailing term always dominates, so `static` is
-redundant and `trailing=False` is silently ignored.
-
-**Do.** Pick a real cTrader one-step firm, read its spec, and confirm: static vs
-trailing max loss, min trading days, consistency rule, and whether EAs are allowed
-without restriction.
-
-### 5. Board hygiene — it currently publishes dead numbers
-
-`backtests/scoreboard.html` and `backtests/xpos/board.json` still show the
-pre-fix world: H-017 at 28.5d/9.7d, the crypto legs, and silver. All three are
-dead. Prune or rebuild, and put gold on it with the measured-cost numbers.
-
-Also: `strategies/xpos/stage10_wide.py` writes files named `stage14_*`. Confusing,
-pre-existing, worth renaming while touching it.
+* **One market is left: gold.** All crypto price hypotheses are dead.
+* **Two survivors**, H-002 (VWAP, 4.41 trades/day, 143.6 expected days) and
+  H-016 (ribbon, 0.53 trades/day, 175.9 days). Both beat their nulls.
+* **The problem is speed, not edge.** Both are 3–4x slower than the 45-day target.
+* **The biggest lever is the firm, not research.** One-step turns 143.6 into 55.9.
+* **Two dead records still top the board** at 8.9 and 7.8, flagged SUPERSEDED.
 
 ---
 
-## Do NOT do these
+## THE PLAN — items 1, 2, 3. Agreed with Kris 2026-09-07.
 
-- **More single-feed crypto hypotheses.** Six have now been measured and every one
-  landed in the 1-9bps band: quarter-hour 2.67, absorption 6.55, depth 7.9, DVOL
-  8.9, premium ~10.9 quintile spread, crowd ~17. The band looks structural, and
-  the spec says 8-20bps NET is required. Adding a seventh is not a plan.
-- **Signal stacking.** Tested. The feeds are nearly independent (median |corr|
-  0.027) and combining them still scored **3.1bps WORSE** than the best single
-  ingredient. Equal weighting dilutes.
-- **Moving down the cap curve.** Tested across 11 coins: 0 of 935 depth cells
-  clear 14bps. The literature's small-cap advantage is a 3-second effect and does
-  not reach 15m-4h.
-- **Three copies of one strategy on three accounts.** They are perfectly
-  correlated and pass or fail together. The 1-(1-p)^3 arithmetic only applies to
-  genuinely DIFFERENT strategies — which is what Kris proposed and what the plan
-  should stay aimed at.
-- **Silver.** 2 real cells against its null's 2, and its cost was assumed at HALF
-  the measured spread (2.25 assumed vs 4.554 per side). Dead twice over.
+The root cause of every "it worked, then it was a bug" event is that **results
+are published before they are verified.** The order is backwards:
+
+```
+now:      kernel -> sweep -> walk-forward -> BOARD -> (verify, ad hoc, later)
+should:   kernel -> VERIFY -> sweep -> walk-forward -> BOARD
+```
+
+H-009 reached board score **8.9 without ever being checked by a second engine**,
+and nothing in the system stopped it. These three items make that impossible.
 
 ---
 
-## Open questions for Kris
+### ITEM 1 — kernel fingerprint and automatic staleness *(highest value, do first)*
 
-1. **Power of Three** — the version tested has a fixed hold to the session close,
-   **no stop and no target**. Yours presumably has both. Give me your exact entry,
-   stop and target rules and I will rerun it; the current result only kills the
-   formalisation I chose.
-2. **Is 173 days acceptable** if the edge is real and the account survives
-   afterwards? That changes whether item 3 is a priority or a nice-to-have.
-3. **Which firm?** Item 4 cannot start without one.
+**The problem.** `SUPERSEDED 2026-09-07 — SCORED ON A BROKEN KERNEL` is a note a
+human typed by hand, after noticing. If nobody notices, the board keeps
+publishing numbers produced by code that no longer exists.
+
+**The fix.** Every board record records what produced it:
+
+* the **git SHA** of the repo at write time,
+* a **content hash of every kernel file** the result depends on
+  (`strategies/<x>/engine.py`, `sweep.py`),
+* a **content hash of the input data files** and their date ranges,
+* the cost assumption used.
+
+Then a checker recomputes those hashes and **marks any record stale
+automatically** when the kernel it was built on has changed. The board renders
+the flag; nobody has to remember.
+
+**Why this one first.** It is self-contained, it needs no new tests, and it is
+the item that directly answers Kris's complaint. It converts "oops, that was a
+bug" from a discovery into a notification.
+
+**Where.** `core/board.py::write_board` writes the fingerprint;
+`core/build_scoreboard.py` checks it and renders the flag; a small
+`core/fingerprint.py` holds the hashing.
+
+**Done when.** Touching `strategies/vwap/engine.py` and rebuilding the board
+makes H-002 render as stale without any human editing a note.
+
+---
+
+### ITEM 2 — a verification gate in code
+
+**The problem.** A hypothesis can reach the board having passed nothing. The
+scorecard has an evidence weight, but it does not *gate*.
+
+**The fix.** A hypothesis cannot receive a board score above a floor until it
+passes, in code:
+
+| check | what it catches | status today |
+|---|---|---|
+| **look-ahead truncation** — cut the last N bars, earlier output must not change | the bug that killed all of crypto | exists for ribbon indicators only |
+| **paired null** — same search on phase-randomised data | search noise | done by hand per hypothesis |
+| **second-engine match** — NautilusTrader, trade by trade | kernel flaws | done once, by hand, for gold |
+| **degenerate inputs** — zero volume, flat bars, zero sigma, single bar | this session's fix | none |
+| **cost monotonicity** — PF must fall as cost rises | sign errors in cost | none |
+
+**Where.** `core/verification.py` runs the checks and writes a
+`verification.json` per hypothesis; `core/scorecard.py` reads it and caps the
+score when a check has not passed.
+
+**Note.** The individual checks have to exist before the gate can read them, so
+item 3 partly feeds this. Build the checks as pytest tests, then have the gate
+read their results.
+
+---
+
+### ITEM 3 — pytest, real tests, and CI
+
+**The problem.** No test suite exists. Verified: `smoke_test.py` checks the
+environment, `strategies/ribbon/test_parity.py` covers ribbon's indicators, and
+that is all. **The VWAP kernel has zero tests.**
+
+**Buy the frame, build the invariants.** No package on GitHub knows that a trade
+must not use a bar that has not closed — that is a fact about our strategy.
+
+```
+pip install pytest hypothesis
+```
+
+`hypothesis` matters here: it **generates** adversarial inputs (zero volume, flat
+bars, one bar, all-equal prices) instead of us guessing which ones to write.
+Every bug this project has found was a degenerate input nobody thought of.
+
+**The tests to write, in order of value:**
+
+1. **`test_no_lookahead.py`** — for **every** kernel. Truncate the series, rerun,
+   assert earlier bars and earlier trades are byte-identical. *This single test
+   would have caught the 2026-09-05 look-aheads instantly.*
+2. **`test_degenerate.py`** — zero-volume bars, flat OHLC, zero sigma, empty
+   series, one bar, constant price. Property-based via `hypothesis`.
+3. **`test_costs.py`** — profit factor must be monotone decreasing in cost;
+   R at 0x/1x/2x must satisfy the linear identity `reprice` relies on.
+4. **`test_golden.py`** — pin a known config's trade list. Any kernel edit that
+   moves it must be explained in the commit, not discovered in three weeks.
+5. **Make the Nautilus cross-check a test**, not a session job. It is the thing
+   that has actually found bugs; running it once by hand is the gap.
+
+**CI.** GitHub Actions on push. There is no CI today.
+
+---
+
+### After 1–3, not before: ITEM 4 — one `Strategy` interface
+
+Kernels become a tested library with a shared interface instead of each
+hypothesis reinventing the engine. **This is a refactor, not a fix** — it makes
+future work cheaper, it does not stop the bleeding. Roughly a week. Do not start
+it until 1–3 are in.
+
+---
+
+## Blocked on Kris
+
+| # | question | blocks |
+|---|---|---|
+| B1 | **Which prop firm?** A real cTrader one-step spec. | worth 17pp of pass rate, and 143.6 days → 55.9 |
+| B2 | **The two dead board records** (H-009 8.9, H-017 7.8) — zero them, drop them, or leave them flagged? | the board's top two rows |
+| B3 | **Is ~144 days acceptable** (56 one-step) if the edge is real and the account survives? | whether pace work is a priority |
+| B4 | **Power of Three — your exact entry, stop and target rules.** The tested version had a session-close hold, no stop, no target. Only that formalisation is dead. | rerun of H-026 |
+
+---
+
+## Do NOT do
+
+Carried forward and still true. Full reasoning in `CLAUDE.md`.
+
+* **New hypotheses of any kind** until items 1–3 are in. Kris's call, 2026-09-07.
+* **More single-feed crypto hypotheses.** Six measured, all in the 1–9bps band
+  against a spec needing 8–20bps net. The band looks structural.
+* **Signal stacking.** Combining nearly-independent feeds scored 3.1bps *worse*
+  than the best single ingredient.
+* **Moving down the cap curve.** 0 of 935 depth cells clear 14bps across 11
+  coins; the small-cap effect is a 3-second one.
+* **Three copies of one strategy on three accounts.** Perfectly correlated.
+* **Silver.** Loses to its own null and was costed at half its measured spread.
+* **A wider universe as a drawdown cure** without solving weighting first (H-012).
+* **A database or a VM to fix correctness.** It would not have caught one of
+  these bugs. A VM *is* justified for the **feed collector** — it runs on Kris's
+  laptop via cron and gaps over ~41h are unrecoverable forever.
