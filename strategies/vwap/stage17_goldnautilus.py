@@ -66,12 +66,17 @@ from nautilus_trader.trading.strategy import Strategy                   # noqa: 
 from core.nautilus_setup import make_engine, add_bars_for, fx_instrument  # noqa: E402
 from strategies.vwap.sweep import features, run_one, DEFAULTS           # noqa: E402
 from strategies.vwap.stage3_timeframes import load_tf                   # noqa: E402
-from strategies.vwap.engine import (T_ENTRY_I, T_EXIT_I, T_DIR,         # noqa: E402
+from strategies.vwap.engine import (SD_EPS_FRAC, T_ENTRY_I, T_EXIT_I, T_DIR,  # noqa: E402
                                     T_ENTRY_PX, T_EXIT_PX, T_R, T_REASON)
 
 OUT = ROOT / "backtests" / "queue"
 OUT.mkdir(parents=True, exist_ok=True)
-FOLDS = ROOT / "backtests" / "vwap" / "stage6_folds.parquet"
+# After the 2026-09-07 dead-bar fix the folds re-select, so the cross-check has
+# to verify the shapes the CORRECTED walk-forward chose, not the old ones.
+# --prefolds falls back to the pre-fix file for a like-for-like re-run.
+FOLDS = ROOT / "backtests" / "vwap" / (
+    "stage6_folds.parquet" if "--prefolds" in sys.argv
+    else "stage6_folds_xauusd_deadfix.parquet")
 
 SYM = "XAUUSD"
 TFS = {"5m": "5-MINUTE-LAST", "1h": "1-HOUR-LAST", "4h": "4-HOUR-LAST"}
@@ -254,7 +259,8 @@ class GoldVwap(Strategy):
                  c.stop_k * (self.pending_atr if self.pending_atr > 0
                              else self.pending_sd))
             ar = self.pending_rank
-            ok = d > 0.0 and d >= o * c.min_risk_bps / 1e4
+            # the kernel refuses a fill on a bar that never traded
+            ok = vol > 0.0 and d > 0.0 and d >= o * c.min_risk_bps / 1e4
             if ok and c.min_atr_rank > 0.0 and ar < c.min_atr_rank:
                 ok = False
             if ok and c.max_atr_rank > 0.0 and ar > c.max_atr_rank:
@@ -362,7 +368,15 @@ class GoldVwap(Strategy):
         if band is None:
             return
         v, sd = band
-        if v <= 0.0 or sd <= 0.0:
+        # matches the kernel's post-2026-09-07 guard: `sd <= 0.0` let float
+        # cancellation noise (~3e-5 on gold) through on a session of padded
+        # weekend bars whose true sigma is exactly zero. See engine.SD_EPS_FRAC.
+        if v <= 0.0 or sd <= v * SD_EPS_FRAC:
+            return
+        if vol <= 0.0:
+            # the bar never traded - nothing to decide on. The kernel refuses
+            # both the signal bar and the fill bar; the fill bar is checked
+            # where `pending` is consumed.
             return
         upper, lower = v + c.band_k * sd, v - c.band_k * sd
 

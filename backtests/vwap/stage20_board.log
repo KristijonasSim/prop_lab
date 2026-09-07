@@ -1,0 +1,6 @@
+  wrote /home/kris/prop_lab/backtests/vwap/board.json
+    VWAP — gold only: PF 1.849  2504 trades  4.04/day across 2 sub-strategies (2.02/day each)  R/day +0.1555
+    pick 1.00% risk  TWO-STEP pass 89.9%  killed 0.0%  median 90.0 d  expected 100.2 d   (one-step was 46.9 d)
+  wrote /home/kris/prop_lab/backtests/vwap/board.json
+    VWAP — gold only: PF 2.016  2723 trades  4.406/day across 4 sub-strategies (1.101/day each)  R/day +0.1564
+    pick 1.00% risk  TWO-STEP pass 89.8%  killed 0.0%  median 129.0 d  expected 143.6 d   (one-step was 55.9 d)

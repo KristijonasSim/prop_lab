@@ -5,7 +5,8 @@ This file is the checklist. `NEXT.md` is the reasoning behind it.
 
 **State in one line:** gold (XAUUSD) is the only edge that ever beat a paired null
 on a walk-forward. Crypto died to the look-ahead fix on 2026-09-06. The remaining
-problem is **pace**: 173 median days to funded against a 45-day target.
+problem is **pace**: after the 2026-09-07 dead-bar fix (T7) the best gold book needs
+**143.6 expected days two-step, 55.9 one-step**, against a 45-day target.
 
 ---
 
@@ -14,7 +15,7 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 | # | Question | Blocks |
 |---|---|---|
 | B1 | **Which prop firm?** Need a real cTrader one-step spec. | T4 (worth 17pp of pass rate) |
-| B2 | **Is 173 days to funded acceptable** if the edge is real and the account survives? | whether T3 is priority or nice-to-have |
+| B2 | **Is 144 days to funded acceptable** (56 if one-step) if the edge is real and the account survives? | whether T3 is priority or nice-to-have |
 | B3 | **Power of Three — your exact entry, stop and target rules.** Tested version had a fixed session-close hold, no stop, no target. Only that formalisation is dead. | rerun of H-026 |
 
 ---
@@ -33,13 +34,61 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 - **Kill criterion:** if a 4h hold does not cut drawdown ~in proportion to the hold ratio, the drawdown is not from hold length. Family finished. Say so and stop.
 </details>
 
-## T2 — Nautilus cross-check of the GOLD legs  *(highest risk on the list)*
+## T2 — Nautilus cross-check of the GOLD legs — **DONE 2026-09-07. GOLD SURVIVED.**
+
+**Result:** 5m matched 13/13 entry bars, 1h matched 11/12; matched trades agree on R to
+1e-14. Three bugs turned up and all three were the PORT's. The single disagreement was
+the **KERNEL's** — see T7.
+
+<details><summary>original task</summary>
+
 
 - `strategies/vwap/stage15_nautilus.py` is already faithful (commit `0342772`).
 - Point it at XAUUSD 5m floor100 top10, and the 1h cell.
 - Entry bars must match exactly. Exit-price gaps are a finding, not a failure.
 - Why: the only independent-engine check ever run was BTCUSDT 4h MODE_BREAK — one config, one market. Gold is now the whole book and is as unverified as crypto was before it collapsed.
 - **If gold does not survive this, the project has nothing.**
+</details>
+
+## T7 — the two dead-bar fixes — **DONE 2026-09-07. Edge holds, pace headline does not.**
+
+Stage 19 wrote both fixes down and deliberately did NOT apply them. `stage20_deadfix.py`
+applies them and measures the cost. `strategies/vwap/notes.md` stage 20 has the workings.
+
+**The fixes.** (1) The `sd <= 0.0` volatility guard let float cancellation noise (~3e-5 on
+gold, the floor is `price·sqrt(eps)`) act as a real band on sessions whose true sigma is
+zero — now `sd <= vwap · 1e-6`. (2) The kernel refused neither to DECIDE nor to FILL on
+Dukascopy's padded weekend bars, and **21.5% of the XAUUSD series is those**. Both engines
+carry both rules; the Nautilus port in stage 17 was patched to match.
+
+| | before | after |
+|---|---|---|
+| gold cells clearing PF 1.20 @2x measured | 15/20 | **15/20** |
+| paired null, same procedure | 1/20 | 2/20 |
+| median cell PF@2x | 1.395 | **1.485** |
+| best book, expected days two-step | 100.2 | **143.6** |
+| same, one-step | 46.9 | **55.9** |
+
+**The signal survives; the median cell got BETTER.** Weekend padding was adding noise, not
+edge. **The pace headline does not survive.** The old book's peak drawdown was 8.00R
+against an 8.00R cap — exactly on the line — so a 3.8% trade cut takes it to 8.60R,
+`riskladder.pick` drops a risk rung, and the day count nearly doubles. The 100-day number
+was never robust.
+
+New book: `5m+30m+1h+4h` weighted by **signal-to-cost** — H-012's prescription, now winning
+on its own. Control: 3 of 78 real books under 150 days against **0 of 78** null; the null's
+fastest needs 474.7 days.
+
+**H-016 got BETTER, not worse.** Ribbon was far more exposed than VWAP — XAUUSD 1h took
+25.19R of 54.25R from dead-bar entries and 4h took 11.87R of 2.15R. After the fix its
+metals legs clear 11/14 against a null mean of 4.33/14, up from 7/14 against 4.67. Slower
+though: 175.9 expected days. Rescored 5.5 → 5.0. H-002 rescored 6.7 → 6.0.
+
+Crypto is untouched: it has **zero** zero-volume bars.
+
+**Still open on this:** the four-leg book and its weighting were chosen on the window they
+are scored on, same weak joint as stage 18. Pre-fix results backed up at
+`backtests/ribbon/prefix_2026-09-07/` and `backtests/vwap/board.json.prefix-2026-09-07`.
 
 ## T3 — Close the pace gap on gold — **items 1 and 2 DONE, item 3 has no headroom**
 
@@ -49,7 +98,12 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 | 2. re-price at measured cost | Done for the ribbon too. On gold it is worth 0.33 PF; on the ribbon it is a **no-op** — gold's gain and silver's loss cancel. Silver also **loses to its own null** and came off the board. |
 | 3. raise risk | **No headroom.** At 1.00% risk peak drawdown is exactly −8.00%, the cap. At 1.25% it is −10.01% and `fail_max` goes 0% → 20.8%. The **max-loss** cap binds first, not the daily-loss limit — the opposite of what `NEXT.md` guessed. |
 
-**Where that leaves pace: 100 expected days two-step, 46.9 one-step.** If the firm is one-step this book is already at the 45-day target, which makes B1 the highest-value open question in the project.
+**SUPERSEDED BY T7.** Every number in this section was measured on the pre-dead-bar-fix
+kernel. The 100.2-day book re-scores to 185.8 on the corrected data, and the re-run search
+finds 143.6 (55.9 one-step). The conclusion is unchanged in shape and worse in size: if the
+firm is one-step the book is near the target, so B1 is still the highest-value open
+question. Item 3's finding — the **max-loss** cap binds before the daily-loss limit — is
+what makes the fix cost so much, since the old book sat exactly on that cap.
 
 <details><summary>original task</summary>
 

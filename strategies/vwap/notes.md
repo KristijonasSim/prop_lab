@@ -248,3 +248,71 @@ should be done deliberately rather than at the end of a session:
 1. change the kernel's `sd <= 0.0` guard to a tolerance in price terms;
 2. drop zero-volume bars from FX/metals data at load, or at least refuse to
    trade them.
+
+## Stage 20 — the two dead-bar fixes applied. The edge holds; the PACE headline does not.
+
+`stage20_deadfix.py`. Stage 19 wrote down two fixes and deliberately did not
+apply them, because they move every gold number and gold is the only edge in the
+project. This applies both and measures what they cost.
+
+### The fixes
+
+1. **The volatility guard.** `vwstd` is `sqrt(p2v/v − vwap²)`: a difference of
+   two nearly equal accumulated sums, so its floating-point cancellation floor
+   is `price·sqrt(eps)` — about 3e-5 on gold, which is exactly the 3.1e-5 stage
+   17 observed. A session made entirely of padded weekend bars has a TRUE sigma
+   of zero, and the old `if sd <= 0.0` guard let that noise through as a real
+   band. Now `sd <= vwap · SD_EPS_FRAC` with `SD_EPS_FRAC = 1e-6` — ~70x above
+   the cancellation floor, ~2,000x below the smallest real band on gold.
+2. **Dead bars refused.** `live[i]` is 1 where the bar actually traded.
+   **21.5% of the XAUUSD series is zero-volume padding** (57,975 of 270,144 5m
+   bars). The kernel now refuses to decide on one AND refuses to fill on one.
+   The Nautilus port in stage 17 carries both rules, so the cross-check stays
+   honest.
+
+Crypto has **zero** zero-volume bars, so no crypto number moves.
+
+### The signal survives the correction
+
+| | before | after |
+|---|---|---|
+| cells clearing PF 1.20 at 2x measured | 15 / 20 | **15 / 20** |
+| paired null, same procedure | 1 / 20 | 2 / 20 |
+| median cell PF@2x | 1.395 | **1.485** |
+| gold walk-forward trades | 18,119 | 17,432 (−3.8%) |
+
+The median cell got BETTER. That is the right shape for this fix: weekend
+padding was adding noise, not edge, and removing it does not remove the signal.
+
+### The pace headline does not survive
+
+| book | expected days (two-step) |
+|---|---|
+| 5m + 4h equal, the board's old book, re-scored | 100.2 → **185.8** |
+| the 78-combination search re-run: 5m+30m+1h+4h [sig_cost] | **143.6** |
+
+**Why a 3.8% trade cut nearly doubled the day count.** The old book's peak
+drawdown was **8.00R against an 8.00R cap — exactly on the line**. The fix took
+it to 8.60R, `riskladder.pick` drops a risk rung, and the day count roughly
+doubles. So the 100-day number was never robust; it was resting on a knife edge,
+and any change of that size in either direction would have moved it as much.
+This is the same cap that T3 item 3 found binds before the daily-loss limit.
+
+### The new book, and its control
+
+`5m+30m+1h+4h` weighted by **signal-to-cost** — which is what H-012 said was
+missing when a wider book made things slower, and it is now the weighting that
+wins on its own. PF 2.016, 4.41 trades/day, maxDD 7.52R, **143.6 expected days
+two-step, 55.9 one-step.**
+
+The search controls: 3 of 78 real books come in under 150 expected days against
+**0 of 78** for the null, and the null's fastest book needs 474.7 days.
+
+### Caveats, unprompted
+
+- **The book and its weighting were chosen on the window they are scored on**,
+  from 78 combinations. Same weak joint as stage 18. The null controls the
+  search; a held-out window would settle it and there is not one.
+- 143.6 days is **3.2x** the 45-day target, worse than stage 18's 2.2x.
+- The one-step number, 55.9 days, is the one that matters if the firm turns out
+  to be one-step. That still makes the firm question the highest-value open item.

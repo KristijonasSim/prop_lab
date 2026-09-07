@@ -121,6 +121,7 @@ def ribbon_inputs(df: pd.DataFrame, p: RibbonParams | None = None) -> dict:
         agree=agree, prev_agree=prev,
         nflat=f["n_flat"].to_numpy(float),
         strength=f["strength"].to_numpy(float),
+        live=(df["volume"].to_numpy(float) > 0).astype(np.uint8),
     )
 
 
@@ -132,6 +133,7 @@ def run_one(inp: dict, cfg: dict, fee, slip, minrisk, gate=None,
     return E.simulate(
         inp["o"], inp["h"], inp["l"], inp["c"], inp["atr"],
         inp["agree"], inp["prev_agree"], inp["nflat"], inp["strength"], g,
+        inp.get("live", np.ones(inp["agree"].shape[0], dtype=np.uint8)),
         int(cfg["mode"]), float(cfg["entry_thr"]), int(cfg["require_flip"]),
         float(cfg["squeeze_n"]), float(cfg["min_strength"]),
         int(cfg["trail_mode"]), float(cfg["trail_k"]), float(cfg["stop_k"]),

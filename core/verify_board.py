@@ -7,11 +7,24 @@ principles with each step printed.
 
 Run:  .venv/bin/python core/verify_board.py
 
+It should reproduce the board's headline exactly: PF 2.016, max drawdown 7.518 R,
+R per day +0.15627, and 136.9 expected days two-step at the largest risk that
+keeps peak drawdown inside the 8% cap (1.064%). The board itself reports 143.6 at
+1.00%, because `core/riskladder` only offers discrete risk rungs and 1.064% is not
+one of them. If any of those numbers moves, the board is wrong or this is.
+
+REWRITTEN 2026-09-07. It used to audit the five-leg book of 2026-09-01 —
+BTCUSDT 4h, ETHUSDT 1h/30m, SOLUSDT 4h, XAUUSD 5m. **Four of those five legs died
+on 2026-09-06** when three look-aheads came out of the VWAP kernel, and the whole
+file predates the 2026-09-07 dead-bar fix. An audit tool that verifies a book the
+board no longer carries is worse than no audit tool, so this now reads the same
+walk-forward the board reads.
+
 WHAT THE INPUT IS
 -----------------
-backtests/vwap/stage10_trades.parquet holds one row per out-of-sample
-trade from the quarterly walk-forward whose fold selector ranks by train PF at
-double cost. Columns:
+backtests/vwap/stage6_trades_xauusd_deadfix.parquet holds one row per
+out-of-sample trade from the quarterly walk-forward whose fold selector ranks by
+train PF at double cost, on the kernel corrected 2026-09-07. Columns:
     symbol, tf      market and timeframe
     floor, topn     the selection rule that produced the trade (see below)
     quarter         the test quarter it was traded in
@@ -25,9 +38,28 @@ made exactly what it risked. Fees and slippage are already subtracted.
 
 THE BOOK CONSTRUCTION
 ---------------------
-The board uses the best tradeable subset found by stage 11 on the twelve-market
-universe: BTCUSDT 4h, ETHUSDT 1h, ETHUSDT 30m, SOLUSDT 4h and XAUUSD 5m, one
-blind-chosen configuration per leg, equal weighted on the common 2024-09+ window.
+Gold, and only gold. The board's book is four cells of the SAME instrument at
+different timeframes — XAUUSD 5m, 30m, 1h and 4h — chosen as the fastest of 78
+one-cell-per-timeframe combinations, and weighted by SIGNAL-TO-COST rather than
+equally: leg i gets (total R / max drawdown)_i normalised across the legs. Equal
+weight is reported beside it as the control, because H-012 established that
+adding equally weighted legs makes a book slower, not faster.
+
+Two cells on the same timeframe are the same walk re-selected, so at most one
+cell per timeframe may enter the book. The representative cell for a timeframe
+is the one with the highest total R inside the common window.
+
+RE-PRICING, AND WHY IT IS EXACT
+-------------------------------
+The walk-forward charged an ASSUMED 3.00bps round trip on XAUUSD. `core/fx_spread`
+later measured 1.83bps from 478 hours of Dukascopy ticks. R is linear in cost and
+the file stores each trade at 1x and 2x, so
+
+    C = r_1x - r_2x            (one round trip, in R)
+    r_0x = r_1x + C            (zero cost)
+    r_s  = r_0x - (s/3.00) * C (any round trip s, in bps)
+
+recovers any cost level exactly. No re-simulation, and no approximation.
 
 THE EVALUATION STRUCTURE
 ------------------------
@@ -47,23 +79,24 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-TRADES = ROOT / "backtests" / "vwap" / "stage10_trades.parquet"
-STITCHED = ROOT / "backtests" / "vwap" / "stage10_stitched.csv"
+TRADES = ROOT / "backtests" / "vwap" / "stage6_trades_xauusd_deadfix.parquet"
+STITCHED = ROOT / "backtests" / "vwap" / "stage6_stitched_xauusd_deadfix.csv"
 
 TARGET = 0.08        # prop profit target
 MAX_LOSS = 0.08      # prop max-loss cap
 DAILY_LOSS = 0.04    # prop daily-loss cap
-COMMON_START = "2024-09-01"   # first quarter every leg in the book has
 GATE = 1.20
-SELECTED_LEGS = [
-    ("BTCUSDT", "4h"),
-    ("ETHUSDT", "1h"),
-    ("ETHUSDT", "30m"),
-    ("SOLUSDT", "4h"),
-    ("XAUUSD", "5m"),
-]
-FLOOR = 100
-TOPN = 1
+SYM = "XAUUSD"
+ASSUMED_RT = 3.00    # bps round trip the walk-forward charged on XAUUSD
+MEASURED_RT = 1.83   # 1.671 mean spread + 0.15 cTrader commission
+BOOK_TFS = ["5m", "30m", "1h", "4h"]   # the board's four legs
+WEIGHTING = "sig_cost"                 # total R / max drawdown, normalised
+
+
+def reprice(r_1x, r_2x, rt_bps):
+    """R at an arbitrary round-trip cost. Exact: R is linear in cost."""
+    c = np.asarray(r_1x) - np.asarray(r_2x)
+    return (np.asarray(r_1x) + c) - (rt_bps / ASSUMED_RT) * c
 
 
 def rule(msg):
@@ -153,41 +186,86 @@ def main():
     tr["entry_ts"] = pd.to_datetime(tr.entry_ts, utc=True)
     tr["exit_ts"] = pd.to_datetime(tr.exit_ts, utc=True)
 
-    rule("STEP 1 — which markets are in the book, and why")
-    st = pd.read_csv(STITCHED)
-    piv = st.pivot_table(index=["symbol", "tf"], columns=["floor", "topn"], values="pf_2x")
-    worst = piv.min(axis=1)
-    survivors = [k for k in worst[worst >= GATE].index]
-    print(f"{len(piv)} market x timeframe combinations were walk-forwarded.")
-    print(f"A combination is kept only if its stitched 2x-COST profit factor clears {GATE}")
-    print("under ALL FOUR selection rules (trade-count floor 30 or 100, top-1 or")
-    print("top-10). That is the strictest of the four, not the best.")
-    print(f"\n{len(survivors)} survive: {', '.join(f'{a} {b}' for a, b in survivors)}")
-    print("\nworst-of-four 2x-cost profit factor per survivor:")
-    for a, b in survivors:
-        print(f"    {a:8s} {b:4s}  {worst.loc[(a, b)]:.3f}")
+    tr = tr[tr.symbol == SYM].copy()
 
-    print("\nboard-selected tradeable subset:")
-    for a, b in SELECTED_LEGS:
-        print(f"    {a:8s} {b:4s}")
+    rule("STEP 1 — which cells clear the gate, and which four are the book")
+    print(f"Every number below is at the MEASURED {MEASURED_RT}bps round trip,")
+    print(f"recovered exactly from the stored 1x/2x pair (the walk-forward")
+    print(f"charged {ASSUMED_RT}bps). '2x' means {MEASURED_RT*2}bps.\n")
 
-    for topn, label in ((TOPN, "BOARD: 1 config per selected market"),):
-        rule(f"STEP 2 — book with topn={topn}   ({label})")
-        sel = tr[(tr.floor == FLOOR) & (tr.topn == topn) &
-                 (tr.exit_ts >= COMMON_START)]
-        sel = sel[[(s, t) in SELECTED_LEGS for s, t in zip(sel.symbol, sel.tf)]]
-        sel = sel.sort_values("exit_ts")
-        n_legs = len(SELECTED_LEGS)
-        n_books = n_legs * topn
+    cells = {}
+    for k, g in tr.groupby(["tf", "floor", "topn"]):
+        g = g.sort_values("exit_ts")
+        cells[k] = pd.DataFrame({
+            "entry_ts": g.entry_ts.values, "exit_ts": g.exit_ts.values,
+            "rm": reprice(g.r.values, g.r_2x.values, MEASURED_RT),
+            "rm2": reprice(g.r.values, g.r_2x.values, MEASURED_RT * 2)})
 
-        # equal weight across legs: each leg's R is divided by the leg count.
-        # `r` in the file is already divided by topn.
-        r = sel.r.values / n_legs
-        r2 = sel.r_2x.values / n_legs
+    # every leg must be measured over the SAME dates, or a subset comparison
+    # is a comparison of windows rather than of strategies
+    lo = max(g.exit_ts.min() for g in cells.values())
+    hi = min(g.exit_ts.max() for g in cells.values())
+    cut = {k: g[(g.exit_ts >= lo) & (g.exit_ts <= hi)] for k, g in cells.items()}
+    print(f"common window {pd.Timestamp(lo).date()} -> {pd.Timestamp(hi).date()}\n")
+
+    n_clear = 0
+    for k in sorted(cut, key=lambda x: (BOOK_TFS.index(x[0]) if x[0] in BOOK_TFS
+                                        else 99, x[1], x[2])):
+        g = cut[k]
+        if len(g) < 30:
+            continue
+        p2 = profit_factor(g.rm2.values)
+        n_clear += p2 >= GATE
+        print(f"    {k[0]:4s} floor{k[1]:<4d} top{k[2]:<3d}  {len(g):5d} trades  "
+              f"PF {profit_factor(g.rm.values):6.3f}  PF@2x {p2:6.3f}"
+              f"{'  <- clears' if p2 >= GATE else ''}")
+    print(f"\n{n_clear} of {len([k for k in cut if len(cut[k]) >= 30])} cells "
+          f"clear PF {GATE} at 2x measured cost.")
+    print("  NOTE: stage 20 reports 15 of 20 for the same data. The difference is")
+    print("  the window, not the arithmetic — stage 20 scores each cell over its")
+    print("  OWN full span, this cuts every cell to the common window so the legs")
+    print("  are comparable. Neither is wrong; the common window is the honest one")
+    print("  for building a book, the full span for judging a cell on its own.")
+
+    # one cell per timeframe: two cells on one timeframe are the same walk
+    # re-selected, so combining them counts one book twice
+    rep = {}
+    for tf in BOOK_TFS:
+        cand = {k: g for k, g in cut.items() if k[0] == tf and len(g) >= 30}
+        if cand:
+            rep[tf] = max(cand, key=lambda k: float(cand[k].rm.sum()))
+    print("\nrepresentative cell per timeframe (highest total R in the window):")
+    for tf in BOOK_TFS:
+        if tf in rep:
+            print(f"    {tf:4s}  floor{rep[tf][1]} top{rep[tf][2]}")
+
+    for _ in (0,):
+        rule(f"STEP 2 — the board's book: {'+'.join(BOOK_TFS)} [{WEIGHTING}]")
+        legs = [cut[rep[tf]] for tf in BOOK_TFS if tf in rep]
+        n_legs = len(legs)
+        n_books = sum(rep[tf][2] for tf in BOOK_TFS if tf in rep)
+
+        tot = np.array([max(float(l.rm.sum()), 0.0) for l in legs])
+        # max_drawdown_R returns a NEGATIVE number here; take the magnitude
+        dds = np.array([max(abs(max_drawdown_R(l.rm.values)), 1e-9) for l in legs])
+        raw = tot / dds
+        w = raw / raw.sum()
+        print("  signal-to-cost weights — total R divided by that leg's own")
+        print("  max drawdown, normalised. H-012 showed equal weight dilutes.")
+        for tf, l, t, d, wi in zip(BOOK_TFS, legs, tot, dds, w):
+            print(f"    {tf:4s}  totalR {t:7.2f}  maxDD {d:6.2f}R  "
+                  f"ratio {t/d:6.3f}  weight {wi:.4f}")
+
+        sel = pd.concat([l.assign(rm=l.rm * wi, rm2=l.rm2 * wi)
+                         for l, wi in zip(legs, w)],
+                        ignore_index=True).sort_values("exit_ts")
+        r = sel.rm.values
+        r2 = sel.rm2.values
         span_days = (sel.exit_ts.iloc[-1] - sel.exit_ts.iloc[0]).days
 
-        print(f"  legs                 {n_legs}")
-        print(f"  configs per leg      {topn}")
+        print(f"\n  legs                 {n_legs}")
+        print(f"  configs per leg      "
+              f"{[int(rep[tf][2]) for tf in BOOK_TFS if tf in rep]}")
         print(f"  parallel strategies  {n_books}")
         print(f"  each strategy risks  1/{n_books} of the account's per-trade risk")
         print(f"  trade rows           {len(r)}")
@@ -238,11 +316,9 @@ def main():
         print("  it is another chance to breach, and the drawdown is paid twice.")
 
     rule("STEP 3 — what would be needed to pass in 14 days")
-    sel = tr[(tr.floor == FLOOR) & (tr.topn == TOPN) & (tr.exit_ts >= COMMON_START)]
-    sel = sel[[(s, t) in SELECTED_LEGS for s, t in zip(sel.symbol, sel.tf)]].sort_values("exit_ts")
-    r = sel.r.values / len(SELECTED_LEGS)
-    span = (sel.exit_ts.iloc[-1] - sel.exit_ts.iloc[0]).days
-    dd, rpd = abs(max_drawdown_R(r)), r.sum() / span
+    # same book as STEP 2; `r` and `span_days` are still bound to it
+    dd, rpd = abs(max_drawdown_R(r)), r.sum() / span_days
+    span = span_days
     print(f"  tradeable book: maxDD {dd:.2f} R, R/day {rpd:.4f}")
     print(f"  days = {dd:.2f} / {rpd:.4f} = {dd/rpd:.0f}")
     print(f"  for 14 days you need EITHER")

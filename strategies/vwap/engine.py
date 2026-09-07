@@ -27,6 +27,10 @@ N_COLS = 8
 R_STOP, R_TARGET, R_TIME, R_FLIP, R_VWAP = 0, 1, 2, 3, 4
 
 MODE_TREND, MODE_FADE, MODE_BREAK, MODE_RECLAIM, MODE_PULLBACK = 0, 1, 2, 3, 4
+
+# Minimum volume-weighted sigma, as a fraction of the VWAP, that is treated as
+# real rather than as float cancellation noise. See the guard in `simulate`.
+SD_EPS_FRAC = 1e-6
 FILL_LIMIT, FILL_CLOSE = 0, 1
 TGT_SESSION, TGT_VWAP, TGT_OPPOSITE, TGT_RR = 0, 1, 2, 3
 
@@ -35,6 +39,11 @@ TGT_SESSION, TGT_VWAP, TGT_OPPOSITE, TGT_RR = 0, 1, 2, 3
 def simulate(
     o, h, l, c, atr, vwap, vwstd, rvol, atr_rank,
     sess_start,          # bar index where each session begins
+    live,                # uint8, 1 = the bar really traded. Dukascopy pads a
+                         # closed FX weekend with zero-volume bars carrying the
+                         # last price repeated; 21.5% of XAUUSD bars are these.
+                         # A trade cannot be decided on one or filled at one.
+                         # Crypto has none, so no crypto number moves. 2026-09-07.
     mode,
     fill_mode,
     band_k,              # entry band, in volume-weighted sigmas
@@ -100,7 +109,18 @@ def simulate(
 
             v = vwap[i]
             sd = vwstd[i]
-            if v <= 0.0 or sd <= 0.0:
+            # `sd <= 0.0` was not a sufficient guard. vwstd is
+            # sqrt(p2v/v - vwap^2), a difference of two nearly equal accumulated
+            # sums, so its cancellation floor is price*sqrt(eps) ~ 1.5e-8*price -
+            # about 3e-5 on gold. A session made entirely of padded weekend bars
+            # has a TRUE sigma of exactly zero and returned 3.1e-5 of floating
+            # point noise, which passed the old guard and resolved real trade
+            # decisions in a market that was closed. SD_EPS_FRAC sits ~70x above
+            # that floor and ~2,000x below the smallest real band on gold.
+            if v <= 0.0 or sd <= v * SD_EPS_FRAC:
+                i += 1
+                continue
+            if live[i] == 0:            # the bar never traded; nothing to decide on
                 i += 1
                 continue
 
@@ -213,6 +233,9 @@ def simulate(
                         entry_i = i + 1
 
             if side == 0:
+                i += 1
+                continue
+            if live[entry_i] == 0:      # the fill bar never traded either
                 i += 1
                 continue
             if dir_mode == 1 and side != 1:

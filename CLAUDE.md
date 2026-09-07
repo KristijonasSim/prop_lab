@@ -209,6 +209,25 @@ Standing pattern from that repo: **every leg that ever worked came from a data f
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have
 now died here, and the one crypto book that looked alive died to a look-ahead fix.
 
+**FX/METALS DATA CARRIES A CLOSED MARKET (2026-09-07, `stage20_deadfix.py`).**
+Dukascopy pads the closed FX weekend with synthetic bars: zero volume, O=H=L=C at
+the last traded price. **21.5% of the XAUUSD series is these.** Two rules now hold
+in every engine that touches FX or metals, and any new one must carry them:
+1. **Never decide or fill on a zero-volume bar.** Both kernels (`vwap`, `ribbon`)
+   take a `live` array. Before the fix H-016's XAUUSD 1h leg took **25.19R of
+   54.25R** from dead-bar entries and its 4h leg **11.87R of 2.15R** — that leg
+   was negative without them.
+2. **A volatility guard needs a tolerance in price terms, not `<= 0.0`.** A
+   quantity like `vwstd = sqrt(p2v/v − vwap²)` is a difference of near-equal
+   accumulated sums, so its cancellation floor is `price·sqrt(eps)` ≈ 3e-5 on
+   gold. `sd <= 0.0` let that noise act as a real band on sessions that never
+   traded. Use `sd <= price · 1e-6`.
+Applying both left the signal intact (gold cells clearing PF 1.20 at 2x: 15/20
+before and after, median cell 1.395 → **1.485**) and **cost the pace headline**:
+the best book went 100.2 → 143.6 expected days, because the old book's drawdown
+sat at 8.00R against an 8.00R cap. Crypto has **zero** zero-volume bars and did
+not move.
+
 **Measured, not assumed (2026-09-06, `strategies/depth/stage2_cost.py`):** market
 impact at prop clip sizes is **0.018bps one-way on BTC** and 1.5bps on DOT for a
 $50k clip — around a hundredth of the 2bps/side this repo assumes. **The 14bps round

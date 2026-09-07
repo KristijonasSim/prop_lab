@@ -638,3 +638,52 @@ be distinguished from noise.
 Board record rewritten gold-only at measured cost. **H-016 rescored 6.5 → 5.5.**
 That is the honest number, and it is a downgrade earned by measuring rather than
 by any new failure.
+
+## Stage 12 (2026-09-07) — dead weekend bars removed. The margin over the null WIDENS.
+
+Applied at the same time as H-002's stage 20 and for the same reason: Dukascopy
+pads the closed FX weekend with synthetic bars — zero volume, O=H=L=C at the last
+traded price — and **21.5% of the XAUUSD series is these**. `engine.simulate` now
+takes a `live` array and refuses both the signal bar and the fill bar when the
+volume is zero. `sweep.ribbon_inputs` builds it; there is no VWAP here so the
+sigma-noise half of the H-002 fix does not apply.
+
+### How exposed the ribbon actually was — far more than H-002
+
+Measured on the pre-fix walk-forward trades before anything was changed:
+
+| leg | trades | on a dead bar | R from those | R total |
+|---|---|---|---|---|
+| XAUUSD 1h | 1,180 | 133 (11.3%) | **+25.19** | 54.25 |
+| XAUUSD 4h | 761 | 105 (13.8%) | **+11.87** | **2.15** |
+| XAUUSD 30m | 1,260 | 84 (6.7%) | +0.87 | 25.40 |
+| XAUUSD 15m | 1,470 | 69 (4.7%) | −5.11 | 58.21 |
+
+H-002's equivalent number was **0.83%** of total R. Here XAUUSD 1h took **46%** of
+its R from bars where the market was shut, and 4h was **negative without them**.
+That is the difference between a footnote and a result resting on padding.
+
+### What happened when they were removed
+
+| | before | after |
+|---|---|---|
+| metals legs clearing PF 1.20 at 2x | 7 / 14 | **11 / 14** |
+| null mean, 3 seeds | 4.67 / 14 | 4.33 / 14 |
+| XAUUSD alone, real vs null mean | — | **7 / 8** vs 2.00 |
+| gold-only book, expected days | 151.1 | **175.9** |
+| gold-only book PF at measured cost | 2.068 | 1.811 |
+
+**The real data got better and the null did not.** That is the outcome to hope for:
+if the dead bars had been carrying the edge, removing them would have collapsed the
+real side toward the null. Instead the margin roughly doubled. What it cost is pace
+— 175.9 expected days, worse than H-002's 143.6 — and profit factor, which fell
+because the removed trades were net positive on two legs.
+
+### Caveats, unprompted
+
+- **Silver stays off the board** and this does not revisit that. It was dropped for
+  losing to this hypothesis's own null and for being priced at half its measured
+  spread; neither is affected by the dead-bar rule.
+- Seven walk-forward quarters. The null is three seeds, which is a small sample of
+  a distribution — seed 2 alone clears 10 of 32 against the real 11 of 32.
+- Pre-fix results are kept at `backtests/ribbon/prefix_2026-09-07/`.

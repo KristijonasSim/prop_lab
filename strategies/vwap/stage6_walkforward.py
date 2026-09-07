@@ -227,8 +227,20 @@ def main():
         shuffled, tag = True, "_shuffled"
     else:
         shuffled, tag = False, ""
+    # --only SYM[,SYM] restricts the run and TAGS the output, so a partial
+    # re-run can never overwrite the full walk-forward it is being compared to.
+    only = None
+    for a in sys.argv:
+        if a.startswith("--only="):
+            only = [x.strip() for x in a.split("=", 1)[1].split(",")]
     combos = [(s, tf, shuffled) for s in ASSETS for tf in TFS
               if not (s == "BTCUSDT" and tf == "5m")]   # 15m base cannot go finer
+    if only:
+        combos = [c for c in combos if c[0] in only]
+        tag = f"_{'_'.join(only).lower()}{tag}"
+    for a in sys.argv:
+        if a.startswith("--tag="):
+            tag = tag + a.split("=", 1)[1]
     print(f"{len(combos)} market x timeframe combinations"
           f"{' — SHUFFLED (null benchmark)' if shuffled else ''}", flush=True)
 

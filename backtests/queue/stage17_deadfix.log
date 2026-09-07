@@ -1,0 +1,55 @@
+
+XAUUSD 5m: 270,144 bars  2023-09-01 -> 2026-08-30  |  12 configs
+  [ 1/12] mode2 anch-1/1152 stop0 tgt3 hold144  kernel   194  stream   194  entry-match 1.0000  dR 8.92e-10
+  [ 2/12] mode2 anch-1/1152 stop0 tgt0 hold0  kernel   377  stream   377  entry-match 1.0000  dR 2.97e-08
+  [ 3/12] mode2 anch-1/1152 stop0 tgt0 hold144  kernel   328  stream   328  entry-match 1.0000  dR 1.41e-08
+  [ 4/12] mode2 anch-1/1152 stop0 tgt0 hold0  kernel   346  stream   346  entry-match 1.0000  dR 2.41e-08
+  [ 5/12] mode2 anch-1/1152 stop0 tgt3 hold144  kernel   266  stream   266  entry-match 1.0000  dR 3.68e-09
+  [ 6/12] mode2 anch-1/1152 stop0 tgt0 hold144  kernel   340  stream   340  entry-match 1.0000  dR 1.62e-08
+  [ 7/12] mode2 anch-1/1152 stop1 tgt0 hold0  kernel   134  stream   134  entry-match 1.0000  dR 1.42e-14
+  [ 8/12] mode2 anch-1/1152 stop1 tgt0 hold0  kernel   446  stream   446  entry-match 1.0000  dR 1.07e-14
+  [ 9/12] mode2 anch-1/1152 stop0 tgt0 hold0  kernel   200  stream   200  entry-match 1.0000  dR 2.41e-08
+  [10/12] mode2 anch-1/1152 stop0 tgt3 hold0  kernel   291  stream   291  entry-match 1.0000  dR 7.81e-10
+  [11/12] mode2 anch-1/1152 stop0 tgt0 hold0  kernel    98  stream    98  entry-match 1.0000  dR 2.41e-08
+  [12/12] mode2 anch-1/1152 stop0 tgt0 hold0  kernel   381  stream   381  entry-match 1.0000  dR 5.93e-08
+
+XAUUSD 1h: 22,512 bars  2023-09-01 -> 2026-08-30  |  12 configs
+  [ 1/12] mode2 anch-1/96 stop0 tgt3 hold12  kernel   189  stream   189  entry-match 1.0000  dR 6.43e-10
+  [ 2/12] mode0 anch-1/96 stop0 tgt3 hold0  kernel   508  stream   508  entry-match 1.0000  dR 6.17e-10
+  [ 3/12] mode4 anch0/0 stop1 tgt0 hold0  kernel   258  stream   259  entry-match 1.0000  dR 3.73e-14
+  [ 4/12] mode2 anch-1/96 stop0 tgt0 hold12  kernel   178  stream   178  entry-match 1.0000  dR 6.43e-10
+  [ 5/12] mode1 anch-1/96 stop0 tgt0 hold0  kernel   105  stream   105  entry-match 1.0000  dR 4.46e-09
+  [ 6/12] mode2 anch8/0 stop1 tgt0 hold0  kernel   358  stream   358  entry-match 1.0000  dR 3.26e-14
+  [ 7/12] mode3 anch-1/96 stop0 tgt0 hold0  kernel    91  stream    91  entry-match 1.0000  dR 2.66e-09
+  [ 8/12] mode2 anch-1/96 stop1 tgt0 hold0  kernel   335  stream   335  entry-match 1.0000  dR 2.69e-14
+  [ 9/12] mode2 anch-1/96 stop1 tgt0 hold12  kernel   104  stream   104  entry-match 1.0000  dR 8.88e-15
+  [10/12] mode2 anch-1/96 stop1 tgt3 hold4  kernel   309  stream   309  entry-match 1.0000  dR 5.24e-14
+  [11/12] mode2 anch-1/96 stop1 tgt0 hold0  kernel   108  stream   108  entry-match 1.0000  dR 8.90e-14
+  [12/12] mode2 anch-1/96 stop1 tgt0 hold0  kernel   429  stream   429  entry-match 1.0000  dR 8.90e-14
+
+XAUUSD 4h: 5,628 bars  2023-09-01 -> 2026-08-30  |  14 configs
+  [ 1/14] mode2 anch-1/24 stop1 tgt0 hold0  kernel    37  stream    37  entry-match 1.0000  dR 2.66e-15
+  [ 2/14] mode4 anch-1/24 stop0 tgt0 hold0  kernel   317  stream   317  entry-match 1.0000  dR 2.68e-09
+  [ 3/14] mode3 anch-1/24 stop0 tgt3 hold3  kernel    37  stream    37  entry-match 1.0000  dR 1.09e-10
+  [ 4/14] mode2 anch-1/24 stop0 tgt3 hold3  kernel   317  stream   317  entry-match 1.0000  dR 3.81e-10
+  [ 5/14] mode2 anch-1/24 stop0 tgt3 hold3  kernel   254  stream   254  entry-match 1.0000  dR 3.25e-10
+  [ 6/14] mode2 anch-1/24 stop0 tgt3 hold3  kernel   326  stream   326  entry-match 1.0000  dR 3.81e-10
+  [ 7/14] mode3 anch-1/24 stop1 tgt3 hold0  kernel   127  stream   127  entry-match 1.0000  dR 9.99e-15
+  [ 8/14] mode2 anch-1/24 stop0 tgt3 hold3  kernel   311  stream   311  entry-match 1.0000  dR 3.81e-10
+  [ 9/14] mode2 anch-1/24 stop1 tgt0 hold0  kernel   105  stream   105  entry-match 1.0000  dR 1.15e-14
+  [10/14] mode2 anch-1/24 stop1 tgt3 hold3  kernel   293  stream   293  entry-match 1.0000  dR 1.29e-14
+  [11/14] mode2 anch-1/24 stop1 tgt3 hold0  kernel   106  stream   106  entry-match 1.0000  dR 1.15e-14
+  [12/14] mode2 anch-1/24 stop1 tgt0 hold1  kernel   356  stream   356  entry-match 1.0000  dR 1.29e-14
+  [13/14] mode2 anch-1/24 stop1 tgt3 hold0  kernel   105  stream   105  entry-match 1.0000  dR 1.15e-14
+  [14/14] mode2 anch-1/24 stop0 tgt0 hold0  kernel   418  stream   418  entry-match 1.0000  dR 3.26e-09
+
+============================================================================================
+GOLD VWAP KERNEL vs INDEPENDENT EVENT-DRIVEN ENGINE — XAUUSD
+============================================================================================
+1h    configs  12   entry bars match exactly on 12/12   median match 1.0000   worst 1.0000
+4h    configs  14   entry bars match exactly on 14/14   median match 1.0000   worst 1.0000
+5m    configs  12   entry bars match exactly on 12/12   median match 1.0000   worst 1.0000
+
+EVERY configuration agrees on every entry bar.
+
+wrote /home/kris/prop_lab/backtests/queue/stage17_gold_nautilus.csv

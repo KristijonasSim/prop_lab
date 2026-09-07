@@ -89,8 +89,22 @@ DEFAULTS = dict(mode=0, fill_mode=1, band_k=2.0, stop_mode=0, stop_k=1.0,
                 hour_lo=0, hour_hi=0, ema_regime=0)
 
 
-def run_one(df, feats, vw_cache, cfg, fee_bps, slip_bps) -> np.ndarray:
+def live_bars(df: pd.DataFrame) -> np.ndarray:
+    """1 where the bar actually traded, 0 where it is padding.
+
+    Dukascopy fills the closed FX weekend with synthetic bars: zero volume and
+    the last traded price repeated as O=H=L=C. 21.5% of the XAUUSD series is
+    these. They are not tradeable at any price, and stage 19 measured cells
+    taking up to 46.5% of their total R from trades entered on one.
+    Crypto has none, so this array is all ones there.
+    """
+    return (df.volume.values > 0).astype(np.uint8)
+
+
+def run_one(df, feats, vw_cache, cfg, fee_bps, slip_bps, live=None) -> np.ndarray:
     atr, rvol, atr_rank, ema = feats
+    if live is None:
+        live = live_bars(df)
     key = (int(cfg["anchor_hour"]), int(cfg["anchor_minute"]))
     if key not in vw_cache:
         # anchor_hour == -1 selects the rolling window, sized by anchor_minute
@@ -99,7 +113,7 @@ def run_one(df, feats, vw_cache, cfg, fee_bps, slip_bps) -> np.ndarray:
     vwap, vwstd, ss = vw_cache[key]
     return simulate(
         df.open.values, df.high.values, df.low.values, df.close.values,
-        atr, vwap, vwstd, rvol, atr_rank, ss,
+        atr, vwap, vwstd, rvol, atr_rank, ss, live,
         int(cfg["mode"]), int(cfg["fill_mode"]), float(cfg["band_k"]),
         int(cfg["stop_mode"]), float(cfg["stop_k"]), int(cfg["target_mode"]),
         float(cfg["rr"]), int(cfg["max_hold_bars"]), int(cfg["warmup_bars"]),

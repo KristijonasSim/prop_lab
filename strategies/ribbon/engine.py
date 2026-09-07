@@ -53,6 +53,11 @@ def simulate(
     strength,         # mean SIGNED score - magnitude, not just direction
     gate,             # external per-bar gate: +1 long-ok, -1 short-ok, 0 none,
                       # 2 = both ok. Variation D feeds the crowd read in here.
+    live,             # uint8, 1 = the bar really traded. Dukascopy pads the closed
+                      # FX weekend with zero-volume bars carrying the last price
+                      # repeated; 21.5% of XAUUSD is these. Measured 2026-09-07:
+                      # XAUUSD 1h took 25.19R of 54.25R from trades entered on one
+                      # and 4h took 11.87R of 2.15R. Not a footnote here.
     mode,
     entry_thr,        # |agree| must reach this to enter
     require_flip,     # 1 = only on the bar agreement FIRST reaches the level
@@ -97,6 +102,10 @@ def simulate(
         st = strength[i]
         at = atr[i]
         if np.isnan(a) or np.isnan(at) or at <= 0.0 or np.isnan(st):
+            i += 1
+            continue
+        if live[i] == 0 or live[i + 1] == 0:
+            # the signal bar or the fill bar never traded
             i += 1
             continue
 
