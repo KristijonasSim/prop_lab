@@ -36,6 +36,17 @@ Kristijonas is the trader and the only judge. Claude researches, proposes, codes
 
 ## Current phase constraint
 
+**PACE TARGET, set by Kris 2026-09-07: evaluations that resolve in 5-14 days.**
+He will run **several prop firms**, not one, so the plan does not depend on any
+single firm's structure. Anything past **50 expected days is flagged TOO SLOW**
+by `core/scorecard.py` and the flag OVERRIDES the score on the board.
+
+His first instruction was to delete anything slower than 50 days. That would have
+emptied the board - H-002 needs 143.6 days and H-016 needs 175.9 - so he chose to
+**keep both, flagged**, as worked examples and as test targets for the
+verification work in `NEXT.md`. Read the flag as "this cannot fund an account on
+the timescale the business needs", not as a suggestion.
+
 Only build hypotheses that **resolve within ~1-2 weeks of active trading**.
 High trade frequency, short holds — intraday to a few days.
 Named archetypes: ORB, VWAP mean reversion, breakout-retest.

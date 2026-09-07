@@ -38,7 +38,17 @@ WEIGHTS = {
     "profit": 10,
 }
 
-PHASE_DAYS = 14.0      # the current phase constraint
+# THE PACE TARGET, set by Kris 2026-09-07. He will use SEVERAL prop firms
+# rather than one, and wants evaluations that resolve in 5-14 days.
+PACE_TARGET_LO = 5.0   # the aim
+PHASE_DAYS = 14.0      # the outer edge of the aim; speed scores full at or under
+PACE_DELETE = 50.0     # past here a hypothesis is not worth carrying. Kris's
+                       # first instruction was to delete anything slower; he then
+                       # chose to KEEP the two survivors flagged instead, so that
+                       # they remain worked examples and test targets for the
+                       # verification work in NEXT.md items 1-3. The flag is not
+                       # cosmetic: read it as "this cannot fund an account on the
+                       # timescale the business needs".
 DEAD_DAYS = 180.0      # past here, speed scores zero
 DD_CAP = 0.08          # the prop max-loss cap
 BREACH_DEAD = 0.30     # a 30% breach rate scores zero on safety
@@ -148,10 +158,15 @@ class Scorecard:
     evidence_capped: bool = False
     null_capped: bool = False
 
+    #: expected days to a funded account, carried so the pace gate can read it
+    expected_days: float | None = None
+
     def as_dict(self) -> dict:
         return {
             "total": round(self.total, 1),
-            "verdict": verdict(self.total),
+            "verdict": verdict(self.total, self.expected_days),
+            "too_slow": too_slow(self.expected_days),
+            "expected_days": self.expected_days,
             "evidence_capped": self.evidence_capped,
             "null_capped": self.null_capped,
             "components": [
@@ -163,7 +178,15 @@ class Scorecard:
         }
 
 
-def verdict(total: float) -> str:
+def too_slow(expected_days: float | None) -> bool:
+    """Past the line at which a hypothesis cannot fund an account fast enough to
+    be a business. Reported separately from the score because a strategy can be
+    excellent evidence and still be useless at this pace - H-002 beats its null
+    on every cut and needs 143.6 days against a 5-14 day target."""
+    return expected_days is not None and expected_days > PACE_DELETE
+
+
+def verdict(total: float, expected_days: float | None = None) -> str:
     """Plain words, and deliberately conservative at the top.
 
     Nothing in this project gets called good, ready, or worth real money on the
@@ -172,6 +195,12 @@ def verdict(total: float) -> str:
     evidence produced so far) rather than what to do about it. "Trade it" was the
     original label and it was wrong: a score is a summary of tests already
     passed, never a recommendation."""
+    if too_slow(expected_days):
+        # The pace gate OVERRIDES the score. A number that reads "strong
+        # candidate" next to a 176-day evaluation is the exact kind of
+        # flattering summary this board exists to prevent.
+        return (f"TOO SLOW - {expected_days:.0f}d against a "
+                f"{PACE_TARGET_LO:.0f}-{PHASE_DAYS:.0f}d target")
     if total >= 8.0:
         return "Best evidence so far - still not proven live"
     if total >= 6.5:
@@ -217,4 +246,6 @@ def compute(m: dict) -> Scorecard:
     if m.get("beats_null") is not True and total > NULL_CAP:
         total, null_capped = NULL_CAP, True
     return Scorecard(components=c, total=total, evidence_capped=capped,
-                     null_capped=null_capped)
+                     null_capped=null_capped,
+                     expected_days=expected_days(m.get("median_days_pass"),
+                                                 m.get("pass_rate")))

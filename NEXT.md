@@ -11,11 +11,16 @@ later. That stops before anything else is built.
 ## Where the project stands in five lines
 
 * **One market is left: gold.** All crypto price hypotheses are dead.
-* **Two survivors**, H-002 (VWAP, 4.41 trades/day, 143.6 expected days) and
-  H-016 (ribbon, 0.53 trades/day, 175.9 days). Both beat their nulls.
-* **The problem is speed, not edge.** Both are 3–4x slower than the 45-day target.
-* **The biggest lever is the firm, not research.** One-step turns 143.6 into 55.9.
-* **Two dead records still top the board** at 8.9 and 7.8, flagged SUPERSEDED.
+* **Two survivors, and BOTH are flagged TOO SLOW.** H-002 (VWAP, 4.41 trades/day,
+  143.6 expected days) and H-016 (ribbon, 0.53 trades/day, 175.9 days). Both beat
+  their nulls; neither is close to the pace target.
+* **The pace target is 5-14 days** (Kris, 2026-09-07, across several firms).
+  Past 50 expected days the board flags `TOO SLOW` and the flag overrides the
+  score. **Nothing here has ever been within reach of 5-14 days on honest
+  numbers.**
+* **The problem is speed, not edge.** Both survivors are ~10x the target.
+* **H-009 and H-017 were deleted from the board** — both scored on the broken
+  kernel. Their log rows stay; the failures are the denominator.
 
 ---
 
@@ -139,10 +144,23 @@ it until 1–3 are in.
 
 | # | question | blocks |
 |---|---|---|
-| B1 | **Which prop firm?** A real cTrader one-step spec. | worth 17pp of pass rate, and 143.6 days → 55.9 |
-| B2 | **The two dead board records** (H-009 8.9, H-017 7.8) — zero them, drop them, or leave them flagged? | the board's top two rows |
-| B3 | **Is ~144 days acceptable** (56 one-step) if the edge is real and the account survives? | whether pace work is a priority |
-| B4 | **Power of Three — your exact entry, stop and target rules.** The tested version had a session-close hold, no stop, no target. Only that formalisation is dead. | rerun of H-026 |
+| B1 | **Which prop firms?** Kris will use several. Still need at least one real spec: static vs trailing max loss, min trading days, consistency rule, EAs allowed. | worth 17pp of pass rate |
+| B2 | **Power of Three — your exact entry, stop and target rules.** The tested version had a session-close hold, no stop, no target. Only that formalisation is dead. | rerun of H-026 |
+
+**ANSWERED 2026-09-07:** pace target is **5-14 days** across several firms;
+anything past **50 days** is flagged `TOO SLOW`. The two dead board records were
+**deleted**. Both surviving hypotheses were **kept and flagged** rather than
+deleted, so they remain worked examples and test targets for items 1-3.
+
+### The hard fact this creates
+
+The pace target is now **~10x away**, not 3x. Every lever already measured has
+been tried on H-002: combining cells (worked, 193 → 100 days pre-fix), re-pricing
+at measured cost (worth 0.33 PF), and raising risk (**no headroom — the max-loss
+cap binds first**). **Speed is not going to come from tuning these two books.**
+It has to come from a genuinely faster mechanism, and per the standing pattern in
+`CLAUDE.md` that means a **data feed**, not another price geometry. That is a
+hypothesis question for after items 1-3, not before.
 
 ---
 

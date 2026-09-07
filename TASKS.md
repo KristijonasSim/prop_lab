@@ -6,7 +6,10 @@ This file is the checklist. `NEXT.md` is the reasoning behind it.
 **State in one line:** gold (XAUUSD) is the only edge that ever beat a paired null
 on a walk-forward. Crypto died to the look-ahead fix on 2026-09-06. The remaining
 problem is **pace**: after the 2026-09-07 dead-bar fix (T7) the best gold book needs
-**143.6 expected days two-step, 55.9 one-step**, against a 45-day target.
+**143.6 expected days two-step, 55.9 one-step**, against the pace target Kris
+set on 2026-09-07: **5-14 days**, across several firms. Past **50 days** the
+board flags `TOO SLOW` and the flag overrides the score. Both survivors are
+flagged. See `NEXT.md` for the plan — items 1-3, and no new hypotheses first.
 
 ---
 

@@ -55,6 +55,13 @@ Working targets (no firm signed yet):
 | min trading days | 5 | placeholder, confirm with the firm |
 | consistency share | 40% | placeholder, confirm with the firm |
 
+**Pace target, set 2026-09-07: 5-14 days to resolve an evaluation.** Kris will
+run **several firms**, so no single firm's structure is assumed. **Past 50
+expected days a hypothesis is flagged `TOO SLOW` and the flag overrides its
+score.** Nothing in this project has ever been within reach of 5-14 days on
+honest numbers - the two entries that once looked fast enough were both scored on
+a broken kernel.
+
 **Two facts that dominate every decision:**
 
 * **A coin flip funds an account.** With zero edge, one account passes **40.2%**
@@ -351,13 +358,18 @@ this. If it disagrees with the board, one of them is wrong.
 
 | ID | hypothesis | score | PF | trades/day | expected days | state |
 |---|---|---|---|---|---|---|
-| H-009 | VWAP gated by crowd | 8.9 | 2.05 | — | 48.7 | **DEAD — scored on a broken kernel** |
-| H-017 | VWAP MR / breakout | 7.8 | 2.06 | — | 28.5 | **DEAD — scored on a broken kernel** |
-| **H-002** | **VWAP — gold only** | **6.0** | **2.02** | **4.41** | **143.6** (55.9 one-step) | alive |
-| **H-016** | **MA ribbon — gold only** | **5.0** | **1.81** | **0.53** | **175.9** | alive |
+| **H-002** | **VWAP — gold only** | **6.0** | **2.02** | **4.41** | **143.6** (55.9 one-step) | **TOO SLOW** |
+| **H-016** | **MA ribbon — gold only** | **5.0** | **1.81** | **0.53** | **175.9** | **TOO SLOW** |
 
-**A `SUPERSEDED` note on a board record means the number came from a bug, not
-from the market. Never quote one.**
+**Both survivors fail the pace gate.** They are kept because they beat their
+nulls and are the only worked examples to test the verification work against —
+not because they are tradeable at this pace.
+
+**Removed from the board 2026-09-07:** H-009 (8.9) and H-017 (7.8). Both were
+scored on the kernel that had three look-aheads; on the corrected kernel their
+crypto legs went from 11 cells clearing the gate to zero. Their rows in
+`STRATEGY_LOG.md` and `RESEARCH_LOG.md` stay — **the failures are the
+denominator.** Recoverable from git at `698724f`.
 
 * **One market is left: gold.** Every crypto price hypothesis is dead — twelve of
   them, plus the entire VWAP crypto book, which died to a look-ahead fix.
