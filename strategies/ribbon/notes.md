@@ -582,3 +582,59 @@ Three things keep it off the candidate list:
 And the standing caveats do not go away: the gold cache is one bull market with
 no bear market in it, and the −2.00R drawdown assumes every stop fills at its
 price.
+
+## Stage 11 — measured cost, and silver comes off the board
+
+TASK T3 item 2 from `NEXT.md`. Code: `stage11_reprice.py`.
+Output: `backtests/ribbon/stage11_{legs,books}.csv`.
+
+### Re-pricing is exact, and here it changes almost nothing
+
+Every trade is stored at 1x and 2x cost and R is linear in cost, so
+`C/risk = r_1x − r_2x` recovers any cost level with no re-simulation.
+
+| symbol | assumed bps/side | measured bps/side | direction |
+|---|---|---|---|
+| XAUUSD | 1.50 | **0.915** | 1.6x cheaper |
+| XAGUSD | 2.25 | **4.554** | **2.0x more expensive** |
+
+Measured by `core/fx_spread.py` from Dukascopy ticks — gold 478 sampled hours,
+silver 330.
+
+| book | PF | expected days | one-step |
+|---|---|---|---|
+| board book (3 gold + silver), assumed | 1.844 | 126.8 | 58.1 |
+| board book, **measured** | 1.855 | **125.5** | 57.5 |
+| gold only, measured | **2.068** | **151.1** | 83.3 |
+
+**The correction is a no-op on this hypothesis** — 0.011 of profit factor and
+1.3 days — because half the book is the metal that got more expensive. On the
+VWAP book the same correction was worth 0.33 PF and 60 days. Worth recording:
+"re-price everything at measured cost" is not a uniform improvement, it is a
+uniform *measurement*, and it can cut either way.
+
+### Silver loses to this hypothesis's own null
+
+Borrowing H-002's verdict on silver would have been sloppy — the two hypotheses
+share a market and nothing else. Run against the ribbon's own three paired-null
+seeds, cells clearing PF 1.20 at 2x:
+
+| symbol | cells | real clear | null clear (3 seeds) | real best | null best | verdict |
+|---|---|---|---|---|---|---|
+| XAUUSD | 8 | **5** | 2 / 1 / 0 — mean **1.0** | **2.113** | 1.255 | **beats its null** |
+| XAGUSD | 6 | 2 | 2 / 5 / 4 — mean **3.67** | 1.344 | **2.549** | **loses to its null** |
+
+Silver's null clears the gate almost twice as often as silver does, and the
+null's best cell beats silver's best. That is the same answer H-002's
+walk-forward gave from a completely different kernel.
+
+### The uncomfortable part
+
+Dropping silver makes the book **slower**: 125.5 expected days becomes **151.1**,
+even though profit factor rises 1.855 → 2.068. The 126.8-day headline this
+hypothesis has carried since 2026-09-04 was partly paid for by a leg that cannot
+be distinguished from noise.
+
+Board record rewritten gold-only at measured cost. **H-016 rescored 6.5 → 5.5.**
+That is the honest number, and it is a downgrade earned by measuring rather than
+by any new failure.

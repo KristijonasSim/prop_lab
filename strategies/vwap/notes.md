@@ -145,3 +145,106 @@ phase-randomised markets never gets under 150.
   more than any further tuning here.
 - Seven walk-forward quarters, 2024-09 to 2026-05. Gold's cached history starts
   2023-09, so there is no more to hold out.
+
+## Stage 17 — the gold legs through an independent engine. They survive.
+
+TASK T2 from `NEXT.md`, and it was called "the highest-risk item on the list":
+gold is the whole book and had never been checked by anything but the kernel
+that produced it. Code: `stage17_goldnautilus.py`.
+Output: `backtests/queue/stage17_gold_nautilus.csv`.
+
+### What was actually tested
+
+The only cross-check this project had ever run covered **one configuration on
+one market** — BTCUSDT 4h, MODE_BREAK, rolling anchor, no target. Gold's folds
+select twenty-five different rule shapes: five entry modes, three anchors
+(rolling, midnight, London), both stop modes, two target modes, holds from none
+to 144 bars. Each one was run over the full XAUUSD series in both engines and
+compared trade by trade.
+
+The Nautilus strategy is handed one bar at a time and holds no array it could
+index into. Indicators are rebuilt incrementally, including the awkward ones:
+the session VWAP and its volume-weighted sigma, the rvol baseline over prior
+bars only, the ATR percentile rank, and the `while i < stop_bar` loop's habit of
+**never visiting the bars a trade occupies** — which MODE_TREND's `prev_side`
+and MODE_RECLAIM's stretched flags depend on.
+
+### Result
+
+| timeframe | configs | entry bars match exactly | worst |
+|---|---|---|---|
+| 5m | 13 | **13 / 13** | 1.0000 |
+| 1h | 12 | **11 / 12** | 0.8754 |
+
+Matched trades agree on entry price to the cent and on R to 1e-14 - 1e-8.
+
+### Three bugs were found on the way and all three were the PORT's
+
+Worth recording because a port that agrees immediately usually means the port
+is wrong in the same way as the thing it is testing.
+
+1. **`atr_rank` was ranked one bar early.** The kernel builds it as
+   `rolling(5760).rank(pct=True).shift(1)` and reads it at `entry_i`, so the
+   value is the rank of `atr[i]` in a window ending at `i`. Ranking before the
+   append gave `atr[i-1]`. Cost: 40% of the entries.
+2. **Zero-volume bars.** `sweep.vwap_series` does
+   `volume.replace(0, nan).ffill().fillna(1.0)`, so a zero-volume bar is
+   weighted by the LAST NON-ZERO volume. The port weighted it 1.0, which is what
+   the BTC port did and is harmless on a perpetual. XAUUSD 1h has **4,819
+   zero-volume bars** out of 22,512, so it moved the VWAP everywhere.
+3. **`prev_vwap` was overwritten** with the current bar's value before
+   MODE_RECLAIM and MODE_PULLBACK compared against it.
+
+And a precision trap before any of that: `core.nautilus_setup.add_bars` builds
+bars against a BTCUSDT perpetual with **price_precision 1 and size_precision
+3**. Gold closes carry three decimals and its tick-count volume runs at 0.0216;
+both would have been rounded on the way in. `fx_instrument()` was added for it.
+
+### The one disagreement is a flaw in the KERNEL, and it is worth knowing
+
+XAUUSD 1h, MODE_TREND, midnight anchor, ATR stop, RR target — 87.5%. The first
+divergent bar:
+
+```
+2023-09-01 21:00   O=H=L=C 1939.238   volume 0.00000   vwstd 3.692849
+2023-09-03 00:00   O=H=L=C 1939.238   volume 0.00000   vwstd 0.000000   <- anchor
+2023-09-03 01:00   O=H=L=C 1939.238   volume 0.00000   vwstd 0.000000
+2023-09-03 02:00   O=H=L=C 1939.238   volume 0.00000   vwstd 0.000031   <- trades
+```
+
+That is the FX weekend. Dukascopy pads the closed market with synthetic bars
+carrying zero volume and the last traded price repeated. A session made entirely
+of them has a volume-weighted sigma of exactly zero — but `vwstd` is
+`sqrt(p2v/v − vwap²)`, a difference of two nearly-equal accumulated sums, so it
+comes out as **3.1e-5 of floating-point noise**. The kernel's only guard is
+`if sd <= 0.0: skip`, and 3.1e-5 passes it.
+
+**So the kernel resolves a trade decision on rounding noise in a market that was
+closed.** The streaming port accumulates the same sums in a different order,
+gets exactly 0.0, and skips. Neither is wrong; the guard is.
+
+## Stage 19 — how much of gold is booked on dead bars
+
+`stage19_deadbars.py`. Every gold walk-forward trade tagged by whether its entry
+bar had zero volume.
+
+| | count | share |
+|---|---|---|
+| gold walk-forward trades | 18,119 | |
+| entered on a **zero-volume** bar | **696** | **3.84%** |
+| R carried by those trades | **6.04R** of 724.30R | **0.83%** |
+
+On the board's own book (5m floor100 top10 + 4h floor100 top1), removing all 58
+of them **raises** profit factor 1.618 → 1.629 and costs 2.11R.
+
+**So it is a footnote for the board and a real hazard for the cells that are not
+on it.** `15m floor30 top1` takes **46.5%** of its total R from dead bars, and
+`30m floor30 top1` gets −124% — its dead-bar trades lose more than the cell
+makes. Both are low-trade-count `top1` cells, which is exactly where a handful
+of noise trades can dominate.
+
+**Two fixes, neither applied yet** because they change every gold number and
+should be done deliberately rather than at the end of a session:
+1. change the kernel's `sd <= 0.0` guard to a tolerance in price terms;
+2. drop zero-volume bars from FX/metals data at load, or at least refuse to
+   trade them.

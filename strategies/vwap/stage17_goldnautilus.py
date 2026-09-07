@@ -74,7 +74,11 @@ OUT.mkdir(parents=True, exist_ok=True)
 FOLDS = ROOT / "backtests" / "vwap" / "stage6_folds.parquet"
 
 SYM = "XAUUSD"
-TFS = {"5m": "5-MINUTE-LAST", "1h": "1-HOUR-LAST"}
+TFS = {"5m": "5-MINUTE-LAST", "1h": "1-HOUR-LAST", "4h": "4-HOUR-LAST"}
+# 4h is here because it is the board book's second leg AND because it is the
+# only gold timeframe whose folds select target_mode=TGT_VWAP, the exit that
+# reads bar j's own running VWAP. `--peek` re-runs it with that value taken
+# from bar j-1 instead, which prices the assumption.
 # XAUUSD cost, MEASURED not assumed: 1.68bps spread + ~0.15bps cTrader
 # commission (SESSION_2026-09-06). Split as the kernel wants it.
 FEE_BPS, SLIP_BPS = 0.15, 1.68

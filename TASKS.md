@@ -19,7 +19,11 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 
 ---
 
-## T1 — `crowd_z` at a 4h hold, with a stop  *(cheapest shot at pace)*
+## T1 — `crowd_z` at a 4h hold, with a stop — **DONE 2026-09-07. FAILED its kill criterion.**
+
+**Result:** drawdown does not come from hold length — it goes the other way, monotonically (median maxDD 2,810R at 2h against 184R at 72h; median PF@2x 0.41 against 0.92). The walk-forward at a fixed 4h hold scores PF@2x **0.646** against the 8-72h record's 1.050, with **negative** R/day and zero accounts funded. The signal still beats every null seed; it cannot pay 28bps in four hours. **H-006's short-hold lever is spent.** See `strategies/orderflow/notes.md` stage 9.
+
+<details><summary>original task</summary>
 
 - Kernel: `strategies/orderflow/orderflow.py`. Fixed 4h hold, trailing stop 1.5-3.0 sigma.
 - Walk-forward quarterly, config picked blind on 2x-cost train PF.
@@ -27,6 +31,7 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 - Why: `strategies/stack/stage2_size.py` — 19/220 cells clear 14bps and beat 1d/1w/1mo block nulls. BTC `dcrowd_4h` −17.3bps monotone 7/7 years; BTC `crowd_z` −16.2bps 7/7.
 - H-006 tested this only at 8-72h holds, no stop, and died of **drawdown** (63.5R, 548 days).
 - **Kill criterion:** if a 4h hold does not cut drawdown ~in proportion to the hold ratio, the drawdown is not from hold length. Family finished. Say so and stop.
+</details>
 
 ## T2 — Nautilus cross-check of the GOLD legs  *(highest risk on the list)*
 
@@ -36,7 +41,17 @@ problem is **pace**: 173 median days to funded against a 45-day target.
 - Why: the only independent-engine check ever run was BTCUSDT 4h MODE_BREAK — one config, one market. Gold is now the whole book and is as unverified as crypto was before it collapsed.
 - **If gold does not survive this, the project has nothing.**
 
-## T3 — Close the pace gap on gold, or rule it out
+## T3 — Close the pace gap on gold — **items 1 and 2 DONE, item 3 has no headroom**
+
+| step | result |
+|---|---|
+| 1. combine the gold cells | **WORKS. 193 expected days → 100.2** (5m+4h, equal weight). Null control: 9/78 real books under 150 days, **0/78 null**. |
+| 2. re-price at measured cost | Done for the ribbon too. On gold it is worth 0.33 PF; on the ribbon it is a **no-op** — gold's gain and silver's loss cancel. Silver also **loses to its own null** and came off the board. |
+| 3. raise risk | **No headroom.** At 1.00% risk peak drawdown is exactly −8.00%, the cap. At 1.25% it is −10.01% and `fail_max` goes 0% → 20.8%. The **max-loss** cap binds first, not the daily-loss limit — the opposite of what `NEXT.md` guessed. |
+
+**Where that leaves pace: 100 expected days two-step, 46.9 one-step.** If the firm is one-step this book is already at the 45-day target, which makes B1 the highest-value open question in the project.
+
+<details><summary>original task</summary>
 
 In order of what to try:
 
@@ -46,17 +61,25 @@ In order of what to try:
 
 If none reach ~45 days, say so plainly. A real edge that is 4x too slow is a legitimate answer and points at a different firm structure, not more research.
 
-## T4 — Firm spec + fix the risk-rule defect  *(blocked on B1)*
+## T4 — Firm spec + fix the risk-rule defect — **code defect FIXED; the spec is still blocked on B1**
 
 - Confirm: static vs trailing max loss, min trading days, consistency rule, EAs allowed unrestricted.
 - Static-only max loss lifts a **zero-edge** pass rate from 40.2% → 57.1%. Bigger than most edges in this repo.
-- **Code defect:** `core/riskladder.run_accounts` ORs both breach conditions and reads neither `PropRules.trailing` nor `.static`. Since `peak >= 0` the trailing term always dominates, so `static` is redundant and `trailing=False` is silently ignored. Both are documented as configurable. Fix.
+- **Code defect — FIXED 2026-09-07.** `core/riskladder` now routes both call sites through `_breached()`, which reads the flags. Defaults unchanged (both True), so no published number moves — verified. `PropRules(trailing=False)` now means something.
 
-## T5 — Board hygiene  *(publishes dead numbers right now)*
+## T5 — Board hygiene — **DONE 2026-09-07**
+
+- H-017 and H-009 are off the board. Records **renamed, not deleted**, with a `WHY_DEAD.md` beside each.
+- H-002 rewritten gold-only at measured cost: **6.7** (was 8.6 with its crypto legs).
+- H-016 rewritten gold-only at measured cost, silver dropped: **5.5** (was 6.5).
+- `stage10_wide.py` writing `stage14_*` files is still unrenamed.
+
+<details><summary>original task</summary>
 
 - `backtests/scoreboard.html` and `backtests/xpos/board.json` still show the pre-fix world: H-017 at 28.5d/9.7d, the crypto legs, silver. All dead.
 - Prune or rebuild. Put gold on it with **measured-cost** numbers.
 - Rename while touching: `strategies/xpos/stage10_wide.py` writes files named `stage14_*`.
+</details>
 
 ## T6 — Feed hygiene — **DONE 2026-09-07, no work needed**
 
