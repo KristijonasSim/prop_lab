@@ -152,6 +152,14 @@ anything past **50 days** is flagged `TOO SLOW`. The two dead board records were
 **deleted**. Both surviving hypotheses were **kept and flagged** rather than
 deleted, so they remain worked examples and test targets for items 1-3.
 
+**Four project-level levers are written up in `IDEAS.md`** — measuring the six
+unmeasured FX spreads, splitting evaluation risk from funded risk, screening on
+speed instead of profit factor, and modelling parallel accounts. **None is agreed
+work yet.** Two of them are cheap and look large: re-pricing EURUSD at its
+measured cost took it from 3 of 20 cells clearing the gate to **10 of 20**, and
+the risk ladder shows 3% risk funding an account **2.5x faster** than the 1% the
+board picks, after paying for every blown account.
+
 ### The hard fact this creates
 
 The pace target is now **~10x away**, not 3x. Every lever already measured has

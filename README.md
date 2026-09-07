@@ -14,6 +14,8 @@ every AI agent and every human who opens this repository.**
 | **`CLAUDE.md`** | standing rules + the known-dead list | before proposing anything |
 | **`NEXT.md`** | the current plan, and what is blocked on Kris | before starting work |
 
+| **`IDEAS.md`** | project-level levers, not hypotheses. Unagreed until Kris picks. | when the plan feels stuck |
+
 Then, as needed: `SESSION_<date>.md` for why the last session did what it did,
 `STRATEGY_LOG.md` for every variation ever tested, `RESEARCH_LOG.md` for the
 reasoning behind each verdict.
