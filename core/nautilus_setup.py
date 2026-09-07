@@ -58,3 +58,59 @@ def add_bars(
     bars = wrangler.process(ohlcv)
     engine.add_data(bars)
     return instrument, bar_type
+
+
+def fx_instrument(symbol: str, price_precision: int = 3,
+                  size_precision: int = 8):
+    """An instrument whose precision does not destroy the data.
+
+    `add_bars` builds its bars against a BTCUSDT perpetual, which has
+    **price_precision 1 and size_precision 3**. That is harmless on a 30,000
+    BTC print and ruinous on gold: XAUUSD closes carry three decimals, so
+    1939.815 quantises to 1939.8, and the Dukascopy tick-count "volume" of
+    0.0216 quantises to 0.022 — a 1.8% error in a number the VWAP uses as its
+    weight. A cross-check run on rounded inputs would report mismatches that
+    belong to the rounding and not to the kernel.
+
+    Volume scale itself does not matter — VWAP and rvol are both ratios and are
+    invariant to it — but volume RESOLUTION does, which is why size_precision
+    is 8 rather than the venue's real lot rules. This instrument exists to
+    carry data faithfully into a backtest engine, not to model a broker.
+    """
+    from decimal import Decimal
+
+    from nautilus_trader.model.currencies import USD
+    from nautilus_trader.model.identifiers import InstrumentId, Symbol
+    from nautilus_trader.model.instruments import CurrencyPair
+    from nautilus_trader.model.objects import Currency, Money, Price, Quantity
+
+    base = Currency.from_str("XAU") if symbol.startswith("XAU") else \
+        Currency.from_str(symbol[:3])
+    quote = Currency.from_str(symbol[-3:])
+    return CurrencyPair(
+        instrument_id=InstrumentId(symbol=Symbol(symbol), venue=VENUE),
+        raw_symbol=Symbol(symbol),
+        base_currency=base, quote_currency=quote,
+        price_precision=price_precision, size_precision=size_precision,
+        price_increment=Price(10 ** -price_precision, price_precision),
+        size_increment=Quantity(10 ** -size_precision, size_precision),
+        lot_size=None,
+        max_quantity=Quantity.from_str("1e7"),
+        min_quantity=Quantity(10 ** -size_precision, size_precision),
+        max_price=None, min_price=None,
+        max_notional=Money(50_000_000.00, USD), min_notional=None,
+        margin_init=Decimal("0.03"), margin_maint=Decimal("0.03"),
+        maker_fee=Decimal("0"), taker_fee=Decimal("0"),
+        ts_event=0, ts_init=0,
+    )
+
+
+def add_bars_for(engine: BacktestEngine, df: pd.DataFrame, instrument,
+                 bar_spec: str = "5-MINUTE-LAST"):
+    """`add_bars`, but against an instrument the caller chose."""
+    engine.add_instrument(instrument)
+    bar_type = BarType.from_str(f"{instrument.id}-{bar_spec}-EXTERNAL")
+    wrangler = BarDataWrangler(bar_type=bar_type, instrument=instrument)
+    ohlcv = df[["open", "high", "low", "close", "volume"]].astype("float64").copy()
+    engine.add_data(wrangler.process(ohlcv))
+    return instrument, bar_type

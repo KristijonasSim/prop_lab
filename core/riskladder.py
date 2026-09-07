@@ -31,6 +31,34 @@ DD_CAP = 0.08         # and its equity curve must stay inside the prop max-loss 
 MAX_DAYS = 400        # an account still open after this counts as not passed
 
 
+def _breached(low: float, peak: float, rules: PropRules) -> bool:
+    """Has the max-loss cap been breached, under the rules ACTUALLY configured?
+
+    `PropRules` documents `trailing` and `static` as configurable and both call
+    sites used to hard-code `low - peak <= -max_loss or low <= -max_loss`,
+    reading neither flag. Two consequences, both silent:
+
+      * `trailing=False` did nothing. Every result the board has ever published
+        is on a trailing cap whether or not the firm uses one.
+      * the static term was dead code. `peak` starts at 0 and only rises, so
+        `low - peak <= low` always, and the trailing test fires first or at the
+        same moment. It could never be the binding constraint.
+
+    That is not a rounding difference. `NEXT.md` puts it at **17 points of pass
+    rate**: a ZERO-EDGE strategy passes 40.2% of the time under a trailing cap
+    and 57.1% under a static one. Which of those a firm uses is worth more than
+    most edges in this repo, and until 2026-09-07 the code could not express the
+    question. Defaults are unchanged - both flags are True - so no published
+    number moves; what changes is that `PropRules(trailing=False)` now means
+    something.
+    """
+    if rules.trailing and low - peak <= -rules.max_loss:
+        return True
+    if rules.static and low <= -rules.max_loss:
+        return True
+    return False
+
+
 def run_accounts(daily_r: pd.Series, risk: float, rules: PropRules = PropRules(),
                  max_days: int = MAX_DAYS) -> dict:
     """Fresh account every trading day, fixed risk, real breaches, no size
@@ -49,7 +77,7 @@ def run_accounts(daily_r: pd.Series, risk: float, rules: PropRules = PropRules()
             if min(step, 0.0) <= -rules.daily_loss:
                 res = "FAIL_DAILY"; break
             low = eq + min(step, 0.0)
-            if low - peak <= -rules.max_loss or low <= -rules.max_loss:
+            if _breached(low, peak, rules):
                 res = "FAIL_MAX"; break
             eq += step
             peak = max(peak, eq)
@@ -95,7 +123,7 @@ def run_accounts_two_step(daily_r: pd.Series, risk: float,
                 if min(step, 0.0) <= -rules.daily_loss:
                     res = "FAIL_DAILY"; break
                 low = eq + min(step, 0.0)
-                if low - peak <= -rules.max_loss or low <= -rules.max_loss:
+                if _breached(low, peak, rules):
                     res = "FAIL_MAX"; break
                 eq += step
                 peak = max(peak, eq)

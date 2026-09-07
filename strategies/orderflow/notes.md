@@ -313,3 +313,78 @@ perpetual, and more coins means more trades from different crowds, which
 diversifies the drawdown rather than splitting one edge. That is the same cure
 H-007's rejection identified, and it is the only thing left that attacks the
 49.8R directly.
+
+## Stage 9 — the 4-hour hold. The kill criterion fires. This family is finished.
+
+`NEXT.md` made this the first task of 2026-09-07 and gave it a kill criterion in
+advance, which is the only reason the answer is clean.
+
+**The premise.** Stage 3's walk-forward loses on drawdown, not on profit factor:
+BTC-only holds PF 1.227 at double cost and still needs 548 days because its
+equity curve draws down 63.5R. Every hold H-006 has ever traded is 8-72h. The
+stacking study then measured the same feed family at **4h** and found it strong
+— BTC `dcrowd_4h` −17.3bps monotone in 7 of 7 years, `crowd_z` −16.2bps 7 of 7.
+If the drawdown came from the hold, a hold 2-18x shorter should cut it.
+
+**Arm A — it does not. It goes the other way.** 2,940 configurations per coin,
+holds 2h to 72h, stop at 0/2/3 sigma. Median max drawdown in R at 2x cost:
+
+| hold | median maxDD | median total R | median PF@2x | median trades |
+|---|---|---|---|---|
+| 2h | **2,810R** | −2,808 | 0.41 | 6,263 |
+| 4h | 1,387R | −1,383 | 0.53 | 4,093 |
+| 8h | 759R | −742 | 0.63 | 2,710 |
+| 12h | 560R | −545 | 0.69 | 2,141 |
+| 24h | 341R | −294 | 0.79 | 1,405 |
+| 48h | 231R | −166 | 0.86 | 877 |
+| **72h** | **184R** | −91 | **0.92** | 664 |
+
+Monotone in both directions. A shorter hold is worse on drawdown AND worse on
+profit factor.
+
+The obvious objection is trade count — a 2h hold takes 9.4x more trades than a
+72h one, so of course it accumulates more drawdown. It does not survive: per
+trade the drawdown is **0.449R at 2h against 0.277R at 72h**, still worse, and
+median profit factor is count-free and moves the same way. The edge is a slow
+drift that has to be given time to outrun the spread, which is what stage 2 said
+in the first place ("median PF at 2x: 0.786 at 8h → 0.996 at 72h") and what
+stage 4 said again from the stop side ("wider is better, monotonically").
+
+**Arm B — the walk-forward confirms it.** Hold fixed at 4h and not selectable,
+so the configuration count stays at 560 against stage 3's 700 and this is not a
+repeat of stage 5's "four times as many chances to fit the quarter". Stop at
+0/1.5/2/3 sigma is selectable. 52 folds, config re-chosen blind each quarter on
+2x-cost training profit factor.
+
+| book | trades | PF | PF@2x | maxDD | R/day | tpd | win rate | days to funded |
+|---|---|---|---|---|---|---|---|---|
+| BTC+ETH+SOL | 2,629 | 0.878 | **0.646** | 196.4R | **−0.102** | 0.47 | 37.7% | never (0% pass) |
+| BTCUSDT | 904 | 0.879 | 0.592 | 254.7R | −0.130 | 0.48 | 35.2% | never |
+| ETHUSDT | 852 | 0.870 | 0.638 | 188.9R | −0.140 | 0.63 | 35.3% | never |
+| SOLUSDT | 873 | 0.885 | 0.717 | 155.4R | −0.110 | 0.66 | 42.6% | never |
+| *stage 3 record, 8-72h* | *1,271* | *1.143* | *1.050* | *49.8R* | *+0.045* | — | — | *1,119* |
+
+R per day is **negative** at every level. The 4h book does not draw down its way
+out of a funded account, it simply loses money.
+
+**The signal is still real, and that is the point.** Real PF@2x 0.646 beats every
+one of five block-shuffled null seeds (median 0.477, best 0.490), so the feed is
+still ranking returns at 4h the way the stacking study found. It just cannot pay
+a 28bps round trip over four hours. A 17bps gross response is a real number and
+it is the wrong side of the cost line.
+
+Two things worth recording because they repeat:
+- the fold selector chose **no stop in 37 of 52 folds**, the same behaviour
+  stage 5 documented — profit factor does not reward a stop;
+- `crowd_z` was chosen in 40 of 52 folds, `dcrowd` 7, `disagree` 5. The
+  stacking study's `size_z` was not in this grid.
+
+**Verdict.** The kill criterion in `NEXT.md` was: *if the 4h hold does not cut
+drawdown roughly in proportion to the hold lengths, the drawdown is not coming
+from hold length and this family is finished.* It does not, and it is. H-006's
+value stays where stage 5 left it — as H-009's filter, not as a strategy — and
+the short-hold lever is now spent.
+
+Code: `strategies/orderflow/stage9_fasthold.py`.
+Output: `backtests/orderflow/stage9_{ddcurve,folds,summary}.csv`,
+`stage9_trades.parquet`, `stage9_run.log`.
