@@ -80,12 +80,34 @@ against a **0.27 bps** hurdle.
 ### What to do
 
 1. Extend `core/fx_spread.py` to GBPUSD, USDJPY, AUDUSD, USDCAD, USDCHF, NZDUSD.
-   Same method: sample real tick spreads across many hours, add commission.
+   **BY HOUR AND WEEKDAY, and reporting the MEAN, not one median per
+   instrument.** Both corrections were forced by measurement on 2026-09-07 and
+   neither is optional:
+   * `core/fx_spread.py` does `days = days[days.dayofweek < 5]`, so **Sunday has
+     never been sampled**. The weekly reopen is 1.9x wider than mid-week on
+     EURUSD and 1.5x on GBPUSD. A single per-instrument number scores a
+     mechanism against hours it does not trade.
+   * The spread distribution inside a thin window is **skewed 2.3-2.7x** —
+     EURUSD's open-window median is 0.362bps against a mean of 0.961. Expected
+     P&L is `E[edge − cost]`, which uses the **mean**. Judging M-007 on the
+     median said two legs survived; the mean killed all three.
 2. Replace the guessed `ASSETS` costs with measured ones, keeping the guess
    beside it so the correction is visible and auditable.
 3. Re-price the existing walk-forward — **no re-run needed**, `reprice()` is
    exact because R is linear in cost.
 4. Report which markets change verdict. Expect at least one more EURUSD.
+
+### Update 2026-09-07 — this idea has already been half-tested, and it cuts both ways
+
+The first mechanism batch produced a candidate (M-007, the FX weekly open) whose
+survival depended entirely on this measurement. Measuring it **killed** the
+candidate: gross +0.76 to +2.37bps against a real in-window round trip of 2.07
+(EURUSD) and 3.76 (GBPUSD). See `core/fx_spread_weekopen.py`.
+
+So idea A is not "a cheap spread will resurrect our dead hypotheses". It is **"we
+do not currently know what anything costs, and the error goes both ways"** —
+EURUSD's mid-week cost was overstated 5.5x, and its weekly-open cost was
+understated 7.6x. Both errors came from the same missing measurement.
 
 ### The honest caveat
 
