@@ -1,0 +1,202 @@
+# STEPS — items 1, 2, 4. Chosen by Kris 2026-09-08.
+
+Plan of record is `NEXT.md`. This file is the step list only.
+Why any of it exists: `SESSION_2026-09-07.md` §7.
+
+**Kris picked 1, 2 and 4. Item 3 (pytest + CI) was not picked.**
+
+One dependency has to be stated up front, because it changes the order:
+
+* `core/KERNEL_CONTRACT.md` §4 says **item 4 must not start until five tests
+  exist** — truncation, degenerate inputs, cost monotonicity, golden output,
+  second-engine agreement. Item 4 moves code between files. Moving kernels
+  without those tests is how a fix becomes a silent regression.
+* **Item 2 builds four of those five anyway** — they are the gate's checks.
+  So the plan below folds the missing frame (pytest runner, golden test, CI)
+  into item 2 as ~2 hours of work, and item 4 stays last.
+* Net effect: **1 → 2 (+ the frame) → 4.** Item 3 is not skipped, it is absorbed.
+
+Standing rule still in force: **no new hypotheses until 1 and 2 are in.**
+
+---
+
+## ITEM 1 — kernel fingerprint and automatic staleness
+
+**Goal.** The board marks its own records stale when the code that produced them
+changes. Today `SUPERSEDED — SCORED ON A BROKEN KERNEL` is a note typed by hand
+after someone noticed. H-009 held score 8.9 on a kernel that no longer existed.
+
+**Done when.** Edit one byte of `strategies/vwap/engine.py`, rerun
+`core/build_scoreboard.py`, and H-002 renders `STALE` — with no human editing a
+note, and no rerun of the sweep.
+
+### Steps
+
+1. **`core/fingerprint.py`** — new file, no dependencies on anything else.
+   * `hash_files(paths) -> str` — sha256 over sorted `(relpath, bytes)`. Not
+     mtime; mtime changes on a checkout and would cry stale every clone.
+   * `git_sha() -> str` — `git rev-parse HEAD`, plus a `dirty` bool from
+     `git status --porcelain`. A result produced from a dirty tree must say so.
+   * `hash_data(paths) -> dict` — per data file: sha256, row count, first and
+     last timestamp. The date range matters on its own: the feeds grow daily and
+     a result scored on a shorter series is not the same result.
+   * `fingerprint(kernels, data, costs) -> dict` — assembles the record.
+
+2. **Every hypothesis declares its inputs.** Add to each strategy folder a
+   `manifest.py` (or a dict in the board stage) naming:
+   `kernels = [...]`, `data = [...]`, `costs = {...}`.
+   Start with `vwap` and `ribbon` — they are the only two live boards.
+
+3. **`core/board.py::write_board`** — new keyword `manifest`, and write
+   `rec["fingerprint"] = fingerprint(...)`. Make it **required**: a board record
+   without a fingerprint is exactly the hole this item closes, so raise rather
+   than default to `None`.
+
+4. **`core/build_scoreboard.py::load`** — recompute the fingerprint from the
+   files on disk and compare against the stored one. Emit
+   `stale: {kernel: bool, data: bool, git: bool, detail: str}`.
+   Data drift is a **note**, not a kill — the feeds legitimately grow. A kernel
+   hash change is a **hard stale**.
+
+5. **Render it.** `core/scoreboard_template.html` — a `STALE` badge on the card,
+   listing which file changed. Same visual weight as `TOO SLOW`; both are facts
+   that override the score.
+
+6. **`core/scorecard.py`** — a hard-stale record cannot exceed `EVIDENCE_CAP`
+   (3.0). It was measured on code that no longer exists, which is the same
+   epistemic position as never having been measured.
+
+7. **Backfill.** Run it over the existing `backtests/*/board.json`. Every record
+   predating this work has no fingerprint — mark those `UNFINGERPRINTED` rather
+   than inventing one. Expect H-002 and H-016 to be the only clean rows.
+
+**Cost.** ~1 day. Self-contained; touches no kernel arithmetic.
+
+---
+
+## ITEM 2 — a verification gate in code
+
+**Goal.** A hypothesis cannot carry a real board score until it has passed the
+checks, in code. Today the scorecard has an evidence *weight* but nothing
+*gates* — H-009 reached 8.9 without a second engine ever looking at it.
+
+**Done when.** A new hypothesis with no `verification.json` is capped at 3.0 on
+the board automatically, and `pytest` runs the five checks against both kernels.
+
+### Steps
+
+1. **The frame (this is the absorbed part of item 3, ~2h).**
+   * `pip install pytest hypothesis`, pin both in `requirements.txt`.
+   * `pytest.ini`, `tests/` at the repo root, `conftest.py` with fixtures that
+     load a small fixed slice of BTCUSDT 15m and XAUUSD 1h.
+   * `hypothesis` earns its place here: every bug this project has found was a
+     degenerate input nobody thought to write by hand. Let it generate them.
+
+2. **`tests/test_no_lookahead.py`** — highest value, write it first.
+   Truncate the series at N, rerun the kernel, assert every trade before N is
+   **byte-identical**. Run over both kernels and a sample of configs.
+   *This single test would have caught the 2026-09-05 look-aheads immediately.*
+
+3. **`tests/test_degenerate.py`** — zero-volume bars, flat OHLC, `sd = 0`,
+   one bar, constant price, empty series. Property-based.
+   Assert the two FX rules from `CLAUDE.md` hold: **no decision or fill on a
+   zero-volume bar**, and the volatility guard uses `sd <= price * 1e-6`, never
+   `sd <= 0.0`. Both are last session's bugs; they must not come back.
+
+4. **`tests/test_costs.py`** — PF strictly falls as cost rises 0x → 1x → 2x → 3x,
+   and the linear identity `reprice` depends on holds.
+
+5. **`tests/test_golden.py`** — pin one known config's trade list per kernel to a
+   checked-in fixture. Any edit that moves it must be explained in the commit
+   message rather than discovered three weeks later.
+
+6. **`tests/test_second_engine.py`** — make the NautilusTrader cross-check
+   automatic. It ran once by hand for gold (26/26 exact). **It is the check that
+   has actually found bugs**; running it once by hand is the whole gap.
+   Mark it `@pytest.mark.slow` and exclude from the fast run.
+
+7. **`core/verification.py`** — runs the checks for one hypothesis and writes
+   `backtests/<id>/verification.json`:
+   `{check: {passed, when, detail, fingerprint}}`. The fingerprint field matters
+   — a pass earned on an old kernel is not a pass. This is where item 1 pays for
+   itself twice.
+   Include the **paired null** here as a check with a pass/fail, not a number
+   read by eye.
+
+8. **`core/scorecard.py`** — read `verification.json`. Any check missing or
+   failed caps the total at `EVIDENCE_CAP`. Render *which* check is missing on
+   the card, so the fix is obvious.
+
+9. **CI.** GitHub Actions on push: fast tests on every push, `slow` nightly.
+   There is no CI today.
+
+10. **Backfill.** Run the gate over H-002 and H-016. Expect H-016 to cap — it has
+    the null but has **never** been through a second engine. That is the correct
+    answer, not a bug in the gate.
+
+**Cost.** ~2 days including the frame.
+
+---
+
+## ITEM 4 — one `Strategy` interface
+
+**Goal.** Kernels become a tested shared library instead of each hypothesis
+reinventing the engine. **This is a refactor, not a fix.** It makes future work
+cheaper. It does not stop the bleeding — items 1 and 2 do that.
+
+**Do not start until items 1 and 2 are green**, and specifically until the five
+tests in step 2 above pass on both kernels. That is the whole reason they come
+first: this item moves code across files, and the tests are what prove the move
+changed nothing.
+
+### Steps
+
+1. **Freeze the contract.** `core/KERNEL_CONTRACT.md` §1 is already written and
+   already true of both kernels. Promote §3's sketch to `core/strategy.py` as a
+   `Protocol`: `features()`, `grid()`, `run()`, returning the `(n, 8)` array.
+   Nothing downstream changes — `sweep`, walk-forward, null, `board.py`,
+   `riskladder` and `scorecard` all already work off that array. **That is why
+   this refactor is safe and also why it is not urgent.**
+
+2. **Port `vwap` first.** It is the better-tested kernel: second-engine checked,
+   26/26 exact. Golden test from item 2 step 5 must produce a byte-identical
+   trade list before and after. If it moves, the port is wrong — not the test.
+
+3. **Port `ribbon` second.** Same bar. Its `test_parity.py` covers indicators
+   only, so it leans harder on the new golden and truncation tests.
+
+4. **Do not touch `strategies/orderflow/orderflow.py`.** It is **not** a strategy
+   kernel — it is the shared feed loader imported by 20+ files across a dozen
+   hypotheses. It survived H-006's death for that reason. Folding it into the
+   contract or deleting it would break twelve things.
+
+5. **Shared pieces out of the kernels, once both are ported:** cost application,
+   R computation, the `live` / zero-volume mask, the volatility guard tolerance.
+   One implementation, one place to fix the next bug.
+
+6. **Re-run both boards.** Fingerprints change (item 1 does its job and marks
+   everything stale). Scores must land identical to three decimals. Any drift is
+   a regression introduced by the refactor and must be explained before the
+   board is republished.
+
+**Cost.** ~1 week. Lowest urgency of the three.
+
+---
+
+## Order and rough calendar
+
+| # | item | cost | gate to start |
+|---|---|---|---|
+| 1 | fingerprint + auto-stale | ~1 day | nothing — start here |
+| 2 | verification gate (+ pytest, golden, CI) | ~2 days | item 1, for the fingerprint field |
+| 4 | one `Strategy` interface | ~1 week | items 1 and 2 green, 5 tests passing |
+
+**No new hypotheses until 1 and 2 are done.** Kris, 2026-09-07.
+
+## What this does NOT fix
+
+Stated plainly so it is not a surprise later. None of these three items makes a
+strategy faster. The board's two survivors need **143.6** and **175.9** expected
+days against a **5-14 day** target. Items 1, 2 and 4 make the numbers
+*trustworthy*; they do not make them *good*. The pace problem is a hypothesis
+problem and it is still open — see `IDEAS.md` and `NEXT.md` "the hard fact".

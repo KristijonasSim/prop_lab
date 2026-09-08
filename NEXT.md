@@ -26,6 +26,12 @@ later. That stops before anything else is built.
 
 ## THE PLAN — items 1, 2, 3. Agreed with Kris 2026-09-07.
 
+**UPDATE 2026-09-08: Kris picked items 1, 2 and 4.** The step-by-step build
+order is in `STEPS_1_2_4.md`. Item 3 is not skipped — item 2 needs four of its
+five tests anyway, so the pytest frame, the golden test and CI are folded into
+item 2. Item 4 still starts last, because it moves code and the tests are what
+prove the move changed nothing.
+
 The root cause of every "it worked, then it was a bug" event is that **results
 are published before they are verified.** The order is backwards:
 
