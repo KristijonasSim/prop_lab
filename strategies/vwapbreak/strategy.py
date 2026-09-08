@@ -43,6 +43,27 @@ THRESHOLDS = (0.5, 0.75, 1.0, 1.25, 1.5)
 STOPS = (0.75, 1.0, 1.25, 1.5, 2.0)
 HOLD_HOURS = (48, 96, 192)
 
+#: SESSION WINDOWS, in UTC hours [lo, hi). (0, 0) means no window at all and is
+#: always in the grid, so the fold selector can decline the filter entirely -
+#: which is the only way to tell a filter that helps from one that is merely
+#: being fitted.
+#:
+#: H-001 established on this repo's own data that the NY cash open (13:30 UTC) is
+#: the ONLY session anchor carrying anything on FX and metals, and that Asia is
+#: the worst region. These windows are chosen around that finding rather than
+#: swept blindly:
+#:   (7, 16)   London session
+#:   (13, 21)  New York
+#:   (13, 17)  the London/NY overlap, the deepest liquidity of the day
+#:   (0, 7)    Asia - included precisely BECAUSE it is expected to be worst. A
+#:             filter set containing only the windows you believe in cannot fail.
+SESSIONS = ((0, 0), (7, 16), (13, 21), (13, 17), (0, 7))
+
+#: Minimum relative volume on the SIGNAL bar. 0 disables. rvol was the only
+#: filter family that ever lifted anything in this project (H-001, +0.063 paired
+#: on the strongest cut), so it is the one worth spending grid on.
+MIN_RVOL = (0.0, 1.0, 1.5)
+
 
 def grid_for(bars_per_hour: float) -> list[dict]:
     """Horizons in HOURS, converted per timeframe so they mean the same thing on
@@ -51,9 +72,12 @@ def grid_for(bars_per_hour: float) -> list[dict]:
     for thr in THRESHOLDS:
         for stop in STOPS:
             for hrs in HOLD_HOURS:
-                out.append({"thr": thr, "stop_sig": stop,
-                            "max_hold": max(2, int(round(hrs * bars_per_hour))),
-                            "min_risk_bps": 3.0})
+                for lo, hi in SESSIONS:
+                    for mrv in MIN_RVOL:
+                        out.append({"thr": thr, "stop_sig": stop,
+                                    "max_hold": max(2, int(round(hrs * bars_per_hour))),
+                                    "hour_lo": lo, "hour_hi": hi,
+                                    "min_rvol": mrv, "min_risk_bps": 3.0})
     return out
 
 
@@ -68,7 +92,14 @@ class VwapBreakStrategy:
         c = df.close.values
         with np.errstate(invalid="ignore", divide="ignore"):
             z = (c - vwap) / np.where(vwstd > vwap * 1e-6, vwstd, np.nan)
-        return {"z": z, "sd": vwstd,
+        # rvol against a trailing baseline, SHIFTED so a bar is never judged on
+        # its own completed volume - the exact mistake that inflated H-002's
+        # profit factor from 0.627 to 2.765 in 2026-09-05.
+        v = pd.Series(df.volume.values, index=df.index)
+        base = v.rolling(20 * 24, min_periods=120).mean().shift(1)
+        rvol = (v / base).fillna(0.0).values
+        return {"z": z, "sd": vwstd, "rvol": rvol,
+                "hour": df.index.hour.values.astype(np.int64),
                 "live": (df.volume.values > 0).astype(np.uint8)}
 
     def grid(self, tf: str) -> list[dict]:
@@ -79,6 +110,9 @@ class VwapBreakStrategy:
             feats=None, **kw) -> np.ndarray:
         f = feats if feats is not None else self.features(df)
         z, sd, live = f["z"], f["sd"], f["live"]
+        rvol, hour = f["rvol"], f["hour"]
+        h_lo, h_hi = int(cfg.get("hour_lo", 0)), int(cfg.get("hour_hi", 0))
+        min_rvol = float(cfg.get("min_rvol", 0.0))
         o, h, l, c = (df.open.values, df.high.values,
                       df.low.values, df.close.values)
         n = len(c)
@@ -94,6 +128,18 @@ class VwapBreakStrategy:
                 continue
             side = 1 if z[i] >= thr else (-1 if z[i] <= -thr else 0)
             if side == 0:
+                i += 1
+                continue
+            # FILTERS, read on the SIGNAL bar i and never on the fill bar i+1.
+            # A filter that reads the entry bar asks for volume and range that do
+            # not exist when the order is placed.
+            if h_lo != h_hi:
+                hh = hour[i]
+                inside = (h_lo <= hh < h_hi) if h_lo < h_hi else (hh >= h_lo or hh < h_hi)
+                if not inside:
+                    i += 1
+                    continue
+            if min_rvol > 0.0 and rvol[i] < min_rvol:
                 i += 1
                 continue
             e = i + 1

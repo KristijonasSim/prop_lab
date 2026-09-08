@@ -100,6 +100,10 @@ tbody tr:hover{background:var(--bg)}
 details{margin-top:14px}
 summary{cursor:pointer;color:var(--muted);font-size:12px}
 details table{margin-top:8px;font-size:12px}
+.notes{margin:8px 0 0;padding-left:20px;color:var(--muted);font-size:12.5px;
+  line-height:1.65;max-width:1000px}
+.notes li{margin-bottom:5px}
+.notes b{color:var(--ink)}
 </style>
 
 <div class="wrap">
@@ -236,6 +240,15 @@ function atRisk(r){
 // level it has to be read back out of it. Stalled is the quiet killer - accounts
 // that never reach the target rather than accounts that die - and a blank column
 // hid it completely.
+// The fastest risk level that reaches at least 60% pass. Kris's goal is stated
+// as a PAIR - 60% pass AND 14 days - and neither number alone answers it: a level
+// can pass 79% of the time and take 32 days, or resolve in 8 days and pass 40%.
+function fastest60(r){
+  const ok = (r.ladder || []).filter(x => x.pass_pct >= 60 && x.days_to_pass);
+  if (!ok.length) return null;
+  return ok.reduce((a, b) => b.days_to_pass < a.days_to_pass ? b : a);
+}
+
 function stalled(r){
   if (r.still_open_pct != null) return r.still_open_pct;
   const lv = (r.ladder || []).find(x => Math.abs(x.risk_pct - r.risk_pct) < 1e-9);
@@ -283,6 +296,13 @@ function progress(h){
     <span class="bar"><i style="width:${pct}%"></i></span></div>`;
 }
 
+// Findings worth carrying on the page rather than in a commit message.
+function notes(h){
+  if (!h.notes || !h.notes.length) return '';
+  return `<details open><summary>What the research established</summary>
+    <ul class="notes">${h.notes.map(n => `<li>${n}</li>`).join('')}</ul></details>`;
+}
+
 function paint(h){
   const _h = h;
   $('panel').innerHTML = `
@@ -301,7 +321,13 @@ function paint(h){
     ${considered(h.rows || [])}
     <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
       — the phase gate — not by profit factor. Every market also ran the identical
-      walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.</p>`;
+      walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.
+      <br><b>60% in</b> is the goal column: the fastest risk level anywhere on that row's
+      ladder that reaches at least 60% pass, with the level itself in the next column.
+      It is <i>not</i> the auto-picked risk, which answers a different question — the
+      fastest level whose drawdown fits the cap. Hover it for the pass rate and drawdown
+      you would be accepting.</p>
+    ${notes(h)}`;
   wireRiskCells(_h);
 }
 

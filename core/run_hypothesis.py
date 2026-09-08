@@ -298,7 +298,7 @@ class _FixedGrid:
 
 
 def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
-              manifest=None, done=True, mode="single") -> dict:
+              manifest=None, done=True, mode="single", notes=None) -> dict:
     """One record - one page - from whatever cells exist so far.
 
     `mode="single"` promotes the best market in each class. `mode="basket"`
@@ -358,7 +358,7 @@ def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
     rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
            "when": pd.Timestamp.utcnow().isoformat(),
            "structure": "one_step_6pct", "complete": bool(done),
-           "years": YEARS, "mode": mode,
+           "years": YEARS, "mode": mode, "notes": notes or [],
            "timeframes": tfs, "universe": universe,
            "rows": rows,
            "cells": [{k: v for k, v in c.items() if k != "_trades"} for c in cells]}
@@ -370,7 +370,8 @@ def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
 def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
         universe: dict[str, list[str]], tfs: list[str],
         pipe_kw: dict | None = None, manifest: dict | None = None,
-        null_seeds: int = 1, years: int = YEARS) -> dict:
+        null_seeds: int = 1, years: int = YEARS,
+        notes: list | None = None) -> dict:
     """Walk-forward every market, promote the best per asset class, write the page.
 
     THE PAGE IS WRITTEN AFTER EVERY CELL, not at the end. A full universe takes
@@ -399,7 +400,7 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
         out.write_text(json.dumps(_assemble(
             cells, sid=sid, hid=hid, name=name, tagline=tagline, tfs=tfs,
             universe=universe, manifest=manifest if done else None,
-            done=done, mode="single"), indent=1, default=str))
+            done=done, mode="single", notes=notes), indent=1, default=str))
         bout.write_text(json.dumps(_assemble(
             cells, sid=f"{sid}_basket", hid=f"{hid}B",
             name=f"{name} — basket",
@@ -407,7 +408,7 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
                      "weighted, on one common selection rule."),
             tfs=tfs, universe=universe,
             manifest=manifest if done else None,
-            done=done, mode="basket"), indent=1, default=str))
+            done=done, mode="basket", notes=notes), indent=1, default=str))
     for cls, syms in universe.items():
         for sym in syms:
             for tf in tfs:
