@@ -100,11 +100,25 @@ class Pipeline:
     `run(df, cfg, fee_bps, slip_bps, feats=...)`. See `core/strategy.py`.
     """
 
+    #: WHICH COST THE FOLD SELECTOR RANKS ON. README.md 3.3 and START_HERE.md
+    #: both state the rule outright - "Select configurations on 2x-cost profit
+    #: factor inside the fold, not on 1x with a 2x check afterwards. Selecting on
+    #: 1x and checking 2x afterwards let four fragile legs into the book." That
+    #: rule was learned on the hand-written walk-forward and did NOT survive the
+    #: port into this file: selection ranked on 1x from the day Engine 2 shipped.
+    #: The 2x series is already computed on the train slice by `_trades`, so this
+    #: costs nothing to honour. Default "2x" is the documented rule; "1x" is kept
+    #: only so the old behaviour can be reproduced for comparison.
+    SELECT_ON = "2x"
+
     def __init__(self, strategy, *, train_months: int = TRAIN_MONTHS,
                  test_months: int = TEST_MONTHS, floors=FLOORS, topn=TOPN,
                  first_test: str | None = None, last_test: str | None = None,
-                 null_kind: str = "paired"):
+                 null_kind: str = "paired", select_on: str | None = None):
         self.s = strategy
+        self.select_on = select_on or self.SELECT_ON
+        if self.select_on not in ("1x", "2x"):
+            raise ValueError(f"select_on must be '1x' or '2x', got {select_on!r}")
         self.train_months = train_months
         self.test_months = test_months
         self.floors = tuple(floors)
@@ -201,10 +215,18 @@ class Pipeline:
             pfs = np.full(len(cfgs), np.nan)
             cnts = np.zeros(len(cfgs), dtype=int)
             for ci, cfg in enumerate(cfgs):
-                r, _, _, _ = self._trades(train, f_tr, pad_tr, cfg, m, cache_tr)
+                r, _, _, r2 = self._trades(train, f_tr, pad_tr, cfg, m, cache_tr)
                 cnts[ci] = len(r)
                 if len(r):
-                    pfs[ci] = pf(r)
+                    # Rank on the cost the rule says to rank on. `r2` can carry
+                    # NaN when the 2x re-run produced a different trade count, so
+                    # fall back to 1x for that configuration rather than dropping
+                    # it - a config that vanishes at 2x is a finding, not an
+                    # eligibility question, and it is caught downstream.
+                    if self.select_on == "2x" and np.isfinite(r2).all():
+                        pfs[ci] = pf(r2)
+                    else:
+                        pfs[ci] = pf(r)
 
             span = (test.index[-1] - test.index[pad_te]).total_seconds() / 86400.0
             cache_te = self._cache()

@@ -241,3 +241,80 @@ def test_the_paired_null_keeps_each_bar_with_its_own_volume():
     np.testing.assert_allclose(np.sort(df.volume.values),
                                np.sort(paired.volume.values), atol=1e-12)
     assert not np.allclose(plain.volume.values, paired.volume.values)
+
+
+# --------------------------------------------------------------------------- #
+# which cost the fold selector ranks on
+# --------------------------------------------------------------------------- #
+class CostSensitiveStrategy:
+    """Two configurations that swap places when the cost doubles.
+
+    `thin` trades often for a small edge and dies when the cost doubles; `fat`
+    trades rarely for a large one and survives. At 1x `thin` has the higher
+    profit factor, at 2x `fat` does. So the configuration the selector picks
+    says, unambiguously, which cost it ranked on.
+    """
+
+    name = "cost_sensitive"
+    #: per-trade edge in the same units the fee is charged in
+    EDGE = {"thin": 1.6, "fat": 9.0}
+    EVERY = {"thin": 4, "fat": 40}
+
+    def features(self, df):
+        return df.close.values
+
+    def grid(self, tf):
+        return [{"kind": "thin"}, {"kind": "fat"}]
+
+    def run(self, df, cfg, fee_bps, slip_bps, feats=None, **kw):
+        k = cfg["kind"]
+        n = len(df)
+        ent = np.arange(1, n - 2, self.EVERY[k])
+        ext = np.minimum(ent + 1, n - 1)
+        out = np.zeros((len(ent), N_COLS))
+        out[:, T_ENTRY_I] = ent
+        out[:, T_EXIT_I] = ext
+        out[:, 2] = 1.0
+        out[:, 3] = df.open.values[ent]
+        out[:, 4] = df.close.values[ext]
+        # alternating win/loss around a fixed edge, so the profit factor is a
+        # clean function of edge minus cost and nothing else
+        sign = np.where(np.arange(len(ent)) % 2 == 0, 1.0, -1.0)
+        out[:, 5] = sign * self.EDGE[k] + self.EDGE[k] * 0.35 - (fee_bps + slip_bps)
+        return out
+
+
+def _picked_kinds(market, select_on):
+    p = Pipeline(CostSensitiveStrategy(), train_months=12, test_months=3,
+                 floors=(1,), topn=(1,), select_on=select_on)
+    f = p.walk_forward(market).folds
+    # `train_pf` is the ranking score of the configuration that was chosen, so
+    # the two runs having different scores is the selector reading a different
+    # series - which is exactly what is under test.
+    return f.train_pf.round(3).tolist()
+
+
+def test_the_selector_ranks_on_2x_by_default():
+    """README.md 3.3, verbatim: "Select configurations on 2x-cost profit factor
+    inside the fold, not on 1x with a 2x check afterwards. Selecting on 1x and
+    checking 2x afterwards let four fragile legs into the book."
+
+    `core/pipeline.py` shipped on 2026-09-08 ranking on 1x, and nothing caught
+    it, because no test pinned the rule. This is that test.
+    """
+    assert Pipeline.SELECT_ON == "2x"
+    assert Pipeline(CostSensitiveStrategy()).select_on == "2x"
+
+
+def test_the_ranking_key_actually_changes_what_is_selected():
+    m = Market(sym="TEST", tf="1h", df=bars(), fee_bps=2.0, slip_bps=0.0,
+               pad_bars=100)
+    one, two = _picked_kinds(m, "1x"), _picked_kinds(m, "2x")
+    assert len(one) == len(two) > 0
+    # If these were identical the `select_on` switch would be decorative.
+    assert one != two
+
+
+def test_an_unknown_ranking_key_is_refused():
+    with pytest.raises(ValueError, match="select_on"):
+        Pipeline(CostSensitiveStrategy(), select_on="3x")
