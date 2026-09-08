@@ -41,7 +41,10 @@ R_STOP, R_HORIZON = 0, 1
 #: grid would only give the fold selector a way to rediscover that.
 THRESHOLDS = (0.5, 0.75, 1.0, 1.25, 1.5)
 STOPS = (0.75, 1.0, 1.25, 1.5, 2.0)
-HOLD_HOURS = (48, 96, 192)
+#: EXTENDED. The blind selector chose 192 hours - the longest in the grid - in
+#: all seven folds on gold, which is the signature of a binding grid edge rather
+#: than a preference. 384 hours is a fortnight.
+HOLD_HOURS = (96, 192, 384)
 
 #: SESSION WINDOWS, in UTC hours [lo, hi). (0, 0) means no window at all and is
 #: always in the grid, so the fold selector can decline the filter entirely -

@@ -52,11 +52,17 @@ TEST_MONTHS = 3
 #: and 30 keeps them at the cost of noisier selection. Neither is obviously
 #: right, so neither is chosen in advance.
 FLOORS = (30, 100)
-#: Single best train config vs the top ten equally weighted. Taking the single
-#: highest train PF is the highest-variance choice available; the top ten is the
-#: same information with the selection noise averaged down. If top-ten holds and
-#: single-best does not, the edge was in the family and not in the winner.
-TOPN = (1, 10)
+#: How many of the top train configurations to trade, equally weighted.
+#:
+#: 1 and 10 were the only values for a long time and the gap between them turned
+#: out to matter enormously. On filtered XAUUSD 1h the single config reaches
+#: profit factor 2.150 with average R +1.16 but only 0.69 trades a day, so
+#: accounts STALL and it never reaches 60% pass at all; the ten-deep book reaches
+#: 62.6% in 19.2 days but blows 35% of accounts, because ten correlated positions
+#: at 0.50% risk put 5% at risk against a 3% DAILY cap.
+#:
+#: The middle was never tested. 3 and 5 are added for exactly that reason.
+TOPN = (1, 3, 5, 10)
 
 
 def pf(r: np.ndarray) -> float:
