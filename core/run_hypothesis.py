@@ -292,7 +292,15 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
                           "pass_pct": m["pass_pct"],
                           "days60": b["days_to_pass"] if b else None,
                           "pass60": b["pass_pct"] if b else None,
-                          "risk60": b["risk_pct"] if b else None})
+                          "risk60": b["risk_pct"] if b else None,
+                          # THE WHOLE LADDER, not just the rung `pick` chose.
+                          # Kris trades at a risk HE picks - he asked for 2% per
+                          # trade on 2026-09-08 - and without this the record can
+                          # only answer at the one rung the scorer happened to
+                          # like. Twelve small dicts per rule; it costs nothing
+                          # and it is the difference between a board you can
+                          # interrogate and one you have to re-run.
+                          "ladder": m.get("ladder", [])})
     out["rules"] = rules
     out["_trades"] = keep_trades          # stripped before the record is written
     if nulls:

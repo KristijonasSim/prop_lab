@@ -54,6 +54,31 @@ Named archetypes: ORB, VWAP mean reversion, breakout-retest.
 Longer-hold ideas (trend following, carry, position swing) are logged as future
 candidates, not built now. Say so explicitly when logging one.
 
+## THE NOISE FLOOR — measured 2026-09-08, and it governs every comparison
+
+Six gates carrying **no information by construction** (the MA200 slope sign,
+block-shuffled at its own median run length) were run through the full blind
+walk-forward on gold. At 2% risk they scored between **13.3 and 26.5 expected
+days** and between **PF@2x 1.485 and 2.295**.
+
+**The best-scoring arm of that entire day's work was one of the shuffled gates.**
+
+Two rules follow and neither is optional:
+
+* **An improvement smaller than that spread is not evidence of anything.** Every
+  real candidate measured that day — 14.1, 16.1, 16.6, 17.2 expected days — sits
+  inside the band. So did the earlier 62.6%-pass headline, which evaporated when
+  the grid was widened.
+* **Quote a per-cell number with its noise band or do not quote it.** No number
+  in this repo's history has been reported that way, which is the mechanism
+  behind every result it has had to retract.
+
+**The one thing that is NOT subject to this: the risk ladder.** Re-simulating the
+same trade series at a different position size selects nothing and searches
+nothing — it is arithmetic on a fixed series. Gold 1h needs 38.0 expected days at
+0.25% risk and **16.6 at 2%, 13.0 at 3%**, and that difference is real in a way
+no filter result today was.
+
 ## Mandatory reporting fields
 
 Every backtest reports, no exceptions:
@@ -249,6 +274,25 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   24 conditioner cells beat a permutation null. Caveat: tested with a fixed hold to
   the session close and **no stop and no target** — a stop-and-target version is
   untested and Kris trades one.
+- **Entry filters on H-027 gold, as a family** (2026-09-08) — 25 candidates
+  screened as a paired lift per configuration on gold 1h and 4h: moving averages
+  (position, slope, counter-trend), fibonacci retracement and extension zones,
+  six session windows, volatility regime, day of week. **24 of 25 raise profit
+  factor and LOWER R per day**, which makes the evaluation slower — the metric is
+  `days = maxDD_R / R_per_day`, not PF. Every session window is slower on both
+  timeframes, so "try London or NY instead" is closed by measurement. Fibonacci
+  sign-flips across timeframes (fib100 beyond .618: −25.7 days on 1h, **+344.6**
+  on 4h) which is H-026's signature for no effect. The one survivor, MA200 slope
+  alignment, was re-run inside the kernel and then **lost to its own control**:
+  a gate block-shuffled to carry no information scored PF@2x 1.968 / 54.4 days
+  and 2.295 / 40.5 against the real gate's 1.840 / 75.5, and a shuffled gate on
+  1h reached **60% pass in 14.5 days** — the exact target, from noise.
+  `strategies/vwapbreak/research/`.
+- **Order flow on GOLD is not testable and no number may be quoted for it.**
+  Every file in `data/feeds/` is a Binance crypto symbol; `data/dukascopy_raw/
+  XAUUSD` holds one-minute BID CANDLES, not ticks, so there is no bid/ask volume
+  on disk. Gold trades naked. Backlog H-030, and it needs a download.
+
 - **Book depth imbalance** (H-024) — real, monotone, beats its null, stable across
   years, and **0 of 935 cells across 11 coins clear a 14bps taker round trip**. Best
   honest cell 7.9bps. Also settles the cap-curve question: the small-cap edge in the

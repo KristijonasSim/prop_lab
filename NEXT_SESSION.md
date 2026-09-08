@@ -104,18 +104,53 @@ XAGUSD went from losing to clearing the gate on the wider grid: 1h PF@2x
 `TASKS.md` no longer applies. **But it moved for the same reason gold moved, in
 the other direction** — treat it as grid noise until something separates the two.
 
+---
+
+## TASK 2 — DONE 2026-09-08 late. Filters screened, and the noise floor measured.
+
+Kris asked for filters — MAs, fibonacci, order flow, London/NY sessions — and
+then for the economics: is a higher profit factor worth the days it costs?
+Full workings in `RESEARCH_LOG.md` 2026-09-08 (fourth entry).
+
+**Answers:**
+
+* **25 filters screened. 24 of 25 raise PF by cutting R per day**, i.e. they make
+  the evaluation slower. Sessions are slower on both timeframes. Fibonacci
+  sign-flips across timeframes. The one survivor, MA200 slope alignment, **lost
+  to a shuffled version of itself** and is dead.
+* **Order flow cannot be tested on gold** — no bid/ask volume on disk, only
+  one-minute bid candles. Backlog H-030.
+* **correlation(PF@2x, expected days) = +0.231 over 18 arms.** Higher PF goes
+  with MORE days. Compare on expected days and euros, never on PF.
+* **THE NOISE FLOOR: six information-free gates span 13.3 to 26.5 expected days.**
+  Every real candidate built today lands inside it. Nothing from 2026-09-08 is
+  distinguishable from noise, the selector fix included.
+
+**The one real gain, and it is Kris's:** raising risk per trade. Gold 1h needs
+**38.0** expected days at 0.25% risk, **16.6** at 2%, **13.0** at 3%. The risk
+ladder re-simulates a FIXED trade series at a different size — nothing is
+selected, so the noise floor does not apply. 58% of accounts blow at 2%, which is
+2.4 accounts and EUR 52 per funded account.
+
 ### What to do next, in order
 
-1. **Do not chase the topn/hold axis further.** It has been tested end to end.
-2. **Quantify the selection noise before believing any of these cells.** Re-run
-   the identical pipeline with a different null seed and with the grid split in
-   half; if gold and silver swap places again, the per-cell numbers are draws
-   from a distribution and only the distribution should be quoted. This is the
-   single highest-value thing left and nothing else is safe until it is done.
-3. **Persist the per-fold chosen configuration.** `cells[].rules` records the
-   outcome of each selection rule but not *what* it chose, so "which hold did it
-   pick" cannot be answered from the record — it had to be inferred. Add it.
-4. Only then: the two-leg XAUUSD 1h + 4h book, anchor variations, trailing stop.
+1. **STOP SEARCHING FOR AN EDGE UNTIL THE NOISE FLOOR IS ON THE BOARD.** It is
+   measured (13.3–26.5 expected days) and it is larger than every difference this
+   project has ever reported. `core/board.py` should carry a per-cell band, and
+   `core/scorecard.py` should refuse to rank two cells whose bands overlap. Until
+   that exists every board number invites the same mistake.
+2. **Take the risk lever, it is the only real gain here.** 0.25% → 2% is 38.0 →
+   16.6 expected days on the same trades. `core/riskladder.pick` chooses the rung
+   and it optimises something other than expected days — find out what, and
+   whether Kris's ≥2% should simply be a floor. This is `IDEAS.md` item B and it
+   is now the highest-value open item in the project.
+3. **Do not chase filters, sessions, fibonacci or the topn/hold axis.** All
+   tested end to end, all in `CLAUDE.md`'s known-dead list now.
+4. **Persist the per-fold chosen configuration.** `cells[].rules` records the
+   outcome of each selection rule but not *what* it chose. Per-rule ladders are
+   now stored (2026-09-08) — the config is not.
+5. Only after 1 and 2: the two-leg XAUUSD 1h + 4h book, anchor variations,
+   trailing stop. Each needs its noise band, not a point estimate.
 
 ---
 

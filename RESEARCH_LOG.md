@@ -2498,3 +2498,119 @@ first run — twelve near-identical configurations, all `trail_mode 0`, all pass
 
 Both disagreements are left failing in `pytest -m slow`. The failure is the
 finding; making it green would only hide it again.
+
+
+## 2026-09-08 (fourth entry) — 25 filters, a gate that beat its own null backwards, and the noise floor that ate all of it
+
+Kris asked whether filters — moving averages, fibonacci, order flow, a different
+session — could make H-027 gold better, and then asked the sharper question: is a
+higher profit factor worth the days it costs? Both are now answered with numbers.
+
+### The screen: 24 of 25 filters raise PF by making the book slower
+
+`strategies/vwapbreak/research/filters.py`, 25 candidates on gold 1h and 4h,
+scored as a **paired lift per configuration** on 75 reference configs — every
+threshold x stop x hold with the session and rvol axes off, so a candidate is
+measured against a clean baseline rather than against whatever the session filter
+was already doing.
+
+Sorting by profit factor and sorting by pace give almost opposite tables. The
+governing identity is `days = maxDD_R / R_per_day`, and nearly every filter here
+buys PF by cutting R per day:
+
+| filter | dPF 1h | dDAYS 1h | dPF 4h | dDAYS 4h |
+|---|---|---|---|---|
+| MA200 slope aligned | +0.278 | **−44.5** | +0.156 | **−57.4** |
+| fib100 beyond .618 | +0.311 | −25.7 | −0.239 | **+344.6** |
+| session Asia 00-07 | −0.012 | +309.5 | +0.221 | +200.7 |
+| session NY open 13-15 | −0.247 | +773.9 | — | — |
+| vol above trailing median | −0.296 | +495.9 | −0.518 | +503.1 |
+
+* **Every session window is slower on both timeframes.** That closes "try London
+  or NY instead" with a measurement.
+* **Fibonacci sign-flips across timeframes**, which by H-026's own precedent is
+  the signature of no effect.
+* **Order flow is not testable on gold and no number is quoted.** Every file in
+  `data/feeds/` is a Binance crypto symbol and `data/dukascopy_raw/XAUUSD` holds
+  one-minute BID CANDLES, not ticks — there is no bid/ask volume for gold on
+  disk. Gold trades naked. That is backlog H-030 and it needs a download.
+
+### The survivor, run properly, and then destroyed by its own control
+
+MA200 slope alignment was the only filter faster on both timeframes, so it was
+re-run **inside the kernel** (`research/ma_gate.py`) rather than as a post-hoc
+mask — expressed by setting `z` to NaN on refused bars, which the kernel already
+skips, so the shipped kernel is untouched.
+
+In-kernel it split: gold 4h went 47.1% pass / 97.7 days to **64.9% / 75.5**, and
+reached 60% pass for the first time ever. Gold 1h went the other way, 38.0 to
+**64.9 days** — the screen had predicted −44.5 there. **The post-hoc masking
+approximation failed on 1h**, which is exactly why the screen was labelled a
+screen.
+
+Then the control. `research/gate_null.py` block-shuffles the gate's sign series at
+its own median run length, preserving duty cycle and persistence and destroying
+only its alignment with price — the same test H-009 was accepted on.
+
+| gold 4h | PF@2x | pass% | days | days@60% |
+|---|---|---|---|---|
+| **real gate** | 1.840 | 64.9 | 75.5 | 46.5 |
+| shuffled seed 0 | **1.968** | 62.5 | **54.4** | **31.2** |
+| shuffled seed 1 | 1.485 | 51.5 | 62.1 | never |
+| shuffled seed 2 | **2.295** | 64.2 | **40.5** | 40.5 |
+
+**Two of three meaningless gates beat the real one.** On 1h a shuffled gate
+reached **60% pass in 14.5 days** — Kris's exact target, produced by a gate that
+knows nothing. The MA200 gate is search noise and the whole filter family goes
+with it.
+
+### The answer to Kris's question: profit factor does not buy days
+
+`research/economics.py` prices every arm produced today at a common risk, in the
+units the business actually pays in — expected days to a funded account and euros
+of Thunderbolt fees.
+
+**correlation(PF@2x, expected days) = +0.231 over 18 arms.** Positive: higher
+profit factor goes with MORE days. +0.1 of profit factor is worth **+0.3 days**.
+
+The clearest single case, at 2% risk:
+
+| arm | PF@2x | pass% | exp. days | EUR/funded |
+|---|---|---|---|---|
+| gold 1h + MA200 gate | **1.865** (best PF) | 28.3 | **21.2** (worst) | **77** |
+| gold 1h, as it stands | 1.679 | 42.2 | 16.6 | 52 |
+| gold 1h, selector on 2x | 1.715 | 42.5 | **14.1** | 52 |
+
+The highest profit factor in the study has the worst economics — five days slower
+and 25 euros dearer per funded account. **Compare candidates on expected days and
+euros. Never on profit factor.**
+
+### THE NOISE FLOOR, and it is the most useful number here
+
+The six shuffled gates are, by construction, six strategies with no information
+in them. At 2% risk they span **13.3 to 26.5 expected days** and **PF@2x 1.485 to
+2.295**.
+
+The best arm in the entire day's work — 13.3 expected days at PF 2.134 — is a
+shuffled gate. Every real candidate (14.1, 16.1, 16.6, 17.2) sits inside that
+band.
+
+**Nothing built on 2026-09-08 is distinguishable from noise**, the selector fix
+included. Any future claim of an improvement must clear a ~13-day spread before
+it means anything, and no per-cell number in this project has ever been quoted
+with that spread attached.
+
+### What DOES survive, and why it is different in kind
+
+Raising risk. Gold 1h needs **38.0** expected days at the 0.25% the scorer picks
+and **16.6** at 2%, **13.0** at 3%. Cost is 58% of accounts blown, which at
+EUR 21.89 is 2.4 accounts and EUR 52 per funded account.
+
+This is not subject to the noise floor above, and the distinction matters: the
+risk ladder re-simulates the SAME trade series at a different position size. No
+configuration is re-chosen, no search happens, nothing is selected. It is
+arithmetic on a fixed series, not a result pulled out of a grid.
+
+It is also `IDEAS.md` item B — "split evaluation risk from funded risk", flagged
+high value and never started — arrived at from the other direction.
+
