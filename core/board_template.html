@@ -44,7 +44,13 @@ h1{margin:0;font-size:20px;letter-spacing:-.01em}
 .rb:hover{color:var(--ink)}
 .rb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .rb.auto::after{content:"\2713";margin-left:5px;opacity:.7}
-.risknote{color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.55}
+.risknote{color:var(--muted);font-size:12px;margin:14px 0 10px;line-height:1.55}
+.risksel{background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:4px;padding:2px 4px;font-size:12px;cursor:pointer;
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums}
+.risksel:hover{border-color:var(--accent)}
+.risksel.forced{border-color:var(--accent);color:var(--accent)}
 .tab{background:var(--surface);color:var(--muted);border:1px solid var(--line);
   border-radius:999px;padding:7px 15px;font-size:13px;cursor:pointer;
   font-family:inherit;display:flex;gap:8px;align-items:center}
@@ -130,7 +136,7 @@ const COLS = [
   {h:'Class',    f:r => `<span class="cls">${esc(r.asset_class)}</span>`},
   {h:'Market',   f:r => r.sym
       ? `<span class="mkt">${esc(r.sym)} ${esc(r.tf)}</span>`
-      : '<span class="dim">none resolved</span>'},
+      : `<span class="dim">${esc(r.note || 'none resolved')}</span>`},
   {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
   {h:'Pass %',   f:r => n(r.pass_pct, 1)},
@@ -145,7 +151,7 @@ const COLS = [
   {h:'Avg R',    f:r => n(r.avg_r, 3)},
   {h:'Tr/day', f:r => n(r.trades_per_day, 2)},
   {h:'Trades',   f:r => r.trades == null ? '<span class="dim">—</span>' : r.trades},
-  {h:'Risk %',   f:r => r._norisk ? '<span class="dim">n/a</span>' : n(r.risk_pct, 2)},
+  {h:'Risk %',   f:r => riskCell(r)},
   {h:'Sharpe',   f:r => n(r.sharpe, 2)},
   {h:'Cost', f:r => r.cost_rt_bps == null ? '<span class="dim">—</span>'
       : `${n(r.cost_rt_bps,2)}${r.cost_measured ? '' : '<span class="pill">assumed</span>'}`},
@@ -178,51 +184,54 @@ function dataSpan(h){
   return ` (${esc(from)} to ${esc(to)})`;
 }
 
+// RISK IS SET PER ROW, not for the whole table. Each asset class is a different
+// market with a different drawdown shape, so forcing one level across all three
+// compares things nobody would trade together.
+//
 // Risk per trade is the only lever left once a configuration has been chosen
-// blind, and it moves speed and survival in OPPOSITE directions. PF, win rate,
-// average R, trades/day and Sharpe are R-based and do not move with it - only
-// pass rate, drawdown, days and CAGR do, and only those are swapped here.
-let RISK = null;          // null = each row uses the level the ladder picked
+// blind, and it moves speed and survival in OPPOSITE directions. Profit factor,
+// win rate, average R, trades per day and Sharpe are all R-based and do NOT move
+// with it - only pass rate, drawdown, days and CAGR do, and only those are
+// swapped here.
+const ROW_RISK = {};       // asset class -> chosen risk %, or absent for 'auto'
 
 function atRisk(r){
-  if (RISK === null || !r.ladder) return r;
-  const lv = r.ladder.find(x => Math.abs(x.risk_pct - RISK) < 1e-9);
-  if (!lv) return Object.assign({}, r, {_norisk: true});
+  const want = ROW_RISK[r.asset_class];
+  if (want === undefined || !r.ladder) return r;
+  const lv = r.ladder.find(x => Math.abs(x.risk_pct - want) < 1e-9);
+  if (!lv) return r;
   return Object.assign({}, r, {
     risk_pct: lv.risk_pct, pass_pct: lv.pass_pct, max_dd_pct: lv.max_dd_pct,
     days_to_pass: lv.days_to_pass, median_days: lv.median_days,
     fail_max_pct: lv.fail_max_pct, fail_daily_pct: lv.fail_daily_pct,
-    cagr_pct: lv.cagr_pct, _picked: lv.picked});
+    cagr_pct: lv.cagr_pct, _forced: !lv.picked});
 }
 
-function riskLevels(h){
-  const s = new Set();
-  (h.rows || []).forEach(r => (r.ladder || []).forEach(x => s.add(x.risk_pct)));
-  return [...s].sort((a, b) => a - b);
+function riskCell(r){
+  if (!r.ladder || !r.ladder.length)
+    return r.risk_pct == null ? '<span class="dim">—</span>' : n(r.risk_pct, 2);
+  const cur = ROW_RISK[r.asset_class];
+  const sel = cur === undefined ? r.ladder.find(x => x.picked) : null;
+  const val = cur === undefined ? (sel ? sel.risk_pct : r.risk_pct) : cur;
+  return `<select class="risksel${r._forced ? ' forced' : ''}"
+      data-class="${esc(r.asset_class)}" title="risk per trade for this row only">
+      ${r.ladder.map(x => `<option value="${x.risk_pct}"
+        ${Math.abs(x.risk_pct - val) < 1e-9 ? 'selected' : ''}>${x.risk_pct.toFixed(2)}%${x.picked ? ' \u2713' : ''}</option>`).join('')}
+    </select>`;
 }
 
-function renderRiskBar(h){
-  const levels = riskLevels(h);
-  if (!levels.length){ $('riskbar').innerHTML = ''; $('risknote').textContent = ''; return; }
-  $('riskbar').innerHTML = `<span class="lab">Risk per trade</span>`
-    + `<button class="rb" data-r="auto" aria-pressed="${RISK === null}">auto</button>`
-    + levels.map(v => {
-        const auto = (h.rows || []).some(r => (r.ladder || []).some(
-          x => x.picked && Math.abs(x.risk_pct - v) < 1e-9));
-        return `<button class="rb${auto ? ' auto' : ''}" data-r="${v}"
-          aria-pressed="${RISK !== null && Math.abs(RISK - v) < 1e-9}">${v.toFixed(2)}%</button>`;
-      }).join('');
-  $('risknote').innerHTML = RISK === null
-    ? 'Each row is at the risk level the ladder chose for it &mdash; the fastest '
-      + 'one whose drawdown still fits inside the firm&rsquo;s 6% cap. '
-      + '&#10003; marks a level some row chose.'
-    : `All rows forced to <b>${RISK.toFixed(2)}%</b>. Profit factor, win rate, `
-      + 'average R, trades/day and Sharpe do not move with risk &mdash; only pass '
-      + 'rate, drawdown, days and CAGR do. A red drawdown breaches the 6% cap.';
-  [...document.querySelectorAll('.rb')].forEach(b => b.addEventListener('click', () => {
-    RISK = b.dataset.r === 'auto' ? null : parseFloat(b.dataset.r);
-    paint(h);
-  }));
+function wireRiskCells(h){
+  [...document.querySelectorAll('.risksel')].forEach(el =>
+    el.addEventListener('change', () => {
+      ROW_RISK[el.dataset.class] = parseFloat(el.value);
+      paint(h);
+    }));
+  $('risknote').innerHTML =
+    'Change <b>risk per trade</b> in any row\u2019s Risk column \u2014 it affects '
+    + '<b>that row only</b>. \u2713 is the level the ladder chose: the fastest one '
+    + 'whose drawdown still fits inside the firm\u2019s 6% cap. Profit factor, win '
+    + 'rate, average R, trades/day and Sharpe do not move with risk \u2014 only '
+    + 'pass rate, drawdown, days and CAGR do. A red drawdown breaches the cap.';
 }
 
 function paint(h){
@@ -233,7 +242,6 @@ function paint(h){
     <p class="meta">${esc(h.hid)} · ${(h.timeframes||[]).join(' / ')}
       · ${h.years ? h.years + ' years of data' : ''}${dataSpan(h)}
       · limit entry, market exit · walk-forward, config re-chosen blind each quarter</p>
-    <div class="riskbar" id="riskbar"></div>
     <p class="risknote" id="risknote"></p>
     <div class="scroll"><table><thead><tr>
       ${COLS.map(c => `<th>${esc(c.h)}</th>`).join('')}
@@ -244,7 +252,7 @@ function paint(h){
     <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
       — the phase gate — not by profit factor. Every market also ran the identical
       walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.</p>`;
-  renderRiskBar(_h);
+  wireRiskCells(_h);
 }
 
 const H = D.hypotheses || [];
