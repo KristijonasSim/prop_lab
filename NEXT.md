@@ -173,6 +173,21 @@ it until 1–3 are in.
 
 ---
 
+## OPEN — the two vwap cross-check disagreements
+
+Precisely localised in `CLAUDE.md`. 4 trades of 330 on a 30m config at the weekly
+reopen (cannot reach the board — wrong quarter), and 1 trade of 416 on a 15m
+config 7 bars from the end of the series. Exit bars and R agree everywhere they
+share a trade, so neither reads as a look-ahead. Both are boundary cases: one at
+a session edge spanning padded weekend bars, one at the end of the dataset.
+
+**Next step:** instrument the kernel and the port on those exact bars and print
+the state each is carrying — `sess_start`, `blocked_until`, `prev` close and
+VWAP, `stretched_*`. Do not weaken `tests/test_second_engine.py` to make it
+green; the failure is the finding.
+
+---
+
 ## Blocked on Kris
 
 | # | question | blocks |

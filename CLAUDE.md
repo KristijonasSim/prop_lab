@@ -261,15 +261,21 @@ The edge survives — 13 of 16 against a null's 3.0 — the speed never existed.
 **A TARGET keeps its level**: it is a limit order, a gap through it fills better,
 and taking that bonus would be optimism in the other direction.
 
-**OPEN, 2026-09-08: 1 of 11 configurations on XAUUSD 30m and 1 of 13 on 15m
-DISAGREE with the vwap NautilusTrader port on entry bars.** Found the moment
-those two timeframes were added to the port's `TFS` map, which had listed only
-5m/1h/4h — so two of the board book's four legs had never been cross-checked at
-all. Exit bars match 1.0000 and `max |dR|` is 2e-7 (float noise) on every
-configuration that does match, so this is narrow, but an entry-bar disagreement
-is a causality question and it is NOT yet known whether the kernel or the port is
-wrong. **Do not quote H-002's 30m or 15m legs as second-engine verified until
-this is resolved.** The slow suite fails on it deliberately.
+**OPEN, 2026-09-08: two configurations disagree with the vwap NautilusTrader
+port on entry bars.** Found the moment 15m and 30m were added to the port's `TFS`
+map, which had listed only 5m/1h/4h — **two of the board book's four legs had
+never been cross-checked at all** and nothing said so. Both are localised, both
+sit at a boundary, and on every shared trade exit bars match 1.0000 and
+`max |dR|` is 2e-7 (float noise), so **neither looks like a look-ahead**:
+
+| | disagreement | where | reaches the board? |
+|---|---|---|---|
+| 30m, MODE_PULLBACK, `min_rvol` 2.0, anchor 13:30 | 4 of 330 trades | all four are the **first live bar after the weekend** (Sunday 22:00 UTC decision, 22:30 entry) | **No.** The config is fold-selected only for the 2025-12 quarter and all four dates (2024-04-07, 2025-04-06, 2025-05-18, 2025-06-15) fall outside it. |
+| 15m, MODE_BREAK, rolling 384-bar anchor, hold 48 | 1 of 416 trades | bar **90041 of 90048** — 7 bars from the end of the series, in the last rolling window | Possibly one trade in the final fold. |
+
+Which side is right is **unresolved**. Do not quote H-002's 30m or 15m legs as
+second-engine verified until it is. The slow suite fails on this deliberately —
+`pytest -m slow`.
 
 **BOTH KERNELS ARE NOW SECOND-ENGINE CHECKED (2026-09-08).** `strategies/ribbon/
 stage12_nautilus.py` streams the ribbon kernel through NautilusTrader one bar at

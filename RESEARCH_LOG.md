@@ -2450,3 +2450,51 @@ Any exit that can be held across a session boundary has to state where it fills
 on the reopen, and a backtest that answers "at my level" is claiming a fill it
 could not have got. This is the same class of error as the previous repo's
 resting-limit VWAP band strategy — PF 3.0 in backtest, ~0.7 live.
+
+---
+
+## 2026-09-08 (third entry) — two of H-002's four legs had never been cross-checked
+
+Not a bug in a kernel. A gap in what the cross-check covered, which is a harder
+class of problem because nothing fails when coverage is missing.
+
+`strategies/vwap/stage17_goldnautilus.py` carried
+
+```python
+TFS = {"5m": "5-MINUTE-LAST", "1h": "1-HOUR-LAST", "4h": "4-HOUR-LAST"}
+```
+
+The board book is **XAUUSD 5m + 30m + 1h + 4h**. 30m was not in that map, and
+neither was 15m. The port is timeframe-agnostic — those two lines had simply
+never been written — so **half the board book had never been through a second
+engine**, while the project's notes said the kernel was cross-checked. Nothing
+was wrong; something was absent, and absence does not raise.
+
+It surfaced only because item 2's slow suite parametrised over the timeframes the
+walk-forward actually selects and got `KeyError`. I first read that as the port
+being stale (it was, separately, on 1h) and was wrong about the other two.
+
+### What the added coverage immediately found
+
+| | disagreement | where | reaches the board? |
+|---|---|---|---|
+| 30m, MODE_PULLBACK, `min_rvol` 2.0, anchor 13:30 | 4 of 330 trades | all four on the **first live bar after the weekend** — Sunday 22:00 UTC decision, 22:30 entry | **No.** Fold-selected only for the 2025-12 quarter; all four dates fall outside it. |
+| 15m, MODE_BREAK, rolling 384-bar anchor, hold 48 | 1 of 416 trades | bar **90041 of 90048**, in the final rolling window | possibly one trade in the last fold |
+
+On every trade the two engines share, **exit bars match 1.0000 and `max |dR|` is
+2e-7**. Both disagreements are entry-bar only, both sit on a boundary — one where
+a session spans padded weekend bars, one at the end of the dataset. Neither has
+the shape of a look-ahead, and which side is right is **not yet known**.
+
+### The rule worth keeping
+
+**A cross-check's coverage is a claim, and it needs stating with the same
+precision as its result.** "The kernel agrees with an independent engine" was
+true and useless — it did not say *on which timeframes*, and for two of the four
+the answer was "none". The same trap is why `strategies/ribbon/stage12_nautilus.py`
+records which half it verifies (trade logic, not the moving averages) and why its
+first run — twelve near-identical configurations, all `trail_mode 0`, all passing
+— was thrown away and replaced with one configuration per distinct code path.
+
+Both disagreements are left failing in `pytest -m slow`. The failure is the
+finding; making it green would only hide it again.
