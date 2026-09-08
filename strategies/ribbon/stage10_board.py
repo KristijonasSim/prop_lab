@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import board                                             # noqa: E402
+from strategies.ribbon.manifest import MANIFEST_STAGE10            # noqa: E402
 from strategies.ribbon import engine as E                          # noqa: E402
 from strategies.ribbon.sweep import (COSTS, OUT, TFS, build_grid,  # noqa: E402
                                      load_tf, ribbon_inputs, shuffled)
@@ -239,7 +240,8 @@ def main() -> int:
             "weekends and the -2.00R is optimistic by an unknown amount.",
             "trail_k improves monotonically to the edge of the grid, so the "
             "best configurations are near-permanent exposure, not timing.",
-        ])
+        ],
+        manifest=MANIFEST_STAGE10)
     return 0
 
 

@@ -20,7 +20,8 @@
     "pass_rate": 0.8984,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "max_dd": -0.0752
+    "max_dd": -0.0752,
+    "stale": false
    },
    "score": {
     "total": 6.0,
@@ -29,6 +30,7 @@
     "expected_days": 143.5886019590383,
     "evidence_capped": false,
     "null_capped": false,
+    "stale_capped": false,
     "components": [
      {
       "name": "speed",
@@ -69,6 +71,65 @@
     ]
    },
    "note": "Gold, and only gold, on the kernel corrected 2026-09-07. Two defects that stage 17's NautilusTrader cross-check exposed are now fixed: the volatility guard let floating-point cancellation noise (~3e-5 on gold) act as a real band on sessions whose true sigma is exactly zero, and the kernel would both decide and fill on Dukascopy's padded weekend bars - zero volume, last price repeated, <strong>21.5% of the XAUUSD series</strong>. The edge survives the correction intact: 15 of 20 walk-forward cells still clear PF 1.20 at 2x measured cost against the paired null's 2 of 20, and the median cell IMPROVED, 1.395 to 1.485. What does not survive is the pace headline. The old book's peak drawdown was 8.00R against an 8.00R cap - exactly on the line - so a 7.5% increase to 8.60R drops the risk ladder a rung and the same two cells go from 100.2 expected days to 185.8. Re-running the whole 78-combination search on the corrected data finds a better book than re-scoring the old one: four legs weighted by signal-to-cost rather than equally, at 143.6 expected days. Read that with the same caveat as before - it is the fastest of 78 books chosen on the window it is scored on. The control is that the identical search on phase-randomised markets puts 0 of 78 books under 150 days against the real data's 3, and the null's fastest book needs 474.7 days. It is still 143.6 against a 45-day target, and 55.9 if the firm turns out to be one-step.",
+   "stale": {
+    "state": "ok",
+    "stale": false,
+    "reasons": [],
+    "notes": [],
+    "detail": ""
+   },
+   "fingerprint": {
+    "git": "26a434e",
+    "dirty": true,
+    "written": "2026-09-08T06:03:53.589462+00:00",
+    "kernel_hash": "40610052ec0c",
+    "kernels": [
+     "strategies/vwap/engine.py",
+     "strategies/vwap/stage18_goldbook.py",
+     "strategies/vwap/stage20_deadfix.py",
+     "strategies/vwap/stage3_timeframes.py",
+     "strategies/vwap/stage6_walkforward.py",
+     "strategies/vwap/sweep.py"
+    ],
+    "costs": {
+     "rt_bps": 1.83,
+     "assumed_rt_bps": 3.0,
+     "gate_multiple": 2,
+     "basis": "478 sampled hours of Dukascopy XAUUSD ticks, core/fx_spread.py"
+    },
+    "data": {
+     "backtests/vwap/stage6_trades_xauusd_deadfix.parquet": {
+      "rows": 0,
+      "first": null,
+      "last": null
+     },
+     "backtests/vwap/stage6_trades_xauusd_shuffled_paired_deadfix.parquet": {
+      "rows": 0,
+      "first": null,
+      "last": null
+     },
+     "data/XAUUSD_dukascopy_1h.parquet": {
+      "rows": 22512,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:00:00+00:00"
+     },
+     "data/XAUUSD_dukascopy_30min.parquet": {
+      "rows": 45024,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:30:00+00:00"
+     },
+     "data/XAUUSD_dukascopy_4h.parquet": {
+      "rows": 5628,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 20:00:00+00:00"
+     },
+     "data/XAUUSD_dukascopy_5min.parquet": {
+      "rows": 270144,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:55:00+00:00"
+     }
+    }
+   },
    "headline": {
     "pf": 2.016,
     "pf2x": 1.85,
@@ -17426,7 +17487,8 @@
     "pass_rate": 0.756,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "max_dd": -0.076
+    "max_dd": -0.076,
+    "stale": false
    },
    "score": {
     "total": 5.0,
@@ -17435,6 +17497,7 @@
     "expected_days": 175.92592592592592,
     "evidence_capped": false,
     "null_capped": false,
+    "stale_capped": false,
     "components": [
      {
       "name": "speed",
@@ -17475,6 +17538,60 @@
     ]
    },
    "note": "Gold only, at measured cost. The board used to carry a fourth leg - XAGUSD 30m - and it is gone for two independent reasons. Against this hypothesis's OWN paired null, silver clears PF 1.20 at 2x on 2 of 6 cells while the null clears 3.7 on average and reaches 2.549 against silver's real best of 2.113: it loses to its own null. And it was priced at 2.25bps per side when the measured spread is 4.554 - Dukascopy ticks, 330 sampled hours. Gold does the opposite on both counts: 5 of 8 real cells clear against the null's 1.0, and the measured 0.915bps per side is cheaper than the 1.50 assumed. THE UNCOMFORTABLE PART, stated rather than buried: removing silver makes this book SLOWER, 125.5 expected days to 151.1, even though profit factor rises from 1.855 to 2.068. The old 126.8-day headline was paid for by a leg that cannot be distinguished from noise. Re-pricing on its own is nearly a no-op (126.8 -> 125.5) because gold's gain and silver's loss cancel.",
+   "stale": {
+    "state": "ok",
+    "stale": false,
+    "reasons": [],
+    "notes": [],
+    "detail": ""
+   },
+   "fingerprint": {
+    "git": "26a434e",
+    "dirty": true,
+    "written": "2026-09-08T06:06:39.056405+00:00",
+    "kernel_hash": "07f83a1aa796",
+    "kernels": [
+     "strategies/ribbon/engine.py",
+     "strategies/ribbon/ribbon.py",
+     "strategies/ribbon/stage10_board.py",
+     "strategies/ribbon/stage11_reprice.py",
+     "strategies/ribbon/stage6_walkforward.py",
+     "strategies/ribbon/sweep.py"
+    ],
+    "costs": {
+     "model": "bps per side, measured from Dukascopy ticks (core/fx_spread.py)",
+     "XAUUSD": 0.915,
+     "assumed": "sweep.COSTS[sym] = (fee_bps, slip_bps, min_risk_bps); XAUUSD was (1.00, 0.50, 3.0)",
+     "gate_multiple": 2
+    },
+    "data": {
+     "backtests/ribbon/stage10_trades.parquet": {
+      "rows": 0,
+      "first": null,
+      "last": null
+     },
+     "backtests/ribbon/stage6_stitched.csv": {
+      "rows": null,
+      "first": null,
+      "last": null
+     },
+     "data/XAUUSD_dukascopy_15min.parquet": {
+      "rows": 90048,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:45:00+00:00"
+     },
+     "data/XAUUSD_dukascopy_1h.parquet": {
+      "rows": 22512,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:00:00+00:00"
+     },
+     "data/XAUUSD_dukascopy_30min.parquet": {
+      "rows": 45024,
+      "first": "2023-09-01 00:00:00+00:00",
+      "last": "2026-08-30 23:30:00+00:00"
+     }
+    }
+   },
    "headline": {
     "pf": 1.811,
     "pf2x": 1.772,

@@ -20,7 +20,40 @@ Standing rule still in force: **no new hypotheses until 1 and 2 are in.**
 
 ---
 
-## ITEM 1 — kernel fingerprint and automatic staleness
+## ITEM 1 — kernel fingerprint and automatic staleness — **DONE 2026-09-08**
+
+**Done-when condition met.** Appending one comment line to
+`strategies/vwap/engine.py` and rerunning `core/build_scoreboard.py` takes H-002
+from `6.0/10 TOO SLOW` to `3.0/10 STALE - scored on code that has since changed`,
+naming the file, with no human editing a note. Same for H-016 on the ribbon
+kernel. `core/fingerprint_selftest.py` covers all twenty cases and passes.
+
+**What shipped:** `core/fingerprint.py`, `strategies/{vwap,ribbon}/manifest.py`,
+`manifest=` now required by `core.board.write_board`, staleness rehashed in
+`core/build_scoreboard.py`, a `STALE` banner in `core/scoreboard_template.html`,
+a 3.0 cap in `core/scorecard.py`, and both live boards backfilled - each rewrote
+byte-identical apart from the new `fingerprint` key.
+
+**Three things the plan did not anticipate:**
+
+1. **Two tiers, not one.** A change to the trade arithmetic (`engine.py`,
+   `sweep.py`, the walk-forward stage) is a hard stale: the trade list is wrong.
+   A change to `core/board.py` or `core/riskladder.py` is a **note**: the trades
+   stand, the stored summary was computed by code that moved. One tier would have
+   flagged every card on every cosmetic edit, and a flag that is always on is
+   ignored.
+2. **`stage18_goldbook.py` rewrote the board on import.** Its trigger was
+   `if "--board" in sys.argv` at module level, so `stage20_deadfix.py --board` -
+   which imports it - silently wrote the superseded pre-dead-bar-fix record
+   first and the corrected one second. `stage11_reprice.py` had the identical
+   bug. Both now guard on `__name__ == "__main__"`.
+3. **The live ribbon board is written by `stage11_reprice.py --board`, not
+   `stage10_board.py`.** Running stage 10 replaces the record with the
+   superseded four-leg book that still contains **silver** - which is on the
+   do-not-trade list in `CLAUDE.md`. Found by running it. Both stages now carry
+   their own manifest so neither can claim the other's provenance.
+
+### Steps as planned
 
 **Goal.** The board marks its own records stale when the code that produced them
 changes. Today `SUPERSEDED — SCORED ON A BROKEN KERNEL` is a note typed by hand

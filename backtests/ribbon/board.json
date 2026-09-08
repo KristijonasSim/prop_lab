@@ -2357,5 +2357,69 @@
   ],
   "searched": "12 markets x 5 timeframes x 660 configurations (37,620 backtests), plus S&P 500, US30 and Nasdaq - all three rejected",
   "note": "Silver was dropped 2026-09-07: it loses to this hypothesis's own null and was priced at half its measured spread."
+ },
+ "fingerprint": {
+  "v": 1,
+  "written": "2026-09-08T06:06:39.056405+00:00",
+  "git": {
+   "sha": "26a434ebdb2b0150a8722411fe5952ec35812234",
+   "short": "26a434e",
+   "dirty": true
+  },
+  "kernels": {
+   "strategies/ribbon/engine.py": "4f9ec4e0e04f5c644d385d4de182a4d803fbbd3a6200e43bebe28d19a6b0aeec",
+   "strategies/ribbon/ribbon.py": "2a4fa8a6f8be761aabdefc2e3b4208fbb7830237bdb62e4e2ab8d4e5b39a9852",
+   "strategies/ribbon/stage10_board.py": "0d2f953477e084bfd0443f079786ce23ab43bf41b3460a11773b0966b9fc42a2",
+   "strategies/ribbon/stage11_reprice.py": "fcd2700748ca114677ca3a555ff3558202e80ab37fb59cc9452a409c824524a5",
+   "strategies/ribbon/stage6_walkforward.py": "1254cf87a9706cfabcfdf5b1041c89ea333a42eb01cbd1cf7b7fd9b704598615",
+   "strategies/ribbon/sweep.py": "eee095e167e824f350afb8f0f8af482aa61babeacb953ba43fbee0d523658fc1"
+  },
+  "kernel_hash": "07f83a1aa7968daa7a41320a781ba2aa5b7bd8aac3a662ab3cf75dd22febe3f3",
+  "scoring": {
+   "core/board.py": "a8f63848144c20790a45e939f67de4e01ad186daacda8d119d14ef5743591eaa",
+   "core/riskladder.py": "9180c71025cea5367b4f84dcea81ba7c4de7078ba2567904e669cd462db2a12e"
+  },
+  "scoring_hash": "8e284dd802bad2210003b31048d7d86e89d5cc931ef595eddd8d5ae3bd148395",
+  "data": {
+   "backtests/ribbon/stage10_trades.parquet": {
+    "sha": "5340c716a1aa15c7d939050f4398715de8ad9c963d8a32fe226b75627b1a2c65",
+    "bytes": 208445,
+    "rows": 0
+   },
+   "backtests/ribbon/stage6_stitched.csv": {
+    "sha": "2dbe58dda22ff84fc71c0f9bad95e254174109c2ba9d6759714a8b3e7032ff50",
+    "bytes": 2002,
+    "read_error": "ArrowInvalid: Could not open Parquet input source '<Buffer>': Parquet magic bytes not found in footer. Either the file is corrupted or this is not a parquet file.",
+    "rows": null
+   },
+   "data/XAUUSD_dukascopy_15min.parquet": {
+    "sha": "9719be66544ac728e9e2497bc7b38435eae0b08aafd7c2a648b49522bfbda65a",
+    "bytes": 3109145,
+    "rows": 90048,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:45:00+00:00"
+   },
+   "data/XAUUSD_dukascopy_1h.parquet": {
+    "sha": "788c36df244a1a4009aa020c7d52642d98ac5b4cd2b2d7cd93f66d79d9f5d838",
+    "bytes": 827251,
+    "rows": 22512,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:00:00+00:00"
+   },
+   "data/XAUUSD_dukascopy_30min.parquet": {
+    "sha": "0780934a95479af98e2a9c9c0f222abe46cd472d2149241e5e0514bf56637fa9",
+    "bytes": 1610891,
+    "rows": 45024,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:30:00+00:00"
+   }
+  },
+  "costs": {
+   "model": "bps per side, measured from Dukascopy ticks (core/fx_spread.py)",
+   "XAUUSD": 0.915,
+   "assumed": "sweep.COSTS[sym] = (fee_bps, slip_bps, min_risk_bps); XAUUSD was (1.00, 0.50, 3.0)",
+   "gate_multiple": 2
+  },
+  "note": null
  }
 }

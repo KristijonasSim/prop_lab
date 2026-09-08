@@ -157,6 +157,7 @@ class Scorecard:
     total: float = 0.0                               # 0..10
     evidence_capped: bool = False
     null_capped: bool = False
+    stale_capped: bool = False
 
     #: expected days to a funded account, carried so the pace gate can read it
     expected_days: float | None = None
@@ -164,11 +165,13 @@ class Scorecard:
     def as_dict(self) -> dict:
         return {
             "total": round(self.total, 1),
-            "verdict": verdict(self.total, self.expected_days),
+            "verdict": verdict(self.total, self.expected_days,
+                               stale=self.stale_capped),
             "too_slow": too_slow(self.expected_days),
             "expected_days": self.expected_days,
             "evidence_capped": self.evidence_capped,
             "null_capped": self.null_capped,
+            "stale_capped": self.stale_capped,
             "components": [
                 {"name": k, "weight": WEIGHTS[k],
                  "score": round(v, 3),
@@ -186,7 +189,8 @@ def too_slow(expected_days: float | None) -> bool:
     return expected_days is not None and expected_days > PACE_DELETE
 
 
-def verdict(total: float, expected_days: float | None = None) -> str:
+def verdict(total: float, expected_days: float | None = None,
+            stale: bool = False) -> str:
     """Plain words, and deliberately conservative at the top.
 
     Nothing in this project gets called good, ready, or worth real money on the
@@ -195,6 +199,12 @@ def verdict(total: float, expected_days: float | None = None) -> str:
     evidence produced so far) rather than what to do about it. "Trade it" was the
     original label and it was wrong: a score is a summary of tests already
     passed, never a recommendation."""
+    if stale:
+        # Staleness outranks even the pace gate, because the pace number is
+        # itself an output of the kernel that changed. Saying "TOO SLOW - 143d"
+        # about a record whose engine no longer exists states a measurement the
+        # repo can no longer reproduce.
+        return "STALE - scored on code that has since changed; rerun the board stage"
     if too_slow(expected_days):
         # The pace gate OVERRIDES the score. A number that reads "strong
         # candidate" next to a 176-day evaluation is the exact kind of
@@ -245,7 +255,19 @@ def compute(m: dict) -> Scorecard:
     null_capped = False
     if m.get("beats_null") is not True and total > NULL_CAP:
         total, null_capped = NULL_CAP, True
+
+    # Staleness gate (item 1 of STEPS_1_2_4.md). `stale` is set by
+    # core/build_scoreboard.py after rehashing the record's fingerprint against
+    # the files on disk. A result produced by a kernel that has since changed has
+    # not been shown to hold on the kernel that exists now, which is the same
+    # epistemic position as never having been measured - so it takes the same cap
+    # as a missing walk-forward. H-009 sat at 8.9 in exactly this state for
+    # three weeks because nothing in the code was watching.
+    stale_capped = False
+    if m.get("stale") is True and total > EVIDENCE_CAP:
+        total, stale_capped = EVIDENCE_CAP, True
+
     return Scorecard(components=c, total=total, evidence_capped=capped,
-                     null_capped=null_capped,
+                     null_capped=null_capped, stale_capped=stale_capped,
                      expected_days=expected_days(m.get("median_days_pass"),
                                                  m.get("pass_rate")))

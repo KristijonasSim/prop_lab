@@ -242,6 +242,15 @@ strong{font-weight:600;color:var(--ink)}
 .bdrow .pts b{color:var(--ink);font-weight:700}
 .capnote{padding:11px 15px;background:var(--failbg);color:var(--fail);font-size:13px;
   border-top:1px solid var(--line)}
+/* Provenance banner. A stale record is one whose kernel, data or cost has moved
+   since it was scored, detected by rehashing - not by a human typing a note. */
+.stale{margin:8px 0 2px;padding:9px 13px;border-radius:4px;font-size:12.5px;
+  line-height:1.5;border:1px solid var(--line)}
+.stale b{font-weight:700;letter-spacing:.02em}
+.stale.hard{background:var(--failbg);color:var(--fail);border-color:var(--fail)}
+.stale.soft{background:var(--surface);color:var(--muted)}
+.stale .files{font-family:"JetBrains Mono",monospace;font-size:11.5px;
+  display:block;margin-top:4px;opacity:.9}
 
 /* tables */
 .scroll{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:4px;
@@ -323,6 +332,7 @@ a{color:var(--accent)}
     <div class="vtext">
       <div class="who" id="who"></div>
       <h2 id="verdict"></h2>
+      <div class="stale" id="stale" hidden></div>
       <p id="tagline"></p>
       <div class="cand" id="cand"></div>
       <div class="pinebar" id="pinebar"></div>
@@ -764,6 +774,37 @@ function paint(base){
   renderBook(base, s);
 }
 
+// The board marks its own records stale. `s.stale` is computed in
+// core/build_scoreboard.py by rehashing every file core/fingerprint.py recorded
+// when the record was written; nothing here is typed by hand.
+function renderStale(s){
+  const el = $('stale'), st = s.stale;
+  if (!st || st.state === 'ok'){ el.hidden = true; return; }
+  const fp = s.fingerprint;
+  const built = fp && fp.git
+    ? ` Built at <b>${esc(fp.git)}</b>${fp.dirty ? ' (uncommitted tree)' : ''}.` : '';
+  let head, cls;
+  if (st.state === 'stale'){
+    cls = 'hard';
+    head = '<b>STALE — the code or data behind this record has changed.</b> '
+         + 'Every number on this card was produced by something that is no longer '
+         + 'on disk. Rerun the strategy\'s board stage before quoting any of it.';
+  } else if (st.state === 'unfingerprinted'){
+    cls = 'soft';
+    head = '<b>No fingerprint.</b> This record predates provenance tracking, so '
+         + 'the board cannot tell whether the kernel that produced it still '
+         + 'exists. Rerun the board stage to fingerprint it.';
+  } else {
+    cls = 'soft';
+    head = '<b>Note.</b> The trades still stand; something around them moved.';
+  }
+  const lines = (st.reasons||[]).concat(st.notes||[]);
+  el.className = 'stale ' + cls;
+  el.innerHTML = head + built
+    + (lines.length ? `<span class="files">${lines.map(esc).join('<br>')}</span>` : '');
+  el.hidden = false;
+}
+
 function render(s, sel){
   const L0=s.ladder;
   const risk = L0 ? (sel==null ? L0.picked : sel) : null;
@@ -772,9 +813,11 @@ function render(s, sel){
   const custom = !!s.custom;
   const SC = custom ? null
     : (row ? {total:row.score, verdict:row.verdict, components:row.components,
-              evidence_capped:row.evidence_capped, null_capped:row.null_capped}
+              evidence_capped:row.evidence_capped, null_capped:row.null_capped,
+              stale_capped:s.score.stale_capped}
            : s.score);
   $('who').textContent = `${s.hid} · ${s.name}`;
+  renderStale(s);
   $('verdict').textContent = custom ? 'Your own book — measured, not scored' : SC.verdict;
   $('tagline').textContent = s.tagline;
   const cand = row ? s.candidate.replace(/[\d.]+% risk per trade/,
@@ -855,6 +898,11 @@ function render(s, sel){
        effectively absent, and the project's rule is that no strategy is a candidate without
        it &mdash; whatever it scores elsewhere. Without this cap, churning accounts quickly
        would bank most of the speed weight on no demonstrated edge.</div>` : '')
+    + (SC.stale_capped
+    ? `<div class="capnote"><strong>Capped at 3.0 &mdash; stale.</strong> This was measured on
+       a kernel, dataset or cost assumption that has since changed, so it has not been shown
+       to hold on the code that exists now. That is the same position as never having been
+       measured, and it takes the same cap. Rerun the board stage.</div>` : '')
     + (SC.null_capped
     ? `<div class="capnote"><strong>Capped at 4.0 &mdash; did not beat its own null.</strong>
        The identical search run on phase-randomised data found as much or more than the real

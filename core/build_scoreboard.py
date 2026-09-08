@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from core import fingerprint as FP  # noqa: E402
 from core.scorecard import compute, expected_days, WEIGHTS, PHASE_DAYS  # noqa: E402
 from core.prop_rules import ONE_STEP, TWO_STEP  # noqa: E402
 from core.riskladder import RISK_LADDER, MAX_BREACH, DD_CAP, MAX_DAYS  # noqa: E402
@@ -86,6 +87,36 @@ def _pine(sid: str, kind: str = "") -> str | None:
     return p.read_text() if p.exists() else None
 
 
+def _declared_costs(sid: str):
+    """The cost assumption the strategy declares TODAY, from its manifest. A
+    record scored at 1.83bps is not a record scored at 3.00, and the manifest is
+    where that number now lives - so a change to it has to invalidate the card
+    the same way a kernel edit does."""
+    try:
+        mod = __import__(f"strategies.{sid}.manifest", fromlist=["MANIFEST"])
+    except Exception:                                        # noqa: BLE001
+        return None                                          # no manifest yet
+    return mod.MANIFEST.get("costs")
+
+
+def _fp_summary(fp: dict | None) -> dict | None:
+    """The small, human-readable part of the fingerprint. The full hash map is
+    kept in board.json; the page only needs enough to say what it was built on."""
+    if not fp:
+        return None
+    return {
+        "git": (fp.get("git") or {}).get("short"),
+        "dirty": (fp.get("git") or {}).get("dirty"),
+        "written": fp.get("written"),
+        "kernel_hash": (fp.get("kernel_hash") or "")[:12],
+        "kernels": sorted(fp.get("kernels") or {}),
+        "costs": fp.get("costs"),
+        "data": {k: {"rows": v.get("rows"), "first": v.get("first"),
+                     "last": v.get("last")}
+                 for k, v in (fp.get("data") or {}).items()},
+    }
+
+
 def load(sid: str) -> dict | None:
     p = BT / sid / "board.json"
     if not p.exists():
@@ -93,10 +124,21 @@ def load(sid: str) -> dict | None:
     b = json.loads(p.read_text())
     pick, fields = b["pick"], b["fields"]
 
+    # Item 1: rehash what this record says it was built from, and compare with
+    # what is on disk now. Nobody has to remember to mark a record superseded.
+    fp = b.get("fingerprint")
+    stale = FP.check(fp)
+    if fp and FP.costs_changed(fp, _declared_costs(sid)):
+        stale["stale"] = True
+        stale["state"] = "stale"
+        stale["reasons"] = list(stale["reasons"]) + ["cost assumption changed"]
+        stale["detail"] = "; ".join(stale["reasons"])
+
     measured = dict(b["measured"])
     measured.update(median_days_pass=pick["median_days"], pass_rate=pick["pass_rate"],
                     fail_max=pick["fail_max"], fail_daily=pick["fail_daily"],
-                    max_dd=pick["max_dd"])
+                    max_dd=pick["max_dd"],
+                    stale=stale["stale"])
     card = compute(measured).as_dict()
 
     return {
@@ -104,6 +146,9 @@ def load(sid: str) -> dict | None:
         "period": b["period"], "report": b["report"],
         "candidate": f'{b["candidate"]}, {pick["risk"]*100:.2f}% risk per trade',
         "measured": measured, "score": card, "note": b.get("note"),
+        # rendered as a badge on the card; see core/scoreboard_template.html
+        "stale": stale,
+        "fingerprint": _fp_summary(fp),
         "headline": {
             "pf": fields["pf"], "pf2x": b.get("pf_2x"),
             "tpd": fields["trades_per_day"], "trades": fields["trades"],
@@ -174,8 +219,13 @@ def main():
     for s in out:
         pine = ("strategy+indicator" if s.get("pine") and s.get("pine_indicator")
                 else "strategy only" if s.get("pine") else "NO PINE")
+        st = (s.get("stale") or {}).get("state", "?")
+        tag = {"ok": "", "note": "  NOTE", "stale": "  STALE",
+               "unfingerprinted": "  UNFINGERPRINTED"}.get(st, "")
         print(f"  {s['hid']} {s['name']:26s} {s['score']['total']:4.1f}/10  "
-              f"{s['score']['verdict']:52s} {pine}")
+              f"{s['score']['verdict']:52s} {pine}{tag}")
+        if (s.get("stale") or {}).get("detail"):
+            print(f"      {s['stale']['detail']}")
 
 
 if __name__ == "__main__":

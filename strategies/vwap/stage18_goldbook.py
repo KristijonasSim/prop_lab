@@ -58,6 +58,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import board, riskladder                              # noqa: E402
+from strategies.vwap.manifest import MANIFEST_PREFIX            # noqa: E402
 
 BT = ROOT / "backtests" / "vwap"
 OUT = BT
@@ -335,8 +336,13 @@ def write_gold_board(rt_bps: float = MEASURED_RT):
             {"t": "Pace", "w": "100 expected days against a 45-day target. Still 2.2x short.", "done": False},
         ],
         note=BOOK_NOTE,
+        manifest=MANIFEST_PREFIX,
     )
 
 
-if "--board" in sys.argv:
+# Guarded on __main__ as well as the flag. Without the first clause, merely
+# IMPORTING this module with --board on the command line rewrote board.json -
+# which is what stage20_deadfix.py does, so `stage20 --board` was silently
+# writing the superseded pre-fix record first and the corrected one second.
+if __name__ == "__main__" and "--board" in sys.argv:
     write_gold_board()

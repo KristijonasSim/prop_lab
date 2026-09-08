@@ -41,6 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import riskladder                                     # noqa: E402
+from strategies.ribbon.manifest import MANIFEST                 # noqa: E402
 from strategies.ribbon.sweep import COSTS                       # noqa: E402
 
 BT = ROOT / "backtests" / "ribbon"
@@ -262,10 +263,15 @@ def write_ribbon_board(t: pd.DataFrame):
             {"t": "Independent-engine cross-check", "w": "This kernel has never been run through a second engine.", "done": False},
         ],
         note=BOOK_NOTE,
+        manifest=MANIFEST,
     )
 
 
-if "--board" in sys.argv:
+# Guarded on __main__ as well as the flag: a module-level side effect keyed only
+# on sys.argv rewrites board.json the moment anything imports this file with
+# --board on the command line. The same pattern in stage18_goldbook.py was doing
+# exactly that.
+if __name__ == "__main__" and "--board" in sys.argv:
     _t = pd.read_parquet(BT / "stage10_trades.parquet")
     _t["exit_ts"] = pd.to_datetime(_t.exit_ts, utc=True)
     _t["entry_ts"] = pd.to_datetime(_t.entry_ts, utc=True)

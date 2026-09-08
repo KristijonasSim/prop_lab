@@ -50,6 +50,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from core import board                                # noqa: E402
+from strategies.vwap.manifest import MANIFEST         # noqa: E402
 from strategies.vwap.stage18_goldbook import (         # noqa: E402
     ASSUMED_RT, MEASURED_RT, GATE, TF_ORDER, SYM, BT,
     reprice, pf, maxdd, cells, combine, best_per_tf, score, build,
@@ -315,6 +316,7 @@ def write_gold_board(rt_bps: float = MEASURED_RT):
             {"t": "Pace", "w": "143.6 expected days two-step against a 45-day target. 55.9 one-step.", "done": False},
         ],
         note=BOOK_NOTE,
+        manifest=MANIFEST,
     )
 
 

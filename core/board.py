@@ -24,6 +24,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from core import fingerprint as FP                       # noqa: E402
 from core import riskladder as RL                        # noqa: E402
 
 BT = ROOT / "backtests"
@@ -143,10 +144,25 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
                 beats_null: bool = False,
                 grid: dict | None = None, todo: list | None = None,
                 note: str | None = None, legs: dict | None = None,
-                markets: dict | None = None) -> dict:
+                markets: dict | None = None,
+                manifest: dict | None = None) -> dict:
     """`r` is the stitched out-of-sample trade series - walk-forward output, not
     a fitted backtest. Anything else is not comparable to what is already here
-    and should not be put on the board."""
+    and should not be put on the board.
+
+    `manifest` is REQUIRED and comes from `strategies/<sid>/manifest.py`. It names
+    the kernel files, data files and cost assumption this record depends on, and
+    they are hashed into the record so `build_scoreboard` can mark the card stale
+    by itself when any of them changes. There is no default: a record with no
+    fingerprint is precisely the hole item 1 exists to close, and defaulting to
+    None would quietly reopen it for every future hypothesis."""
+    if manifest is None:
+        raise ValueError(
+            f"write_board({sid!r}) needs manifest=. Create "
+            f"strategies/{sid}/manifest.py declaring KERNELS, SCORING, DATA and "
+            f"COSTS (copy strategies/vwap/manifest.py) and pass its MANIFEST. "
+            f"See STEPS_1_2_4.md item 1. Without it the board cannot tell when "
+            f"this record stops being true.")
     order = np.argsort(pd.DatetimeIndex(exit_ts).values, kind="stable")
     r = np.asarray(r)[order]
     exit_ts = pd.DatetimeIndex(exit_ts)[order]
@@ -197,6 +213,9 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
         # configuration was chosen from, which is usually far wider and is the
         # thing that makes a single survivor unimpressive.
         "markets": markets,
+        # What produced this record. Recomputed at render time; see
+        # core/fingerprint.py.
+        "fingerprint": FP.make(**manifest),
     }
     out = BT / sid / "board.json"
     out.parent.mkdir(parents=True, exist_ok=True)
