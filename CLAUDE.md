@@ -240,6 +240,14 @@ exits (6.2%)** and **H-016 1,532 of 8,610 (17.8%)**. Both are now zero.
   premature stop-outs on a price nobody traded. **The counterfactual has to be
   re-run, not subtracted.**
 
+**BOTH KERNELS ARE NOW SECOND-ENGINE CHECKED (2026-09-08).** `strategies/ribbon/
+stage12_nautilus.py` streams the ribbon kernel through NautilusTrader one bar at
+a time and matches **108 of 108 rule shapes exactly** across 15m/30m/1h/4h -
+every entry bar, every exit bar, `max |dR| = 0`. It covers the TRADE LOGIC; the
+twenty moving averages are covered separately by `test_parity.py` against a
+literal reading of the Pine. With that gap closed H-016 went **3.0 → 6.0** on the
+board, having been capped by `core/verification.py` for exactly this.
+
 **FX/METALS DATA CARRIES A CLOSED MARKET (2026-09-07, `stage20_deadfix.py`).**
 Dukascopy pads the closed FX weekend with synthetic bars: zero volume, O=H=L=C at
 the last traded price. **21.5% of the XAUUSD series is these.** Two rules now hold

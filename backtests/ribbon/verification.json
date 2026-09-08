@@ -1,6 +1,6 @@
 {
  "sid": "ribbon",
- "when": "2026-09-08T06:45:36.670294+00:00",
+ "when": "2026-09-08T06:51:07.132143+00:00",
  "kernel_hash": "c1ef5bdbfcf74853c8258b3e353e90fe0cdcaa109cdb8cffe391474b3b36141f",
  "depth": "fast",
  "checks": {
@@ -37,11 +37,11 @@
    "why": "A pinned trade list. Any kernel edit that moves a trade has to be explained in the commit rather than discovered weeks later."
   },
   "second_engine": {
-   "passed": false,
-   "ran": 0,
-   "skipped": 1,
+   "passed": true,
+   "ran": 1,
+   "skipped": 0,
    "failed": 0,
-   "detail": "SKIPPED test_ribbon_matches_a_second_engine: H-016's ribbon kernel has never been ported to a second engine. This is a real gap in the evidence, not a missing test file: core/verification.py reads it and c",
+   "detail": "1 passed",
    "why": "Trade-by-trade agreement with NautilusTrader. An event-driven engine holds no array it could index into, so it cannot reproduce a look-ahead. This is the check that has actually found bugs."
   },
   "manifest": {
@@ -74,8 +74,6 @@
    "detail": "measured.beats_null = True"
   }
  },
- "all_passed": false,
- "failed": [
-  "second_engine"
- ]
+ "all_passed": true,
+ "failed": []
 }

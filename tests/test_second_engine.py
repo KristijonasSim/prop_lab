@@ -12,9 +12,10 @@ time and holds no array it could index into, so it cannot reproduce a
 look-ahead even by accident. Agreement between the two is the strongest
 evidence this repo can produce about a kernel.
 
-RIBBON HAS NEVER BEEN THROUGH A SECOND ENGINE. That is recorded here as a
-skip with a reason rather than left as an absence, so `core/verification.py`
-can read it and cap H-016's score for it.
+Ribbon was ported on 2026-09-08 (`strategies/ribbon/stage12_nautilus.py`) and
+this file now checks both kernels. Until then the gap was recorded here as a
+skip with a reason rather than left as an absence, and `core/verification.py`
+read that skip and capped H-016's score at 3.0 for it.
 """
 from __future__ import annotations
 
@@ -71,9 +72,47 @@ def test_vwap_matches_nautilus_on_every_timeframe(tf):
     _check_tf(_stage17(), tf)
 
 
-@pytest.mark.skip(reason="H-016's ribbon kernel has never been ported to a "
-                         "second engine. This is a real gap in the evidence, "
-                         "not a missing test file: core/verification.py reads "
-                         "it and caps H-016's board score for it.")
-def test_ribbon_matches_a_second_engine():
-    raise AssertionError("not implemented")
+def _stage12():
+    try:
+        from strategies.ribbon import stage12_nautilus as S12
+    except Exception as exc:                                   # noqa: BLE001
+        pytest.skip(f"ribbon cross-check unavailable: "
+                    f"{type(exc).__name__}: {exc}")
+    return S12
+
+
+def _check_ribbon(S12, tf: str, limit: int | None):
+    cfgs = S12.covering_configs(tf)
+    if limit:
+        # The board's own rule is appended last by covering_configs, so keep the
+        # tail: a fast check that skipped the configuration actually traded
+        # would be checking the wrong thing.
+        cfgs = cfgs[-limit:]
+    df = S12.load_tf(S12.SYM, tf)
+    inp = S12.ribbon_inputs(df)
+    bad = []
+    for cfg in cfgs:
+        r = S12.one(df, inp, cfg, S12.BAR_SPEC[tf])
+        if r["entry_match"] < MATCH or r.get("max_r_diff", 0.0) > 1e-9:
+            bad.append(r)
+    assert not bad, (
+        f"{len(bad)} of {len(cfgs)} ribbon rule shapes on {tf} disagree with "
+        f"the independent engine. First: kernel {bad[0]['kernel_trades']} "
+        f"trades, stream {bad[0]['stream_trades']}, "
+        f"entry match {bad[0]['entry_match']:.4f}, "
+        f"max |dR| {bad[0].get('max_r_diff', float('nan')):.3e}")
+
+
+def test_ribbon_matches_nautilus_on_4h():
+    """The board's own rule plus the shapes around it, on the cheapest
+    timeframe. `covering_configs` picks one configuration per distinct CODE
+    PATH - entry mode, flip requirement, trail form, fixed target, trailing
+    start - because a cross-check is about branches, not about tuning."""
+    _check_ribbon(_stage12(), "4h", limit=6)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("tf", ["1h", "30m", "15m"])
+def test_ribbon_matches_nautilus_on_every_board_timeframe(tf):
+    """Every rule shape on every timeframe H-016 actually trades."""
+    _check_ribbon(_stage12(), tf, limit=None)

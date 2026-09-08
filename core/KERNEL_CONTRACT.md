@@ -183,8 +183,19 @@ Each is described in `NEXT.md` item 3.
 
 | kernel | file | tests today | second-engine checked |
 |---|---|---|---|
-| vwap | `strategies/vwap/engine.py` | **none** | **yes** — 26/26 configs exact, 2026-09-07 |
-| ribbon | `strategies/ribbon/engine.py` | indicators only (`test_parity.py`) | **no** |
+| vwap | `strategies/vwap/engine.py` | the full `tests/` suite | **yes** — 26/26 configs exact, 2026-09-07 |
+| ribbon | `strategies/ribbon/engine.py` | the full suite + `test_parity.py` | **yes** — 108/108 rule shapes exact, 2026-09-08 |
+
+Both kernels also declare themselves against `core/strategy.py::Strategy`
+(`strategies/<x>/strategy.py`), and `tests/kernels.py` drives every invariant
+through those declarations. `core/strategy.py::conforms` states the section 1
+output rules as executable checks.
+
+The ribbon cross-check (`strategies/ribbon/stage12_nautilus.py`) verifies the
+TRADE LOGIC, not the twenty moving averages - those are covered by
+`test_parity.py` against a literal reading of the Pine and are handed to the
+stream one bar at a time. Say which half a cross-check covers; "it agrees" on
+its own is not a claim anyone can check.
 
 `strategies/orderflow/orderflow.py` is **not** a strategy kernel — it is the
 shared feed loader (metrics join, point-in-time features, block-shuffle null)

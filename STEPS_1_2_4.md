@@ -293,6 +293,52 @@ changed nothing.
 
 ---
 
+---
+
+## TASK A — port the ribbon kernel to a second engine — **DONE 2026-09-08**
+
+Not on the original list. It became the top item the moment item 2 shipped,
+because it was the ONLY thing capping H-016: everything else passed.
+
+`strategies/ribbon/stage12_nautilus.py` streams the kernel through
+NautilusTrader one bar at a time. The strategy holds no array it could index
+into, so it cannot reproduce a look-ahead even by accident.
+
+**108 of 108 rule shapes match exactly** across 15m/30m/1h/4h — every entry bar,
+every exit bar, `max |dR| = 0`.
+
+| timeframe | shapes | exact |
+|---|---|---|
+| 15m | 27 | 27 |
+| 30m | 27 | 27 |
+| 1h | 27 | 27 |
+| 4h | 27 | 27 |
+
+**Say which half a cross-check covers.** This one verifies the TRADE LOGIC —
+entry timing, initial stop, both trailing forms, flip exit, time stop, intrabar
+ordering, dead-bar guards, cost and R. It does NOT verify the twenty moving
+averages; those are covered by `test_parity.py` against a literal reading of the
+Pine and are handed to the stream one bar at a time. "It agrees" without saying
+what agreed is not a claim anyone can check.
+
+**Two things went wrong and both are worth keeping:**
+
+1. `self.stop = 0.0` in the strategy silently overwrote NautilusTrader's
+   `Strategy.stop()` lifecycle method, and the engine died on shutdown with
+   `'numpy.float64' object is not callable`. Renamed `stop_px`.
+2. **The first run was nearly worthless and looked fine.** It drew its
+   configurations from the fold file and got twelve rows that were all
+   `mode 0, entry_thr 1.0, trail_mode 0`. Twelve passes, no coverage — the
+   board's own legs use the **chandelier** trail, which recomputes its distance
+   from ATR on every bar and is the branch most likely to break in a streaming
+   port. `covering_configs` now takes one configuration per distinct CODE PATH
+   plus the board's own rule. A cross-check is about branches, not about tuning.
+
+**Result: H-016 3.0 → 6.0.** It did not get the score back by being argued for;
+it got it back by being checked.
+
+---
+
 ## Order and rough calendar
 
 | # | item | cost | gate to start |
