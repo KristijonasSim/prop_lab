@@ -155,7 +155,23 @@ def window(syms, tfs, years: int = YEARS) -> tuple[pd.Timestamp, pd.Timestamp]:
                 ends.append(d.index[-1])
     if not ends:
         raise ValueError("no market in the universe has data")
-    end = min(ends)
+
+    # SNAPPED TO A MONTH BOUNDARY, and this is the point of the function.
+    #
+    # Caches end on whatever day their last download finished. XAGUSD ends
+    # 2026-08-25 and everything else ends 2026-08-30, so ADDING SILVER TO THE
+    # METALS CLASS MOVED CRYPTO'S NUMBERS - five fewer days at the end changed
+    # the final fold, which changed the trades, which changed the profit factor
+    # and the days-to-pass of markets that have nothing to do with silver.
+    #
+    # A study's window must not depend on which markets happen to be in it.
+    # Snapping down to the first of the month absorbs that jitter: 2026-08-25 and
+    # 2026-08-30 both become 2026-08-01, so adding a leg changes nothing unless
+    # its history is genuinely shorter by a month or more. Folds already begin on
+    # month starts, so nothing is lost but the ragged tail.
+    end = min(ends).normalize().replace(day=1)
+    if end.tz is None:
+        end = end.tz_localize("UTC")
     return end - pd.DateOffset(years=years), end
 
 
