@@ -45,6 +45,12 @@ h1{margin:0;font-size:20px;letter-spacing:-.01em}
 .rb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .rb.auto::after{content:"\2713";margin-left:5px;opacity:.7}
 .risknote{color:var(--muted);font-size:12px;margin:14px 0 10px;line-height:1.55}
+.running{background:var(--surface);border:1px solid var(--accent);border-radius:5px;
+  padding:9px 13px;margin:14px 0 4px;font-size:12.5px;color:var(--accent);
+  display:flex;align-items:center;gap:9px}
+.running .bar{flex:1;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.running .bar i{display:block;height:100%;background:var(--accent)}
+.running b{font-family:"JetBrains Mono",ui-monospace,monospace}
 .risksel{background:var(--surface);color:var(--ink);border:1px solid var(--line);
   border-radius:4px;padding:2px 4px;font-size:12px;cursor:pointer;
   font-family:"JetBrains Mono",ui-monospace,monospace;
@@ -154,9 +160,10 @@ const COLS = [
                  return `<span class="${b > 20 ? 'fail' : (b > 5 ? 'warn' : '')}"
                    title="max-DD ${n(r.fail_max_pct,1)}% + daily ${n(r.fail_daily_pct,1)}%"
                    >${b.toFixed(1)}</span>`; })()},
-  {h:'Stalled %', f:r => r.still_open_pct == null ? '<span class="dim">—</span>'
-      : `<span class="${r.still_open_pct > 50 ? 'fail' : (r.still_open_pct > 25 ? 'warn' : '')}"
-          title="never reached the 6% target inside 400 days">${n(r.still_open_pct,1)}</span>`},
+  {h:'Stalled %', f:r => { const v = stalled(r);
+      return v == null ? '<span class="dim">—</span>'
+        : `<span class="${v > 50 ? 'fail' : (v > 25 ? 'warn' : '')}"
+            title="never reached the 6% target inside 400 days">${n(v,1)}</span>`; }},
   {h:'Curve DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
       : `<span class="dim" title="peak-to-trough of the strategy's whole 3-year equity curve at this risk. NOT one account's drawdown - an account lives weeks, not years, and never meets the whole curve. The blown % column is the account-level number.">${n(r.max_dd_pct,2)}</span>`},
   {h:'PF',       f:r => r.pf == null ? '<span class="dim">—</span>'
@@ -225,6 +232,16 @@ function atRisk(r){
     cagr_pct: lv.cagr_pct, _forced: !lv.picked});
 }
 
+// The runner records still-open only inside the ladder, so at the auto-picked
+// level it has to be read back out of it. Stalled is the quiet killer - accounts
+// that never reach the target rather than accounts that die - and a blank column
+// hid it completely.
+function stalled(r){
+  if (r.still_open_pct != null) return r.still_open_pct;
+  const lv = (r.ladder || []).find(x => Math.abs(x.risk_pct - r.risk_pct) < 1e-9);
+  return lv ? lv.still_open_pct : null;
+}
+
 function riskCell(r){
   if (!r.ladder || !r.ladder.length)
     return r.risk_pct == null ? '<span class="dim">—</span>' : n(r.risk_pct, 2);
@@ -252,6 +269,20 @@ function wireRiskCells(h){
     + 'pass rate, drawdown, days and CAGR do. A red drawdown breaches the cap.';
 }
 
+// A half-filled table is the normal state of a twenty-cell run, and it looked
+// identical to a broken one. It does not any more.
+function progress(h){
+  if (h.complete) return '';
+  const done = (h.cells || []).length;
+  const total = Object.values(h.universe || {}).reduce((a, v) => a + v.length, 0)
+                * (h.timeframes || []).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  return `<div class="running">
+    <span>Running — <b>${done}/${total || '?'}</b> market/timeframe cells done.
+      Rows fill in as they finish; this page reloads itself every 30s.</span>
+    <span class="bar"><i style="width:${pct}%"></i></span></div>`;
+}
+
 function paint(h){
   const _h = h;
   $('panel').innerHTML = `
@@ -260,6 +291,7 @@ function paint(h){
     <p class="meta">${esc(h.hid)} · ${(h.timeframes||[]).join(' / ')}
       · ${h.years ? h.years + ' years of data' : ''}${dataSpan(h)}
       · limit entry, market exit · walk-forward, config re-chosen blind each quarter</p>
+    ${progress(h)}
     <p class="risknote" id="risknote"></p>
     <div class="scroll"><table><thead><tr>
       ${COLS.map(c => `<th>${esc(c.h)}</th>`).join('')}
