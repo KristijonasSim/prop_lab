@@ -3,9 +3,9 @@
  "hid": "H-002",
  "name": "VWAP mean reversion / breakout",
  "tagline": "Five model families around the volume-weighted average price, re-chosen blind every quarter.",
- "when": "2026-09-08T13:01:22.614159+00:00",
+ "when": "2026-09-08T13:03:48.282276+00:00",
  "structure": "one_step_6pct",
- "complete": false,
+ "complete": true,
  "years": 3,
  "mode": "single",
  "timeframes": [
@@ -673,6 +673,18 @@
      "tf": "4h",
      "pf": 1.382,
      "days_to_pass": 374.2
+    },
+    {
+     "sym": "SOLUSDT",
+     "tf": "1h",
+     "pf": 1.152,
+     "days_to_pass": 657.0
+    },
+    {
+     "sym": "SOLUSDT",
+     "tf": "4h",
+     "pf": 1.235,
+     "days_to_pass": 569.3
     }
    ]
   }
@@ -3863,6 +3875,433 @@
    "null_pf": 0.855,
    "null_days": NaN,
    "beats_null": true
+  },
+  {
+   "sym": "SOLUSDT",
+   "tf": "1h",
+   "asset_class": "Crypto",
+   "cost_rt_bps": 10.0,
+   "cost_taker_bps": 16.0,
+   "exec_mode": "mixed",
+   "cost_measured": false,
+   "data_from": "2023-08-01",
+   "data_to": "2026-08-01",
+   "trades": 2604,
+   "pf": 1.152,
+   "pf_2x": 1.01,
+   "win_pct": 32.8,
+   "avg_r": 0.0099,
+   "trades_per_day": 3.61,
+   "r_per_day": 0.0356,
+   "sharpe": 0.79,
+   "risk_pct": 0.25,
+   "pass_pct": 30.3,
+   "max_dd_pct": -5.78,
+   "days_to_pass": 657.0,
+   "median_days": 199.0,
+   "fail_max_pct": 0.0,
+   "fail_daily_pct": 0.0,
+   "cagr_pct": 3.2,
+   "span_days": 722.0,
+   "ladder": [
+    {
+     "risk_pct": 0.25,
+     "pass_pct": 30.3,
+     "max_dd_pct": -5.78,
+     "days_to_pass": 657.0,
+     "median_days": 199.0,
+     "fail_max_pct": 0.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 69.7,
+     "cagr_pct": 3.2,
+     "picked": true
+    },
+    {
+     "risk_pct": 0.5,
+     "pass_pct": 49.9,
+     "max_dd_pct": -11.55,
+     "days_to_pass": 204.3,
+     "median_days": 102.0,
+     "fail_max_pct": 10.4,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 39.7,
+     "cagr_pct": 6.4,
+     "picked": false
+    },
+    {
+     "risk_pct": 0.75,
+     "pass_pct": 44.8,
+     "max_dd_pct": -17.33,
+     "days_to_pass": 110.5,
+     "median_days": 49.5,
+     "fail_max_pct": 33.3,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 21.9,
+     "cagr_pct": 9.4,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.0,
+     "pass_pct": 47.2,
+     "max_dd_pct": -23.11,
+     "days_to_pass": 84.8,
+     "median_days": 40.0,
+     "fail_max_pct": 33.6,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 19.2,
+     "cagr_pct": 12.4,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.25,
+     "pass_pct": 39.7,
+     "max_dd_pct": -28.88,
+     "days_to_pass": 57.9,
+     "median_days": 23.0,
+     "fail_max_pct": 44.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 16.3,
+     "cagr_pct": 15.3,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.5,
+     "pass_pct": 44.7,
+     "max_dd_pct": -34.66,
+     "days_to_pass": 47.0,
+     "median_days": 21.0,
+     "fail_max_pct": 39.1,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 16.2,
+     "cagr_pct": 18.0,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.75,
+     "pass_pct": 45.6,
+     "max_dd_pct": -40.44,
+     "days_to_pass": 39.4,
+     "median_days": 18.0,
+     "fail_max_pct": 36.8,
+     "fail_daily_pct": 1.8,
+     "still_open_pct": 15.8,
+     "cagr_pct": 20.7,
+     "picked": false
+    },
+    {
+     "risk_pct": 2.0,
+     "pass_pct": 39.1,
+     "max_dd_pct": -46.21,
+     "days_to_pass": 33.2,
+     "median_days": 13.0,
+     "fail_max_pct": 44.1,
+     "fail_daily_pct": 1.5,
+     "still_open_pct": 15.2,
+     "cagr_pct": 23.2,
+     "picked": false
+    },
+    {
+     "risk_pct": 2.5,
+     "pass_pct": 39.0,
+     "max_dd_pct": -57.77,
+     "days_to_pass": 23.1,
+     "median_days": 9.0,
+     "fail_max_pct": 36.9,
+     "fail_daily_pct": 16.9,
+     "still_open_pct": 7.2,
+     "cagr_pct": 27.8,
+     "picked": false
+    },
+    {
+     "risk_pct": 3.0,
+     "pass_pct": 35.3,
+     "max_dd_pct": -69.32,
+     "days_to_pass": 17.0,
+     "median_days": 6.0,
+     "fail_max_pct": 34.3,
+     "fail_daily_pct": 23.2,
+     "still_open_pct": 7.2,
+     "cagr_pct": 31.9,
+     "picked": false
+    },
+    {
+     "risk_pct": 4.0,
+     "pass_pct": 33.9,
+     "max_dd_pct": -92.43,
+     "days_to_pass": 14.8,
+     "median_days": 5.0,
+     "fail_max_pct": 11.8,
+     "fail_daily_pct": 47.2,
+     "still_open_pct": 7.2,
+     "cagr_pct": 38.1,
+     "picked": false
+    },
+    {
+     "risk_pct": 5.0,
+     "pass_pct": 34.2,
+     "max_dd_pct": -115.53,
+     "days_to_pass": 11.7,
+     "median_days": 4.0,
+     "fail_max_pct": 6.4,
+     "fail_daily_pct": 52.3,
+     "still_open_pct": 7.2,
+     "cagr_pct": 41.5,
+     "picked": false
+    }
+   ],
+   "null_pf": 0.773,
+   "null_days": NaN,
+   "beats_null": true
+  },
+  {
+   "sym": "SOLUSDT",
+   "tf": "4h",
+   "asset_class": "Crypto",
+   "cost_rt_bps": 10.0,
+   "cost_taker_bps": 16.0,
+   "exec_mode": "mixed",
+   "cost_measured": false,
+   "data_from": "2023-08-01",
+   "data_to": "2026-08-01",
+   "trades": 2326,
+   "pf": 1.235,
+   "pf_2x": 1.015,
+   "win_pct": 43.6,
+   "avg_r": 0.0091,
+   "trades_per_day": 3.19,
+   "r_per_day": 0.0291,
+   "sharpe": 0.69,
+   "risk_pct": 0.25,
+   "pass_pct": 44.8,
+   "max_dd_pct": -3.08,
+   "days_to_pass": 569.3,
+   "median_days": 255.0,
+   "fail_max_pct": 0.0,
+   "fail_daily_pct": 0.0,
+   "cagr_pct": 2.6,
+   "span_days": 728.0,
+   "ladder": [
+    {
+     "risk_pct": 0.25,
+     "pass_pct": 44.8,
+     "max_dd_pct": -3.08,
+     "days_to_pass": 569.3,
+     "median_days": 255.0,
+     "fail_max_pct": 0.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 55.2,
+     "cagr_pct": 2.6,
+     "picked": true
+    },
+    {
+     "risk_pct": 0.5,
+     "pass_pct": 64.7,
+     "max_dd_pct": -6.16,
+     "days_to_pass": 260.6,
+     "median_days": 168.5,
+     "fail_max_pct": 5.6,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 29.7,
+     "cagr_pct": 5.1,
+     "picked": false
+    },
+    {
+     "risk_pct": 0.75,
+     "pass_pct": 64.9,
+     "max_dd_pct": -9.24,
+     "days_to_pass": 251.8,
+     "median_days": 163.5,
+     "fail_max_pct": 6.9,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 28.2,
+     "cagr_pct": 7.6,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.0,
+     "pass_pct": 67.5,
+     "max_dd_pct": -12.33,
+     "days_to_pass": 201.4,
+     "median_days": 136.0,
+     "fail_max_pct": 9.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 23.4,
+     "cagr_pct": 10.0,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.25,
+     "pass_pct": 61.8,
+     "max_dd_pct": -15.41,
+     "days_to_pass": 173.2,
+     "median_days": 107.0,
+     "fail_max_pct": 24.5,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 13.7,
+     "cagr_pct": 12.2,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.5,
+     "pass_pct": 57.4,
+     "max_dd_pct": -18.49,
+     "days_to_pass": 146.3,
+     "median_days": 84.0,
+     "fail_max_pct": 29.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 13.6,
+     "cagr_pct": 14.4,
+     "picked": false
+    },
+    {
+     "risk_pct": 1.75,
+     "pass_pct": 38.5,
+     "max_dd_pct": -21.57,
+     "days_to_pass": 119.5,
+     "median_days": 46.0,
+     "fail_max_pct": 48.6,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 12.9,
+     "cagr_pct": 16.5,
+     "picked": false
+    },
+    {
+     "risk_pct": 2.0,
+     "pass_pct": 35.5,
+     "max_dd_pct": -24.65,
+     "days_to_pass": 107.1,
+     "median_days": 38.0,
+     "fail_max_pct": 51.6,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 12.9,
+     "cagr_pct": 18.4,
+     "picked": false
+    },
+    {
+     "risk_pct": 2.5,
+     "pass_pct": 33.3,
+     "max_dd_pct": -30.81,
+     "days_to_pass": 81.1,
+     "median_days": 27.0,
+     "fail_max_pct": 54.0,
+     "fail_daily_pct": 0.0,
+     "still_open_pct": 12.7,
+     "cagr_pct": 22.0,
+     "picked": false
+    },
+    {
+     "risk_pct": 3.0,
+     "pass_pct": 19.3,
+     "max_dd_pct": -36.98,
+     "days_to_pass": 72.5,
+     "median_days": 14.0,
+     "fail_max_pct": 28.4,
+     "fail_daily_pct": 39.6,
+     "still_open_pct": 12.7,
+     "cagr_pct": 25.2,
+     "picked": false
+    },
+    {
+     "risk_pct": 4.0,
+     "pass_pct": 24.2,
+     "max_dd_pct": -49.3,
+     "days_to_pass": 53.6,
+     "median_days": 13.0,
+     "fail_max_pct": 11.1,
+     "fail_daily_pct": 56.4,
+     "still_open_pct": 8.2,
+     "cagr_pct": 30.2,
+     "picked": false
+    },
+    {
+     "risk_pct": 5.0,
+     "pass_pct": 19.7,
+     "max_dd_pct": -61.63,
+     "days_to_pass": 50.7,
+     "median_days": 10.0,
+     "fail_max_pct": 10.8,
+     "fail_daily_pct": 61.2,
+     "still_open_pct": 8.2,
+     "cagr_pct": 33.4,
+     "picked": false
+    }
+   ],
+   "null_pf": 0.936,
+   "null_days": NaN,
+   "beats_null": true
   }
- ]
+ ],
+ "fingerprint": {
+  "v": 1,
+  "written": "2026-09-08T13:03:48.283452+00:00",
+  "git": {
+   "sha": "b42b78c945ef992dede99402da19df323a19093c",
+   "short": "b42b78c",
+   "dirty": true
+  },
+  "kernels": {
+   "core/metrics.py": "1d5e1df2a415eb708084744d39a8debf1b4c12296829498c7141ed42ad5ee120",
+   "strategies/vwap/engine.py": "a0e8db1a7fe85c836916239e5dea284ebbf3e4075d727f451eb3ee4d8abb7edc",
+   "strategies/vwap/stage18_goldbook.py": "1c5f73ab661347874b8759bc6daca6b73258de517bd158ee6a2154ef7fa2aee8",
+   "strategies/vwap/stage1_grid.py": "68f96364b0ed2f68ec8d21fc890834ac2513d804646ef74700dc81104d432893",
+   "strategies/vwap/stage20_deadfix.py": "10267bc73df8c645a0a2f2743f0a14da05ec6f32ababb73c9946abb722bf948a",
+   "strategies/vwap/stage3_timeframes.py": "23835a361b8a73e5ff830f167f21cabfaa788cc9b8c01ad7a2eadc9574825677",
+   "strategies/vwap/stage6_walkforward.py": "9c4583840dc9d7468ead52ddf00d1677d512f9b8fa6ea55606a3c7fe4f9c8ffe",
+   "strategies/vwap/sweep.py": "f6822e2475d93fdded59ccc65a20a76133f4a1402eb0f242fb00511f0e9bcbd7"
+  },
+  "kernel_hash": "52b2991006bf689d5abe8e7ae6333407c2a019503611eaab51bca354cc56935d",
+  "scoring": {
+   "core/board.py": "8fcc99690675bcd752cc823aec1a7719b00a6255bd5a4ede047acbf8428c8011",
+   "core/prop_rules.py": "b480f908f55d6887a3ec99c59c0298f21ef51bfdfe875f2e943f6bbaa73201de",
+   "core/riskladder.py": "4e6e33cf8713c2d568c8eb3af141ea2423cf1d8fb7b71490b9794da40d3ab52a"
+  },
+  "scoring_hash": "d5df2acf5feec3e2a2fbd68db6eacca76d42c5c8ab49eb8c23c1dc66f5519d98",
+  "data": {
+   "backtests/vwap/stage6_trades_xauusd_deadfix.parquet": {
+    "sha": "554ebdf6c2e7b6d50c8ddff0f5151cb58abd83e4cab724582905a17e735fb50f",
+    "bytes": 357945,
+    "rows": 0
+   },
+   "backtests/vwap/stage6_trades_xauusd_shuffled_paired_deadfix.parquet": {
+    "sha": "5a19bc78df992b4cbd6dfd5baa3eca22252486cc28ca15cef52e7ff192218a44",
+    "bytes": 406003,
+    "rows": 0
+   },
+   "data/XAUUSD_dukascopy_1h.parquet": {
+    "sha": "788c36df244a1a4009aa020c7d52642d98ac5b4cd2b2d7cd93f66d79d9f5d838",
+    "bytes": 827251,
+    "rows": 22512,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:00:00+00:00"
+   },
+   "data/XAUUSD_dukascopy_30min.parquet": {
+    "sha": "0780934a95479af98e2a9c9c0f222abe46cd472d2149241e5e0514bf56637fa9",
+    "bytes": 1610891,
+    "rows": 45024,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:30:00+00:00"
+   },
+   "data/XAUUSD_dukascopy_4h.parquet": {
+    "sha": "60e345b2d8f690b5c1d8670b6f2544d6c1c9888a73df89d88b525c85d1240056",
+    "bytes": 226176,
+    "rows": 5628,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 20:00:00+00:00"
+   },
+   "data/XAUUSD_dukascopy_5min.parquet": {
+    "sha": "12d29b8406a3a7c478e43c6a610988577bfc12f36736b6f79bcaf01f6d9c7e47",
+    "bytes": 7678733,
+    "rows": 270144,
+    "first": "2023-09-01 00:00:00+00:00",
+    "last": "2026-08-30 23:55:00+00:00"
+   }
+  },
+  "costs": {
+   "rt_bps": 1.83,
+   "assumed_rt_bps": 3.0,
+   "gate_multiple": 2,
+   "basis": "478 sampled hours of Dukascopy XAUUSD ticks, core/fx_spread.py"
+  },
+  "note": null
+ }
 }
