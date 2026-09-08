@@ -282,65 +282,67 @@ class _FixedGrid:
 
 
 def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
-              manifest=None, done=True) -> dict:
-    """Rows from whatever cells exist so far. Safe to call mid-run.
+              manifest=None, done=True, mode="single") -> dict:
+    """One record - one page - from whatever cells exist so far.
 
-    TWO ROWS PER ASSET CLASS, so the comparison Kris asked for is on the page
-    rather than in a commit message:
-
-      * BEST SINGLE - the one market/timeframe with the fewest expected days;
-      * BASKET      - every market in the class traded together, equally
-                      weighted, on one common selection rule.
-
-    If the basket does not beat the best single market, the row says so in the
-    only way that matters: more days.
+    `mode="single"` promotes the best market in each class. `mode="basket"`
+    trades every market in the class together, equally weighted, on one common
+    selection rule. THEY ARE SEPARATE PAGES, on Kris's instruction: mixing a
+    four-leg book into the same table as the single markets it is built from
+    invites reading one row against another as if they were alternatives at the
+    same risk, which they are not.
     """
     rows = []
     for cls in CLASSES:
-        got = [c for c in cells if c["asset_class"] == cls and c.get("days_to_pass")]
         mine = [c for c in cells if c["asset_class"] == cls]
+        considered = [{"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
+                       "days_to_pass": c.get("days_to_pass")} for c in mine]
         if not mine:
-            rows.append({"asset_class": cls, "mode": "best single", "sym": None,
+            rows.append({"asset_class": cls, "sym": None,
                          "note": "not run yet", "considered": []})
             continue
 
-        considered = [{"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
-                       "days_to_pass": c.get("days_to_pass")} for c in mine]
+        if mode == "single":
+            got = [c for c in mine if c.get("days_to_pass")]
+            if got:
+                best = {k: v for k, v in min(
+                    got, key=lambda c: c["days_to_pass"]).items() if k != "_trades"}
+                best["considered"] = considered
+                rows.append(best)
+            else:
+                rows.append({"asset_class": cls, "sym": None,
+                             "note": "no market in this class resolved an account",
+                             "considered": considered})
+            continue
 
-        if got:
-            best = dict(min(got, key=lambda c: c["days_to_pass"]))
-            best.pop("_trades", None)
-            best["mode"] = "best single"
-            best["considered"] = considered
-            rows.append(best)
-        else:
-            rows.append({"asset_class": cls, "mode": "best single", "sym": None,
-                         "note": "no market in this class resolved an account",
+        # ---- basket ---------------------------------------------------- #
+        per_leg = {f"{c['sym']} {c['tf']}": c["_trades"]
+                   for c in mine if c.get("_trades") is not None and len(c["_trades"])}
+        if len(per_leg) < 2:
+            rows.append({"asset_class": cls, "sym": None,
+                         "note": (f"only {len(per_leg)} leg has trades - a basket "
+                                  f"needs two" if per_leg else "not run yet"),
                          "considered": considered})
-
-        # ---- the basket: every leg in the class, one common selection rule ----
-        per_leg = {f"{c['sym']} {c['tf']}": c.get("_trades")
-                   for c in mine if c.get("_trades") is not None
-                   and len(c.get("_trades"))}
-        if len(per_leg) >= 2:
-            floor, topn = common_rule(per_leg)
-            sel = {k: v[(v.floor == floor) & (v.topn == topn)]
-                   for k, v in per_leg.items()}
-            sel = {k: v for k, v in sel.items() if len(v)}
-            if len(sel) >= 2:
-                bk = basket(list(sel.values()), list(sel))
-                m = metrics(bk)
-                rows.append({
-                    "asset_class": cls, "mode": f"basket ({len(sel)} legs)",
-                    "sym": " + ".join(sorted(sel)), "tf": "",
-                    "cost_rt_bps": None, "cost_measured": False,
-                    "legs": sorted(sel), "rule": f"floor {floor} / top {topn}",
-                    "considered": considered, **m})
+            continue
+        floor, topn = common_rule(per_leg)
+        sel = {k: v[(v.floor == floor) & (v.topn == topn)] for k, v in per_leg.items()}
+        sel = {k: v for k, v in sel.items() if len(v)}
+        if len(sel) < 2:
+            rows.append({"asset_class": cls, "sym": None,
+                         "note": "no common selection rule covers two legs",
+                         "considered": considered})
+            continue
+        bk = basket(list(sel.values()), list(sel))
+        rows.append({"asset_class": cls,
+                     "sym": " + ".join(sorted(sel)), "tf": f"{len(sel)} legs",
+                     "legs": sorted(sel), "rule": f"floor {floor} / top {topn}",
+                     "cost_rt_bps": None, "cost_measured": False,
+                     "considered": considered, **metrics(bk)})
 
     rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
            "when": pd.Timestamp.utcnow().isoformat(),
            "structure": "one_step_6pct", "complete": bool(done),
-           "years": YEARS,
+           "years": YEARS, "mode": mode,
            "timeframes": tfs, "universe": universe,
            "rows": rows,
            "cells": [{k: v for k, v in c.items() if k != "_trades"} for c in cells]}
@@ -372,7 +374,24 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
 
     out = BT / sid / "hypothesis.json"
     out.parent.mkdir(parents=True, exist_ok=True)
+    bout = BT / f"{sid}_basket" / "hypothesis.json"
+    bout.parent.mkdir(parents=True, exist_ok=True)
     cells = []
+
+    def _write(done: bool):
+        """Both pages, from the same cells. Separate files, separate tabs."""
+        out.write_text(json.dumps(_assemble(
+            cells, sid=sid, hid=hid, name=name, tagline=tagline, tfs=tfs,
+            universe=universe, manifest=manifest if done else None,
+            done=done, mode="single"), indent=1, default=str))
+        bout.write_text(json.dumps(_assemble(
+            cells, sid=f"{sid}_basket", hid=f"{hid}B",
+            name=f"{name} — basket",
+            tagline=("Every market in the class traded together, equally "
+                     "weighted, on one common selection rule."),
+            tfs=tfs, universe=universe,
+            manifest=manifest if done else None,
+            done=done, mode="basket"), indent=1, default=str))
     for cls, syms in universe.items():
         for sym in syms:
             for tf in tfs:
@@ -391,13 +410,10 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
                       f"PF {cell.get('pf', float('nan'))}  "
                       f"{cell.get('days_to_pass')} d  [{time.time()-t:.0f}s]",
                       flush=True)
-                out.write_text(json.dumps(
-                    _assemble(cells, sid=sid, hid=hid, name=name,
-                              tagline=tagline, tfs=tfs, universe=universe,
-                              done=False), indent=1, default=str))
+                _write(done=False)
 
-    rec = _assemble(cells, sid=sid, hid=hid, name=name, tagline=tagline,
-                    tfs=tfs, universe=universe, manifest=manifest, done=True)
-    out.write_text(json.dumps(rec, indent=1, default=str))
+    _write(done=True)
+    rec = json.loads(out.read_text())
     print(f"\n  wrote {out.relative_to(ROOT)}")
+    print(f"  wrote {bout.relative_to(ROOT)}")
     return rec
