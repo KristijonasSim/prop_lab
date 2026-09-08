@@ -42,6 +42,12 @@ class VwapStrategy:
         means the same thing on 5m as on 4h."""
         return build_grid(TFS[tf][1])
 
+    def new_cache(self) -> dict:
+        """The anchored VWAP is shared by every configuration on the same bars.
+        `Pipeline` builds one of these per fold slice and hands it back on every
+        call, so the VWAP is computed once per anchor instead of once per config."""
+        return {"vw_cache": {}}
+
     def run(self, df: pd.DataFrame, cfg: dict,
             fee_bps: float, slip_bps: float,
             feats=None, vw_cache: dict | None = None) -> np.ndarray:

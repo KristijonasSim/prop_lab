@@ -222,9 +222,12 @@ def main():
             out.append(s)
         else:
             print(f"  skip {sid}: unreadable board.json")
+    # An EMPTY board is a legitimate state, not an error. The board was cleared
+    # to zero on 2026-09-08 so every hypothesis is re-run through core/pipeline.py
+    # (Engine 2) and re-scored under the real firm spec. The page still renders,
+    # because "nothing has been proven yet" is exactly what it should say.
     if not out:
-        print("no board.json anywhere - run each strategy's board stage first")
-        return
+        print("board is EMPTY - no backtests/<id>/board.json on disk")
     out.sort(key=lambda s: -s["score"]["total"])
 
     # The evaluation rules, shipped to the page rather than restated in

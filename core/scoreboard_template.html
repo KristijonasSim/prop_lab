@@ -240,6 +240,12 @@ strong{font-weight:600;color:var(--ink)}
 .bdrow .pts{font-family:"JetBrains Mono",monospace;font-size:12.5px;text-align:right;
   color:var(--muted);font-variant-numeric:tabular-nums}
 .bdrow .pts b{color:var(--ink);font-weight:700}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:44px 40px;margin-top:26px;box-shadow:var(--shadow);max-width:760px}
+.empty h2{margin:0 0 10px;font-size:22px;letter-spacing:-.01em}
+.empty p{margin:0 0 12px;font-size:14px;line-height:1.65}
+.empty .dim{color:var(--muted);font-size:13px}
+.empty code{font-family:"JetBrains Mono",monospace;font-size:12px}
 .capnote{padding:11px 15px;background:var(--failbg);color:var(--fail);font-size:13px;
   border-top:1px solid var(--line)}
 /* Provenance banner. A stale record is one whose kernel, data or cost has moved
@@ -1056,6 +1062,30 @@ function drawLadder(s, risk){
 }
 
 const S=D.strategies;
+
+// AN EMPTY BOARD IS A LEGITIMATE STATE. The board was cleared to zero on
+// 2026-09-08: Engine 2 (core/pipeline.py) now exists, and every hypothesis is
+// being re-run through it and re-scored against the real firm spec rather than
+// the modelled two-step it was originally judged on. A page that crashed here
+// would be saying "something is broken" when the truth is "nothing has been
+// proven yet", which is a different and much more useful statement.
+if (!S.length){
+  document.querySelector('.wrap').innerHTML = `
+    <div class="empty">
+      <h2>The board is empty.</h2>
+      <p>No hypothesis has been scored yet.</p>
+      <p class="dim">Cleared 2026-09-08. Everything is being re-run through the
+      pipeline in <code>core/pipeline.py</code> and re-scored against the firm's
+      real rules &mdash; Thunderbolt, one step, 6% target, 3% daily drawdown,
+      6% max drawdown. Nothing appears here until it has passed every check in
+      <code>core/verification.py</code>.</p>
+      <p class="dim">The record of what has already been tested and killed lives
+      in <code>STRATEGY_LOG.md</code> and <code>RESEARCH_LOG.md</code>. That
+      history is the denominator and it was not cleared.</p>
+    </div>`;
+  $('tabs').innerHTML = '';
+  throw new Error('empty board');   // stops the rest of the page bootstrapping
+}
 S.forEach(s=>{ BASE[s.id]=s; });
 $('tabs').innerHTML = S.map((s,i)=>{
   const b=scoreBand(s.score.total);

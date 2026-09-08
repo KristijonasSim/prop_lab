@@ -45,6 +45,11 @@ class RibbonStrategy:
     def grid(self, tf: str = "1h") -> list[dict]:
         return RS.build_grid(RS.TFS[tf][1])
 
+    def new_cache(self) -> dict:
+        """Nothing config-independent to reuse beyond `features`, which the
+        pipeline already computes once per slice."""
+        return {}
+
     def run(self, df: pd.DataFrame, cfg: dict,
             fee_bps: float, slip_bps: float, feats=None) -> np.ndarray:
         full = dict(BASE) | cfg
