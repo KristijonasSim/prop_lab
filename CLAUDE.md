@@ -73,9 +73,44 @@ The last field is the phase gate. Check it before getting attached to a Sharpe.
 
 ## Prop-firm risk rules
 
-Targets (no firm chosen yet): **4% daily loss, 8% max loss, 8% profit target.**
-"Max loss" not specified static vs trailing — enforce both at 8% (stricter reading).
-`min_trading_days` and consistency share are placeholders — confirm when a firm is picked.
+**THE FIRM IS CHOSEN, 2026-09-08: Thunderbolt, 1 step.** First real spec this
+project has had. Everything before this date was modelled on a guessed 8%+5%
+two-step and those numbers are wrong, not merely stale.
+
+| | |
+|---|---|
+| Profit target | **6%** |
+| Daily drawdown | **3%** |
+| Max drawdown | **6%** |
+| Time limit | unlimited |
+| Payout | on demand, 90% split |
+| Leverage | up to 10x |
+
+**Easier on the target, harder on both caps.** The 6% max drawdown is the binding
+constraint: both board picks sat at −7.5% and −7.8% under the old 8% cap and
+neither fits. `core/riskladder.DD_CAP` is now 0.06 and both books re-picked a
+lower risk per trade.
+
+**What it did to the board** (nothing about the strategies changed — only the rules):
+
+| | before, modelled 8%+5% | Thunderbolt 6% one-step |
+|---|---|---|
+| H-002 | 6.0/10, 143.6d, 1.00% risk | **7.7/10, 55.9d, 0.75% risk** |
+| H-016 | 4.7/10, 260.1d, 2.00% risk | **6.2/10, 117.0d, 1.50% risk** |
+
+Both still `TOO SLOW` against 5–14 days. H-002 is now 4x away rather than 10x.
+
+**STILL UNKNOWN — ask the firm before money moves:**
+* **Static or trailing max drawdown?** Worth 17 points of pass rate on a
+  zero-edge strategy. Modelled as **both**, the stricter reading.
+* Minimum trading days? Modelled as **0** — an unlimited time limit usually
+  comes with none, and assuming one would flatter the pace.
+* Any consistency rule (max share of profit from one day)?
+
+**THE MARKET MISMATCH IS THE REAL PROBLEM.** The offer shows crypto pairs and
+10x leverage. **Both surviving hypotheses are gold-only**, and every crypto price
+hypothesis in this repo is dead. Confirm XAUUSD is tradeable there before reading
+any board number as a plan.
 
 Clean PASS/FAIL evaluation with FIXED risk per trade and real breaches. No
 budget-shrinking risk manager that sizes down to avoid ever breaching — that

@@ -7,7 +7,7 @@
    "tagline": "The one edge that survived the kernel fix, and then the dead-bar fix.",
    "period": "XAUUSD 5m+30m+1h+4h [sig_cost] \u00b7 walk-forward 2024-09 \u2192 2026-05 \u00b7 MEASURED 1.83bps round trip",
    "report": "",
-   "candidate": "config re-chosen blind each quarter on train PF; the 5m+30m+1h+4h book and its sig_cost weighting chosen from 78 combinations on the same window, 1.00% risk per trade",
+   "candidate": "config re-chosen blind each quarter on train PF; the 5m+30m+1h+4h book and its sig_cost weighting chosen from 78 combinations on the same window, 0.75% risk per trade",
    "measured": {
     "wf_pf": 2.016,
     "wf_pf_2x": 1.85,
@@ -16,11 +16,11 @@
     "consistency": 0.0,
     "pf": 2.016,
     "sharpe": 2.324,
-    "median_days_pass": 129.0,
-    "pass_rate": 0.8984,
+    "median_days_pass": 51.0,
+    "pass_rate": 0.9129,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "max_dd": -0.0752,
+    "max_dd": -0.0564,
     "stale": false,
     "verified": true,
     "verify_failed": [
@@ -28,10 +28,10 @@
     ]
    },
    "score": {
-    "total": 6.0,
-    "verdict": "TOO SLOW - 144d against a 5-14d target",
+    "total": 7.7,
+    "verdict": "TOO SLOW - 56d against a 5-14d target",
     "too_slow": true,
-    "expected_days": 143.5886019590383,
+    "expected_days": 55.865921787709496,
     "evidence_capped": false,
     "null_capped": false,
     "stale_capped": false,
@@ -43,14 +43,14 @@
      {
       "name": "speed",
       "weight": 30,
-      "score": 0.219,
-      "points": 0.66
+      "score": 0.748,
+      "points": 2.24
      },
      {
       "name": "pass_rate",
       "weight": 18,
-      "score": 0.898,
-      "points": 1.62
+      "score": 0.913,
+      "points": 1.64
      },
      {
       "name": "breach",
@@ -61,8 +61,8 @@
      {
       "name": "drawdown",
       "weight": 10,
-      "score": 0.707,
-      "points": 0.71
+      "score": 0.863,
+      "points": 0.86
      },
      {
       "name": "evidence",
@@ -149,9 +149,9 @@
     ]
    },
    "fingerprint": {
-    "git": "f1a2773",
+    "git": "8c42a90",
     "dirty": true,
-    "written": "2026-09-08T07:09:19.166376+00:00",
+    "written": "2026-09-08T07:58:56.795810+00:00",
     "kernel_hash": "52b2991006bf",
     "kernels": [
      "core/metrics.py",
@@ -210,37 +210,46 @@
     "n_books": 4,
     "tpd_per_book": 1.101,
     "r_per_day": 0.1564,
-    "max_dd": -0.0752,
-    "pass_rate": 0.8984,
+    "max_dd": -0.0564,
+    "pass_rate": 0.9129,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "median_days": 129.0,
-    "still_open": 0.1016,
-    "expected_days": 143.5886019590383,
+    "median_days": 51.0,
+    "still_open": 0.0871,
+    "expected_days": 55.865921787709496,
     "expected_days_one_step": 55.9
    },
    "ladder": {
-    "picked": 0.01,
+    "picked": 0.0075,
     "note": "Risk per trade is the only lever left once the configuration is chosen blind, and it moves speed and survival in opposite directions. <strong>Click any row</strong> to score the strategy at that risk level. The recommended row is the fewest expected days to a funded account among the levels that keep the breach rate under 5% <em>and</em> the drawdown inside the 8% cap. Days and pass rates are the <strong>two-step</strong> evaluation (8% then 5%); the single-step number is in the last column for comparison only.",
     "rows": [
      {
       "risk": 0.0025,
-      "pass_rate": 0.5806,
+      "pass_rate": 0.7758,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.4194,
-      "median_days": 284.0,
-      "p25_days": 194.0,
-      "expected_days": 489.1,
+      "still_open": 0.2242,
+      "median_days": 198.0,
+      "p25_days": 81.0,
+      "expected_days": 255.2,
       "max_dd": -0.0188,
-      "one_step": {
-       "pass_rate": 0.7532,
+      "two_step": {
+       "pass_rate": 0.5806,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.2468,
-       "median_days": 233.0,
-       "p25_days": 116.5,
-       "expected_days": 309.3
+       "still_open": 0.4194,
+       "median_days": 284.0,
+       "p25_days": 194.0,
+       "expected_days": 489.1
+      },
+      "one_step": {
+       "pass_rate": 0.7758,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.2242,
+       "median_days": 198.0,
+       "p25_days": 81.0,
+       "expected_days": 255.2
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -254,8 +263,8 @@
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.581,
-        "points": 1.05
+        "score": 0.776,
+        "points": 1.4
        },
        {
         "name": "breach",
@@ -292,33 +301,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.0188,
-       "pass_rate": 0.5806,
+       "pass_rate": 0.7758,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 284.0,
-       "still_open": 0.4194,
-       "expected_days": 489.1,
-       "expected_days_one_step": 309.3
+       "median_days": 198.0,
+       "still_open": 0.2242,
+       "expected_days": 255.2,
+       "expected_days_one_step": 255.2
       }
      },
      {
       "risk": 0.005,
-      "pass_rate": 0.7532,
+      "pass_rate": 0.8984,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.2468,
-      "median_days": 225.0,
-      "p25_days": 116.5,
-      "expected_days": 298.7,
+      "still_open": 0.1016,
+      "median_days": 84.0,
+      "p25_days": 47.0,
+      "expected_days": 93.5,
       "max_dd": -0.0376,
-      "one_step": {
-       "pass_rate": 0.8242,
+      "two_step": {
+       "pass_rate": 0.7532,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.1758,
-       "median_days": 155.0,
-       "p25_days": 57.0,
-       "expected_days": 188.1
+       "still_open": 0.2468,
+       "median_days": 225.0,
+       "p25_days": 116.5,
+       "expected_days": 298.7
+      },
+      "one_step": {
+       "pass_rate": 0.8984,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.1016,
+       "median_days": 84.0,
+       "p25_days": 47.0,
+       "expected_days": 93.5
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -326,14 +344,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.521,
+        "points": 1.56
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.753,
-        "points": 1.36
+        "score": 0.898,
+        "points": 1.62
        },
        {
         "name": "breach",
@@ -370,33 +388,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.0376,
-       "pass_rate": 0.7532,
+       "pass_rate": 0.8984,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 225.0,
-       "still_open": 0.2468,
-       "expected_days": 298.7,
-       "expected_days_one_step": 188.1
+       "median_days": 84.0,
+       "still_open": 0.1016,
+       "expected_days": 93.5,
+       "expected_days_one_step": 93.5
       }
      },
      {
       "risk": 0.0075,
-      "pass_rate": 0.7758,
+      "pass_rate": 0.9129,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.2242,
-      "median_days": 178.0,
-      "p25_days": 86.0,
-      "expected_days": 229.4,
+      "still_open": 0.0871,
+      "median_days": 51.0,
+      "p25_days": 26.0,
+      "expected_days": 55.9,
       "max_dd": -0.0564,
-      "one_step": {
-       "pass_rate": 0.9,
+      "two_step": {
+       "pass_rate": 0.7758,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.1,
-       "median_days": 73.0,
-       "p25_days": 40.0,
-       "expected_days": 81.1
+       "still_open": 0.2242,
+       "median_days": 178.0,
+       "p25_days": 86.0,
+       "expected_days": 229.4
+      },
+      "one_step": {
+       "pass_rate": 0.9129,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.0871,
+       "median_days": 51.0,
+       "p25_days": 26.0,
+       "expected_days": 55.9
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -404,14 +431,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.748,
+        "points": 2.24
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.776,
-        "points": 1.4
+        "score": 0.913,
+        "points": 1.64
        },
        {
         "name": "breach",
@@ -448,33 +475,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.0564,
-       "pass_rate": 0.7758,
+       "pass_rate": 0.9129,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 178.0,
-       "still_open": 0.2242,
-       "expected_days": 229.4,
-       "expected_days_one_step": 81.1
+       "median_days": 51.0,
+       "still_open": 0.0871,
+       "expected_days": 55.9,
+       "expected_days_one_step": 55.9
       }
      },
      {
       "risk": 0.01,
-      "pass_rate": 0.8984,
-      "fail_max": 0.0,
+      "pass_rate": 0.8097,
+      "fail_max": 0.1452,
       "fail_daily": 0.0,
-      "still_open": 0.1016,
-      "median_days": 129.0,
-      "p25_days": 59.0,
-      "expected_days": 143.6,
+      "still_open": 0.0452,
+      "median_days": 35.5,
+      "p25_days": 17.0,
+      "expected_days": 43.8,
       "max_dd": -0.0752,
-      "one_step": {
-       "pass_rate": 0.9129,
+      "two_step": {
+       "pass_rate": 0.8984,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.0871,
-       "median_days": 51.0,
-       "p25_days": 26.0,
-       "expected_days": 55.9
+       "still_open": 0.1016,
+       "median_days": 129.0,
+       "p25_days": 59.0,
+       "expected_days": 143.6
+      },
+      "one_step": {
+       "pass_rate": 0.8097,
+       "fail_max": 0.1452,
+       "fail_daily": 0.0,
+       "still_open": 0.0452,
+       "median_days": 35.5,
+       "p25_days": 17.0,
+       "expected_days": 43.8
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -482,20 +518,20 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.219,
-        "points": 0.66
+        "score": 0.82,
+        "points": 2.46
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.898,
-        "points": 1.62
+        "score": 0.81,
+        "points": 1.46
        },
        {
         "name": "breach",
         "weight": 12,
-        "score": 1.0,
-        "points": 1.2
+        "score": 0.516,
+        "points": 0.62
        },
        {
         "name": "drawdown",
@@ -526,33 +562,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.0752,
-       "pass_rate": 0.8984,
-       "fail_max": 0.0,
+       "pass_rate": 0.8097,
+       "fail_max": 0.1452,
        "fail_daily": 0.0,
-       "median_days": 129.0,
-       "still_open": 0.1016,
-       "expected_days": 143.6,
-       "expected_days_one_step": 55.9
+       "median_days": 35.5,
+       "still_open": 0.0452,
+       "expected_days": 43.8,
+       "expected_days_one_step": 43.8
       }
      },
      {
       "risk": 0.0125,
-      "pass_rate": 0.6435,
-      "fail_max": 0.2871,
-      "fail_daily": 0.0,
-      "still_open": 0.0694,
-      "median_days": 79.0,
-      "p25_days": 48.0,
-      "expected_days": 122.8,
+      "pass_rate": 0.6355,
+      "fail_max": 0.2645,
+      "fail_daily": 0.0581,
+      "still_open": 0.0419,
+      "median_days": 25.0,
+      "p25_days": 12.0,
+      "expected_days": 39.3,
       "max_dd": -0.094,
-      "one_step": {
-       "pass_rate": 0.8129,
-       "fail_max": 0.1371,
+      "two_step": {
+       "pass_rate": 0.6435,
+       "fail_max": 0.2871,
        "fail_daily": 0.0,
-       "still_open": 0.05,
-       "median_days": 38.0,
-       "p25_days": 19.0,
-       "expected_days": 46.7
+       "still_open": 0.0694,
+       "median_days": 79.0,
+       "p25_days": 48.0,
+       "expected_days": 122.8
+      },
+      "one_step": {
+       "pass_rate": 0.6355,
+       "fail_max": 0.2645,
+       "fail_daily": 0.0581,
+       "still_open": 0.0419,
+       "median_days": 25.0,
+       "p25_days": 12.0,
+       "expected_days": 39.3
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -560,20 +605,20 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.345,
-        "points": 1.03
+        "score": 0.847,
+        "points": 2.54
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.643,
-        "points": 1.16
+        "score": 0.635,
+        "points": 1.14
        },
        {
         "name": "breach",
         "weight": 12,
-        "score": 0.043,
-        "points": 0.05
+        "score": 0.0,
+        "points": 0.0
        },
        {
         "name": "drawdown",
@@ -604,33 +649,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.094,
-       "pass_rate": 0.6435,
-       "fail_max": 0.2871,
-       "fail_daily": 0.0,
-       "median_days": 79.0,
-       "still_open": 0.0694,
-       "expected_days": 122.8,
-       "expected_days_one_step": 46.7
+       "pass_rate": 0.6355,
+       "fail_max": 0.2645,
+       "fail_daily": 0.0581,
+       "median_days": 25.0,
+       "still_open": 0.0419,
+       "expected_days": 39.3,
+       "expected_days_one_step": 39.3
       }
      },
      {
       "risk": 0.015,
-      "pass_rate": 0.6355,
-      "fail_max": 0.3,
-      "fail_daily": 0.0,
-      "still_open": 0.0645,
-      "median_days": 69.5,
-      "p25_days": 44.0,
-      "expected_days": 109.4,
+      "pass_rate": 0.629,
+      "fail_max": 0.279,
+      "fail_daily": 0.0516,
+      "still_open": 0.0403,
+      "median_days": 22.0,
+      "p25_days": 10.0,
+      "expected_days": 35.0,
       "max_dd": -0.1128,
-      "one_step": {
-       "pass_rate": 0.7887,
-       "fail_max": 0.1694,
+      "two_step": {
+       "pass_rate": 0.6355,
+       "fail_max": 0.3,
        "fail_daily": 0.0,
-       "still_open": 0.0419,
-       "median_days": 31.0,
-       "p25_days": 16.0,
-       "expected_days": 39.3
+       "still_open": 0.0645,
+       "median_days": 69.5,
+       "p25_days": 44.0,
+       "expected_days": 109.4
+      },
+      "one_step": {
+       "pass_rate": 0.629,
+       "fail_max": 0.279,
+       "fail_daily": 0.0516,
+       "still_open": 0.0403,
+       "median_days": 22.0,
+       "p25_days": 10.0,
+       "expected_days": 35.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -638,14 +692,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.426,
-        "points": 1.28
+        "score": 0.874,
+        "points": 2.62
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.635,
-        "points": 1.14
+        "score": 0.629,
+        "points": 1.13
        },
        {
         "name": "breach",
@@ -682,33 +736,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.1128,
-       "pass_rate": 0.6355,
-       "fail_max": 0.3,
-       "fail_daily": 0.0,
-       "median_days": 69.5,
-       "still_open": 0.0645,
-       "expected_days": 109.4,
-       "expected_days_one_step": 39.3
+       "pass_rate": 0.629,
+       "fail_max": 0.279,
+       "fail_daily": 0.0516,
+       "median_days": 22.0,
+       "still_open": 0.0403,
+       "expected_days": 35.0,
+       "expected_days_one_step": 35.0
       }
      },
      {
       "risk": 0.0175,
-      "pass_rate": 0.5226,
-      "fail_max": 0.3548,
-      "fail_daily": 0.0581,
-      "still_open": 0.0645,
-      "median_days": 63.0,
-      "p25_days": 36.0,
-      "expected_days": 120.6,
+      "pass_rate": 0.6613,
+      "fail_max": 0.2145,
+      "fail_daily": 0.1161,
+      "still_open": 0.0081,
+      "median_days": 17.0,
+      "p25_days": 7.0,
+      "expected_days": 25.7,
       "max_dd": -0.1316,
-      "one_step": {
-       "pass_rate": 0.6339,
-       "fail_max": 0.2661,
+      "two_step": {
+       "pass_rate": 0.5226,
+       "fail_max": 0.3548,
        "fail_daily": 0.0581,
-       "still_open": 0.0419,
-       "median_days": 25.0,
-       "p25_days": 13.0,
-       "expected_days": 39.4
+       "still_open": 0.0645,
+       "median_days": 63.0,
+       "p25_days": 36.0,
+       "expected_days": 120.6
+      },
+      "one_step": {
+       "pass_rate": 0.6613,
+       "fail_max": 0.2145,
+       "fail_daily": 0.1161,
+       "still_open": 0.0081,
+       "median_days": 17.0,
+       "p25_days": 7.0,
+       "expected_days": 25.7
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -716,14 +779,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.358,
-        "points": 1.07
+        "score": 0.929,
+        "points": 2.79
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.523,
-        "points": 0.94
+        "score": 0.661,
+        "points": 1.19
        },
        {
         "name": "breach",
@@ -760,33 +823,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.1316,
-       "pass_rate": 0.5226,
-       "fail_max": 0.3548,
-       "fail_daily": 0.0581,
-       "median_days": 63.0,
-       "still_open": 0.0645,
-       "expected_days": 120.6,
-       "expected_days_one_step": 39.4
+       "pass_rate": 0.6613,
+       "fail_max": 0.2145,
+       "fail_daily": 0.1161,
+       "median_days": 17.0,
+       "still_open": 0.0081,
+       "expected_days": 25.7,
+       "expected_days_one_step": 25.7
       }
      },
      {
       "risk": 0.02,
-      "pass_rate": 0.5339,
-      "fail_max": 0.3516,
-      "fail_daily": 0.0532,
-      "still_open": 0.0613,
-      "median_days": 52.0,
-      "p25_days": 33.0,
-      "expected_days": 97.4,
+      "pass_rate": 0.6484,
+      "fail_max": 0.2355,
+      "fail_daily": 0.1081,
+      "still_open": 0.0081,
+      "median_days": 14.0,
+      "p25_days": 6.0,
+      "expected_days": 21.6,
       "max_dd": -0.1504,
-      "one_step": {
-       "pass_rate": 0.6258,
-       "fail_max": 0.279,
+      "two_step": {
+       "pass_rate": 0.5339,
+       "fail_max": 0.3516,
        "fail_daily": 0.0532,
-       "still_open": 0.0419,
-       "median_days": 22.5,
-       "p25_days": 12.0,
-       "expected_days": 36.0
+       "still_open": 0.0613,
+       "median_days": 52.0,
+       "p25_days": 33.0,
+       "expected_days": 97.4
+      },
+      "one_step": {
+       "pass_rate": 0.6484,
+       "fail_max": 0.2355,
+       "fail_daily": 0.1081,
+       "still_open": 0.0081,
+       "median_days": 14.0,
+       "p25_days": 6.0,
+       "expected_days": 21.6
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -794,14 +866,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.498,
-        "points": 1.49
+        "score": 0.954,
+        "points": 2.86
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.534,
-        "points": 0.96
+        "score": 0.648,
+        "points": 1.17
        },
        {
         "name": "breach",
@@ -838,33 +910,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.1504,
-       "pass_rate": 0.5339,
-       "fail_max": 0.3516,
-       "fail_daily": 0.0532,
-       "median_days": 52.0,
-       "still_open": 0.0613,
-       "expected_days": 97.4,
-       "expected_days_one_step": 36.0
+       "pass_rate": 0.6484,
+       "fail_max": 0.2355,
+       "fail_daily": 0.1081,
+       "median_days": 14.0,
+       "still_open": 0.0081,
+       "expected_days": 21.6,
+       "expected_days_one_step": 21.6
       }
      },
      {
       "risk": 0.025,
-      "pass_rate": 0.4968,
-      "fail_max": 0.3097,
-      "fail_daily": 0.1855,
+      "pass_rate": 0.579,
+      "fail_max": 0.1855,
+      "fail_daily": 0.2274,
       "still_open": 0.0081,
-      "median_days": 40.0,
-      "p25_days": 25.75,
-      "expected_days": 80.5,
+      "median_days": 11.0,
+      "p25_days": 5.0,
+      "expected_days": 19.0,
       "max_dd": -0.188,
-      "one_step": {
-       "pass_rate": 0.6097,
-       "fail_max": 0.2565,
-       "fail_daily": 0.1258,
+      "two_step": {
+       "pass_rate": 0.4968,
+       "fail_max": 0.3097,
+       "fail_daily": 0.1855,
        "still_open": 0.0081,
-       "median_days": 16.0,
-       "p25_days": 10.0,
-       "expected_days": 26.2
+       "median_days": 40.0,
+       "p25_days": 25.75,
+       "expected_days": 80.5
+      },
+      "one_step": {
+       "pass_rate": 0.579,
+       "fail_max": 0.1855,
+       "fail_daily": 0.2274,
+       "still_open": 0.0081,
+       "median_days": 11.0,
+       "p25_days": 5.0,
+       "expected_days": 19.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -872,14 +953,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.599,
-        "points": 1.8
+        "score": 0.97,
+        "points": 2.91
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.497,
-        "points": 0.89
+        "score": 0.579,
+        "points": 1.04
        },
        {
         "name": "breach",
@@ -916,33 +997,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.188,
-       "pass_rate": 0.4968,
-       "fail_max": 0.3097,
-       "fail_daily": 0.1855,
-       "median_days": 40.0,
+       "pass_rate": 0.579,
+       "fail_max": 0.1855,
+       "fail_daily": 0.2274,
+       "median_days": 11.0,
        "still_open": 0.0081,
-       "expected_days": 80.5,
-       "expected_days_one_step": 26.2
+       "expected_days": 19.0,
+       "expected_days_one_step": 19.0
       }
      },
      {
       "risk": 0.03,
-      "pass_rate": 0.4887,
-      "fail_max": 0.3016,
-      "fail_daily": 0.2016,
+      "pass_rate": 0.6113,
+      "fail_max": 0.1371,
+      "fail_daily": 0.2435,
       "still_open": 0.0081,
-      "median_days": 32.0,
-      "p25_days": 21.0,
-      "expected_days": 65.5,
+      "median_days": 10.0,
+      "p25_days": 5.0,
+      "expected_days": 16.4,
       "max_dd": -0.2255,
-      "one_step": {
-       "pass_rate": 0.6242,
-       "fail_max": 0.2258,
-       "fail_daily": 0.1419,
+      "two_step": {
+       "pass_rate": 0.4887,
+       "fail_max": 0.3016,
+       "fail_daily": 0.2016,
        "still_open": 0.0081,
-       "median_days": 14.0,
-       "p25_days": 9.0,
-       "expected_days": 22.4
+       "median_days": 32.0,
+       "p25_days": 21.0,
+       "expected_days": 65.5
+      },
+      "one_step": {
+       "pass_rate": 0.6113,
+       "fail_max": 0.1371,
+       "fail_daily": 0.2435,
+       "still_open": 0.0081,
+       "median_days": 10.0,
+       "p25_days": 5.0,
+       "expected_days": 16.4
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -950,14 +1040,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.69,
-        "points": 2.07
+        "score": 0.986,
+        "points": 2.96
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.489,
-        "points": 0.88
+        "score": 0.611,
+        "points": 1.1
        },
        {
         "name": "breach",
@@ -994,33 +1084,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.2255,
-       "pass_rate": 0.4887,
-       "fail_max": 0.3016,
-       "fail_daily": 0.2016,
-       "median_days": 32.0,
+       "pass_rate": 0.6113,
+       "fail_max": 0.1371,
+       "fail_daily": 0.2435,
+       "median_days": 10.0,
        "still_open": 0.0081,
-       "expected_days": 65.5,
-       "expected_days_one_step": 22.4
+       "expected_days": 16.4,
+       "expected_days_one_step": 16.4
       }
      },
      {
       "risk": 0.04,
-      "pass_rate": 0.4016,
-      "fail_max": 0.2839,
-      "fail_daily": 0.3065,
+      "pass_rate": 0.5194,
+      "fail_max": 0.1323,
+      "fail_daily": 0.3403,
       "still_open": 0.0081,
-      "median_days": 26.0,
-      "p25_days": 18.0,
-      "expected_days": 64.7,
+      "median_days": 7.0,
+      "p25_days": 3.0,
+      "expected_days": 13.5,
       "max_dd": -0.3007,
-      "one_step": {
-       "pass_rate": 0.5887,
-       "fail_max": 0.1371,
-       "fail_daily": 0.2661,
+      "two_step": {
+       "pass_rate": 0.4016,
+       "fail_max": 0.2839,
+       "fail_daily": 0.3065,
        "still_open": 0.0081,
-       "median_days": 13.0,
-       "p25_days": 9.0,
-       "expected_days": 22.1
+       "median_days": 26.0,
+       "p25_days": 18.0,
+       "expected_days": 64.7
+      },
+      "one_step": {
+       "pass_rate": 0.5194,
+       "fail_max": 0.1323,
+       "fail_daily": 0.3403,
+       "still_open": 0.0081,
+       "median_days": 7.0,
+       "p25_days": 3.0,
+       "expected_days": 13.5
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -1028,14 +1127,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.694,
-        "points": 2.08
+        "score": 1.0,
+        "points": 3.0
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.402,
-        "points": 0.72
+        "score": 0.519,
+        "points": 0.93
        },
        {
         "name": "breach",
@@ -1072,33 +1171,42 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.3007,
-       "pass_rate": 0.4016,
-       "fail_max": 0.2839,
-       "fail_daily": 0.3065,
-       "median_days": 26.0,
+       "pass_rate": 0.5194,
+       "fail_max": 0.1323,
+       "fail_daily": 0.3403,
+       "median_days": 7.0,
        "still_open": 0.0081,
-       "expected_days": 64.7,
-       "expected_days_one_step": 22.1
+       "expected_days": 13.5,
+       "expected_days_one_step": 13.5
       }
      },
      {
       "risk": 0.05,
-      "pass_rate": 0.2048,
-      "fail_max": 0.3548,
-      "fail_daily": 0.4323,
+      "pass_rate": 0.5242,
+      "fail_max": 0.1032,
+      "fail_daily": 0.3645,
       "still_open": 0.0081,
-      "median_days": 17.0,
-      "p25_days": 15.0,
-      "expected_days": 83.0,
+      "median_days": 6.0,
+      "p25_days": 3.0,
+      "expected_days": 11.4,
       "max_dd": -0.3759,
-      "one_step": {
-       "pass_rate": 0.4855,
-       "fail_max": 0.1581,
-       "fail_daily": 0.3484,
+      "two_step": {
+       "pass_rate": 0.2048,
+       "fail_max": 0.3548,
+       "fail_daily": 0.4323,
        "still_open": 0.0081,
-       "median_days": 10.0,
-       "p25_days": 8.0,
-       "expected_days": 20.6
+       "median_days": 17.0,
+       "p25_days": 15.0,
+       "expected_days": 83.0
+      },
+      "one_step": {
+       "pass_rate": 0.5242,
+       "fail_max": 0.1032,
+       "fail_daily": 0.3645,
+       "still_open": 0.0081,
+       "median_days": 6.0,
+       "p25_days": 3.0,
+       "expected_days": 11.4
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -1106,14 +1214,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.584,
-        "points": 1.75
+        "score": 1.0,
+        "points": 3.0
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.205,
-        "points": 0.37
+        "score": 0.524,
+        "points": 0.94
        },
        {
         "name": "breach",
@@ -1150,13 +1258,13 @@
        "tpd_per_book": 1.101,
        "r_per_day": 0.1564,
        "max_dd": -0.3759,
-       "pass_rate": 0.2048,
-       "fail_max": 0.3548,
-       "fail_daily": 0.4323,
-       "median_days": 17.0,
+       "pass_rate": 0.5242,
+       "fail_max": 0.1032,
+       "fail_daily": 0.3645,
+       "median_days": 6.0,
        "still_open": 0.0081,
-       "expected_days": 83.0,
-       "expected_days_one_step": 20.6
+       "expected_days": 11.4,
+       "expected_days_one_step": 11.4
       }
      }
     ]
@@ -17546,7 +17654,7 @@
    "tagline": "Twenty moving averages agreeing across timescales. Beats its null on gold, loses to it on silver, and is still too slow.",
    "period": "XAUUSD 15m + 30m + 1h \u00b7 walk-forward 2024-10 to 2026-06 \u00b7 MEASURED 1.83bps round trip",
    "report": "strategies/ribbon/notes.md",
-   "candidate": "no \u2014 fails the phase gate at 151 expected days, and dropping the null-failing silver leg made it slower, not faster, 2.00% risk per trade",
+   "candidate": "no \u2014 fails the phase gate at 151 expected days, and dropping the null-failing silver leg made it slower, not faster, 1.50% risk per trade",
    "measured": {
     "wf_pf": 1.652,
     "wf_pf_2x": 1.617,
@@ -17555,11 +17663,11 @@
     "consistency": 0.0,
     "pf": 1.652,
     "sharpe": 2.453,
-    "median_days_pass": 165.0,
-    "pass_rate": 0.6343,
+    "median_days_pass": 88.0,
+    "pass_rate": 0.752,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "max_dd": -0.0778,
+    "max_dd": -0.0584,
     "stale": false,
     "verified": true,
     "verify_failed": [
@@ -17567,10 +17675,10 @@
     ]
    },
    "score": {
-    "total": 4.7,
-    "verdict": "TOO SLOW - 260d against a 5-14d target",
+    "total": 6.2,
+    "verdict": "TOO SLOW - 117d against a 5-14d target",
     "too_slow": true,
-    "expected_days": 260.12927636764937,
+    "expected_days": 117.02127659574468,
     "evidence_capped": false,
     "null_capped": false,
     "stale_capped": false,
@@ -17582,14 +17690,14 @@
      {
       "name": "speed",
       "weight": 30,
-      "score": 0.0,
-      "points": 0.0
+      "score": 0.379,
+      "points": 1.14
      },
      {
       "name": "pass_rate",
       "weight": 18,
-      "score": 0.634,
-      "points": 1.14
+      "score": 0.752,
+      "points": 1.35
      },
      {
       "name": "breach",
@@ -17600,8 +17708,8 @@
      {
       "name": "drawdown",
       "weight": 10,
-      "score": 0.685,
-      "points": 0.69
+      "score": 0.847,
+      "points": 0.85
      },
      {
       "name": "evidence",
@@ -17688,9 +17796,9 @@
     ]
    },
    "fingerprint": {
-    "git": "f1a2773",
+    "git": "8c42a90",
     "dirty": true,
-    "written": "2026-09-08T07:04:09.872054+00:00",
+    "written": "2026-09-08T07:59:03.408014+00:00",
     "kernel_hash": "a91bd109bbb3",
     "kernels": [
      "core/metrics.py",
@@ -17747,17 +17855,17 @@
     "n_books": 3,
     "tpd_per_book": 0.178,
     "r_per_day": 0.0344,
-    "max_dd": -0.0778,
-    "pass_rate": 0.6343,
+    "max_dd": -0.0584,
+    "pass_rate": 0.752,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "median_days": 165.0,
-    "still_open": 0.3657,
-    "expected_days": 260.12927636764937,
+    "median_days": 88.0,
+    "still_open": 0.248,
+    "expected_days": 117.02127659574468,
     "expected_days_one_step": 117.0
    },
    "ladder": {
-    "picked": 0.02,
+    "picked": 0.015,
     "note": "Risk per trade is the only lever left once the configuration is chosen blind, and it moves speed and survival in opposite directions. <strong>Click any row</strong> to score the strategy at that risk level. The recommended row is the fewest expected days to a funded account among the levels that keep the breach rate under 5% <em>and</em> the drawdown inside the 8% cap. Days and pass rates are the <strong>two-step</strong> evaluation (8% then 5%); the single-step number is in the last column for comparison only.",
     "rows": [
      {
@@ -17770,6 +17878,15 @@
       "p25_days": null,
       "expected_days": null,
       "max_dd": -0.0097,
+      "two_step": {
+       "pass_rate": 0.0,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 1.0,
+       "median_days": null,
+       "p25_days": null,
+       "expected_days": null
+      },
       "one_step": {
        "pass_rate": 0.0,
        "fail_max": 0.0,
@@ -17840,22 +17957,31 @@
      },
      {
       "risk": 0.005,
-      "pass_rate": 0.0,
+      "pass_rate": 0.5548,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 1.0,
-      "median_days": null,
-      "p25_days": null,
-      "expected_days": null,
+      "still_open": 0.4452,
+      "median_days": 253.0,
+      "p25_days": 194.0,
+      "expected_days": 456.0,
       "max_dd": -0.0195,
-      "one_step": {
-       "pass_rate": 0.4626,
+      "two_step": {
+       "pass_rate": 0.0,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.5374,
-       "median_days": 301.0,
-       "p25_days": 226.5,
-       "expected_days": 650.7
+       "still_open": 1.0,
+       "median_days": null,
+       "p25_days": null,
+       "expected_days": null
+      },
+      "one_step": {
+       "pass_rate": 0.5548,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.4452,
+       "median_days": 253.0,
+       "p25_days": 194.0,
+       "expected_days": 456.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -17869,8 +17995,8 @@
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.555,
+        "points": 1.0
        },
        {
         "name": "breach",
@@ -17907,33 +18033,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0195,
-       "pass_rate": 0.0,
+       "pass_rate": 0.5548,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": null,
-       "still_open": 1.0,
-       "expected_days": null,
-       "expected_days_one_step": 650.7
+       "median_days": 253.0,
+       "still_open": 0.4452,
+       "expected_days": 456.0,
+       "expected_days_one_step": 456.0
       }
      },
      {
       "risk": 0.0075,
-      "pass_rate": 0.2417,
+      "pass_rate": 0.62,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.7583,
-      "median_days": 333.5,
-      "p25_days": 308.75,
-      "expected_days": 1379.8,
+      "still_open": 0.38,
+      "median_days": 177.5,
+      "p25_days": 118.25,
+      "expected_days": 286.3,
       "max_dd": -0.0292,
-      "one_step": {
-       "pass_rate": 0.566,
+      "two_step": {
+       "pass_rate": 0.2417,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.434,
-       "median_days": 226.5,
-       "p25_days": 144.0,
-       "expected_days": 400.2
+       "still_open": 0.7583,
+       "median_days": 333.5,
+       "p25_days": 308.75,
+       "expected_days": 1379.8
+      },
+      "one_step": {
+       "pass_rate": 0.62,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.38,
+       "median_days": 177.5,
+       "p25_days": 118.25,
+       "expected_days": 286.3
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -17947,8 +18082,8 @@
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.242,
-        "points": 0.44
+        "score": 0.62,
+        "points": 1.12
        },
        {
         "name": "breach",
@@ -17985,33 +18120,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0292,
-       "pass_rate": 0.2417,
+       "pass_rate": 0.62,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 333.5,
-       "still_open": 0.7583,
-       "expected_days": 1379.8,
-       "expected_days_one_step": 400.2
+       "median_days": 177.5,
+       "still_open": 0.38,
+       "expected_days": 286.3,
+       "expected_days_one_step": 286.3
       }
      },
      {
       "risk": 0.01,
-      "pass_rate": 0.5246,
+      "pass_rate": 0.7297,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.4754,
-      "median_days": 272.0,
-      "p25_days": 229.25,
-      "expected_days": 518.5,
+      "still_open": 0.2703,
+      "median_days": 127.0,
+      "p25_days": 66.5,
+      "expected_days": 174.0,
       "max_dd": -0.0389,
-      "one_step": {
-       "pass_rate": 0.62,
+      "two_step": {
+       "pass_rate": 0.5246,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.38,
-       "median_days": 177.5,
-       "p25_days": 118.25,
-       "expected_days": 286.3
+       "still_open": 0.4754,
+       "median_days": 272.0,
+       "p25_days": 229.25,
+       "expected_days": 518.5
+      },
+      "one_step": {
+       "pass_rate": 0.7297,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.2703,
+       "median_days": 127.0,
+       "p25_days": 66.5,
+       "expected_days": 174.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18019,14 +18163,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.036,
+        "points": 0.11
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.525,
-        "points": 0.94
+        "score": 0.73,
+        "points": 1.31
        },
        {
         "name": "breach",
@@ -18063,33 +18207,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0389,
-       "pass_rate": 0.5246,
+       "pass_rate": 0.7297,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 272.0,
-       "still_open": 0.4754,
-       "expected_days": 518.5,
-       "expected_days_one_step": 286.3
+       "median_days": 127.0,
+       "still_open": 0.2703,
+       "expected_days": 174.0,
+       "expected_days_one_step": 174.0
       }
      },
      {
       "risk": 0.0125,
-      "pass_rate": 0.5803,
+      "pass_rate": 0.7409,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.4197,
-      "median_days": 222.0,
-      "p25_days": 146.0,
-      "expected_days": 382.6,
+      "still_open": 0.2591,
+      "median_days": 100.0,
+      "p25_days": 56.0,
+      "expected_days": 135.0,
       "max_dd": -0.0486,
-      "one_step": {
-       "pass_rate": 0.7122,
+      "two_step": {
+       "pass_rate": 0.5803,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.2878,
-       "median_days": 134.5,
-       "p25_days": 88.75,
-       "expected_days": 188.9
+       "still_open": 0.4197,
+       "median_days": 222.0,
+       "p25_days": 146.0,
+       "expected_days": 382.6
+      },
+      "one_step": {
+       "pass_rate": 0.7409,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.2591,
+       "median_days": 100.0,
+       "p25_days": 56.0,
+       "expected_days": 135.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18097,14 +18250,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.271,
+        "points": 0.81
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.58,
-        "points": 1.04
+        "score": 0.741,
+        "points": 1.33
        },
        {
         "name": "breach",
@@ -18141,33 +18294,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0486,
-       "pass_rate": 0.5803,
+       "pass_rate": 0.7409,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 222.0,
-       "still_open": 0.4197,
-       "expected_days": 382.6,
-       "expected_days_one_step": 188.9
+       "median_days": 100.0,
+       "still_open": 0.2591,
+       "expected_days": 135.0,
+       "expected_days_one_step": 135.0
       }
      },
      {
       "risk": 0.015,
-      "pass_rate": 0.593,
+      "pass_rate": 0.752,
       "fail_max": 0.0,
       "fail_daily": 0.0,
-      "still_open": 0.407,
-      "median_days": 193.0,
-      "p25_days": 122.0,
-      "expected_days": 325.5,
+      "still_open": 0.248,
+      "median_days": 88.0,
+      "p25_days": 46.0,
+      "expected_days": 117.0,
       "max_dd": -0.0584,
-      "one_step": {
-       "pass_rate": 0.7345,
+      "two_step": {
+       "pass_rate": 0.593,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.2655,
-       "median_days": 122.0,
-       "p25_days": 62.0,
-       "expected_days": 166.1
+       "still_open": 0.407,
+       "median_days": 193.0,
+       "p25_days": 122.0,
+       "expected_days": 325.5
+      },
+      "one_step": {
+       "pass_rate": 0.752,
+       "fail_max": 0.0,
+       "fail_daily": 0.0,
+       "still_open": 0.248,
+       "median_days": 88.0,
+       "p25_days": 46.0,
+       "expected_days": 117.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18175,14 +18337,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.379,
+        "points": 1.14
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.593,
-        "points": 1.07
+        "score": 0.752,
+        "points": 1.35
        },
        {
         "name": "breach",
@@ -18219,33 +18381,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0584,
-       "pass_rate": 0.593,
+       "pass_rate": 0.752,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "median_days": 193.0,
-       "still_open": 0.407,
-       "expected_days": 325.5,
-       "expected_days_one_step": 166.1
+       "median_days": 88.0,
+       "still_open": 0.248,
+       "expected_days": 117.0,
+       "expected_days_one_step": 117.0
       }
      },
      {
       "risk": 0.0175,
-      "pass_rate": 0.6121,
-      "fail_max": 0.0,
+      "pass_rate": 0.5803,
+      "fail_max": 0.1765,
       "fail_daily": 0.0,
-      "still_open": 0.3879,
-      "median_days": 177.0,
-      "p25_days": 115.0,
-      "expected_days": 289.2,
+      "still_open": 0.2432,
+      "median_days": 56.0,
+      "p25_days": 35.0,
+      "expected_days": 96.5,
       "max_dd": -0.0681,
-      "one_step": {
-       "pass_rate": 0.744,
+      "two_step": {
+       "pass_rate": 0.6121,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.256,
-       "median_days": 97.0,
-       "p25_days": 53.75,
-       "expected_days": 130.4
+       "still_open": 0.3879,
+       "median_days": 177.0,
+       "p25_days": 115.0,
+       "expected_days": 289.2
+      },
+      "one_step": {
+       "pass_rate": 0.5803,
+       "fail_max": 0.1765,
+       "fail_daily": 0.0,
+       "still_open": 0.2432,
+       "median_days": 56.0,
+       "p25_days": 35.0,
+       "expected_days": 96.5
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18253,20 +18424,20 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.503,
+        "points": 1.51
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.612,
-        "points": 1.1
+        "score": 0.58,
+        "points": 1.04
        },
        {
         "name": "breach",
         "weight": 12,
-        "score": 1.0,
-        "points": 1.2
+        "score": 0.412,
+        "points": 0.49
        },
        {
         "name": "drawdown",
@@ -18297,33 +18468,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0681,
-       "pass_rate": 0.6121,
-       "fail_max": 0.0,
+       "pass_rate": 0.5803,
+       "fail_max": 0.1765,
        "fail_daily": 0.0,
-       "median_days": 177.0,
-       "still_open": 0.3879,
-       "expected_days": 289.2,
-       "expected_days_one_step": 130.4
+       "median_days": 56.0,
+       "still_open": 0.2432,
+       "expected_days": 96.5,
+       "expected_days_one_step": 96.5
       }
      },
      {
       "risk": 0.02,
-      "pass_rate": 0.6343,
-      "fail_max": 0.0,
+      "pass_rate": 0.6184,
+      "fail_max": 0.2401,
       "fail_daily": 0.0,
-      "still_open": 0.3657,
-      "median_days": 165.0,
-      "p25_days": 103.0,
-      "expected_days": 260.1,
+      "still_open": 0.1415,
+      "median_days": 48.0,
+      "p25_days": 31.0,
+      "expected_days": 77.6,
       "max_dd": -0.0778,
-      "one_step": {
-       "pass_rate": 0.752,
+      "two_step": {
+       "pass_rate": 0.6343,
        "fail_max": 0.0,
        "fail_daily": 0.0,
-       "still_open": 0.248,
-       "median_days": 88.0,
-       "p25_days": 46.0,
-       "expected_days": 117.0
+       "still_open": 0.3657,
+       "median_days": 165.0,
+       "p25_days": 103.0,
+       "expected_days": 260.1
+      },
+      "one_step": {
+       "pass_rate": 0.6184,
+       "fail_max": 0.2401,
+       "fail_daily": 0.0,
+       "still_open": 0.1415,
+       "median_days": 48.0,
+       "p25_days": 31.0,
+       "expected_days": 77.6
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18331,20 +18511,20 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.617,
+        "points": 1.85
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.634,
-        "points": 1.14
+        "score": 0.618,
+        "points": 1.11
        },
        {
         "name": "breach",
         "weight": 12,
-        "score": 1.0,
-        "points": 1.2
+        "score": 0.2,
+        "points": 0.24
        },
        {
         "name": "drawdown",
@@ -18375,54 +18555,63 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0778,
-       "pass_rate": 0.6343,
-       "fail_max": 0.0,
+       "pass_rate": 0.6184,
+       "fail_max": 0.2401,
        "fail_daily": 0.0,
-       "median_days": 165.0,
-       "still_open": 0.3657,
-       "expected_days": 260.1,
-       "expected_days_one_step": 117.0
+       "median_days": 48.0,
+       "still_open": 0.1415,
+       "expected_days": 77.6,
+       "expected_days_one_step": 77.6
       }
      },
      {
       "risk": 0.025,
-      "pass_rate": 0.3943,
-      "fail_max": 0.3355,
+      "pass_rate": 0.5898,
+      "fail_max": 0.2766,
       "fail_daily": 0.0,
-      "still_open": 0.2703,
-      "median_days": 69.0,
-      "p25_days": 53.75,
-      "expected_days": 175.0,
+      "still_open": 0.1335,
+      "median_days": 36.0,
+      "p25_days": 24.5,
+      "expected_days": 61.0,
       "max_dd": -0.0973,
-      "one_step": {
-       "pass_rate": 0.6057,
-       "fail_max": 0.151,
+      "two_step": {
+       "pass_rate": 0.3943,
+       "fail_max": 0.3355,
        "fail_daily": 0.0,
-       "still_open": 0.2432,
-       "median_days": 53.0,
-       "p25_days": 33.0,
-       "expected_days": 87.5
+       "still_open": 0.2703,
+       "median_days": 69.0,
+       "p25_days": 53.75,
+       "expected_days": 175.0
       },
-      "score": 2.9,
-      "verdict": "TOO SLOW - 175d against a 5-14d target",
+      "one_step": {
+       "pass_rate": 0.5898,
+       "fail_max": 0.2766,
+       "fail_daily": 0.0,
+       "still_open": 0.1335,
+       "median_days": 36.0,
+       "p25_days": 24.5,
+       "expected_days": 61.0
+      },
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.03,
-        "points": 0.09
+        "score": 0.717,
+        "points": 2.15
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.394,
-        "points": 0.71
+        "score": 0.59,
+        "points": 1.06
        },
        {
         "name": "breach",
         "weight": 12,
-        "score": 0.0,
-        "points": 0.0
+        "score": 0.078,
+        "points": 0.09
        },
        {
         "name": "drawdown",
@@ -18453,33 +18642,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.0973,
-       "pass_rate": 0.3943,
-       "fail_max": 0.3355,
+       "pass_rate": 0.5898,
+       "fail_max": 0.2766,
        "fail_daily": 0.0,
-       "median_days": 69.0,
-       "still_open": 0.2703,
-       "expected_days": 175.0,
-       "expected_days_one_step": 87.5
+       "median_days": 36.0,
+       "still_open": 0.1335,
+       "expected_days": 61.0,
+       "expected_days_one_step": 61.0
       }
      },
      {
       "risk": 0.03,
-      "pass_rate": 0.3784,
-      "fail_max": 0.4881,
+      "pass_rate": 0.593,
+      "fail_max": 0.3482,
       "fail_daily": 0.0,
-      "still_open": 0.1335,
-      "median_days": 58.0,
-      "p25_days": 44.0,
-      "expected_days": 153.3,
+      "still_open": 0.0588,
+      "median_days": 29.0,
+      "p25_days": 19.0,
+      "expected_days": 48.9,
       "max_dd": -0.1167,
-      "one_step": {
-       "pass_rate": 0.5851,
-       "fail_max": 0.2814,
+      "two_step": {
+       "pass_rate": 0.3784,
+       "fail_max": 0.4881,
        "fail_daily": 0.0,
        "still_open": 0.1335,
-       "median_days": 42.0,
-       "p25_days": 27.0,
-       "expected_days": 71.8
+       "median_days": 58.0,
+       "p25_days": 44.0,
+       "expected_days": 153.3
+      },
+      "one_step": {
+       "pass_rate": 0.593,
+       "fail_max": 0.3482,
+       "fail_daily": 0.0,
+       "still_open": 0.0588,
+       "median_days": 29.0,
+       "p25_days": 19.0,
+       "expected_days": 48.9
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18487,14 +18685,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.161,
-        "points": 0.48
+        "score": 0.79,
+        "points": 2.37
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.378,
-        "points": 0.68
+        "score": 0.593,
+        "points": 1.07
        },
        {
         "name": "breach",
@@ -18531,33 +18729,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.1167,
-       "pass_rate": 0.3784,
-       "fail_max": 0.4881,
+       "pass_rate": 0.593,
+       "fail_max": 0.3482,
        "fail_daily": 0.0,
-       "median_days": 58.0,
-       "still_open": 0.1335,
-       "expected_days": 153.3,
-       "expected_days_one_step": 71.8
+       "median_days": 29.0,
+       "still_open": 0.0588,
+       "expected_days": 48.9,
+       "expected_days_one_step": 48.9
       }
      },
      {
       "risk": 0.04,
-      "pass_rate": 0.5294,
-      "fail_max": 0.4118,
-      "fail_daily": 0.0,
-      "still_open": 0.0588,
-      "median_days": 56.0,
-      "p25_days": 41.0,
-      "expected_days": 105.8,
+      "pass_rate": 0.6153,
+      "fail_max": 0.275,
+      "fail_daily": 0.097,
+      "still_open": 0.0127,
+      "median_days": 20.0,
+      "p25_days": 12.0,
+      "expected_days": 32.5,
       "max_dd": -0.1557,
-      "one_step": {
-       "pass_rate": 0.593,
-       "fail_max": 0.3482,
+      "two_step": {
+       "pass_rate": 0.5294,
+       "fail_max": 0.4118,
        "fail_daily": 0.0,
        "still_open": 0.0588,
-       "median_days": 29.0,
-       "p25_days": 20.0,
-       "expected_days": 48.9
+       "median_days": 56.0,
+       "p25_days": 41.0,
+       "expected_days": 105.8
+      },
+      "one_step": {
+       "pass_rate": 0.6153,
+       "fail_max": 0.275,
+       "fail_daily": 0.097,
+       "still_open": 0.0127,
+       "median_days": 20.0,
+       "p25_days": 12.0,
+       "expected_days": 32.5
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18565,14 +18772,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.447,
-        "points": 1.34
+        "score": 0.889,
+        "points": 2.67
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.529,
-        "points": 0.95
+        "score": 0.615,
+        "points": 1.11
        },
        {
         "name": "breach",
@@ -18609,33 +18816,42 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.1557,
-       "pass_rate": 0.5294,
-       "fail_max": 0.4118,
-       "fail_daily": 0.0,
-       "median_days": 56.0,
-       "still_open": 0.0588,
-       "expected_days": 105.8,
-       "expected_days_one_step": 48.9
+       "pass_rate": 0.6153,
+       "fail_max": 0.275,
+       "fail_daily": 0.097,
+       "median_days": 20.0,
+       "still_open": 0.0127,
+       "expected_days": 32.5,
+       "expected_days_one_step": 32.5
       }
      },
      {
       "risk": 0.05,
-      "pass_rate": 0.5692,
-      "fail_max": 0.2909,
-      "fail_daily": 0.1224,
-      "still_open": 0.0175,
-      "median_days": 49.0,
-      "p25_days": 35.0,
-      "expected_days": 86.1,
+      "pass_rate": 0.5199,
+      "fail_max": 0.2544,
+      "fail_daily": 0.2258,
+      "still_open": 0.0,
+      "median_days": 13.0,
+      "p25_days": 8.0,
+      "expected_days": 25.0,
       "max_dd": -0.1946,
-      "one_step": {
-       "pass_rate": 0.6105,
-       "fail_max": 0.2639,
-       "fail_daily": 0.1081,
+      "two_step": {
+       "pass_rate": 0.5692,
+       "fail_max": 0.2909,
+       "fail_daily": 0.1224,
        "still_open": 0.0175,
-       "median_days": 24.0,
-       "p25_days": 16.0,
-       "expected_days": 39.3
+       "median_days": 49.0,
+       "p25_days": 35.0,
+       "expected_days": 86.1
+      },
+      "one_step": {
+       "pass_rate": 0.5199,
+       "fail_max": 0.2544,
+       "fail_daily": 0.2258,
+       "still_open": 0.0,
+       "median_days": 13.0,
+       "p25_days": 8.0,
+       "expected_days": 25.0
       },
       "score": 3.0,
       "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
@@ -18643,14 +18859,14 @@
        {
         "name": "speed",
         "weight": 30,
-        "score": 0.566,
-        "points": 1.7
+        "score": 0.934,
+        "points": 2.8
        },
        {
         "name": "pass_rate",
         "weight": 18,
-        "score": 0.569,
-        "points": 1.02
+        "score": 0.52,
+        "points": 0.94
        },
        {
         "name": "breach",
@@ -18687,13 +18903,13 @@
        "tpd_per_book": 0.178,
        "r_per_day": 0.0344,
        "max_dd": -0.1946,
-       "pass_rate": 0.5692,
-       "fail_max": 0.2909,
-       "fail_daily": 0.1224,
-       "median_days": 49.0,
-       "still_open": 0.0175,
-       "expected_days": 86.1,
-       "expected_days_one_step": 39.3
+       "pass_rate": 0.5199,
+       "fail_max": 0.2544,
+       "fail_daily": 0.2258,
+       "median_days": 13.0,
+       "still_open": 0.0,
+       "expected_days": 25.0,
+       "expected_days_one_step": 25.0
       }
      }
     ]
@@ -20807,10 +21023,10 @@
  "prop": {
   "one_step": [
    {
-    "target": 0.08,
-    "daily": 0.04,
-    "maxloss": 0.08,
-    "mindays": 5
+    "target": 0.06,
+    "daily": 0.03,
+    "maxloss": 0.06,
+    "mindays": 0
    }
   ],
   "two_step": [
@@ -20842,7 +21058,7 @@
    0.05
   ],
   "max_breach": 0.05,
-  "dd_cap": 0.08,
+  "dd_cap": 0.06,
   "max_days": 400
  }
 }

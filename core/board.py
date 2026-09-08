@@ -197,9 +197,12 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
             "sharpe": fields["sharpe"],
         },
         # Which evaluation structure the ladder's headline numbers are on.
-        # Two-step (8% then 5%) since 2026-09-01; every row also carries its
-        # one-step values under `one_step`.
-        "structure": "two_step",
+        # THE FIRM, since 2026-09-08: Thunderbolt, one step, 6% target, 3% daily
+        # drawdown, 6% max drawdown. The first real spec this project has had -
+        # everything before it was a modelled 8%+5% two-step, which was an honest
+        # guess and is now simply wrong. Every row also carries its two-step
+        # values under `two_step`, because Kris will run several firms.
+        "structure": "one_step_6pct",
         "ladder": rows, "pick": pick,
         "grid": grid or {}, "todo": todo or [], "note": note,
         # Optional per-leg trade series, so the page can recompute the book from
@@ -224,9 +227,10 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
     print(f"    {name}: PF {fields['pf']}  {fields['trades']} trades  "
           f"{fields['trades_per_day']}/day across {n_books} sub-strategies "
           f"({fields['tpd_per_book']}/day each)  R/day {fields['r_per_day']:+.4f}")
-    one = pick.get("one_step", {})
-    print(f"    pick {pick['risk']*100:.2f}% risk  TWO-STEP pass {pick['pass_rate']*100:.1f}%  "
+    two = pick.get("two_step", {})
+    print(f"    pick {pick['risk']*100:.2f}% risk  ONE-STEP 6% pass {pick['pass_rate']*100:.1f}%  "
           f"killed {(pick['fail_max']+pick['fail_daily'])*100:.1f}%  "
+          f"maxDD {pick['max_dd']*100:.2f}%  "
           f"median {pick['median_days']} d  expected {pick['expected_days']} d"
-          f"   (one-step was {one.get('expected_days')} d)")
+          f"   (a two-step firm would be {two.get('expected_days')} d)")
     return rec

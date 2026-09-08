@@ -22,12 +22,15 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.prop_rules import PropRules, TWO_STEP        # noqa: E402
+from core.prop_rules import ONE_STEP, PropRules, TWO_STEP   # noqa: E402
 
 RISK_LADDER = (0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175,
                0.02, 0.025, 0.03, 0.04, 0.05)
 MAX_BREACH = 0.05     # a risk level that kills more than 1 account in 20 is out
-DD_CAP = 0.08         # and its equity curve must stay inside the prop max-loss cap
+# The firm's max drawdown, not a house rule. Thunderbolt (chosen 2026-09-08) caps
+# it at 6%; this was 0.08 while the spec was a guess. Both board picks were
+# sitting at -7.5% and -7.8% under the old cap and neither fits this one.
+DD_CAP = 0.06
 MAX_DAYS = 400        # an account still open after this counts as not passed
 
 
@@ -59,7 +62,7 @@ def _breached(low: float, peak: float, rules: PropRules) -> bool:
     return False
 
 
-def run_accounts(daily_r: pd.Series, risk: float, rules: PropRules = PropRules(),
+def run_accounts(daily_r: pd.Series, risk: float, rules: PropRules = ONE_STEP[0],
                  max_days: int = MAX_DAYS) -> dict:
     """Fresh account every trading day, fixed risk, real breaches, no size
     shrinking. Worst case within a day: the whole day's loss lands before any of
@@ -155,23 +158,29 @@ def ladder(daily_r: pd.Series, r_series: np.ndarray,
     """One row per risk level. `r_series` is the trade-by-trade R used for the
     drawdown, which is the one quantity that scales linearly with risk.
 
-    Every row carries BOTH structures. The headline keys (`pass_rate`,
-    `median_days`, `expected_days`, the two breach rates) are the **two-step**
-    evaluation, because that is the structure the project decided to trade on
-    2026-09-01 and a board that reports the one-step number reports a fiction.
-    The one-step values are kept alongside under a `one_step` sub-dict so older
-    board figures stay comparable and the gap between the two stays visible.
+    The headline keys (`pass_rate`, `median_days`, `expected_days`, the two
+    breach rates) are the **firm's own structure** — Thunderbolt, one step, 6%
+    target, 3% daily, 6% max, chosen by Kris 2026-09-08 and the first real spec
+    this project has had. Until then the headline was a modelled 8%+5% two-step,
+    which was an honest guess and is now simply wrong.
+
+    The two-step numbers are kept alongside under `two_step`, because Kris will
+    run SEVERAL firms and the next one may well be two-step. Keeping both is what
+    makes the structure question answerable instead of re-litigated.
     """
     eq = np.concatenate(([0.0], np.cumsum(r_series)))
     dd_r = float((eq - np.maximum.accumulate(eq)).min())
     rows = []
     for risk in levels:
-        one = run_accounts(daily_r, risk)
-        two = run_accounts_two_step(daily_r, risk)
+        one = run_accounts(daily_r, risk)          # the firm: one step, 6%
+        two = run_accounts_two_step(daily_r, risk)  # kept for the next firm
         rows.append({
-            "risk": risk, **two,
-            "expected_days": _expected(two),
+            "risk": risk, **one,
+            "expected_days": _expected(one),
             "max_dd": round(dd_r * risk, 4),
+            "two_step": {**two, "expected_days": _expected(two)},
+            # the old key name, so nothing that reads it breaks while the board
+            # pages are updated; same values as the headline now
             "one_step": {**one, "expected_days": _expected(one)},
         })
     return rows

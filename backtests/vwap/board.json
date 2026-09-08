@@ -31,78 +31,85 @@
   "pf": 2.016,
   "sharpe": 2.324
  },
- "structure": "two_step",
+ "structure": "one_step_6pct",
  "ladder": [
   {
    "risk": 0.0025,
-   "pass_rate": 0.5806,
-   "fail_max": 0.0,
-   "fail_daily": 0.0,
-   "still_open": 0.4194,
-   "median_days": 284.0,
-   "p25_days": 194.0,
-   "expected_days": 489.1,
-   "max_dd": -0.0188,
-   "one_step": {
-    "pass_rate": 0.7532,
-    "fail_max": 0.0,
-    "fail_daily": 0.0,
-    "still_open": 0.2468,
-    "median_days": 233.0,
-    "p25_days": 116.5,
-    "expected_days": 309.3
-   }
-  },
-  {
-   "risk": 0.005,
-   "pass_rate": 0.7532,
-   "fail_max": 0.0,
-   "fail_daily": 0.0,
-   "still_open": 0.2468,
-   "median_days": 225.0,
-   "p25_days": 116.5,
-   "expected_days": 298.7,
-   "max_dd": -0.0376,
-   "one_step": {
-    "pass_rate": 0.8242,
-    "fail_max": 0.0,
-    "fail_daily": 0.0,
-    "still_open": 0.1758,
-    "median_days": 155.0,
-    "p25_days": 57.0,
-    "expected_days": 188.1
-   }
-  },
-  {
-   "risk": 0.0075,
    "pass_rate": 0.7758,
    "fail_max": 0.0,
    "fail_daily": 0.0,
    "still_open": 0.2242,
-   "median_days": 178.0,
-   "p25_days": 86.0,
-   "expected_days": 229.4,
-   "max_dd": -0.0564,
-   "one_step": {
-    "pass_rate": 0.9,
+   "median_days": 198.0,
+   "p25_days": 81.0,
+   "expected_days": 255.2,
+   "max_dd": -0.0188,
+   "two_step": {
+    "pass_rate": 0.5806,
     "fail_max": 0.0,
     "fail_daily": 0.0,
-    "still_open": 0.1,
-    "median_days": 73.0,
-    "p25_days": 40.0,
-    "expected_days": 81.1
+    "still_open": 0.4194,
+    "median_days": 284.0,
+    "p25_days": 194.0,
+    "expected_days": 489.1
+   },
+   "one_step": {
+    "pass_rate": 0.7758,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 0.2242,
+    "median_days": 198.0,
+    "p25_days": 81.0,
+    "expected_days": 255.2
    }
   },
   {
-   "risk": 0.01,
+   "risk": 0.005,
    "pass_rate": 0.8984,
    "fail_max": 0.0,
    "fail_daily": 0.0,
    "still_open": 0.1016,
-   "median_days": 129.0,
-   "p25_days": 59.0,
-   "expected_days": 143.6,
-   "max_dd": -0.0752,
+   "median_days": 84.0,
+   "p25_days": 47.0,
+   "expected_days": 93.5,
+   "max_dd": -0.0376,
+   "two_step": {
+    "pass_rate": 0.7532,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 0.2468,
+    "median_days": 225.0,
+    "p25_days": 116.5,
+    "expected_days": 298.7
+   },
+   "one_step": {
+    "pass_rate": 0.8984,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 0.1016,
+    "median_days": 84.0,
+    "p25_days": 47.0,
+    "expected_days": 93.5
+   }
+  },
+  {
+   "risk": 0.0075,
+   "pass_rate": 0.9129,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.0871,
+   "median_days": 51.0,
+   "p25_days": 26.0,
+   "expected_days": 55.9,
+   "max_dd": -0.0564,
+   "two_step": {
+    "pass_rate": 0.7758,
+    "fail_max": 0.0,
+    "fail_daily": 0.0,
+    "still_open": 0.2242,
+    "median_days": 178.0,
+    "p25_days": 86.0,
+    "expected_days": 229.4
+   },
    "one_step": {
     "pass_rate": 0.9129,
     "fail_max": 0.0,
@@ -114,176 +121,286 @@
    }
   },
   {
-   "risk": 0.0125,
-   "pass_rate": 0.6435,
-   "fail_max": 0.2871,
+   "risk": 0.01,
+   "pass_rate": 0.8097,
+   "fail_max": 0.1452,
    "fail_daily": 0.0,
-   "still_open": 0.0694,
-   "median_days": 79.0,
-   "p25_days": 48.0,
-   "expected_days": 122.8,
-   "max_dd": -0.094,
-   "one_step": {
-    "pass_rate": 0.8129,
-    "fail_max": 0.1371,
+   "still_open": 0.0452,
+   "median_days": 35.5,
+   "p25_days": 17.0,
+   "expected_days": 43.8,
+   "max_dd": -0.0752,
+   "two_step": {
+    "pass_rate": 0.8984,
+    "fail_max": 0.0,
     "fail_daily": 0.0,
-    "still_open": 0.05,
-    "median_days": 38.0,
-    "p25_days": 19.0,
-    "expected_days": 46.7
+    "still_open": 0.1016,
+    "median_days": 129.0,
+    "p25_days": 59.0,
+    "expected_days": 143.6
+   },
+   "one_step": {
+    "pass_rate": 0.8097,
+    "fail_max": 0.1452,
+    "fail_daily": 0.0,
+    "still_open": 0.0452,
+    "median_days": 35.5,
+    "p25_days": 17.0,
+    "expected_days": 43.8
    }
   },
   {
-   "risk": 0.015,
+   "risk": 0.0125,
    "pass_rate": 0.6355,
-   "fail_max": 0.3,
-   "fail_daily": 0.0,
-   "still_open": 0.0645,
-   "median_days": 69.5,
-   "p25_days": 44.0,
-   "expected_days": 109.4,
-   "max_dd": -0.1128,
-   "one_step": {
-    "pass_rate": 0.7887,
-    "fail_max": 0.1694,
+   "fail_max": 0.2645,
+   "fail_daily": 0.0581,
+   "still_open": 0.0419,
+   "median_days": 25.0,
+   "p25_days": 12.0,
+   "expected_days": 39.3,
+   "max_dd": -0.094,
+   "two_step": {
+    "pass_rate": 0.6435,
+    "fail_max": 0.2871,
     "fail_daily": 0.0,
+    "still_open": 0.0694,
+    "median_days": 79.0,
+    "p25_days": 48.0,
+    "expected_days": 122.8
+   },
+   "one_step": {
+    "pass_rate": 0.6355,
+    "fail_max": 0.2645,
+    "fail_daily": 0.0581,
     "still_open": 0.0419,
-    "median_days": 31.0,
-    "p25_days": 16.0,
+    "median_days": 25.0,
+    "p25_days": 12.0,
     "expected_days": 39.3
    }
   },
   {
-   "risk": 0.0175,
-   "pass_rate": 0.5226,
-   "fail_max": 0.3548,
-   "fail_daily": 0.0581,
-   "still_open": 0.0645,
-   "median_days": 63.0,
-   "p25_days": 36.0,
-   "expected_days": 120.6,
-   "max_dd": -0.1316,
+   "risk": 0.015,
+   "pass_rate": 0.629,
+   "fail_max": 0.279,
+   "fail_daily": 0.0516,
+   "still_open": 0.0403,
+   "median_days": 22.0,
+   "p25_days": 10.0,
+   "expected_days": 35.0,
+   "max_dd": -0.1128,
+   "two_step": {
+    "pass_rate": 0.6355,
+    "fail_max": 0.3,
+    "fail_daily": 0.0,
+    "still_open": 0.0645,
+    "median_days": 69.5,
+    "p25_days": 44.0,
+    "expected_days": 109.4
+   },
    "one_step": {
-    "pass_rate": 0.6339,
-    "fail_max": 0.2661,
+    "pass_rate": 0.629,
+    "fail_max": 0.279,
+    "fail_daily": 0.0516,
+    "still_open": 0.0403,
+    "median_days": 22.0,
+    "p25_days": 10.0,
+    "expected_days": 35.0
+   }
+  },
+  {
+   "risk": 0.0175,
+   "pass_rate": 0.6613,
+   "fail_max": 0.2145,
+   "fail_daily": 0.1161,
+   "still_open": 0.0081,
+   "median_days": 17.0,
+   "p25_days": 7.0,
+   "expected_days": 25.7,
+   "max_dd": -0.1316,
+   "two_step": {
+    "pass_rate": 0.5226,
+    "fail_max": 0.3548,
     "fail_daily": 0.0581,
-    "still_open": 0.0419,
-    "median_days": 25.0,
-    "p25_days": 13.0,
-    "expected_days": 39.4
+    "still_open": 0.0645,
+    "median_days": 63.0,
+    "p25_days": 36.0,
+    "expected_days": 120.6
+   },
+   "one_step": {
+    "pass_rate": 0.6613,
+    "fail_max": 0.2145,
+    "fail_daily": 0.1161,
+    "still_open": 0.0081,
+    "median_days": 17.0,
+    "p25_days": 7.0,
+    "expected_days": 25.7
    }
   },
   {
    "risk": 0.02,
-   "pass_rate": 0.5339,
-   "fail_max": 0.3516,
-   "fail_daily": 0.0532,
-   "still_open": 0.0613,
-   "median_days": 52.0,
-   "p25_days": 33.0,
-   "expected_days": 97.4,
+   "pass_rate": 0.6484,
+   "fail_max": 0.2355,
+   "fail_daily": 0.1081,
+   "still_open": 0.0081,
+   "median_days": 14.0,
+   "p25_days": 6.0,
+   "expected_days": 21.6,
    "max_dd": -0.1504,
-   "one_step": {
-    "pass_rate": 0.6258,
-    "fail_max": 0.279,
+   "two_step": {
+    "pass_rate": 0.5339,
+    "fail_max": 0.3516,
     "fail_daily": 0.0532,
-    "still_open": 0.0419,
-    "median_days": 22.5,
-    "p25_days": 12.0,
-    "expected_days": 36.0
+    "still_open": 0.0613,
+    "median_days": 52.0,
+    "p25_days": 33.0,
+    "expected_days": 97.4
+   },
+   "one_step": {
+    "pass_rate": 0.6484,
+    "fail_max": 0.2355,
+    "fail_daily": 0.1081,
+    "still_open": 0.0081,
+    "median_days": 14.0,
+    "p25_days": 6.0,
+    "expected_days": 21.6
    }
   },
   {
    "risk": 0.025,
-   "pass_rate": 0.4968,
-   "fail_max": 0.3097,
-   "fail_daily": 0.1855,
+   "pass_rate": 0.579,
+   "fail_max": 0.1855,
+   "fail_daily": 0.2274,
    "still_open": 0.0081,
-   "median_days": 40.0,
-   "p25_days": 25.75,
-   "expected_days": 80.5,
+   "median_days": 11.0,
+   "p25_days": 5.0,
+   "expected_days": 19.0,
    "max_dd": -0.188,
-   "one_step": {
-    "pass_rate": 0.6097,
-    "fail_max": 0.2565,
-    "fail_daily": 0.1258,
+   "two_step": {
+    "pass_rate": 0.4968,
+    "fail_max": 0.3097,
+    "fail_daily": 0.1855,
     "still_open": 0.0081,
-    "median_days": 16.0,
-    "p25_days": 10.0,
-    "expected_days": 26.2
+    "median_days": 40.0,
+    "p25_days": 25.75,
+    "expected_days": 80.5
+   },
+   "one_step": {
+    "pass_rate": 0.579,
+    "fail_max": 0.1855,
+    "fail_daily": 0.2274,
+    "still_open": 0.0081,
+    "median_days": 11.0,
+    "p25_days": 5.0,
+    "expected_days": 19.0
    }
   },
   {
    "risk": 0.03,
-   "pass_rate": 0.4887,
-   "fail_max": 0.3016,
-   "fail_daily": 0.2016,
+   "pass_rate": 0.6113,
+   "fail_max": 0.1371,
+   "fail_daily": 0.2435,
    "still_open": 0.0081,
-   "median_days": 32.0,
-   "p25_days": 21.0,
-   "expected_days": 65.5,
+   "median_days": 10.0,
+   "p25_days": 5.0,
+   "expected_days": 16.4,
    "max_dd": -0.2255,
-   "one_step": {
-    "pass_rate": 0.6242,
-    "fail_max": 0.2258,
-    "fail_daily": 0.1419,
+   "two_step": {
+    "pass_rate": 0.4887,
+    "fail_max": 0.3016,
+    "fail_daily": 0.2016,
     "still_open": 0.0081,
-    "median_days": 14.0,
-    "p25_days": 9.0,
-    "expected_days": 22.4
+    "median_days": 32.0,
+    "p25_days": 21.0,
+    "expected_days": 65.5
+   },
+   "one_step": {
+    "pass_rate": 0.6113,
+    "fail_max": 0.1371,
+    "fail_daily": 0.2435,
+    "still_open": 0.0081,
+    "median_days": 10.0,
+    "p25_days": 5.0,
+    "expected_days": 16.4
    }
   },
   {
    "risk": 0.04,
-   "pass_rate": 0.4016,
-   "fail_max": 0.2839,
-   "fail_daily": 0.3065,
+   "pass_rate": 0.5194,
+   "fail_max": 0.1323,
+   "fail_daily": 0.3403,
    "still_open": 0.0081,
-   "median_days": 26.0,
-   "p25_days": 18.0,
-   "expected_days": 64.7,
+   "median_days": 7.0,
+   "p25_days": 3.0,
+   "expected_days": 13.5,
    "max_dd": -0.3007,
-   "one_step": {
-    "pass_rate": 0.5887,
-    "fail_max": 0.1371,
-    "fail_daily": 0.2661,
+   "two_step": {
+    "pass_rate": 0.4016,
+    "fail_max": 0.2839,
+    "fail_daily": 0.3065,
     "still_open": 0.0081,
-    "median_days": 13.0,
-    "p25_days": 9.0,
-    "expected_days": 22.1
+    "median_days": 26.0,
+    "p25_days": 18.0,
+    "expected_days": 64.7
+   },
+   "one_step": {
+    "pass_rate": 0.5194,
+    "fail_max": 0.1323,
+    "fail_daily": 0.3403,
+    "still_open": 0.0081,
+    "median_days": 7.0,
+    "p25_days": 3.0,
+    "expected_days": 13.5
    }
   },
   {
    "risk": 0.05,
-   "pass_rate": 0.2048,
-   "fail_max": 0.3548,
-   "fail_daily": 0.4323,
+   "pass_rate": 0.5242,
+   "fail_max": 0.1032,
+   "fail_daily": 0.3645,
    "still_open": 0.0081,
-   "median_days": 17.0,
-   "p25_days": 15.0,
-   "expected_days": 83.0,
+   "median_days": 6.0,
+   "p25_days": 3.0,
+   "expected_days": 11.4,
    "max_dd": -0.3759,
-   "one_step": {
-    "pass_rate": 0.4855,
-    "fail_max": 0.1581,
-    "fail_daily": 0.3484,
+   "two_step": {
+    "pass_rate": 0.2048,
+    "fail_max": 0.3548,
+    "fail_daily": 0.4323,
     "still_open": 0.0081,
-    "median_days": 10.0,
-    "p25_days": 8.0,
-    "expected_days": 20.6
+    "median_days": 17.0,
+    "p25_days": 15.0,
+    "expected_days": 83.0
+   },
+   "one_step": {
+    "pass_rate": 0.5242,
+    "fail_max": 0.1032,
+    "fail_daily": 0.3645,
+    "still_open": 0.0081,
+    "median_days": 6.0,
+    "p25_days": 3.0,
+    "expected_days": 11.4
    }
   }
  ],
  "pick": {
-  "risk": 0.01,
-  "pass_rate": 0.8984,
+  "risk": 0.0075,
+  "pass_rate": 0.9129,
   "fail_max": 0.0,
   "fail_daily": 0.0,
-  "still_open": 0.1016,
-  "median_days": 129.0,
-  "p25_days": 59.0,
-  "expected_days": 143.6,
-  "max_dd": -0.0752,
+  "still_open": 0.0871,
+  "median_days": 51.0,
+  "p25_days": 26.0,
+  "expected_days": 55.9,
+  "max_dd": -0.0564,
+  "two_step": {
+   "pass_rate": 0.7758,
+   "fail_max": 0.0,
+   "fail_daily": 0.0,
+   "still_open": 0.2242,
+   "median_days": 178.0,
+   "p25_days": 86.0,
+   "expected_days": 229.4
+  },
   "one_step": {
    "pass_rate": 0.9129,
    "fail_max": 0.0,
@@ -16672,10 +16789,10 @@
  },
  "fingerprint": {
   "v": 1,
-  "written": "2026-09-08T07:09:19.166376+00:00",
+  "written": "2026-09-08T07:58:56.795810+00:00",
   "git": {
-   "sha": "f1a2773de333abbbb3a329fe1df947c1e4e387bf",
-   "short": "f1a2773",
+   "sha": "8c42a9063e74ce2904ee291013366f5031c4b5ed",
+   "short": "8c42a90",
    "dirty": true
   },
   "kernels": {
@@ -16690,11 +16807,11 @@
   },
   "kernel_hash": "52b2991006bf689d5abe8e7ae6333407c2a019503611eaab51bca354cc56935d",
   "scoring": {
-   "core/board.py": "a8f63848144c20790a45e939f67de4e01ad186daacda8d119d14ef5743591eaa",
-   "core/prop_rules.py": "4a4c16083936e7f1e58bd1f057937a5ee40264b19ada38b166e2e5ba51dabf38",
-   "core/riskladder.py": "9180c71025cea5367b4f84dcea81ba7c4de7078ba2567904e669cd462db2a12e"
+   "core/board.py": "8fcc99690675bcd752cc823aec1a7719b00a6255bd5a4ede047acbf8428c8011",
+   "core/prop_rules.py": "b480f908f55d6887a3ec99c59c0298f21ef51bfdfe875f2e943f6bbaa73201de",
+   "core/riskladder.py": "4e6e33cf8713c2d568c8eb3af141ea2423cf1d8fb7b71490b9794da40d3ab52a"
   },
-  "scoring_hash": "97dd447708cd8628bb3b693020815d3780e4dc92c5667bb3a0c31a419ab6f6c4",
+  "scoring_hash": "d5df2acf5feec3e2a2fbd68db6eacca76d42c5c8ab49eb8c23c1dc66f5519d98",
   "data": {
    "backtests/vwap/stage6_trades_xauusd_deadfix.parquet": {
     "sha": "554ebdf6c2e7b6d50c8ddff0f5151cb58abd83e4cab724582905a17e735fb50f",

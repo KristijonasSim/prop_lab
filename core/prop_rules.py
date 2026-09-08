@@ -64,8 +64,46 @@ PHASE_1 = PropRules(profit_target=0.08, daily_loss=0.04, max_loss=0.08)
 PHASE_2 = PropRules(profit_target=0.05, daily_loss=0.04, max_loss=0.08)
 TWO_STEP = (PHASE_1, PHASE_2)
 
-# The old single-step assumption, kept so board numbers stay comparable.
-ONE_STEP = (PropRules(),)
+# ---------------------------------------------------------------------------
+# THE FIRM, chosen by Kris 2026-09-08. First real spec this project has had.
+#
+#   Thunderbolt, 1 step        profit target      6%
+#   time limit  unlimited      daily drawdown     3%
+#   payout      on demand      max drawdown       6%
+#   split       90%            leverage           up to 10x
+#
+# EASIER ON THE TARGET, HARDER ON BOTH CAPS. 6% in one step instead of 8%+5%,
+# but the daily cap tightens 4% -> 3% and the max cap 8% -> 6%. Which way that
+# nets out is not guessable and is computed, not assumed.
+#
+# THE 6% MAX DRAWDOWN IS THE BINDING CONSTRAINT. `core/riskladder.DD_CAP` moves
+# with it, and the board's own picks were sitting at -7.5% and -7.8% under the
+# old 8% cap - both would breach this firm outright at the risk they had chosen.
+# Every published number moves.
+#
+# STILL NOT KNOWN, and each is worth asking the firm before money moves:
+#   * is the max drawdown STATIC (from the starting balance) or TRAILING (from
+#     the equity high-water mark)? Worth 17 points of pass rate on a zero-edge
+#     strategy - see NEXT.md. Modelled as BOTH, the stricter reading.
+#   * minimum trading days, if any. Modelled as 0 - "unlimited time limit"
+#     usually comes with no minimum, and assuming one would flatter the pace.
+#   * a consistency rule (max share of profit from one day), if any.
+#
+# MARKETS: the offer shows crypto pairs and 10x leverage. BOTH SURVIVING
+# HYPOTHESES ARE GOLD-ONLY and every crypto price hypothesis in this repo is
+# dead. Confirm whether XAUUSD is tradeable on this firm before reading any
+# board number as a plan.
+# ---------------------------------------------------------------------------
+
+THUNDERBOLT = PropRules(profit_target=0.06, daily_loss=0.03, max_loss=0.06,
+                        min_trading_days=0)
+
+#: The structure the board reports on. One phase.
+ONE_STEP = (THUNDERBOLT,)
+
+#: Kept so pre-2026-09-08 board numbers stay comparable, and because Kris will
+#: run several firms - the next one may well be two-step.
+LEGACY_ONE_STEP = (PropRules(),)
 
 
 @dataclass
