@@ -14,6 +14,8 @@ import math
 import sys
 from pathlib import Path
 
+import pandas as pd
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -47,6 +49,8 @@ def main() -> int:
     r = ONE_STEP[0]
     data = {
         "hypotheses": hyps,
+        # so an open tab can always be told apart from a fresh one
+        "built": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         "firm": {"name": "Thunderbolt (1 step)", "target": r.profit_target,
                  "daily": r.daily_loss, "maxloss": r.max_loss},
     }

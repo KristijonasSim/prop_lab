@@ -1,4 +1,10 @@
 <title>Hypothesis board</title>
+<!-- The page is a static file opened over file://, so an already-open tab keeps
+     showing whatever was rendered when it was opened. Kris hit that twice: the
+     board on disk was current and the tab was not. A 30-second refresh removes
+     the whole class of problem, and the build time in the header makes it
+     obvious which render you are looking at. -->
+<meta http-equiv="refresh" content="30">
 <style>
 :root{
   --bg:#faf9f7; --surface:#fff; --ink:#16150f; --muted:#6b6862; --line:#e3e0d8;
@@ -27,6 +33,8 @@ body{background:var(--bg);color:var(--ink);
 header{padding:30px 0 16px;border-bottom:1px solid var(--line);margin-bottom:22px}
 h1{margin:0;font-size:20px;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13px;margin-top:5px}
+.built{color:var(--muted);font-size:11px;margin-top:6px;opacity:.75;
+  font-family:"JetBrains Mono",ui-monospace,monospace}
 .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0 6px}
 .tab{background:var(--surface);color:var(--muted);border:1px solid var(--line);
   border-radius:999px;padding:7px 15px;font-size:13px;cursor:pointer;
@@ -73,6 +81,7 @@ details table{margin-top:8px;font-size:12px}
   <header>
     <h1>Hypothesis board</h1>
     <div class="sub" id="firm"></div>
+    <div class="built" id="built"></div>
   </header>
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="panel"></div>
@@ -89,6 +98,10 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const n = (v, d = 2) => (v === null || v === undefined || Number.isNaN(v))
   ? '<span class="dim">—</span>' : Number(v).toFixed(d);
+
+$('built').textContent = D.built
+  ? `built ${D.built} · this page reloads itself every 30s`
+  : '';
 
 const F = D.firm || {};
 $('firm').textContent =
