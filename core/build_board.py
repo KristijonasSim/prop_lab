@@ -10,6 +10,7 @@ Run: .venv/bin/python core/build_board.py
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -19,6 +20,23 @@ sys.path.insert(0, str(ROOT))
 from core.prop_rules import ONE_STEP                           # noqa: E402
 
 BT = ROOT / "backtests"
+
+
+def _clean(o):
+    """NaN and Infinity out, null in.
+
+    `json.dumps` emits bare `NaN`/`Infinity`, which are valid JavaScript literals
+    but not valid JSON - so the page survives them and anything that later reads
+    `board_data.json` with a strict parser does not. A metric that could not be
+    computed is absent, and `null` is how the page already renders absent.
+    """
+    if isinstance(o, dict):
+        return {k: _clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_clean(v) for v in o]
+    if isinstance(o, float) and not math.isfinite(o):
+        return None
+    return o
 
 
 def main() -> int:
@@ -34,8 +52,10 @@ def main() -> int:
     }
     tpl = (ROOT / "core" / "board_template.html").read_text()
     out = BT / "board.html"
-    out.write_text(tpl.replace("/*__DATA__*/", json.dumps(data, default=str)))
-    (BT / "board_data.json").write_text(json.dumps(data, indent=1, default=str))
+    payload = json.dumps(_clean(data), default=str)
+    out.write_text(tpl.replace("__BOARD_DATA__", payload))
+    (BT / "board_data.json").write_text(json.dumps(_clean(data), indent=1,
+                                                  default=str))
 
     print(f"wrote {out.relative_to(ROOT)}  ({len(hyps)} hypothesis page"
           f"{'' if len(hyps) == 1 else 's'})")

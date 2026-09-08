@@ -53,7 +53,7 @@
      "cagr_pct": 4.1,
      "span_days": 636.0,
      "null_pf": 0.61,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true,
      "considered": [
       {
@@ -163,7 +163,7 @@
      "cagr_pct": 5.5,
      "span_days": 726.0,
      "null_pf": 0.673,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true,
      "considered": [
       {
@@ -232,7 +232,7 @@
      "cagr_pct": 2.5,
      "span_days": 633.0,
      "null_pf": 0.782,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -261,7 +261,7 @@
      "cagr_pct": 1.6,
      "span_days": 632.0,
      "null_pf": 0.871,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -290,7 +290,7 @@
      "cagr_pct": -1.1,
      "span_days": 636.0,
      "null_pf": 0.668,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -319,7 +319,7 @@
      "cagr_pct": -3.0,
      "span_days": 634.0,
      "null_pf": 0.887,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": false
     },
     {
@@ -348,7 +348,7 @@
      "cagr_pct": 4.1,
      "span_days": 636.0,
      "null_pf": 0.61,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -377,7 +377,7 @@
      "cagr_pct": 3.3,
      "span_days": 633.0,
      "null_pf": 0.887,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -406,7 +406,7 @@
      "cagr_pct": 5.1,
      "span_days": 635.0,
      "null_pf": 0.673,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -464,7 +464,7 @@
      "cagr_pct": -1.1,
      "span_days": 730.0,
      "null_pf": 0.714,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -493,7 +493,7 @@
      "cagr_pct": -2.7,
      "span_days": 726.0,
      "null_pf": 0.725,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": false
     },
     {
@@ -522,7 +522,7 @@
      "cagr_pct": -0.9,
      "span_days": 729.0,
      "null_pf": 0.744,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -551,7 +551,7 @@
      "cagr_pct": 5.5,
      "span_days": 726.0,
      "null_pf": 0.673,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     },
     {
@@ -580,7 +580,7 @@
      "cagr_pct": -1.9,
      "span_days": 729.0,
      "null_pf": 0.921,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": false
     },
     {
@@ -609,7 +609,7 @@
      "cagr_pct": -0.6,
      "span_days": 727.0,
      "null_pf": 0.648,
-     "null_days": NaN,
+     "null_days": null,
      "beats_null": true
     }
    ],

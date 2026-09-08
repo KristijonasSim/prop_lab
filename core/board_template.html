@@ -73,7 +73,11 @@ details table{margin-top:8px;font-size:12px}
 </div>
 
 <script>
-const D = /*__DATA__*/ {"hypotheses":[],"firm":{}};
+// The build step replaces the whole token below with the real payload. It used
+// to be `/*__DATA__*/ {...default...}`, which left the default object sitting
+// next to the injected one - two expressions juxtaposed, a syntax error, and a
+// page that rendered its header and nothing else. There is exactly one value here.
+const D = __BOARD_DATA__;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
