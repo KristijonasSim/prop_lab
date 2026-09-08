@@ -40,18 +40,11 @@ UNIVERSE = {
 #: information about whether the machinery works.
 TIMEFRAMES = ["1h", "4h"]
 
-#: ONE COMMON TEST WINDOW FOR EVERY CLASS, and it is a deliberate cost.
-#:
-#: The FX and metals caches start 2023-09, so with a 12-month training window the
-#: first tradeable quarter is 2024-09. BTC has data from 2017 and could roll from
-#: 2019 instead - roughly four times as many folds.
-#:
-#: Letting each market use its own history would make the table incomparable:
-#: "Crypto beat FX" would then partly mean "crypto was measured over a different
-#: seven years". A row-per-asset-class table IS a comparison, so every class gets
-#: the same window and crypto's extra history is left on the floor. Widen it for
-#: a crypto-only study, not for this table.
-WINDOW = {"first_test": "2024-09-01", "last_test": "2026-07-01"}
+#: History is set centrally by `core.run_hypothesis.YEARS` - the last THREE
+#: years for every market, aligned to a common end date. Kris's standing rule,
+#: 2026-09-08. It is a hard limit, not a minimum: BTC has 9.1 years of data and
+#: gets the same three as EURUSD, because a row-per-asset-class table is a
+#: COMPARISON and one class quietly receiving a longer window makes it a lie.
 
 
 def main() -> int:
@@ -61,7 +54,7 @@ def main() -> int:
         tagline="Five model families around the volume-weighted average price, "
                 "re-chosen blind every quarter.",
         universe=UNIVERSE, tfs=TIMEFRAMES,
-        pipe_kw=WINDOW, manifest=MANIFEST,
+        manifest=MANIFEST,
         null_seeds=1)
     return 0
 

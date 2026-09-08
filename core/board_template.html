@@ -145,11 +145,23 @@ function considered(rows){
     </tbody></table></div></details>`;
 }
 
+// Every market is trimmed to the same window, so showing it once above the table
+// is honest; if they ever diverge the per-row values would have to be shown
+// instead, because an unequal window makes the comparison a lie.
+function dataSpan(h){
+  const c = (h.cells || []).filter(x => x.data_from && x.data_to);
+  if (!c.length) return '';
+  const from = c.map(x => x.data_from).sort()[0];
+  const to = c.map(x => x.data_to).sort().slice(-1)[0];
+  return ` (${esc(from)} to ${esc(to)})`;
+}
+
 function paint(h){
   $('panel').innerHTML = `
     <h2>${esc(h.name)}</h2>
     <p class="tagline">${esc(h.tagline || '')}</p>
     <p class="meta">${esc(h.hid)} · ${(h.timeframes||[]).join(' / ')}
+      · ${h.years ? h.years + ' years of data' : ''}${dataSpan(h)}
       · limit entry, market exit · walk-forward, config re-chosen blind each quarter</p>
     <div class="scroll"><table><thead><tr>
       ${COLS.map(c => `<th>${esc(c.h)}</th>`).join('')}

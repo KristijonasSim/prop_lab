@@ -39,6 +39,20 @@ from core.riskladder import from_trades                        # noqa: E402
 BT = ROOT / "backtests"
 CLASSES = ("FX", "Gold", "Crypto")
 
+#: HOW MUCH HISTORY EVERY MARKET GETS. Kris's standing rule, 2026-09-08: always
+#: the last three years.
+#:
+#: Three years of DATA, not three years of out-of-sample. The first twelve months
+#: are the initial training window, so what comes out is roughly TWO years of
+#: blind quarterly tests. Three years of out-of-sample would need four years of
+#: data and the FX/metals caches only reach back to 2023-09.
+#:
+#: It is also a hard limit, not a minimum: BTC has 9.1 years and gets the same
+#: three as EURUSD. Before this, crypto quietly received an extra quarter because
+#: its cache ends six days later than Dukascopy's, and "crypto beat FX" partly
+#: meant "crypto was measured over a longer window".
+YEARS = 3
+
 
 def cagr(daily_r: pd.Series, risk: float) -> float:
     """Compounded annual growth at the chosen risk per trade.
@@ -103,9 +117,34 @@ def best_cell(folds: pd.DataFrame, trades: pd.DataFrame) -> pd.DataFrame:
     return trades[(trades.floor == floor) & (trades.topn == topn)]
 
 
+def window(syms, tfs, years: int = YEARS) -> tuple[pd.Timestamp, pd.Timestamp]:
+    """The common [start, end] every market in this study is trimmed to.
+
+    The end is the EARLIEST last bar across the universe, not the latest. Caches
+    finish on different days and a fold boundary falling between two of them
+    hands one market an extra quarter of testing that the others never get.
+    """
+    ends = []
+    for s in syms:
+        for t in tfs:
+            try:
+                d = load(s, t)
+            except (FileNotFoundError, KeyError):
+                continue
+            if len(d):
+                ends.append(d.index[-1])
+    if not ends:
+        raise ValueError("no market in the universe has data")
+    end = min(ends)
+    return end - pd.DateOffset(years=years), end
+
+
 def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
-               null_seeds: int = 1) -> dict:
+               null_seeds: int = 1, span=None) -> dict:
     df = load(sym, tf)
+    if span is not None:
+        lo, hi = span
+        df = df[(df.index >= lo) & (df.index <= hi)]
     c = COSTS[sym]
     # Limit entry, market exit - a stop-loss cannot be a limit order.
     fee, slip = c.per_side(EXEC_MODE)
@@ -124,6 +163,8 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
            "cost_rt_bps": round(c.round_trip(EXEC_MODE), 2),
            "cost_taker_bps": round(c.round_trip("taker"), 2),
            "exec_mode": EXEC_MODE, "cost_measured": c.measured,
+           "data_from": str(df.index[0].date()) if len(df) else None,
+           "data_to": str(df.index[-1].date()) if len(df) else None,
            **metrics(best_cell(real.folds, real.trades))}
 
     nulls = []
@@ -188,6 +229,7 @@ def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
     rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
            "when": pd.Timestamp.utcnow().isoformat(),
            "structure": "one_step_6pct", "complete": bool(done),
+           "years": YEARS,
            "timeframes": tfs, "universe": universe,
            "rows": rows, "cells": cells}
     if manifest:
@@ -198,7 +240,7 @@ def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
 def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
         universe: dict[str, list[str]], tfs: list[str],
         pipe_kw: dict | None = None, manifest: dict | None = None,
-        null_seeds: int = 1) -> dict:
+        null_seeds: int = 1, years: int = YEARS) -> dict:
     """Walk-forward every market, promote the best per asset class, write the page.
 
     THE PAGE IS WRITTEN AFTER EVERY CELL, not at the end. A full universe takes
@@ -206,7 +248,16 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
     so the board sat empty the whole time and there was no way to tell a slow run
     from a hung one. `complete: false` marks a partial record.
     """
-    pipe_kw = pipe_kw or {}
+    pipe_kw = dict(pipe_kw or {})
+    all_syms = [s for v in universe.values() for s in v]
+    span = window(all_syms, tfs, years)
+    # every market is trimmed to the same window, so the pipeline derives its own
+    # fold boundaries from it rather than being handed hardcoded dates
+    pipe_kw.pop("first_test", None)
+    pipe_kw.pop("last_test", None)
+    print(f"  window: {span[0].date()} -> {span[1].date()}  ({years} years, "
+          f"first 12 months are the initial training window)\n")
+
     out = BT / sid / "hypothesis.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     cells = []
@@ -221,7 +272,7 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
                     continue
                 t = time.time()
                 print(f"  {cls:6s} {sym:8s} {tf:3s} ...", end=" ", flush=True)
-                cell = run_market(strategy, sym, tf, pipe_kw, null_seeds)
+                cell = run_market(strategy, sym, tf, pipe_kw, null_seeds, span)
                 cell["asset_class"] = cls
                 cells.append(cell)
                 print(f"{cell.get('trades', 0):5d} trades  "

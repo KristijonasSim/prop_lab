@@ -128,6 +128,24 @@ far better for coded bots than MT5's GUI-only access. Flag this at selection tim
 - **MetaTrader5** — FX/Gold. NOTE: the pip package is Windows-only; this box is Linux
   with a wine MT5 at `~/.mt5`, so it needs an `mt5linux`-style bridge. Not set up yet — crypto first.
 
+## Test window — ALWAYS THE LAST 3 YEARS
+
+**Kris's standing rule, 2026-09-08.** Every market in a study is trimmed to the
+last three years of data, aligned to a **common end date** across the whole
+universe. `core.run_hypothesis.YEARS`.
+
+* **Three years of DATA, not three years of out-of-sample.** The first twelve
+  months are the initial training window, so a study yields roughly **two years
+  of blind quarterly tests**. Three years out-of-sample would need four years of
+  data and the FX/metals caches only reach 2023-09.
+* **It is a hard limit, not a minimum.** BTC has 9.1 years and gets the same
+  three as EURUSD.
+* **The common end is the EARLIEST last bar in the universe**, not the latest.
+  Caches finish on different days and a fold boundary landing between two of
+  them hands one market an extra quarter. That happened: crypto got 2.00 years
+  of out-of-sample against FX's 1.73, so "crypto beat FX" partly meant "crypto
+  was measured over a longer window".
+
 ## Assets and timeframes
 
 Crypto first: **BTCUSDT**. Other coins only to re-test an edge that already showed on BTC.
