@@ -161,12 +161,54 @@ class _FixedGrid:
         return self._s.run(*a, **k)
 
 
+def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
+              manifest=None, done=True) -> dict:
+    """Rows from whatever cells exist so far. Safe to call mid-run."""
+    rows = []
+    for cls in CLASSES:
+        got = [c for c in cells if c["asset_class"] == cls and c.get("days_to_pass")]
+        if not got:
+            empty = [c for c in cells if c["asset_class"] == cls]
+            rows.append({"asset_class": cls, "sym": None,
+                         "note": ("no market in this class resolved an account"
+                                  if empty else "not run yet"),
+                         "considered": [{"sym": c["sym"], "tf": c["tf"],
+                                         "pf": c.get("pf"),
+                                         "days_to_pass": c.get("days_to_pass")}
+                                        for c in empty]})
+            continue
+        # best by DAYS TO PASS - the phase gate - not by profit factor
+        best = dict(min(got, key=lambda c: c["days_to_pass"]))
+        best["considered"] = [
+            {"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
+             "days_to_pass": c.get("days_to_pass")}
+            for c in cells if c["asset_class"] == cls]
+        rows.append(best)
+
+    rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
+           "when": pd.Timestamp.utcnow().isoformat(),
+           "structure": "one_step_6pct", "complete": bool(done),
+           "timeframes": tfs, "universe": universe,
+           "rows": rows, "cells": cells}
+    if manifest:
+        rec["fingerprint"] = FP.make(**manifest)
+    return rec
+
+
 def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
         universe: dict[str, list[str]], tfs: list[str],
         pipe_kw: dict | None = None, manifest: dict | None = None,
         null_seeds: int = 1) -> dict:
-    """Walk-forward every market, promote the best per asset class, write the page."""
+    """Walk-forward every market, promote the best per asset class, write the page.
+
+    THE PAGE IS WRITTEN AFTER EVERY CELL, not at the end. A full universe takes
+    ten to twenty minutes and the first version of this only wrote on completion,
+    so the board sat empty the whole time and there was no way to tell a slow run
+    from a hung one. `complete: false` marks a partial record.
+    """
     pipe_kw = pipe_kw or {}
+    out = BT / sid / "hypothesis.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     cells = []
     for cls, syms in universe.items():
         for sym in syms:
@@ -186,35 +228,13 @@ def run(strategy, *, sid: str, hid: str, name: str, tagline: str,
                       f"PF {cell.get('pf', float('nan'))}  "
                       f"{cell.get('days_to_pass')} d  [{time.time()-t:.0f}s]",
                       flush=True)
+                out.write_text(json.dumps(
+                    _assemble(cells, sid=sid, hid=hid, name=name,
+                              tagline=tagline, tfs=tfs, universe=universe,
+                              done=False), indent=1, default=str))
 
-    rows = []
-    for cls in CLASSES:
-        got = [c for c in cells if c["asset_class"] == cls and c.get("days_to_pass")]
-        if not got:
-            empty = [c for c in cells if c["asset_class"] == cls]
-            rows.append({"asset_class": cls, "sym": None,
-                         "note": "no market in this class resolved an account",
-                         "considered": [f"{c['sym']} {c['tf']}" for c in empty]})
-            continue
-        # best by DAYS TO PASS - the phase gate - not by profit factor
-        best = min(got, key=lambda c: c["days_to_pass"])
-        best = dict(best)
-        best["considered"] = [
-            {"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
-             "days_to_pass": c.get("days_to_pass")}
-            for c in cells if c["asset_class"] == cls]
-        rows.append(best)
-
-    rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
-           "when": pd.Timestamp.utcnow().isoformat(),
-           "structure": "one_step_6pct",
-           "timeframes": tfs, "universe": universe,
-           "rows": rows, "cells": cells}
-    if manifest:
-        rec["fingerprint"] = FP.make(**manifest)
-
-    out = BT / sid / "hypothesis.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
+    rec = _assemble(cells, sid=sid, hid=hid, name=name, tagline=tagline,
+                    tfs=tfs, universe=universe, manifest=manifest, done=True)
     out.write_text(json.dumps(rec, indent=1, default=str))
     print(f"\n  wrote {out.relative_to(ROOT)}")
     return rec
