@@ -1,0 +1,59 @@
+name: kernel invariants
+
+# There was no CI in this repo until item 2. Every bug it has found was found by
+# a person reading code or chasing a disagreement between two engines, weeks
+# after the result had already been published on the board.
+#
+# Fast suite on every push. The slow suite - the full NautilusTrader cross-check
+# across five timeframes - nightly, because it is the check that has actually
+# found bugs and it is too slow to sit in front of a push.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"          # 03:00 UTC, the slow suite
+  workflow_dispatch:
+
+jobs:
+  fast:
+    name: fast invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install pytest hypothesis
+      - name: fast suite
+        run: pytest -m "not slow" -q
+      - name: manifests declare everything they depend on
+        run: python core/manifest_audit.py
+
+  slow:
+    name: second-engine cross-check
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install pytest hypothesis
+      - name: full cross-check
+        run: pytest -m slow -q

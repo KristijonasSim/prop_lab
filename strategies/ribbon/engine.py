@@ -296,6 +296,12 @@ def simulate(
 def atr_wilder(h, l, c, n=14):
     """Wilder ATR, seeded from an SMA of the first `n` true ranges, as Pine does."""
     h = np.asarray(h, float); l = np.asarray(l, float); c = np.asarray(c, float)
+    # An empty series is a real input, not a hypothetical: sweep.load_tf returns
+    # an empty frame for a timeframe a cache cannot serve, and a walk-forward
+    # fold can open on a window with no bars in it. Seeding pc[0] from c[0] then
+    # raises IndexError and takes the whole sweep down.
+    if c.size == 0:
+        return np.empty(0, dtype=float)
     pc = np.empty_like(c); pc[0] = c[0]; pc[1:] = c[:-1]
     tr = np.maximum(h - l, np.maximum(np.abs(h - pc), np.abs(l - pc)))
     out = np.full(tr.size, np.nan)

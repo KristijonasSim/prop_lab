@@ -2360,15 +2360,15 @@
  },
  "fingerprint": {
   "v": 1,
-  "written": "2026-09-08T06:15:29.605738+00:00",
+  "written": "2026-09-08T06:21:51.379853+00:00",
   "git": {
-   "sha": "0255b06cc37f531a2a2a2c561ad2aba0053cb1e8",
-   "short": "0255b06",
+   "sha": "e8d01cbc946c1bbdef349daa03ba3a255fc1285a",
+   "short": "e8d01cb",
    "dirty": true
   },
   "kernels": {
    "core/metrics.py": "1d5e1df2a415eb708084744d39a8debf1b4c12296829498c7141ed42ad5ee120",
-   "strategies/ribbon/engine.py": "4f9ec4e0e04f5c644d385d4de182a4d803fbbd3a6200e43bebe28d19a6b0aeec",
+   "strategies/ribbon/engine.py": "9ff0b6f13199e1035f88c83ae5761d460ef90588b49e8546f18a9a2cf1a4d60b",
    "strategies/ribbon/ribbon.py": "2a4fa8a6f8be761aabdefc2e3b4208fbb7830237bdb62e4e2ab8d4e5b39a9852",
    "strategies/ribbon/stage10_board.py": "0d2f953477e084bfd0443f079786ce23ab43bf41b3460a11773b0966b9fc42a2",
    "strategies/ribbon/stage11_reprice.py": "fcd2700748ca114677ca3a555ff3558202e80ab37fb59cc9452a409c824524a5",
@@ -2377,9 +2377,9 @@
    "strategies/vwap/engine.py": "ef4dec1dd2213c0ef8e0205195dd56ecfe87a3dd573b5647f74865023da500a5",
    "strategies/vwap/stage1_grid.py": "68f96364b0ed2f68ec8d21fc890834ac2513d804646ef74700dc81104d432893",
    "strategies/vwap/stage3_timeframes.py": "23835a361b8a73e5ff830f167f21cabfaa788cc9b8c01ad7a2eadc9574825677",
-   "strategies/vwap/sweep.py": "4ac5d02a91f9c2b4698670fe3247e55acf3ec7fe34c3b8c093f3bd35f9b93732"
+   "strategies/vwap/sweep.py": "f6822e2475d93fdded59ccc65a20a76133f4a1402eb0f242fb00511f0e9bcbd7"
   },
-  "kernel_hash": "13f4ac78326b4f202b50a6f6d23f3c00da0260a0ba8a19d4e608e0c6800bbe09",
+  "kernel_hash": "712e3f87058e764dc23ce8f27322c0f71bd81f9b6b25a6c7ff2979b50500e917",
   "scoring": {
    "core/board.py": "a8f63848144c20790a45e939f67de4e01ad186daacda8d119d14ef5743591eaa",
    "core/prop_rules.py": "4a4c16083936e7f1e58bd1f057937a5ee40264b19ada38b166e2e5ba51dabf38",

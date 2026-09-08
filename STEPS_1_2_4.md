@@ -107,7 +107,57 @@ note, and no rerun of the sweep.
 
 ---
 
-## ITEM 2 — a verification gate in code
+## ITEM 2 — a verification gate in code — **DONE 2026-09-08**
+
+**Done-when condition met.** H-016 dropped from 5.0 to **3.0 / UNVERIFIED
+(second_engine)** by itself. Its ribbon kernel has never been through a second
+engine, the test for it exists and skips with that reason, and the gate reads
+the skip. H-002 passes all eight checks and keeps 6.0. Nobody typed either
+outcome.
+
+```
+H-002 VWAP - gold only    6.0/10  TOO SLOW - 144d against a 5-14d target
+H-016 MA ribbon           3.0/10  UNVERIFIED - has not passed the checks
+                                  UNVERIFIED (second_engine)
+```
+
+**What shipped:** `pytest` + `hypothesis` pinned, `pytest.ini`, `tests/` with a
+shared kernel adapter (`tests/kernels.py`), 64 tests, `core/verification.py`
+writing `backtests/<sid>/verification.json`, a 3.0 cap and an `UNVERIFIED`
+verdict in `core/scorecard.py`, a per-check banner on the board card, and
+`.github/workflows/tests.yml` - the repo's first CI.
+
+**A skip is not a pass.** The gate reads junit XML rather than an exit code,
+because "everything passed" and "everything was skipped" both exit 0 and the
+difference between them is the entire point.
+
+**Four real bugs found by writing the tests:**
+
+1. **Both kernels crashed on an empty series.** `IndexError` from `pc[0] = c[0]`
+   in `strategies/ribbon/engine.py::atr_wilder` and
+   `strategies/vwap/sweep.py::features`. Not hypothetical:
+   `sweep.load_tf` **returns an empty frame** for a timeframe the cache cannot
+   serve, and a walk-forward fold can open on a window with no bars.
+2. **`strategies/ribbon/test_parity.py` was never run by anything.** It is named
+   like a test, it is a good check, and it is a *script* with a `main()` and no
+   test functions - so pytest never collected it. Worse than not having it: it
+   made ribbon's indicators look covered. Now wrapped by
+   `tests/test_ribbon_parity.py`.
+3. **The truncation test's first failure was real but not a look-ahead.** Both
+   kernels force-close an open position at the end of the data, so truncating
+   manufactures one extra "closed" trade. Ribbon's alternate config, 126 against
+   127. The comparator now excludes the final bar and says why.
+4. **`-k vwap` selected the slow cross-check.** The gate would have run 5m gold
+   at ~270,000 bars on every invocation. Slow tests are deselected by default and
+   `verification.json` records the depth, so a fast pass cannot claim the full
+   cross-check.
+
+**One design change:** checks are required by default - "no tests matched" fails,
+because a hypothesis with no look-ahead test has not been shown to be free of
+look-ahead. `OPTIONAL` holds the exceptions (ribbon's Pine parity has no vwap
+equivalent, and inventing one so the table looks symmetrical would be theatre).
+
+### Steps as planned
 
 **Goal.** A hypothesis cannot carry a real board score until it has passed the
 checks, in code. Today the scorecard has an evidence *weight* but nothing

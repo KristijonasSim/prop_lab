@@ -16672,10 +16672,10 @@
  },
  "fingerprint": {
   "v": 1,
-  "written": "2026-09-08T06:15:23.035667+00:00",
+  "written": "2026-09-08T06:21:45.080259+00:00",
   "git": {
-   "sha": "0255b06cc37f531a2a2a2c561ad2aba0053cb1e8",
-   "short": "0255b06",
+   "sha": "e8d01cbc946c1bbdef349daa03ba3a255fc1285a",
+   "short": "e8d01cb",
    "dirty": true
   },
   "kernels": {
@@ -16686,9 +16686,9 @@
    "strategies/vwap/stage20_deadfix.py": "10267bc73df8c645a0a2f2743f0a14da05ec6f32ababb73c9946abb722bf948a",
    "strategies/vwap/stage3_timeframes.py": "23835a361b8a73e5ff830f167f21cabfaa788cc9b8c01ad7a2eadc9574825677",
    "strategies/vwap/stage6_walkforward.py": "9c4583840dc9d7468ead52ddf00d1677d512f9b8fa6ea55606a3c7fe4f9c8ffe",
-   "strategies/vwap/sweep.py": "4ac5d02a91f9c2b4698670fe3247e55acf3ec7fe34c3b8c093f3bd35f9b93732"
+   "strategies/vwap/sweep.py": "f6822e2475d93fdded59ccc65a20a76133f4a1402eb0f242fb00511f0e9bcbd7"
   },
-  "kernel_hash": "a74942d21c4d73ac1aea27a0d12c897013bc52f5b941a9ea602b3e9d9cefa6b9",
+  "kernel_hash": "7688bd32f80c3335a88670cdc4728346bfb6a1d049f1fa0d6348a8aee86359fa",
   "scoring": {
    "core/board.py": "a8f63848144c20790a45e939f67de4e01ad186daacda8d119d14ef5743591eaa",
    "core/prop_rules.py": "4a4c16083936e7f1e58bd1f057937a5ee40264b19ada38b166e2e5ba51dabf38",

@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core import fingerprint as FP  # noqa: E402
+from core import verification as VER  # noqa: E402
 from core.scorecard import compute, expected_days, WEIGHTS, PHASE_DAYS  # noqa: E402
 from core.prop_rules import ONE_STEP, TWO_STEP  # noqa: E402
 from core.riskladder import RISK_LADDER, MAX_BREACH, DD_CAP, MAX_DAYS  # noqa: E402
@@ -99,6 +100,25 @@ def _declared_costs(sid: str):
     return mod.MANIFEST.get("costs")
 
 
+def _ver_summary(ver: dict | None) -> dict | None:
+    """What the page shows about verification: one row per check, pass or not,
+    and what a failure means. Named checks, because "unverified" on its own tells
+    a reader nothing about what to go and do."""
+    if not ver:
+        return {"run": False, "all_passed": False, "checks": [],
+                "note": "core/verification.py has never been run for this "
+                        "hypothesis"}
+    return {
+        "run": True,
+        "all_passed": bool(ver.get("all_passed")),
+        "stale_evidence": bool(ver.get("stale_evidence")),
+        "when": ver.get("when"),
+        "checks": [{"name": k, "passed": bool(v.get("passed")),
+                    "detail": v.get("detail", ""), "why": v.get("why", "")}
+                   for k, v in (ver.get("checks") or {}).items()],
+    }
+
+
 def _fp_summary(fp: dict | None) -> dict | None:
     """The small, human-readable part of the fingerprint. The full hash map is
     kept in board.json; the page only needs enough to say what it was built on."""
@@ -134,11 +154,17 @@ def load(sid: str) -> dict | None:
         stale["reasons"] = list(stale["reasons"]) + ["cost assumption changed"]
         stale["detail"] = "; ".join(stale["reasons"])
 
+    # Item 2: the verification gate. Evidence earned on a kernel that has since
+    # changed is discarded by VER.load, so a stale record cannot keep a pass.
+    ver = VER.load(sid, fp)
+
     measured = dict(b["measured"])
     measured.update(median_days_pass=pick["median_days"], pass_rate=pick["pass_rate"],
                     fail_max=pick["fail_max"], fail_daily=pick["fail_daily"],
                     max_dd=pick["max_dd"],
-                    stale=stale["stale"])
+                    stale=stale["stale"],
+                    verified=bool(ver and ver.get("all_passed")),
+                    verify_failed=(ver or {}).get("failed") or ["not run"])
     card = compute(measured).as_dict()
 
     return {
@@ -148,6 +174,7 @@ def load(sid: str) -> dict | None:
         "measured": measured, "score": card, "note": b.get("note"),
         # rendered as a badge on the card; see core/scoreboard_template.html
         "stale": stale,
+        "verification": _ver_summary(ver),
         "fingerprint": _fp_summary(fp),
         "headline": {
             "pf": fields["pf"], "pf2x": b.get("pf_2x"),
@@ -222,6 +249,11 @@ def main():
         st = (s.get("stale") or {}).get("state", "?")
         tag = {"ok": "", "note": "  NOTE", "stale": "  STALE",
                "unfingerprinted": "  UNFINGERPRINTED"}.get(st, "")
+        v = s.get("verification") or {}
+        if not v.get("all_passed"):
+            missing = [c["name"] for c in v.get("checks", []) if not c["passed"]]
+            tag += "  UNVERIFIED" + (f" ({', '.join(missing)})" if missing
+                                     else " (never run)")
         print(f"  {s['hid']} {s['name']:26s} {s['score']['total']:4.1f}/10  "
               f"{s['score']['verdict']:52s} {pine}{tag}")
         if (s.get("stale") or {}).get("detail"):

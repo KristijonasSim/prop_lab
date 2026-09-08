@@ -158,20 +158,27 @@ class Scorecard:
     evidence_capped: bool = False
     null_capped: bool = False
     stale_capped: bool = False
+    unverified_capped: bool = False
 
     #: expected days to a funded account, carried so the pace gate can read it
     expected_days: float | None = None
+
+    #: which verification checks have not passed, for the card to name them
+    unverified: tuple = ()
 
     def as_dict(self) -> dict:
         return {
             "total": round(self.total, 1),
             "verdict": verdict(self.total, self.expected_days,
-                               stale=self.stale_capped),
+                               stale=self.stale_capped,
+                               unverified=self.unverified_capped),
             "too_slow": too_slow(self.expected_days),
             "expected_days": self.expected_days,
             "evidence_capped": self.evidence_capped,
             "null_capped": self.null_capped,
             "stale_capped": self.stale_capped,
+            "unverified_capped": self.unverified_capped,
+            "unverified": list(self.unverified),
             "components": [
                 {"name": k, "weight": WEIGHTS[k],
                  "score": round(v, 3),
@@ -190,7 +197,7 @@ def too_slow(expected_days: float | None) -> bool:
 
 
 def verdict(total: float, expected_days: float | None = None,
-            stale: bool = False) -> str:
+            stale: bool = False, unverified: bool = False) -> str:
     """Plain words, and deliberately conservative at the top.
 
     Nothing in this project gets called good, ready, or worth real money on the
@@ -205,6 +212,11 @@ def verdict(total: float, expected_days: float | None = None,
         # about a record whose engine no longer exists states a measurement the
         # repo can no longer reproduce.
         return "STALE - scored on code that has since changed; rerun the board stage"
+    if unverified:
+        # Ranks below stale (a stale record's checks are meaningless anyway) and
+        # above the pace gate: how fast a thing goes is not worth reading until
+        # the thing has been shown to work.
+        return "UNVERIFIED - has not passed the checks in core/verification.py"
     if too_slow(expected_days):
         # The pace gate OVERRIDES the score. A number that reads "strong
         # candidate" next to a 176-day evaluation is the exact kind of
@@ -267,7 +279,20 @@ def compute(m: dict) -> Scorecard:
     if m.get("stale") is True and total > EVIDENCE_CAP:
         total, stale_capped = EVIDENCE_CAP, True
 
+    # Verification gate (item 2 of STEPS_1_2_4.md). The project's order of work
+    # was backwards: kernel -> sweep -> walk-forward -> BOARD, and verification
+    # happened afterwards, by hand, when somebody remembered. H-009 reached 8.9
+    # without a second engine ever looking at it and nothing stopped it. A
+    # hypothesis that has not passed the checks in core/verification.py now takes
+    # the same cap as one with no walk-forward at all - because that is the same
+    # claim: nothing has been established. A SKIPPED check is not a passed one.
+    unverified = tuple(m.get("verify_failed") or ())
+    unverified_capped = False
+    if m.get("verified") is not True and total > EVIDENCE_CAP:
+        total, unverified_capped = EVIDENCE_CAP, True
+
     return Scorecard(components=c, total=total, evidence_capped=capped,
                      null_capped=null_capped, stale_capped=stale_capped,
+                     unverified_capped=unverified_capped, unverified=unverified,
                      expected_days=expected_days(m.get("median_days_pass"),
                                                  m.get("pass_rate")))

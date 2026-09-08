@@ -67,6 +67,12 @@ def rolling_vwap(df: pd.DataFrame, window: int):
 def features(df: pd.DataFrame, atr_len: int = 14, rvol_len: int = 20 * 96,
              ema_len: int = 200):
     h, l, c, v = df.high.values, df.low.values, df.close.values, df.volume.values
+    # Same reason as strategies/ribbon/engine.py::atr_wilder: an empty frame is a
+    # real input (load_tf returns one for a timeframe the cache cannot serve) and
+    # pc[0] = c[0] raises IndexError on it.
+    if c.size == 0:
+        e = np.empty(0, dtype=float)
+        return e, e.copy(), e.copy(), e.copy()
     pc = np.roll(c, 1); pc[0] = c[0]
     tr = np.maximum(h - l, np.maximum(np.abs(h - pc), np.abs(l - pc)))
     atr = pd.Series(tr).ewm(alpha=1 / atr_len, adjust=False).mean().values

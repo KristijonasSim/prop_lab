@@ -1,0 +1,81 @@
+{
+ "sid": "ribbon",
+ "when": "2026-09-08T06:28:49.752220+00:00",
+ "kernel_hash": "712e3f87058e764dc23ce8f27322c0f71bd81f9b6b25a6c7ff2979b50500e917",
+ "depth": "fast",
+ "checks": {
+  "lookahead": {
+   "passed": true,
+   "ran": 6,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "6 passed",
+   "why": "Truncate the series; every already-closed trade must be identical. This is the test that would have caught the three look-aheads that killed every crypto result in the project."
+  },
+  "degenerate": {
+   "passed": true,
+   "ran": 10,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "10 passed",
+   "why": "Zero-volume bars, flat OHLC, zero sigma, one bar, empty series. Both 2026-09-07 bugs were degenerate-input bugs."
+  },
+  "costs": {
+   "passed": true,
+   "ran": 5,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "5 passed",
+   "why": "Profit factor must fall as cost rises, and R must be affine in the cost multiple - the identity every MEASURED-cost board number uses."
+  },
+  "golden": {
+   "passed": true,
+   "ran": 2,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "2 passed",
+   "why": "A pinned trade list. Any kernel edit that moves a trade has to be explained in the commit rather than discovered weeks later."
+  },
+  "second_engine": {
+   "passed": false,
+   "ran": 0,
+   "skipped": 1,
+   "failed": 0,
+   "detail": "SKIPPED test_ribbon_matches_a_second_engine: H-016's ribbon kernel has never been ported to a second engine. This is a real gap in the evidence, not a missing test file: core/verification.py reads it and c",
+   "why": "Trade-by-trade agreement with NautilusTrader. An event-driven engine holds no array it could index into, so it cannot reproduce a look-ahead. This is the check that has actually found bugs."
+  },
+  "manifest": {
+   "passed": true,
+   "ran": 2,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "2 passed",
+   "why": "Everything this result depends on is declared, so the stale flag can see it. An undeclared kernel never trips the flag."
+  },
+  "fingerprint": {
+   "passed": true,
+   "ran": 1,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "1 passed",
+   "why": "The board record carries a fingerprint and it still matches the files on disk."
+  },
+  "parity": {
+   "passed": true,
+   "ran": 1,
+   "skipped": 0,
+   "failed": 0,
+   "detail": "1 passed",
+   "why": "Ribbon's twenty moving averages recomputed the slow literal way from the Pine source. Existed for weeks as a SCRIPT that pytest never collected, so nothing ran it."
+  },
+  "paired_null": {
+   "passed": true,
+   "why": "The identical search run on phase-randomised data must find LESS than the real market did. Twelve hypotheses have died to this and one (H-005) cleared the gate 1,702 times against its null's 19,062.",
+   "detail": "measured.beats_null = True"
+  }
+ },
+ "all_passed": false,
+ "failed": [
+  "second_engine"
+ ]
+}

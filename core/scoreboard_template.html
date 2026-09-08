@@ -251,6 +251,13 @@ strong{font-weight:600;color:var(--ink)}
 .stale.soft{background:var(--surface);color:var(--muted)}
 .stale .files{font-family:"JetBrains Mono",monospace;font-size:11.5px;
   display:block;margin-top:4px;opacity:.9}
+/* One row per verification check. Named, because "unverified" on its own tells
+   the reader nothing about what to go and do next. */
+.checks{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chk{font-family:"JetBrains Mono",monospace;font-size:11px;padding:2px 7px;
+  border-radius:3px;border:1px solid var(--line)}
+.chk.y{color:var(--good);border-color:var(--good)}
+.chk.n{color:var(--fail);border-color:var(--fail);font-weight:700}
 
 /* tables */
 .scroll{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:4px;
@@ -333,6 +340,7 @@ a{color:var(--accent)}
       <div class="who" id="who"></div>
       <h2 id="verdict"></h2>
       <div class="stale" id="stale" hidden></div>
+      <div class="stale" id="verif" hidden></div>
       <p id="tagline"></p>
       <div class="cand" id="cand"></div>
       <div class="pinebar" id="pinebar"></div>
@@ -805,6 +813,41 @@ function renderStale(s){
   el.hidden = false;
 }
 
+// The verification gate, item 2. Every check is named and its state shown, so a
+// capped score says WHICH evidence is missing rather than only that some is.
+function renderVerification(s){
+  const el = $('verif'), v = s.verification;
+  if (!v){ el.hidden = true; return; }
+  if (v.all_passed){
+    el.className = 'stale soft';
+    el.innerHTML = '<b>Verified.</b> Every check in core/verification.py passes '
+      + 'on the kernel that produced this record.'
+      + `<div class="checks">${(v.checks||[]).map(c=>
+          `<span class="chk y" title="${esc(c.why||'')}">${esc(c.name)} ✓</span>`
+        ).join('')}</div>`;
+    el.hidden = false;
+    return;
+  }
+  const missing = (v.checks||[]).filter(c=>!c.passed);
+  el.className = 'stale hard';
+  el.innerHTML = (v.run
+      ? `<b>UNVERIFIED — ${missing.length} check${missing.length===1?'':'s'} not passed.</b> `
+        + 'The score is capped at 3.0. A check that was SKIPPED has verified '
+        + 'nothing, so it counts the same as one that failed.'
+      : '<b>UNVERIFIED — the checks have never been run for this hypothesis.</b> '
+        + 'Run core/verification.py. The score is capped at 3.0.')
+    + (v.stale_evidence
+        ? ' The evidence that does exist was earned on a kernel that has since '
+          + 'changed, so it has been discarded.' : '')
+    + `<div class="checks">${(v.checks||[]).map(c=>
+        `<span class="chk ${c.passed?'y':'n'}" title="${esc(c.why||'')}">`
+        + `${esc(c.name)} ${c.passed?'✓':'✗'}</span>`).join('')}</div>`
+    + (missing.length
+        ? `<span class="files">${missing.map(c=>esc(c.name+': '+(c.detail||''))).join('<br>')}</span>`
+        : '');
+  el.hidden = false;
+}
+
 function render(s, sel){
   const L0=s.ladder;
   const risk = L0 ? (sel==null ? L0.picked : sel) : null;
@@ -814,10 +857,12 @@ function render(s, sel){
   const SC = custom ? null
     : (row ? {total:row.score, verdict:row.verdict, components:row.components,
               evidence_capped:row.evidence_capped, null_capped:row.null_capped,
-              stale_capped:s.score.stale_capped}
+              stale_capped:s.score.stale_capped,
+              unverified_capped:s.score.unverified_capped}
            : s.score);
   $('who').textContent = `${s.hid} · ${s.name}`;
   renderStale(s);
+  renderVerification(s);
   $('verdict').textContent = custom ? 'Your own book — measured, not scored' : SC.verdict;
   $('tagline').textContent = s.tagline;
   const cand = row ? s.candidate.replace(/[\d.]+% risk per trade/,
@@ -898,6 +943,12 @@ function render(s, sel){
        effectively absent, and the project's rule is that no strategy is a candidate without
        it &mdash; whatever it scores elsewhere. Without this cap, churning accounts quickly
        would bank most of the speed weight on no demonstrated edge.</div>` : '')
+    + (SC.unverified_capped
+    ? `<div class="capnote"><strong>Capped at 3.0 &mdash; unverified.</strong> This has not
+       passed the checks in <code>core/verification.py</code>. The project's order of work used
+       to be kernel &rarr; sweep &rarr; board, with verification afterwards and by hand; H-009
+       reached 8.9 that way without a second engine ever looking at it. A hypothesis that has
+       established nothing takes the same cap as one with no walk-forward at all.</div>` : '')
     + (SC.stale_capped
     ? `<div class="capnote"><strong>Capped at 3.0 &mdash; stale.</strong> This was measured on
        a kernel, dataset or cost assumption that has since changed, so it has not been shown

@@ -21,7 +21,11 @@
     "fail_max": 0.0,
     "fail_daily": 0.0,
     "max_dd": -0.0752,
-    "stale": false
+    "stale": false,
+    "verified": true,
+    "verify_failed": [
+     "not run"
+    ]
    },
    "score": {
     "total": 6.0,
@@ -31,6 +35,10 @@
     "evidence_capped": false,
     "null_capped": false,
     "stale_capped": false,
+    "unverified_capped": false,
+    "unverified": [
+     "not run"
+    ],
     "components": [
      {
       "name": "speed",
@@ -78,11 +86,73 @@
     "notes": [],
     "detail": ""
    },
+   "verification": {
+    "run": true,
+    "all_passed": true,
+    "stale_evidence": false,
+    "when": "2026-09-08T06:29:04.530248+00:00",
+    "checks": [
+     {
+      "name": "lookahead",
+      "passed": true,
+      "detail": "6 passed",
+      "why": "Truncate the series; every already-closed trade must be identical. This is the test that would have caught the three look-aheads that killed every crypto result in the project."
+     },
+     {
+      "name": "degenerate",
+      "passed": true,
+      "detail": "10 passed",
+      "why": "Zero-volume bars, flat OHLC, zero sigma, one bar, empty series. Both 2026-09-07 bugs were degenerate-input bugs."
+     },
+     {
+      "name": "costs",
+      "passed": true,
+      "detail": "5 passed",
+      "why": "Profit factor must fall as cost rises, and R must be affine in the cost multiple - the identity every MEASURED-cost board number uses."
+     },
+     {
+      "name": "golden",
+      "passed": true,
+      "detail": "2 passed",
+      "why": "A pinned trade list. Any kernel edit that moves a trade has to be explained in the commit rather than discovered weeks later."
+     },
+     {
+      "name": "second_engine",
+      "passed": true,
+      "detail": "1 passed",
+      "why": "Trade-by-trade agreement with NautilusTrader. An event-driven engine holds no array it could index into, so it cannot reproduce a look-ahead. This is the check that has actually found bugs."
+     },
+     {
+      "name": "manifest",
+      "passed": true,
+      "detail": "2 passed",
+      "why": "Everything this result depends on is declared, so the stale flag can see it. An undeclared kernel never trips the flag."
+     },
+     {
+      "name": "fingerprint",
+      "passed": true,
+      "detail": "1 passed",
+      "why": "The board record carries a fingerprint and it still matches the files on disk."
+     },
+     {
+      "name": "parity",
+      "passed": true,
+      "detail": "n/a - this hypothesis has no such check",
+      "why": "Ribbon's twenty moving averages recomputed the slow literal way from the Pine source. Existed for weeks as a SCRIPT that pytest never collected, so nothing ran it."
+     },
+     {
+      "name": "paired_null",
+      "passed": true,
+      "detail": "measured.beats_null = True",
+      "why": "The identical search run on phase-randomised data must find LESS than the real market did. Twelve hypotheses have died to this and one (H-005) cleared the gate 1,702 times against its null's 19,062."
+     }
+    ]
+   },
    "fingerprint": {
-    "git": "0255b06",
+    "git": "e8d01cb",
     "dirty": true,
-    "written": "2026-09-08T06:15:23.035667+00:00",
-    "kernel_hash": "a74942d21c4d",
+    "written": "2026-09-08T06:21:45.080259+00:00",
+    "kernel_hash": "7688bd32f80c",
     "kernels": [
      "core/metrics.py",
      "strategies/vwap/engine.py",
@@ -172,8 +242,8 @@
        "p25_days": 116.5,
        "expected_days": 309.3
       },
-      "score": 5.0,
-      "verdict": "TOO SLOW - 489d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -250,8 +320,8 @@
        "p25_days": 57.0,
        "expected_days": 188.1
       },
-      "score": 5.4,
-      "verdict": "TOO SLOW - 299d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -328,8 +398,8 @@
        "p25_days": 40.0,
        "expected_days": 81.1
       },
-      "score": 5.3,
-      "verdict": "TOO SLOW - 229d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -406,8 +476,8 @@
        "p25_days": 26.0,
        "expected_days": 55.9
       },
-      "score": 6.0,
-      "verdict": "TOO SLOW - 144d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -484,8 +554,8 @@
        "p25_days": 19.0,
        "expected_days": 46.7
       },
-      "score": 4.6,
-      "verdict": "TOO SLOW - 123d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -562,8 +632,8 @@
        "p25_days": 16.0,
        "expected_days": 39.3
       },
-      "score": 4.6,
-      "verdict": "TOO SLOW - 109d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -640,8 +710,8 @@
        "p25_days": 13.0,
        "expected_days": 39.4
       },
-      "score": 4.1,
-      "verdict": "TOO SLOW - 120d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -718,8 +788,8 @@
        "p25_days": 11.0,
        "expected_days": 36.0
       },
-      "score": 4.3,
-      "verdict": "TOO SLOW - 97d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -796,8 +866,8 @@
        "p25_days": 10.0,
        "expected_days": 26.2
       },
-      "score": 4.5,
-      "verdict": "TOO SLOW - 81d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -874,8 +944,8 @@
        "p25_days": 9.0,
        "expected_days": 22.2
       },
-      "score": 4.7,
-      "verdict": "TOO SLOW - 67d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -952,8 +1022,8 @@
        "p25_days": 9.0,
        "expected_days": 22.1
       },
-      "score": 4.6,
-      "verdict": "TOO SLOW - 66d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -1030,8 +1100,8 @@
        "p25_days": 8.0,
        "expected_days": 20.5
       },
-      "score": 3.8,
-      "verdict": "TOO SLOW - 87d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -17490,16 +17560,24 @@
     "fail_max": 0.0,
     "fail_daily": 0.0,
     "max_dd": -0.076,
-    "stale": false
+    "stale": false,
+    "verified": false,
+    "verify_failed": [
+     "second_engine"
+    ]
    },
    "score": {
-    "total": 5.0,
-    "verdict": "TOO SLOW - 176d against a 5-14d target",
+    "total": 3.0,
+    "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
     "too_slow": true,
     "expected_days": 175.92592592592592,
     "evidence_capped": false,
     "null_capped": false,
     "stale_capped": false,
+    "unverified_capped": true,
+    "unverified": [
+     "second_engine"
+    ],
     "components": [
      {
       "name": "speed",
@@ -17547,11 +17625,73 @@
     "notes": [],
     "detail": ""
    },
+   "verification": {
+    "run": true,
+    "all_passed": false,
+    "stale_evidence": false,
+    "when": "2026-09-08T06:28:49.752220+00:00",
+    "checks": [
+     {
+      "name": "lookahead",
+      "passed": true,
+      "detail": "6 passed",
+      "why": "Truncate the series; every already-closed trade must be identical. This is the test that would have caught the three look-aheads that killed every crypto result in the project."
+     },
+     {
+      "name": "degenerate",
+      "passed": true,
+      "detail": "10 passed",
+      "why": "Zero-volume bars, flat OHLC, zero sigma, one bar, empty series. Both 2026-09-07 bugs were degenerate-input bugs."
+     },
+     {
+      "name": "costs",
+      "passed": true,
+      "detail": "5 passed",
+      "why": "Profit factor must fall as cost rises, and R must be affine in the cost multiple - the identity every MEASURED-cost board number uses."
+     },
+     {
+      "name": "golden",
+      "passed": true,
+      "detail": "2 passed",
+      "why": "A pinned trade list. Any kernel edit that moves a trade has to be explained in the commit rather than discovered weeks later."
+     },
+     {
+      "name": "second_engine",
+      "passed": false,
+      "detail": "SKIPPED test_ribbon_matches_a_second_engine: H-016's ribbon kernel has never been ported to a second engine. This is a real gap in the evidence, not a missing test file: core/verification.py reads it and c",
+      "why": "Trade-by-trade agreement with NautilusTrader. An event-driven engine holds no array it could index into, so it cannot reproduce a look-ahead. This is the check that has actually found bugs."
+     },
+     {
+      "name": "manifest",
+      "passed": true,
+      "detail": "2 passed",
+      "why": "Everything this result depends on is declared, so the stale flag can see it. An undeclared kernel never trips the flag."
+     },
+     {
+      "name": "fingerprint",
+      "passed": true,
+      "detail": "1 passed",
+      "why": "The board record carries a fingerprint and it still matches the files on disk."
+     },
+     {
+      "name": "parity",
+      "passed": true,
+      "detail": "1 passed",
+      "why": "Ribbon's twenty moving averages recomputed the slow literal way from the Pine source. Existed for weeks as a SCRIPT that pytest never collected, so nothing ran it."
+     },
+     {
+      "name": "paired_null",
+      "passed": true,
+      "detail": "measured.beats_null = True",
+      "why": "The identical search run on phase-randomised data must find LESS than the real market did. Twelve hypotheses have died to this and one (H-005) cleared the gate 1,702 times against its null's 19,062."
+     }
+    ]
+   },
    "fingerprint": {
-    "git": "0255b06",
+    "git": "e8d01cb",
     "dirty": true,
-    "written": "2026-09-08T06:15:29.605738+00:00",
-    "kernel_hash": "13f4ac78326b",
+    "written": "2026-09-08T06:21:51.379853+00:00",
+    "kernel_hash": "712e3f87058e",
     "kernels": [
      "core/metrics.py",
      "strategies/ribbon/engine.py",
@@ -17639,8 +17779,8 @@
        "p25_days": null,
        "expected_days": null
       },
-      "score": 3.9,
-      "verdict": "Weak - something real, but not tradeable as it stands",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -17717,8 +17857,8 @@
        "p25_days": 242.0,
        "expected_days": 652.8
       },
-      "score": 3.9,
-      "verdict": "Weak - something real, but not tradeable as it stands",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -17795,8 +17935,8 @@
        "p25_days": 156.0,
        "expected_days": 328.2
       },
-      "score": 4.7,
-      "verdict": "TOO SLOW - 721d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -17873,8 +18013,8 @@
        "p25_days": 110.0,
        "expected_days": 187.8
       },
-      "score": 5.0,
-      "verdict": "TOO SLOW - 442d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -17951,8 +18091,8 @@
        "p25_days": 82.0,
        "expected_days": 170.6
       },
-      "score": 5.0,
-      "verdict": "TOO SLOW - 349d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18029,8 +18169,8 @@
        "p25_days": 66.75,
        "expected_days": 139.4
       },
-      "score": 5.1,
-      "verdict": "TOO SLOW - 232d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18107,8 +18247,8 @@
        "p25_days": 49.0,
        "expected_days": 106.5
       },
-      "score": 5.0,
-      "verdict": "TOO SLOW - 185d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18185,8 +18325,8 @@
        "p25_days": 38.5,
        "expected_days": 78.0
       },
-      "score": 5.0,
-      "verdict": "TOO SLOW - 176d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18263,8 +18403,8 @@
        "p25_days": 29.0,
        "expected_days": 59.7
       },
-      "score": 3.2,
-      "verdict": "TOO SLOW - 173d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18341,8 +18481,8 @@
        "p25_days": 23.25,
        "expected_days": 49.9
       },
-      "score": 4.7,
-      "verdict": "TOO SLOW - 130d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18419,8 +18559,8 @@
        "p25_days": 18.0,
        "expected_days": 37.5
       },
-      "score": 5.1,
-      "verdict": "TOO SLOW - 91d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",
@@ -18497,8 +18637,8 @@
        "p25_days": 15.0,
        "expected_days": 31.9
       },
-      "score": 4.6,
-      "verdict": "TOO SLOW - 74d against a 5-14d target",
+      "score": 3.0,
+      "verdict": "UNVERIFIED - has not passed the checks in core/verification.py",
       "components": [
        {
         "name": "speed",

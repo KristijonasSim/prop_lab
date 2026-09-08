@@ -13,6 +13,13 @@ numpy
 pyarrow
 python-dotenv
 
+# Test frame, added by item 2 of STEPS_1_2_4.md. `hypothesis` is not optional
+# decoration: it GENERATES the degenerate inputs (zero volume, flat OHLC, one
+# bar) instead of us guessing them, and every bug this project has found was an
+# input nobody thought to write by hand.
+pytest
+hypothesis
+
 # FX/Gold — MetaTrader5 is a Windows-only package. This box is Linux with a wine
 # MT5 at ~/.mt5, so it needs an mt5linux-style RPC bridge. Not set up; crypto first.
 # MetaTrader5
