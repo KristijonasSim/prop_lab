@@ -106,6 +106,11 @@ COSTS: dict[str, Cost] = {
     "GBPUSD": Cost(0.05, 0.05, 0.310, 1.5, True,
                    "MEASURED; median mid-week spread 0.515bps"),
     "USDJPY": Cost(0.05, 0.05, 0.45, 1.5, False, "ASSUMED - spread never measured"),
+    "AUDUSD": Cost(0.05, 0.05, 0.55, 1.5, False, "ASSUMED - spread never measured"),
+    "USDCAD": Cost(0.05, 0.05, 0.60, 1.5, False, "ASSUMED - spread never measured"),
+    # Energy. Dukascopy CFDs, spread never measured here and wider than FX.
+    "WTI": Cost(0.15, 0.15, 2.50, 5.0, False, "ASSUMED - CFD, spread never measured"),
+    "BRENT": Cost(0.15, 0.15, 2.50, 5.0, False, "ASSUMED - CFD, spread never measured"),
     "XAGUSD": Cost(0.15, 0.15, 4.40, 6.0, True, "MEASURED 9.108bps spread"),
     # Binance USD-M futures: maker 0.02%/side, taker 0.05%/side. The SPREAD is
     # unmeasured - bookTicker stopped in 2024-03 - so half_spread is an
@@ -125,8 +130,13 @@ EXEC_MODE = "mixed"
 
 #: how the board groups markets. Kris's layout, 2026-09-08.
 ASSET_CLASS = {
-    "XAUUSD": "Gold", "XAGUSD": "Gold",
+    # "Gold" widened to metals and energy on Kris's instruction 2026-09-08 - the
+    # class is the thing a basket is built from, so it has to hold more than one
+    # tradeable market or there is no basket to build.
+    "XAUUSD": "Metals/Energy", "XAGUSD": "Metals/Energy",
+    "WTI": "Metals/Energy", "BRENT": "Metals/Energy",
     "EURUSD": "FX", "GBPUSD": "FX", "USDJPY": "FX",
+    "AUDUSD": "FX", "USDCAD": "FX",
     **{c: "Crypto" for c in CRYPTO},
 }
 

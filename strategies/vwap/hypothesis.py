@@ -30,8 +30,10 @@ from strategies.vwap.strategy import STRATEGY                  # noqa: E402
 #: promoted — best by DAYS TO PASS, which is the phase gate, not by profit
 #: factor. The others stay visible on the row so the choice can be audited.
 UNIVERSE = {
-    "FX": ["EURUSD", "GBPUSD", "USDJPY"],
-    "Gold": ["XAUUSD"],
+    "FX": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"],
+    # widened from gold alone on Kris's instruction 2026-09-08: a class needs
+    # more than one market or there is no basket to build from it
+    "Metals/Energy": ["XAUUSD", "XAGUSD", "WTI"],
     "Crypto": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
 }
 

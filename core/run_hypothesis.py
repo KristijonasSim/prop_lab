@@ -37,7 +37,7 @@ from core.pipeline import Market, Pipeline, pf                 # noqa: E402
 from core.riskladder import from_trades                        # noqa: E402
 
 BT = ROOT / "backtests"
-CLASSES = ("FX", "Gold", "Crypto")
+CLASSES = ("FX", "Metals/Energy", "Crypto")
 
 #: HOW MUCH HISTORY EVERY MARKET GETS. Kris's standing rule, 2026-09-08: always
 #: the last three years.
@@ -159,6 +159,63 @@ def window(syms, tfs, years: int = YEARS) -> tuple[pd.Timestamp, pd.Timestamp]:
     return end - pd.DateOffset(years=years), end
 
 
+def basket(legs: list[pd.DataFrame], names: list[str]) -> pd.DataFrame:
+    """Combine several markets into ONE book, equally weighted.
+
+    Each leg's R is divided by the leg count, so a book of N is directly
+    comparable to a single market: the same 1% of equity is split across N
+    positions rather than staked on one.
+
+    THIS IS THE THING THAT KILLED H-012, and the arithmetic is worth stating
+    because it is not obvious. Equal weighting divides the BOOK's R per day by
+    the leg count while the drawdown falls by much less than that (the legs are
+    correlated and the bad stretches overlap). H-012's median leg had R/day
+    -0.0013, so every leg added cost more R per day than it saved in drawdown
+    and the book got SLOWER: 15.9 days in-window against 130.7 held out.
+
+    Why it is worth re-running anyway: the binding constraint has changed. Under
+    the old modelled 8%+5% firm, drawdown was not what stopped a book. Under
+    Thunderbolt's 6% cap it is - crypto's chosen risk sits at 0.50% with 55% of
+    accounts STALLING, purely to keep the curve inside the cap. If a basket cuts
+    drawdown per unit of R, it buys a higher risk level, and risk is what buys
+    days. That route did not exist when H-012 ran. It may still lose.
+    """
+    if not legs:
+        return pd.DataFrame()
+    n = len(legs)
+    parts = []
+    for name, g in zip(names, legs):
+        if not len(g):
+            continue
+        h = g.copy()
+        h["r"] = h.r / n
+        h["r_2x"] = h.r_2x / n
+        h["leg"] = name
+        parts.append(h)
+    if not parts:
+        return pd.DataFrame()
+    out = pd.concat(parts, ignore_index=True).sort_values("exit_ts")
+    return out.reset_index(drop=True)
+
+
+def common_rule(per_leg: dict) -> tuple:
+    """One (floor, topn) selection rule for the whole basket.
+
+    Every leg must be scored under the SAME rule or the book is a mix of
+    selection policies and the comparison against a single market means nothing.
+    The busiest rule across the class is used - busiest, not best, because
+    choosing the rule by its own result is the search-on-the-test-set mistake one
+    level up.
+    """
+    counts: dict[tuple, int] = {}
+    for tr in per_leg.values():
+        if not len(tr):
+            continue
+        for k, g in tr.groupby(["floor", "topn"]):
+            counts[k] = counts.get(k, 0) + len(g)
+    return max(counts, key=counts.get) if counts else (30, 1)
+
+
 def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
                null_seeds: int = 1, span=None) -> dict:
     df = load(sym, tf)
@@ -179,6 +236,7 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
 
     p = Pipeline(strat, **pipe_kw)
     real = p.walk_forward(m)
+    keep_trades = real.trades
     out = {"sym": sym, "tf": tf, "asset_class": ASSET_CLASS[sym],
            "cost_rt_bps": round(c.round_trip(EXEC_MODE), 2),
            "cost_taker_bps": round(c.round_trip("taker"), 2),
@@ -193,6 +251,7 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
         nm = metrics(best_cell(n.folds, n.trades))
         if nm:
             nulls.append(nm)
+    out["_trades"] = keep_trades          # stripped before the record is written
     if nulls:
         out["null_pf"] = round(float(np.median([x["pf"] for x in nulls])), 3)
         out["null_days"] = float(np.median(
@@ -224,34 +283,67 @@ class _FixedGrid:
 
 def _assemble(cells, *, sid, hid, name, tagline, tfs, universe,
               manifest=None, done=True) -> dict:
-    """Rows from whatever cells exist so far. Safe to call mid-run."""
+    """Rows from whatever cells exist so far. Safe to call mid-run.
+
+    TWO ROWS PER ASSET CLASS, so the comparison Kris asked for is on the page
+    rather than in a commit message:
+
+      * BEST SINGLE - the one market/timeframe with the fewest expected days;
+      * BASKET      - every market in the class traded together, equally
+                      weighted, on one common selection rule.
+
+    If the basket does not beat the best single market, the row says so in the
+    only way that matters: more days.
+    """
     rows = []
     for cls in CLASSES:
         got = [c for c in cells if c["asset_class"] == cls and c.get("days_to_pass")]
-        if not got:
-            empty = [c for c in cells if c["asset_class"] == cls]
-            rows.append({"asset_class": cls, "sym": None,
-                         "note": ("no market in this class resolved an account"
-                                  if empty else "not run yet"),
-                         "considered": [{"sym": c["sym"], "tf": c["tf"],
-                                         "pf": c.get("pf"),
-                                         "days_to_pass": c.get("days_to_pass")}
-                                        for c in empty]})
+        mine = [c for c in cells if c["asset_class"] == cls]
+        if not mine:
+            rows.append({"asset_class": cls, "mode": "best single", "sym": None,
+                         "note": "not run yet", "considered": []})
             continue
-        # best by DAYS TO PASS - the phase gate - not by profit factor
-        best = dict(min(got, key=lambda c: c["days_to_pass"]))
-        best["considered"] = [
-            {"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
-             "days_to_pass": c.get("days_to_pass")}
-            for c in cells if c["asset_class"] == cls]
-        rows.append(best)
+
+        considered = [{"sym": c["sym"], "tf": c["tf"], "pf": c.get("pf"),
+                       "days_to_pass": c.get("days_to_pass")} for c in mine]
+
+        if got:
+            best = dict(min(got, key=lambda c: c["days_to_pass"]))
+            best.pop("_trades", None)
+            best["mode"] = "best single"
+            best["considered"] = considered
+            rows.append(best)
+        else:
+            rows.append({"asset_class": cls, "mode": "best single", "sym": None,
+                         "note": "no market in this class resolved an account",
+                         "considered": considered})
+
+        # ---- the basket: every leg in the class, one common selection rule ----
+        per_leg = {f"{c['sym']} {c['tf']}": c.get("_trades")
+                   for c in mine if c.get("_trades") is not None
+                   and len(c.get("_trades"))}
+        if len(per_leg) >= 2:
+            floor, topn = common_rule(per_leg)
+            sel = {k: v[(v.floor == floor) & (v.topn == topn)]
+                   for k, v in per_leg.items()}
+            sel = {k: v for k, v in sel.items() if len(v)}
+            if len(sel) >= 2:
+                bk = basket(list(sel.values()), list(sel))
+                m = metrics(bk)
+                rows.append({
+                    "asset_class": cls, "mode": f"basket ({len(sel)} legs)",
+                    "sym": " + ".join(sorted(sel)), "tf": "",
+                    "cost_rt_bps": None, "cost_measured": False,
+                    "legs": sorted(sel), "rule": f"floor {floor} / top {topn}",
+                    "considered": considered, **m})
 
     rec = {"sid": sid, "hid": hid, "name": name, "tagline": tagline,
            "when": pd.Timestamp.utcnow().isoformat(),
            "structure": "one_step_6pct", "complete": bool(done),
            "years": YEARS,
            "timeframes": tfs, "universe": universe,
-           "rows": rows, "cells": cells}
+           "rows": rows,
+           "cells": [{k: v for k, v in c.items() if k != "_trades"} for c in cells]}
     if manifest:
         rec["fingerprint"] = FP.make(**manifest)
     return rec

@@ -75,7 +75,11 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--bg)}
 .cls{font-weight:700}
-.mkt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:var(--muted)}
+.mkt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;color:var(--muted)}
+.mode{font-size:11px;color:var(--muted)}
+.mode.bk{color:var(--accent);font-weight:600}
+/* a basket row sits under its class's single-market row; the tint groups them */
+tbody tr:nth-child(even){background:color-mix(in srgb, var(--bg) 45%, transparent)}
 .good{color:var(--good)} .warn{color:var(--warn)} .fail{color:var(--fail)}
 .dim{color:var(--muted)}
 .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
@@ -134,8 +138,9 @@ function daysClass(d){
 
 const COLS = [
   {h:'Class',    f:r => `<span class="cls">${esc(r.asset_class)}</span>`},
+  {h:'Mode',     f:r => `<span class="mode${(r.mode||'').startsWith('basket') ? ' bk' : ''}">${esc(r.mode || '')}</span>`},
   {h:'Market',   f:r => r.sym
-      ? `<span class="mkt">${esc(r.sym)} ${esc(r.tf)}</span>`
+      ? `<span class="mkt" title="${esc(r.rule ? 'selection rule: ' + r.rule : '')}">${esc(r.sym)} ${esc(r.tf || '')}</span>`
       : `<span class="dim">${esc(r.note || 'none resolved')}</span>`},
   {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
