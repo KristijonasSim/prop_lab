@@ -154,6 +154,20 @@ const COLS = [
   {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
   {h:'Pass %',   f:r => n(r.pass_pct, 1)},
+  // THE GOAL COLUMNS. Kris's target is a PAIR - 60% pass AND 14 days - and
+  // neither number alone answers it: a row can pass 79% of the time in 32 days,
+  // or resolve in 8 days and pass 40%. `Days` above is the AUTO-picked level,
+  // which answers a different question (the fastest whose drawdown fits the cap).
+  // These scan the whole stored ladder for the fastest level that actually
+  // reaches 60% pass.
+  {h:'60% in',   f:r => { const b = fastest60(r);
+      return b == null ? '<span class="dim">never</span>'
+        : `<b class="${b.days_to_pass <= 14 ? 'good' : (b.days_to_pass <= 30 ? 'warn' : 'fail')}"
+             title="${b.pass_pct}% pass at ${b.risk_pct}% risk, curve DD ${b.max_dd_pct}%, blown ${(b.fail_max_pct+b.fail_daily_pct).toFixed(1)}%"
+             >${Number(b.days_to_pass).toFixed(1)}</b>`; }},
+  {h:'@ risk',   f:r => { const b = fastest60(r);
+      return b == null ? '<span class="dim">—</span>'
+        : `<span class="mono dim">${b.risk_pct.toFixed(2)}%</span>`; }},
   // What happened to the accounts. These three plus 'never resolved' sum to
   // 100%, which is the whole story of an evaluation and was previously invisible:
   // the board showed pass% and a curve drawdown and left the reader to guess why
@@ -187,6 +201,32 @@ const COLS = [
       : (r.beats_null ? '<span class="good">yes</span>'
                       : '<span class="fail">no</span>')},
 ];
+
+// Every selection rule for the promoted market, because the headline uses the
+// BUSIEST one and that is not the best one. A single configuration and a ten-deep
+// book of the same signal are different strategies with different daily-cap
+// exposure, and the board was only ever showing the second.
+function ruleTable(rows){
+  const withRules = rows.filter(r => (r.rules || []).length);
+  if (!withRules.length) return '';
+  return `<details open><summary>Selection rules on each promoted market &mdash;
+      the headline row uses the busiest, which is not the fastest</summary>
+    <div class="scroll"><table><thead><tr>
+      <th>Market</th><th>Rule</th><th>Trades</th><th>Tr/day</th><th>PF</th>
+      <th>Win %</th><th>Avg R</th><th>60% in</th><th>@ risk</th></tr></thead><tbody>
+      ${withRules.flatMap(r => r.rules.map(x => `<tr>
+        <td class="mkt">${esc(r.sym)} ${esc(r.tf)}</td>
+        <td class="mono dim">floor ${x.floor} / top ${x.topn}</td>
+        <td>${x.trades}</td><td>${n(x.tpd,2)}</td>
+        <td class="${x.pf >= 1.2 ? 'good' : ''}">${n(x.pf,3)}</td>
+        <td>${n(x.win_pct,1)}</td><td>${n(x.avg_r,3)}</td>
+        <td>${x.days60 == null ? '<span class="dim">never</span>'
+              : `<b class="${x.days60 <= 14 ? 'good' : (x.days60 <= 30 ? 'warn' : 'fail')}"
+                   title="${x.pass60}% pass">${Number(x.days60).toFixed(1)}</b>`}</td>
+        <td class="mono dim">${x.risk60 == null ? '—' : x.risk60.toFixed(2) + '%'}</td>
+      </tr>`)).join('')}
+    </tbody></table></div></details>`;
+}
 
 function considered(rows){
   const all = rows.flatMap(r => (r.considered || []).map(c =>
@@ -318,6 +358,7 @@ function paint(h){
     </tr></thead><tbody>
       ${(h.rows||[]).map(atRisk).map(r => `<tr>${COLS.map(c => `<td>${c.f(r)}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
+    ${ruleTable(h.rows || [])}
     ${considered(h.rows || [])}
     <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
       — the phase gate — not by profit factor. Every market also ran the identical

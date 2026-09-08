@@ -267,6 +267,33 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
         nm = metrics(best_cell(n.folds, n.trades))
         if nm:
             nulls.append(nm)
+    # EVERY SELECTION RULE, not just the busiest one the headline uses.
+    #
+    # `best_cell` takes the rule with the most trades, which is always the
+    # ten-deep book - ten configurations trading the same signal at once. That is
+    # a genuinely different strategy from a single configuration and it is
+    # SLOWER: on XAUUSD 1h the single config reaches 66.6% pass in 21.0 days
+    # while the ten-deep book takes 31.6, because ten correlated positions at
+    # 0.50% risk put 5% at risk against a 3% DAILY cap. Reporting only the
+    # busiest hid the better trade.
+    rules = []
+    if len(keep_trades):
+        for (fl, tn), g in keep_trades.groupby(["floor", "topn"]):
+            m = metrics(g)
+            if not m:
+                continue
+            L = [x for x in m.get("ladder", [])
+                 if x["pass_pct"] >= 60.0 and x["days_to_pass"]]
+            b = min(L, key=lambda x: x["days_to_pass"]) if L else None
+            rules.append({"floor": int(fl), "topn": int(tn),
+                          "trades": m["trades"], "tpd": m["trades_per_day"],
+                          "pf": m["pf"], "win_pct": m["win_pct"],
+                          "avg_r": m["avg_r"], "days_to_pass": m["days_to_pass"],
+                          "pass_pct": m["pass_pct"],
+                          "days60": b["days_to_pass"] if b else None,
+                          "pass60": b["pass_pct"] if b else None,
+                          "risk60": b["risk_pct"] if b else None})
+    out["rules"] = rules
     out["_trades"] = keep_trades          # stripped before the record is written
     if nulls:
         out["null_pf"] = round(float(np.median([x["pf"] for x in nulls])), 3)
