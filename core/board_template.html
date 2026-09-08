@@ -140,8 +140,21 @@ const COLS = [
   {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
   {h:'Pass %',   f:r => n(r.pass_pct, 1)},
-  {h:'Max DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
-      : `<span class="${Math.abs(r.max_dd_pct) > (F.maxloss*100||6) ? 'fail':''}">${n(r.max_dd_pct,2)}</span>`},
+  // What happened to the accounts. These three plus 'never resolved' sum to
+  // 100%, which is the whole story of an evaluation and was previously invisible:
+  // the board showed pass% and a curve drawdown and left the reader to guess why
+  // the pass rate was low.
+  {h:'Blown %',  f:r => (r.fail_max_pct == null && r.fail_daily_pct == null)
+      ? '<span class="dim">—</span>'
+      : (() => { const b = (r.fail_max_pct||0) + (r.fail_daily_pct||0);
+                 return `<span class="${b > 20 ? 'fail' : (b > 5 ? 'warn' : '')}"
+                   title="max-DD ${n(r.fail_max_pct,1)}% + daily ${n(r.fail_daily_pct,1)}%"
+                   >${b.toFixed(1)}</span>`; })()},
+  {h:'Stalled %', f:r => r.still_open_pct == null ? '<span class="dim">—</span>'
+      : `<span class="${r.still_open_pct > 50 ? 'fail' : (r.still_open_pct > 25 ? 'warn' : '')}"
+          title="never reached the 6% target inside 400 days">${n(r.still_open_pct,1)}</span>`},
+  {h:'Curve DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
+      : `<span class="dim" title="peak-to-trough of the strategy's whole 3-year equity curve at this risk. NOT one account's drawdown - an account lives weeks, not years, and never meets the whole curve. The blown % column is the account-level number.">${n(r.max_dd_pct,2)}</span>`},
   {h:'PF',       f:r => r.pf == null ? '<span class="dim">—</span>'
       : `<span class="${r.pf >= 1.2 ? 'good' : (r.pf >= 1 ? '' : 'fail')}">${n(r.pf,3)}</span>`},
   {h:'PF 2×', f:r => n(r.pf_2x, 3)},
@@ -204,6 +217,7 @@ function atRisk(r){
     risk_pct: lv.risk_pct, pass_pct: lv.pass_pct, max_dd_pct: lv.max_dd_pct,
     days_to_pass: lv.days_to_pass, median_days: lv.median_days,
     fail_max_pct: lv.fail_max_pct, fail_daily_pct: lv.fail_daily_pct,
+    still_open_pct: lv.still_open_pct,
     cagr_pct: lv.cagr_pct, _forced: !lv.picked});
 }
 
