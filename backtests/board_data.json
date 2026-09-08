@@ -1,0 +1,9 @@
+{
+ "hypotheses": [],
+ "firm": {
+  "name": "Thunderbolt (1 step)",
+  "target": 0.06,
+  "daily": 0.03,
+  "maxloss": 0.06
+ }
+}
