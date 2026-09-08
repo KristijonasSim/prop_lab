@@ -77,7 +77,7 @@ def metrics(trades: pd.DataFrame) -> dict:
     t = trades.sort_values("exit_ts")
     r = t.r.values
     daily = pd.Series(r, index=pd.DatetimeIndex(t.exit_ts)).resample("1D").sum()
-    rows, pick = from_trades(r, t.exit_ts)
+    ladder, pick = from_trades(r, t.exit_ts)
     eq = np.concatenate(([0.0], np.cumsum(r)))
     dd_r = float((eq - np.maximum.accumulate(eq)).min())
     span = (t.exit_ts.max() - t.exit_ts.min()).total_seconds() / 86400.0
@@ -100,6 +100,26 @@ def metrics(trades: pd.DataFrame) -> dict:
         "fail_daily_pct": round(pick["fail_daily"] * 100, 1),
         "cagr_pct": round(cagr(daily, pick["risk"]), 1),
         "span_days": round(span, 0),
+        # EVERY risk level, not just the chosen one, so the board can be
+        # re-scored in the browser without re-running anything.
+        #
+        # Risk per trade is the only lever left once a configuration has been
+        # chosen blind, and it moves speed and survival in OPPOSITE directions:
+        # more risk reaches 6% sooner and blows more accounts on the way. PF,
+        # win rate, average R, trades per day and Sharpe are all R-based and do
+        # NOT move with risk - only pass rate, drawdown, days and CAGR do.
+        "ladder": [{
+            "risk_pct": round(x["risk"] * 100, 2),
+            "pass_pct": round(x["pass_rate"] * 100, 1),
+            "max_dd_pct": round(x["max_dd"] * 100, 2),
+            "days_to_pass": x["expected_days"],
+            "median_days": x["median_days"],
+            "fail_max_pct": round(x["fail_max"] * 100, 1),
+            "fail_daily_pct": round(x["fail_daily"] * 100, 1),
+            "still_open_pct": round(x["still_open"] * 100, 1),
+            "cagr_pct": round(cagr(daily, x["risk"]), 1),
+            "picked": x["risk"] == pick["risk"],
+        } for x in ladder],
     }
 
 
