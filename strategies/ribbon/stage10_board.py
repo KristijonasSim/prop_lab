@@ -195,6 +195,28 @@ def main() -> int:
     legpay["r"] = legpay.r * len(sub)          # leg_payload divides by the count
     legpay["r_2x"] = legpay.r_2x * len(sub)
 
+    # THIS STAGE NO LONGER WRITES THE LIVE BOARD RECORD BY DEFAULT.
+    #
+    # The record on the board is written by `stage11_reprice.py --board`, which
+    # re-prices these trades at the MEASURED gold spread and DROPS THE SILVER
+    # LEG. Silver is on the do-not-trade list in CLAUDE.md: it loses to this
+    # hypothesis's own null and was costed at half its measured spread. Running
+    # stage 10 on its own used to replace H-016 with the superseded four-leg
+    # book that still contains it - which happened on 2026-09-08, was caught by
+    # reading the output, and was restored from a backup.
+    #
+    # Stage 10's real product is `stage10_trades.parquet`, written above. The
+    # board record here is kept behind a flag so the pre-reprice book stays
+    # reproducible for a before/after, and nothing else.
+    if "--write-superseded-board" not in sys.argv:
+        print("\n  stage10_trades.parquet written.")
+        print("  NOT writing board.json - stage 11 owns that record.")
+        print("  Next:  .venv/bin/python strategies/ribbon/stage11_reprice.py --board")
+        return 0
+
+    print("\n  WARNING: writing the SUPERSEDED four-leg book (3 gold + silver) "
+          "at ASSUMED cost.\n  Run stage11_reprice.py --board afterwards to "
+          "restore the real record.")
     board.write_board(
         sid="ribbon", hid="H-016",
         name="Trend-following MA ribbon",

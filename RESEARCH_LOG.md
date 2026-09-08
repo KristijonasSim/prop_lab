@@ -2394,3 +2394,59 @@ If that bar OPENS beyond the stop, both kernels still fill **at the stop price**
 not at the gap. That is optimistic and it is the next thing to price. It was
 already listed as a caveat on H-016's board card ("gold gaps over weekends and
 the -2.00R is optimistic by an unknown amount"); the amount is still unknown.
+
+---
+
+## 2026-09-08 (second entry) — the gap-through fill, and what holding through the weekend really costs
+
+The morning's fix stopped both kernels exiting on Dukascopy's padded weekend
+bars, so a position now rides through the closed session and resolves on the
+next bar that trades. That immediately raised a question the old behaviour had
+hidden: **what price does it resolve at?**
+
+Both kernels filled a triggered stop **at the stop level**, on any bar whose
+range contained it. On a bar that OPENED beyond the stop that is wrong. A stop is
+a stop-market order; if the market reopens through it, the fill is the first
+available price — the open — not the level. Filling at the level assumes price
+walked down to it, which on a gap it did not.
+
+### Measured before the fix
+
+| leg | stop exits | gapped | median through | worst | R overstated |
+|---|---|---|---|---|---|
+| H-016 XAUUSD 15m | 1,115 | 61 | 13.9bps | 113.9bps | 21.2 of 138.1 |
+| H-016 XAUUSD 30m | 602 | 75 | 22.1bps | 117.3bps | **53.2 of 148.3** |
+| H-016 XAUUSD 1h | 310 | 32 | 27.2bps | 216.1bps | 16.4 of 109.5 |
+| H-002 XAUUSD (all TFs) | 5,382 | **1** | 0.05bps | 0.05bps | 0.01 |
+
+**H-002 is essentially immune and H-016 is not**, for a structural reason: H-002
+is session-bound and rarely holds a position across a weekend, while H-016's
+whole exit is a multi-day trailing stop. The same assumption, on two strategies,
+costs one of them nothing and the other a third of a leg's R.
+
+### What it cost
+
+| | before | after |
+|---|---|---|
+| H-016 walk-forward cells clearing PF 1.20 at 2x | 14 of 16 | 13 of 16 |
+| H-016 real vs paired null | 14 vs 3.3 | 13 vs 3.0 |
+| H-016 board record | PF 1.870, 127.6 expected days | **PF 1.652, 260.1 days** |
+
+**The morning's improvement was mostly this assumption.** Fixing the dead-bar
+exits took H-016 from 175.9 to 127.6 expected days; pricing the gap fill took it
+to 260.1 — worse than where the day started. The edge is still there and still
+beats its null 13 to 3.0. The *pace* was never there; it was resting on a fill
+nobody could have got.
+
+### What is NOT changed, deliberately
+
+**A target keeps its level.** A target is a limit order, and a gap through it
+fills BETTER than the level. Taking that bonus would be optimism in the other
+direction, so the gap is given away instead. Pessimistic on both sides.
+
+### The rule this leaves
+
+Any exit that can be held across a session boundary has to state where it fills
+on the reopen, and a backtest that answers "at my level" is claiming a fill it
+could not have got. This is the same class of error as the previous repo's
+resting-limit VWAP band strategy — PF 3.0 in backtest, ~0.7 live.

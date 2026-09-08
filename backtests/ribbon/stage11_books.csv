@@ -1,5 +1,5 @@
 book,legs,trades,pf,total_r,max_dd_r,r_per_day,tpd,risk,pass_rate,median_days,expected_days,one_step_days
-"board book (3 gold + silver), ASSUMED",4,467,1.755,25.22,2.41,0.0404,0.19,0.03,0.7504,99.0,131.9,74.2
-"board book (3 gold + silver), MEASURED",4,467,1.764,25.45,2.42,0.0408,0.19,0.03,0.7504,99.0,131.9,74.2
-"gold only (3 legs), ASSUMED",3,378,1.842,27.9,2.71,0.0446,0.2,0.025,0.7364,96.0,130.4,79.4
-"gold only (3 legs), MEASURED",3,378,1.87,28.57,2.59,0.0457,0.2,0.03,0.7364,80.0,108.6,60.9
+"board book (3 gold + silver), ASSUMED",4,424,1.589,19.79,2.63,0.0317,0.17,0.03,0.7328,110.0,150.1,109.2
+"board book (3 gold + silver), MEASURED",4,424,1.594,19.96,2.64,0.032,0.17,0.03,0.7328,108.5,148.1,97.3
+"gold only (3 legs), ASSUMED",3,335,1.629,21.03,3.97,0.0335,0.18,0.02,0.6328,166.0,262.3,117.0
+"gold only (3 legs), MEASURED",3,335,1.652,21.61,3.89,0.0344,0.18,0.02,0.6343,165.0,260.1,117.0

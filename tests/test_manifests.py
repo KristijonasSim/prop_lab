@@ -51,3 +51,23 @@ def test_manifest_files_all_exist(sid):
         f"strategies/{sid}/manifest.py names files that do not exist: "
         f"{missing}. A missing declared file hashes to None and reads as a hard "
         f"stale forever.")
+
+
+def test_stage10_does_not_overwrite_the_live_ribbon_board():
+    """H-016's board record is written by `stage11_reprice.py --board`, never by
+    `stage10_board.py`.
+
+    Running stage 10 used to replace the record with the superseded four-leg
+    book that still contains SILVER - which is on the do-not-trade list in
+    CLAUDE.md for losing to this hypothesis's own null and having been costed at
+    half its measured spread. That happened on 2026-09-08 and was caught by
+    reading the output, which is not a control.
+    """
+    src = (ROOT / "strategies" / "ribbon" / "stage10_board.py").read_text()
+    assert "--write-superseded-board" in src, (
+        "stage10_board.py writes board.json unconditionally again. It must not: "
+        "stage 11 owns that record.")
+    i_guard = src.index("--write-superseded-board")
+    i_write = src.index("board.write_board(")
+    assert i_guard < i_write, (
+        "the superseded-board guard no longer precedes the write_board call")

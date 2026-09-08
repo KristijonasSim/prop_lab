@@ -1,7 +1,7 @@
 {
  "sid": "ribbon",
- "when": "2026-09-08T06:51:07.132143+00:00",
- "kernel_hash": "c1ef5bdbfcf74853c8258b3e353e90fe0cdcaa109cdb8cffe391474b3b36141f",
+ "when": "2026-09-08T07:09:41.070224+00:00",
+ "kernel_hash": "a91bd109bbb378b3ecc84d1aebda6a3c9dcd72e6937234e7602418670d3ecc33",
  "depth": "fast",
  "checks": {
   "lookahead": {
@@ -14,10 +14,10 @@
   },
   "degenerate": {
    "passed": true,
-   "ran": 12,
+   "ran": 14,
    "skipped": 0,
    "failed": 0,
-   "detail": "12 passed",
+   "detail": "14 passed",
    "why": "Zero-volume bars, flat OHLC, zero sigma, one bar, empty series. Both 2026-09-07 bugs were degenerate-input bugs."
   },
   "costs": {
@@ -46,10 +46,10 @@
   },
   "manifest": {
    "passed": true,
-   "ran": 2,
+   "ran": 3,
    "skipped": 0,
    "failed": 0,
-   "detail": "2 passed",
+   "detail": "3 passed",
    "why": "Everything this result depends on is declared, so the stale flag can see it. An undeclared kernel never trips the flag."
   },
   "fingerprint": {

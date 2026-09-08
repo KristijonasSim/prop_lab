@@ -339,6 +339,54 @@ it got it back by being checked.
 
 ---
 
+## THE BUG SWEEP — 2026-09-08, after items 1-4
+
+Kris asked for every bug found today to be fixed. Six were already fixed as they
+were found. Closing out the list turned up **two more**, both real.
+
+| # | bug | found by | state |
+|---|---|---|---|
+| 1 | `stage18_goldbook.py` rewrote `board.json` **on import** | wiring item 1 | fixed |
+| 2 | Running `stage10_board.py` restored the superseded book **containing silver** | running it | fixed + pinned by a test |
+| 3 | Both kernels **crash on an empty series** | `test_degenerate` | fixed |
+| 4 | `test_parity.py` had **never been run by anything** | building the gate | fixed |
+| 5 | The dead-bar fix **never guarded the EXIT** | reading ribbon to port it | fixed |
+| 6 | `self.stop` overwrote NautilusTrader's `Strategy.stop()` | the port's first run | fixed |
+| 7 | **The vwap NautilusTrader port sat one fix behind the kernel** | the slow suite | fixed |
+| 8 | **A stop the bar GAPPED past filled at the level, not the open** | measuring the last open assumption | fixed |
+
+**7 is the one that justifies running the slow suite — and it came with a
+correction to my own first reading of it.** The nightly job failed on vwap 1h,
+30m and 15m. Two different causes were hiding in that one symptom:
+
+* **1h was the real bug.** After the exit-path fix the port still filled on
+  padded bars, so it disagreed with the corrected kernel and *every disagreement
+  belonged to the port*. A stale port is worse than no port: it produces a
+  confident-looking mismatch with no cause. Fixed; 1h now matches on entry bars,
+  exit bars and R.
+* **30m and 15m were never disagreements at all.** The port's `TFS` map listed
+  only 5m, 1h and 4h, so the new test raised `KeyError` on the other two. I read
+  three failures as one cause and was wrong. **The port is timeframe-agnostic and
+  those two had simply never been listed — so two of the board book's four legs
+  had never been cross-checked and nothing said so.** Both added.
+
+The 4h fast check passed throughout, which is why only the nightly job saw any
+of it.
+
+**8 is the one that cost a headline.** A stop is a stop-market order; if the bar
+OPENS beyond it the fill is the open, not the level. Filling at the level assumes
+price walked down to it, which on a gap it did not — and the kernels had just
+started holding through the closed weekend, which is exactly where gold gaps. The
+two 2026-09-08 changes belong together and the second undoes the first's gain.
+
+Measured before the fix, on H-016's own legs: **168 of 2,027 stop exits were
+gapped**, median 13.9–27.2bps through, worst 216bps, overstatement **53.2R of
+148.3R on the 30m leg alone**. A target is deliberately NOT given the same
+treatment — a target is a limit order and a gap through it fills BETTER, so
+taking that bonus would be optimism in the other direction.
+
+---
+
 ## Order and rough calendar
 
 | # | item | cost | gate to start |

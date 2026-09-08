@@ -240,6 +240,37 @@ exits (6.2%)** and **H-016 1,532 of 8,610 (17.8%)**. Both are now zero.
   premature stop-outs on a price nobody traded. **The counterfactual has to be
   re-run, not subtracted.**
 
+**A STOP THE BAR GAPPED PAST FILLS AT THE OPEN, NOT AT THE LEVEL (2026-09-08).**
+A stop is a stop-market order. Filling at the level assumes price walked down to
+it; on a gap it did not. This became material the moment the kernels started
+holding through the closed weekend, which is exactly where gold gaps — the two
+2026-09-08 changes belong together and **the second undoes the first's gain**.
+
+| | before either fix | after the exit fix | after the gap fix |
+|---|---|---|---|
+| H-016 expected days | 175.9 | 127.6 | **260.1** |
+| H-016 cells clearing PF 1.20 at 2x | 12/16 | 14/16 | 13/16 |
+| H-016 vs its paired null | 12 vs 5.0 | 14 vs 3.3 | 13 vs 3.0 |
+| H-002 expected days | 143.6 | 143.6 | **143.6** |
+
+**H-002 is immune and H-016 is not, structurally.** H-002 is session-bound and
+rarely holds across a weekend (1 gapped stop in 5,382); H-016's whole exit is a
+multi-day trailing stop (168 gapped of 2,027, median 13.9–27.2bps through, worst
+216bps). **H-016's pace headline was resting on a fill nobody could have got.**
+The edge survives — 13 of 16 against a null's 3.0 — the speed never existed.
+**A TARGET keeps its level**: it is a limit order, a gap through it fills better,
+and taking that bonus would be optimism in the other direction.
+
+**OPEN, 2026-09-08: 1 of 11 configurations on XAUUSD 30m and 1 of 13 on 15m
+DISAGREE with the vwap NautilusTrader port on entry bars.** Found the moment
+those two timeframes were added to the port's `TFS` map, which had listed only
+5m/1h/4h — so two of the board book's four legs had never been cross-checked at
+all. Exit bars match 1.0000 and `max |dR|` is 2e-7 (float noise) on every
+configuration that does match, so this is narrow, but an entry-bar disagreement
+is a causality question and it is NOT yet known whether the kernel or the port is
+wrong. **Do not quote H-002's 30m or 15m legs as second-engine verified until
+this is resolved.** The slow suite fails on it deliberately.
+
 **BOTH KERNELS ARE NOW SECOND-ENGINE CHECKED (2026-09-08).** `strategies/ribbon/
 stage12_nautilus.py` streams the ribbon kernel through NautilusTrader one bar at
 a time and matches **108 of 108 rule shapes exactly** across 15m/30m/1h/4h -

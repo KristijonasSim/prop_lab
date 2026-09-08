@@ -68,6 +68,22 @@ segfaulted on stop-and-reverse, which can flip many times in one session.
   bar hides the intrabar path and this is the pessimistic read.
 * Exit checks run in a fixed order — stop, target, indicator exit, flip — and
   **the stop wins every tie.**
+* **A stop that the bar GAPPED past fills at the open, not at the level**
+  (added 2026-09-08). A stop is a stop-market order; filling at the level assumes
+  price walked down to it, which on a gap it did not. Measured on H-016's legs
+  before the guard: 168 of 2,027 stop exits were gapped, median 13.9–27.2bps
+  through, worst 216bps, and the overstatement was **53.2R of 148.3R on the 30m
+  leg alone**. This matters more since the kernels started holding through the
+  closed weekend, which is exactly where gold gaps — the two 2026-09-08 changes
+  belong together.
+  * **A TARGET deliberately does NOT get the same treatment.** A target is a
+    limit order and a gap through it fills BETTER; taking that bonus would be
+    optimism in the other direction. The target keeps its level and the gap is
+    given away. Pessimistic on both sides, which is the point.
+* **Any second-engine port must carry these rules too.** The vwap NautilusTrader
+  port sat one fix behind the kernel for several hours on 2026-09-08 and reported
+  disagreements that belonged to itself. A stale port is worse than no port: it
+  produces a confident-looking mismatch with no cause. The slow suite caught it.
 
 ### 1.4 Costs and risk
 

@@ -15,12 +15,12 @@ Full detail in `STEPS_1_2_4.md`. What changed:
 | | before today | now |
 |---|---|---|
 | H-002 VWAP — gold | 6.0/10, 143.6d | **6.0/10, 143.6d, every check passes** |
-| H-016 ribbon — gold | 5.0/10, 175.9d | **6.0/10, 127.6d, every check passes** |
+| H-016 ribbon — gold | 5.0/10, 175.9d | **4.7/10, 260.1d, every check passes** |
 | provenance | a hand-typed `SUPERSEDED` note | fingerprinted; the board flags itself |
 | tests | none on either kernel | **77, no skips, plus CI** |
 | second engine | vwap only, run by hand twice | **both, automatic** |
 
-**Six bugs were found by building this**, five of them by the tests rather than
+**Eight bugs were found by building this**, six of them by the tests rather than
 by reading code. The one that mattered: **the 2026-09-07 dead-bar fix guarded the
 decision bar and the fill bar and never guarded the EXIT.** 1,079 of H-002's
 17,432 exits and 1,532 of H-016's 8,610 landed on a bar where nothing traded.
@@ -36,9 +36,11 @@ See `RESEARCH_LOG.md` 2026-09-08.
 
 * **One market is left: gold.** All crypto price hypotheses are dead.
 * **Two survivors, and BOTH are flagged TOO SLOW.** H-002 (VWAP, 4.41 trades/day,
-  **143.6** expected days) and H-016 (ribbon, 0.61 trades/day, **127.6** days,
-  improved from 175.9 by the 2026-09-08 exit-path fix). Both beat their nulls,
-  both are now second-engine checked; neither is close to the pace target.
+  **143.6** expected days) and H-016 (ribbon, 0.53 trades/day, **260.1** days —
+  it went 175.9 → 127.6 on the exit-path fix and then to 260.1 once the
+  gap-through fill was priced). Both beat their nulls, both are now
+  second-engine checked; neither is close to the pace target, and H-016 is
+  now further away than it looked this morning.
 * **The pace target is 5-14 days** (Kris, 2026-09-07, across several firms).
   Past 50 expected days the board flags `TOO SLOW` and the flag overrides the
   score. **Nothing here has ever been within reach of 5-14 days on honest

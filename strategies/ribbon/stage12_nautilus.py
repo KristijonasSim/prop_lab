@@ -234,10 +234,14 @@ class RibbonStream(Strategy):
         # 3. manage an open position on this bar
         if self.pos != 0 and self.live[i] == 1 and i > self.entry_i - 1:
             done = False
+            # gap-through: a stop the bar OPENED beyond fills at the open, not
+            # at the level. Mirrors engine.py.
             if self.pos == 1 and lo <= self.stop_px:
-                self._close(self.stop_px, i, R_TRAIL); done = True
+                self._close(self.stop_px if o > self.stop_px else o, i, R_TRAIL)
+                done = True
             elif self.pos == -1 and hi >= self.stop_px:
-                self._close(self.stop_px, i, R_TRAIL); done = True
+                self._close(self.stop_px if o < self.stop_px else o, i, R_TRAIL)
+                done = True
 
             if not done and c.rr > 0.0:
                 if self.pos == 1 and hi >= self.target:

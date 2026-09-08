@@ -221,3 +221,35 @@ def test_no_exit_lands_on_a_zero_volume_bar(kernel, cfgname):
     assert total > 0, (
         f"{kernel.name} [{cfgname}]: no series produced a trade, so this check "
         f"verified nothing. Widen _dead_block_series rather than accept it.")
+
+
+@pytest.mark.parametrize("kernel", KERNELS, ids=IDS)
+@pytest.mark.parametrize("cfgname", ["cfg", "cfg_alt"])
+def test_a_stop_never_fills_better_than_the_bar_opened(kernel, cfgname):
+    """A stop is a stop-MARKET order. If the bar OPENS beyond it, the fill is
+    the open, not the level.
+
+    Filling at the level assumes the price walked down to it, which on a gap it
+    did not. Measured on H-016's own legs before the guard existed: 168 of 2,027
+    stop exits were gapped, median 13.9-27.2bps through, worst 216bps, and the
+    overstatement was 53.2R of 148.3 on the 30m leg alone. This matters more
+    since the kernels started holding through the closed weekend, which is
+    exactly where gold gaps.
+
+    Stated as an inequality rather than by exit reason, because the reason codes
+    differ between kernels and the invariant does not: a LONG can never exit
+    above the bar's open when that exit was a stop, and no exit of any kind may
+    print outside the bar's own range.
+    """
+    df, _, _ = _dead_block_series(seed=5, drift=+6.0)
+    tr = kernel.run(df, getattr(kernel, cfgname), 1.0, 0.5)
+    if len(tr) == 0:
+        pytest.skip("no trades")
+    xi = tr[:, T_EXIT_I].astype(int)
+    hi = df.high.values[xi]
+    lo = df.low.values[xi]
+    px = tr[:, 4]                              # T_EXIT_PX
+    # Every fill must be a price the bar actually contained. A gap fill at the
+    # open satisfies this; a fill at a stop the bar gapped past does not.
+    assert (px <= hi + 1e-9).all() and (px >= lo - 1e-9).all(), (
+        f"{kernel.name} [{cfgname}]: an exit printed outside the bar's range")

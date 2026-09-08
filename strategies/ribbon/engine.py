@@ -203,13 +203,28 @@ def simulate(
 
             # 1. stop first, always. The bar's path is unknown and this is the
             #    pessimistic reading.
+            # GAP-THROUGH FILL. A stop is a stop-MARKET order: if the bar
+            # OPENS beyond it, the fill is the open, not the stop level. Filling
+            # at the level assumes the price walked down to it, which it did not.
+            # Measured 2026-09-08 on H-016's own legs before this existed:
+            # 168 of 2,027 stop exits were gapped, median 13.9-27.2bps through,
+            # worst 216bps, and the overstatement was 21.2R of 138.1 on 15m,
+            # 53.2R of 148.3 on 30m and 16.4R of 109.5 on 1h. Gold gaps over the
+            # weekend and this kernel now holds through it, so the two changes
+            # of 2026-09-08 belong together. H-002 is barely affected - it is
+            # session-bound and rarely holds across a gap - which is why this was
+            # invisible until the ribbon numbers were looked at.
+            # A TARGET is deliberately NOT given the same treatment. A target is
+            # a limit order and a gap through it fills BETTER; taking that bonus
+            # would be optimism in the other direction, so the target keeps its
+            # level and the gap is given away.
             if side == 1 and lo <= stop:
-                exit_px = stop
+                exit_px = stop if o[j] > stop else o[j]
                 exit_i = j
                 reason = R_TRAIL
                 break
             if side == -1 and hi >= stop:
-                exit_px = stop
+                exit_px = stop if o[j] < stop else o[j]
                 exit_i = j
                 reason = R_TRAIL
                 break

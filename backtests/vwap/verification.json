@@ -1,7 +1,7 @@
 {
  "sid": "vwap",
- "when": "2026-09-08T06:51:22.915049+00:00",
- "kernel_hash": "3ae51cd2efb6b24db73c7fa9e1ba276352e633b86bf5ef3a09a39f1f4266ef21",
+ "when": "2026-09-08T07:09:57.816300+00:00",
+ "kernel_hash": "52b2991006bf689d5abe8e7ae6333407c2a019503611eaab51bca354cc56935d",
  "depth": "fast",
  "checks": {
   "lookahead": {
@@ -14,10 +14,10 @@
   },
   "degenerate": {
    "passed": true,
-   "ran": 12,
+   "ran": 14,
    "skipped": 0,
    "failed": 0,
-   "detail": "12 passed",
+   "detail": "14 passed",
    "why": "Zero-volume bars, flat OHLC, zero sigma, one bar, empty series. Both 2026-09-07 bugs were degenerate-input bugs."
   },
   "costs": {

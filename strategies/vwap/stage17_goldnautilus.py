@@ -79,7 +79,13 @@ FOLDS = ROOT / "backtests" / "vwap" / (
     else "stage6_folds_xauusd_deadfix.parquet")
 
 SYM = "XAUUSD"
-TFS = {"5m": "5-MINUTE-LAST", "1h": "1-HOUR-LAST", "4h": "4-HOUR-LAST"}
+# Every timeframe the gold walk-forward selects on. 15m and 30m were missing
+# until 2026-09-08: the port is timeframe-agnostic, they had simply never been
+# listed, so `tests/test_second_engine.py` raised KeyError on them and the
+# nightly suite reported a failure that was the TEST's, not the kernel's.
+# Two-thirds of the board book was outside the cross-check and nothing said so.
+TFS = {"5m": "5-MINUTE-LAST", "15m": "15-MINUTE-LAST", "30m": "30-MINUTE-LAST",
+       "1h": "1-HOUR-LAST", "4h": "4-HOUR-LAST"}
 # 4h is here because it is the board book's second leg AND because it is the
 # only gold timeframe whose folds select target_mode=TGT_VWAP, the exit that
 # reads bar j's own running VWAP. `--peek` re-runs it with that value taken
@@ -164,6 +170,11 @@ class GoldVwap(Strategy):
         self.atr_hist: deque = deque(maxlen=RANK_WIN)   # atr through bar n-1
         self.prev_close = float("nan")
         self.last_vol = 0.0                             # for the zero-volume ffill
+        # The last bar that actually traded. The kernel's time exit walks BACK
+        # to it when the horizon lands on Dukascopy's padded weekend, so the
+        # port has to know it too. Added 2026-09-08 with the exit-path guard.
+        self.live_i = -1
+        self.live_close = float("nan")
         self.prev_bar = None                            # (o,h,l,c) of bar n-1
         self.prev_vwap = float("nan")
 
@@ -232,6 +243,12 @@ class GoldVwap(Strategy):
         lo = float(bar.low); cl = float(bar.close); vol = float(bar.volume)
         i = self.n
         ts = pd.Timestamp(bar.ts_event, unit="ns", tz="UTC")
+        # 21.5% of the XAUUSD series is zero-volume weekend padding. The kernel
+        # refuses to decide, fill OR EXIT on one; before 2026-09-08 it only
+        # refused the first two and so did this port. Keeping the port in step
+        # is the point of the cross-check - a port that lags the kernel reports
+        # disagreements that belong to itself.
+        is_live = vol > 0.0
 
         # 1. is this bar the start of a session?
         if self.rolling:
@@ -243,7 +260,12 @@ class GoldVwap(Strategy):
             # force flat at the CLOSE of the previous bar - the kernel's
             # horizon = stop_bar with the time exit at horizon - 1
             if self.side != 0:
-                self._close(self.prev_close, i - 1, R_TIME)
+                # not necessarily bar i-1: the kernel walks back past padding,
+                # stopping no earlier than the entry bar
+                if self.live_i >= self.entry_bar and self.live_i >= 0:
+                    self._close(self.live_close, self.live_i, R_TIME)
+                else:
+                    self._close(self.prev_close, i - 1, R_TIME)
             self.pending = 0                     # entry would have been at stop_bar
             self.sess_start = i
             self.sess_id += 1
@@ -288,7 +310,7 @@ class GoldVwap(Strategy):
 
         # 3. manage an open position on this bar, in the kernel's order:
         #    stop, target, vwap, flip - and the stop wins every tie.
-        if self.side != 0:
+        if self.side != 0 and is_live:
             j = i
             if self.side == 1:
                 hit_stop = lo <= self.stop_px
@@ -297,7 +319,13 @@ class GoldVwap(Strategy):
                 hit_stop = hi >= self.stop_px
                 hit_tgt = self.has_target == 1 and lo <= self.target_px
             if hit_stop:
-                self._close(self.stop_px, j, R_STOP)
+                # gap-through: a stop the bar OPENED beyond fills at the open.
+                # Mirrors engine.py; a port one fix behind the kernel reports
+                # disagreements that belong to itself.
+                px = (self.stop_px
+                      if (o > self.stop_px if self.side == 1 else o < self.stop_px)
+                      else o)
+                self._close(px, j, R_STOP)
             elif hit_tgt:
                 self._close(self.target_px, j, R_TARGET)
 
@@ -340,7 +368,7 @@ class GoldVwap(Strategy):
         # 4b. the VWAP target and the TREND flip are checked on bar i using
         #     bar i's OWN vwap, exactly as the kernel does, and only after the
         #     entry bar (`j > entry_i`).
-        if self.side != 0 and i > self.entry_bar:
+        if self.side != 0 and is_live and i > self.entry_bar:
             vw = vwap_now if c.vwap_peek else self.prev_vwap
             if c.target_mode == TGT_VWAP and vw == vw:
                 if (self.side == 1 and hi >= vw) or (self.side == -1 and lo <= vw):
@@ -350,13 +378,18 @@ class GoldVwap(Strategy):
                     self._close(cl, i, R_FLIP)
         # 4c. the time exit, when max_hold_bars binds
         if self.side != 0 and i >= self.horizon - 1:
-            self._close(cl, i, R_TIME)
+            if is_live:
+                self._close(cl, i, R_TIME)
+            elif self.live_i >= self.entry_bar and self.live_i >= 0:
+                self._close(self.live_close, self.live_i, R_TIME)
 
         prev = self.prev_bar
         prev_vw = self.prev_vwap                 # bar i-1's VWAP, which is what
         self.prev_bar = (o, hi, lo, cl)          # MODE_RECLAIM and MODE_PULLBACK
         self.prev_close = cl                     # compare against
         self.prev_vwap = vwap_now
+        if is_live:
+            self.live_i, self.live_close = i, cl
         self.n += 1
 
         # 5. decide on the closed bar i. The kernel only VISITS a bar it is flat
