@@ -79,13 +79,15 @@
     "detail": ""
    },
    "fingerprint": {
-    "git": "26a434e",
+    "git": "0255b06",
     "dirty": true,
-    "written": "2026-09-08T06:03:53.589462+00:00",
-    "kernel_hash": "40610052ec0c",
+    "written": "2026-09-08T06:15:23.035667+00:00",
+    "kernel_hash": "a74942d21c4d",
     "kernels": [
+     "core/metrics.py",
      "strategies/vwap/engine.py",
      "strategies/vwap/stage18_goldbook.py",
+     "strategies/vwap/stage1_grid.py",
      "strategies/vwap/stage20_deadfix.py",
      "strategies/vwap/stage3_timeframes.py",
      "strategies/vwap/stage6_walkforward.py",
@@ -17546,17 +17548,22 @@
     "detail": ""
    },
    "fingerprint": {
-    "git": "26a434e",
+    "git": "0255b06",
     "dirty": true,
-    "written": "2026-09-08T06:06:39.056405+00:00",
-    "kernel_hash": "07f83a1aa796",
+    "written": "2026-09-08T06:15:29.605738+00:00",
+    "kernel_hash": "13f4ac78326b",
     "kernels": [
+     "core/metrics.py",
      "strategies/ribbon/engine.py",
      "strategies/ribbon/ribbon.py",
      "strategies/ribbon/stage10_board.py",
      "strategies/ribbon/stage11_reprice.py",
      "strategies/ribbon/stage6_walkforward.py",
-     "strategies/ribbon/sweep.py"
+     "strategies/ribbon/sweep.py",
+     "strategies/vwap/engine.py",
+     "strategies/vwap/stage1_grid.py",
+     "strategies/vwap/stage3_timeframes.py",
+     "strategies/vwap/sweep.py"
     ],
     "costs": {
      "model": "bps per side, measured from Dukascopy ticks (core/fx_spread.py)",

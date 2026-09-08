@@ -35,6 +35,15 @@ KERNELS = [
     S / "stage6_walkforward.py",  # quarterly blind reselection
     S / "stage10_board.py",       # the walk-forward that produced the trades
     S / "stage11_reprice.py",     # measured repricing, silver dropped, board writer
+    ROOT / "core" / "metrics.py",
+    # REAL cross-hypothesis dependency, found by core/manifest_audit.py:
+    # ribbon/sweep.py imports ASSETS from vwap/stage1_grid.py and the timeframe
+    # loader from vwap/stage3_timeframes.py, and vwap/sweep.py pulls in
+    # vwap/engine.py. Editing H-002's kernel can therefore move H-016's numbers.
+    ROOT / "strategies" / "vwap" / "stage1_grid.py",
+    ROOT / "strategies" / "vwap" / "stage3_timeframes.py",
+    ROOT / "strategies" / "vwap" / "sweep.py",
+    ROOT / "strategies" / "vwap" / "engine.py",
 ]
 
 # Trades stand, summary does not. See core/fingerprint.py for why these are a
@@ -42,6 +51,7 @@ KERNELS = [
 SCORING = [
     ROOT / "core" / "board.py",
     ROOT / "core" / "riskladder.py",
+    ROOT / "core" / "prop_rules.py",
 ]
 
 DATA = [
@@ -60,6 +70,14 @@ COSTS = {
                "XAUUSD was (1.00, 0.50, 3.0)",
     "gate_multiple": 2,
 }
+
+# The stage whose write_board call produces backtests/ribbon/board.json - stage
+# 11, not stage 10. core/manifest_audit.py walks its import graph.
+WRITER = S / "stage11_reprice.py"
+
+# Stage 11 re-prices stage 10's cached trades and reads stage 6's stitched null
+# table, so all three are roots of the provenance chain.
+ROOTS = [WRITER, S / "stage10_board.py", S / "stage6_walkforward.py"]
 
 MANIFEST = {"kernels": KERNELS, "scoring": SCORING,
             "data": DATA, "costs": COSTS}

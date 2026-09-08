@@ -16672,26 +16672,29 @@
  },
  "fingerprint": {
   "v": 1,
-  "written": "2026-09-08T06:03:53.589462+00:00",
+  "written": "2026-09-08T06:15:23.035667+00:00",
   "git": {
-   "sha": "26a434ebdb2b0150a8722411fe5952ec35812234",
-   "short": "26a434e",
+   "sha": "0255b06cc37f531a2a2a2c561ad2aba0053cb1e8",
+   "short": "0255b06",
    "dirty": true
   },
   "kernels": {
+   "core/metrics.py": "1d5e1df2a415eb708084744d39a8debf1b4c12296829498c7141ed42ad5ee120",
    "strategies/vwap/engine.py": "ef4dec1dd2213c0ef8e0205195dd56ecfe87a3dd573b5647f74865023da500a5",
    "strategies/vwap/stage18_goldbook.py": "1c5f73ab661347874b8759bc6daca6b73258de517bd158ee6a2154ef7fa2aee8",
+   "strategies/vwap/stage1_grid.py": "68f96364b0ed2f68ec8d21fc890834ac2513d804646ef74700dc81104d432893",
    "strategies/vwap/stage20_deadfix.py": "10267bc73df8c645a0a2f2743f0a14da05ec6f32ababb73c9946abb722bf948a",
    "strategies/vwap/stage3_timeframes.py": "23835a361b8a73e5ff830f167f21cabfaa788cc9b8c01ad7a2eadc9574825677",
    "strategies/vwap/stage6_walkforward.py": "9c4583840dc9d7468ead52ddf00d1677d512f9b8fa6ea55606a3c7fe4f9c8ffe",
    "strategies/vwap/sweep.py": "4ac5d02a91f9c2b4698670fe3247e55acf3ec7fe34c3b8c093f3bd35f9b93732"
   },
-  "kernel_hash": "40610052ec0ca02883636e4ef7bb0d9cd7b657cad2a95f4aadaf9e56e5f70964",
+  "kernel_hash": "a74942d21c4d73ac1aea27a0d12c897013bc52f5b941a9ea602b3e9d9cefa6b9",
   "scoring": {
    "core/board.py": "a8f63848144c20790a45e939f67de4e01ad186daacda8d119d14ef5743591eaa",
+   "core/prop_rules.py": "4a4c16083936e7f1e58bd1f057937a5ee40264b19ada38b166e2e5ba51dabf38",
    "core/riskladder.py": "9180c71025cea5367b4f84dcea81ba7c4de7078ba2567904e669cd462db2a12e"
   },
-  "scoring_hash": "8e284dd802bad2210003b31048d7d86e89d5cc931ef595eddd8d5ae3bd148395",
+  "scoring_hash": "97dd447708cd8628bb3b693020815d3780e4dc92c5667bb3a0c31a419ab6f6c4",
   "data": {
    "backtests/vwap/stage6_trades_xauusd_deadfix.parquet": {
     "sha": "37da79c18f8955982bb2ac1802361ebc51776f298c2bd7a20690351ba3ec432b",

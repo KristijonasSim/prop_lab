@@ -26,10 +26,12 @@ TFS = {"5m": "5min", "30m": "30min", "1h": "1h", "4h": "4h"}
 KERNELS = [
     S / "engine.py",              # the numba kernel: bands, entries, exits, costs
     S / "sweep.py",               # config expansion and the (n, 8) trade array
+    S / "stage1_grid.py",         # ASSETS: the per-market cost triples
     S / "stage3_timeframes.py",   # load_tf + TFS: which bars a leg actually sees
     S / "stage6_walkforward.py",  # quarterly blind reselection - produced the trades
     S / "stage18_goldbook.py",    # repricing, cell/book construction, selection
     S / "stage20_deadfix.py",     # the two dead-bar fixes, and the board writer
+    ROOT / "core" / "metrics.py", # resolution_estimate, used inside the sweep
 ]
 
 # Trades stand, summary does not. See core/fingerprint.py for why these are a
@@ -37,6 +39,9 @@ KERNELS = [
 SCORING = [
     ROOT / "core" / "board.py",
     ROOT / "core" / "riskladder.py",
+    # The evaluation rules themselves: profit target, daily cap, max loss. Change
+    # these and every pass rate and expected-days number on the card moves.
+    ROOT / "core" / "prop_rules.py",
 ]
 
 DATA = [
@@ -55,6 +60,17 @@ COSTS = {
     "gate_multiple": 2,      # every headline is quoted at 2x as well
     "basis": "478 sampled hours of Dukascopy XAUUSD ticks, core/fx_spread.py",
 }
+
+# The stage whose write_board call produces backtests/vwap/board.json.
+# core/manifest_audit.py walks this file's import graph and fails if anything it
+# reaches is missing from KERNELS - which is what stops a kernel from silently
+# escaping the stale flag by not being listed.
+WRITER = S / "stage20_deadfix.py"
+
+# Every stage that produced something fingerprinted here. The writer reads a
+# cached trades parquet and never imports the kernel, so walking the writer alone
+# would miss the entire simulation.
+ROOTS = [WRITER, S / "stage6_walkforward.py"]
 
 MANIFEST = {"kernels": KERNELS, "scoring": SCORING,
             "data": DATA, "costs": COSTS}
