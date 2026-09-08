@@ -27,6 +27,31 @@ from core.prop_rules import ONE_STEP, PropRules, TWO_STEP   # noqa: E402
 RISK_LADDER = (0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175,
                0.02, 0.025, 0.03, 0.04, 0.05)
 MAX_BREACH = 0.05     # a risk level that kills more than 1 account in 20 is out
+#: MINIMUM RISK PER TRADE. Kris's instruction, 2026-09-08: "aim at at least 2%
+#: per trade."
+#:
+#: THE RULE THIS REPLACES WAS NOT DOING WHAT IT SAID. `pick` documents itself as
+#: "fewest expected days among the risk levels that are actually allowed", but
+#: gold's peak drawdown is -14.86% at the LOWEST rung on the ladder, already far
+#: past the 6% cap - so no rung ever qualified, `pick` fell through to its
+#: `min(abs(max_dd))` fallback every single time, and the board's chosen risk was
+#: the smallest number on the ladder rather than any kind of optimum. Every board
+#: record this project has published was reported at a fallback.
+#:
+#: AND THE FALLBACK IS EXPENSIVE. On gold 1h, 0.25% risk needs 38.0 expected days
+#: to a funded account; 2% needs 16.6 and 3% needs 13.0. What the higher rung
+#: buys is speed and what it costs is accounts: 58% blow instead of 46%, so 2.4
+#: accounts are bought instead of 2.0 - EUR 52 against EUR 44 at EUR 21.89 an
+#: account. Eight euros for twenty-one days is not a close call, and it is only
+#: a close call at all because accounts are cheap. THAT is the trade being made
+#: here, and it is a business decision, not a statistical one.
+#:
+#: Read `max_dd` at these rungs as the drawdown of the CONTINUOUS equity curve at
+#: that size, not as what one challenge account loses - an account is dead at 6%
+#: and stops. It is why a -118% curve still passes 42% of accounts in a median of
+#: seven days: each account starts on its own day and resolves long before it
+#: meets the worst stretch.
+MIN_RISK = 0.02
 # The firm's max drawdown, not a house rule. Thunderbolt (chosen 2026-09-08) caps
 # it at 6%; this was 0.08 while the spec was a guess. Both board picks were
 # sitting at -7.5% and -7.8% under the old cap and neither fits this one.
@@ -203,13 +228,78 @@ def pick(rows: list[dict]) -> dict:
     headline keys: an account has to clear 8% and then 5%, and a level that only
     looks affordable across one phase is not affordable.
 
-    If nothing qualifies, fall back to the level with the smallest drawdown."""
-    ok = [x for x in rows
+    THE FLOOR COMES FIRST. `MIN_RISK` is Kris's instruction and it is applied
+    before anything else, because the alternative - which is what this function
+    did until 2026-09-08 - is to fall through to the smallest number on the
+    ladder whenever the drawdown cap cannot be met, which on this data is always.
+
+    AND IT IS A TARGET, NOT A LICENCE TO CLIMB. Among the rungs that clear the
+    floor, this takes the LOWEST one that resolves accounts - not the fastest.
+    Chasing speed above the floor is a trap with a measured example: at 5% risk
+    GBPUSD 1h reports 10.4 expected days while its profit factor at 2x cost is
+    **0.823**, a losing strategy. `expected_days` is `median_days / pass_rate`,
+    and at a large position size a losing book still funds the occasional account
+    on variance alone before it dies - short median, low pass rate, flattering
+    ratio. Optimising that number across the whole ladder buys lottery tickets,
+    and README.md is explicit that passing is not the goal: "What matters is the
+    lift over that line, and keeping the account afterwards."
+
+    So: clear the floor, then take the smallest size that works. Speed above the
+    floor has to be argued for per strategy, from the ladder, by a person.
+
+    If nothing at or above the floor resolves any account, fall back below it
+    rather than returning nothing, and only then to the smallest drawdown."""
+    at_floor = [x for x in rows if x["risk"] >= MIN_RISK - 1e-12]
+    pool = at_floor or rows
+    ok = [x for x in pool
           if x["fail_max"] <= MAX_BREACH and x["fail_daily"] <= MAX_BREACH
           and abs(x["max_dd"]) <= DD_CAP and x["expected_days"] is not None]
-    if not ok:
-        return min(rows, key=lambda x: abs(x["max_dd"]))
-    return min(ok, key=lambda x: x["expected_days"])
+    if ok:
+        return min(ok, key=lambda x: (x["risk"], x["expected_days"]))
+    # Nothing clears the firm's caps - which on this data is every cell, because
+    # gold already draws -14.86% at the bottom rung against a 6% cap. The caps
+    # cannot arbitrate, so the floor does: smallest size that resolves anything.
+    resolving = [x for x in pool if x["expected_days"] is not None]
+    if resolving:
+        return min(resolving, key=lambda x: (x["risk"], x["expected_days"]))
+    if pool is not rows:
+        resolving = [x for x in rows if x["expected_days"] is not None]
+        if resolving:
+            return min(resolving, key=lambda x: (x["risk"], x["expected_days"]))
+    return min(rows, key=lambda x: abs(x["max_dd"]))
+
+
+#: How a stored board ladder names the same quantities `pick` works in. The
+#: board writes percentages because a page renders them; `pick` works in
+#: fractions. Kept here, next to `pick`, so the two can never drift.
+_STORED = {"risk": ("risk_pct", 100.0), "max_dd": ("max_dd_pct", 100.0),
+           "fail_max": ("fail_max_pct", 100.0),
+           "fail_daily": ("fail_daily_pct", 100.0),
+           "expected_days": ("days_to_pass", None)}
+
+
+def pick_stored(ladder_rows: list[dict]) -> dict | None:
+    """Re-run `pick` over a ladder already written into a board record.
+
+    THE POINT: a board record can be re-priced at a new risk POLICY without
+    re-running the walk-forward. The ladder is a fixed trade series simulated at
+    twelve position sizes, so changing `MIN_RISK` changes which row to read, not
+    what the rows say. When Kris moved the floor to 2% this is what let every
+    record move with him in a second rather than in half an hour.
+
+    Returns the chosen row IN ITS STORED FORM, or None if the ladder is empty.
+    """
+    if not ladder_rows:
+        return None
+    conv = []
+    for row in ladder_rows:
+        c = {}
+        for k, (src, scale) in _STORED.items():
+            v = row.get(src)
+            c[k] = v if (v is None or scale is None) else v / scale
+        c["_stored"] = row
+        conv.append(c)
+    return pick(conv)["_stored"]
 
 
 def from_trades(r: np.ndarray, exit_ts) -> tuple[list[dict], dict]:

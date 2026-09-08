@@ -29,7 +29,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core.prop_rules import PropRules                          # noqa: E402
-from core.riskladder import (DD_CAP, MAX_BREACH, RISK_LADDER,  # noqa: E402
+from core.riskladder import (DD_CAP, MAX_BREACH, MIN_RISK,  # noqa: E402
+                             RISK_LADDER,
                              _breached, from_trades, ladder, pick,
                              run_accounts, run_accounts_two_step)
 
@@ -219,32 +220,82 @@ def test_drawdown_scales_linearly_with_risk():
         [abs(x["max_dd"]) for x in rows], [abs(x["max_dd"]) for x in rows][1:]))
 
 
-def test_pick_respects_every_gate_it_claims_to():
+def _rows():
     rng = np.random.default_rng(9)
     r = rng.normal(0.02, 1.0, 600)
-    rows, chosen = from_trades(
+    return from_trades(
         r, pd.date_range("2024-01-01", periods=len(r), freq="8h", tz="UTC"))
-    if chosen["expected_days"] is None:
-        pytest.skip("nothing qualified; the fallback path is a different rule")
-    assert chosen["fail_max"] <= MAX_BREACH
-    assert chosen["fail_daily"] <= MAX_BREACH
-    assert abs(chosen["max_dd"]) <= DD_CAP, (
-        "pick chose a level whose equity curve draws past the cap it is meant "
-        "to respect - a low breach rate on short-lived accounts is not evidence "
-        "that the drawdown fits")
 
 
-def test_pick_takes_the_fastest_qualifying_level_not_the_safest():
-    rng = np.random.default_rng(9)
-    r = rng.normal(0.02, 1.0, 600)
-    rows, chosen = from_trades(
-        r, pd.date_range("2024-01-01", periods=len(r), freq="8h", tz="UTC"))
-    ok = [x for x in rows
+def test_pick_never_goes_below_the_risk_floor_when_it_does_not_have_to():
+    """Kris's instruction, 2026-09-08: at least 2% per trade.
+
+    The floor is the FIRST filter, ahead of the breach and drawdown gates. Before
+    it existed, gold's -14.86% drawdown at the lowest rung meant no rung ever
+    cleared `DD_CAP`, `pick` fell through to its smallest-drawdown fallback every
+    time, and every board record this project published was reported at the
+    bottom of the ladder rather than at any optimum.
+    """
+    rows, chosen = _rows()
+    resolves = [x for x in rows
+                if x["risk"] >= MIN_RISK - 1e-12 and x["expected_days"] is not None]
+    if not resolves:
+        pytest.skip("nothing at or above the floor resolves an account")
+    assert chosen["risk"] >= MIN_RISK - 1e-12
+
+
+def test_pick_takes_the_SMALLEST_size_above_the_floor_not_the_fastest():
+    """The floor is a target, not a licence to climb.
+
+    Measured example, and it is why this rule is the way round it is: at 5% risk
+    GBPUSD 1h reports 10.4 expected days on a profit factor at 2x cost of
+    **0.823** - a losing strategy. `expected_days` is median_days / pass_rate,
+    and a big position funds the odd account on variance before it dies: short
+    median, low pass rate, flattering ratio. Optimising it across the whole
+    ladder buys lottery tickets."""
+    rows, chosen = _rows()
+    pool = [x for x in rows if x["risk"] >= MIN_RISK - 1e-12] or rows
+    ok = [x for x in pool
           if x["fail_max"] <= MAX_BREACH and x["fail_daily"] <= MAX_BREACH
           and abs(x["max_dd"]) <= DD_CAP and x["expected_days"] is not None]
-    if not ok:
+    pool_ok = ok or [x for x in pool if x["expected_days"] is not None]
+    if not pool_ok:
         pytest.skip("fallback path")
-    assert chosen["expected_days"] == min(x["expected_days"] for x in ok)
+    assert chosen["risk"] == min(x["risk"] for x in pool_ok)
+
+
+def test_pick_does_not_climb_the_ladder_for_speed():
+    """A faster, larger size does not win when a smaller one already resolves."""
+    rows = [
+        {"risk": 0.02, "fail_max": 0.50, "fail_daily": 0.10,
+         "max_dd": -1.00, "expected_days": 40.0},
+        {"risk": 0.05, "fail_max": 0.80, "fail_daily": 0.10,
+         "max_dd": -2.50, "expected_days": 8.0},
+    ]
+    assert pick(rows)["risk"] == 0.02
+
+
+def test_pick_still_prefers_a_level_that_clears_every_gate():
+    """The floor changes WHICH levels are eligible; it does not stop the gates
+    deciding among them. A level that clears all three is chosen over a faster
+    one that does not."""
+    rows = [
+        {"risk": 0.02, "fail_max": 0.01, "fail_daily": 0.01,
+         "max_dd": -0.05, "expected_days": 20.0},
+        {"risk": 0.03, "fail_max": 0.90, "fail_daily": 0.90,
+         "max_dd": -1.50, "expected_days": 5.0},
+    ]
+    assert pick(rows)["risk"] == 0.02
+
+
+def test_pick_falls_below_the_floor_only_when_nothing_above_it_resolves():
+    rows = [
+        {"risk": 0.005, "fail_max": 0.01, "fail_daily": 0.01,
+         "max_dd": -0.03, "expected_days": 90.0},
+        {"risk": 0.02, "fail_max": 0.99, "fail_daily": 0.99,
+         "max_dd": -2.00, "expected_days": None},
+    ]
+    assert pick(rows)["risk"] == 0.005
 
 
 def test_expected_days_is_median_days_over_pass_rate():

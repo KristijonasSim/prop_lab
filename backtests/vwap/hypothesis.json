@@ -49,14 +49,14 @@
    "trades_per_day": 4.64,
    "r_per_day": 0.0451,
    "sharpe": 1.02,
-   "risk_pct": 0.25,
-   "pass_pct": 49.3,
-   "max_dd_pct": -4.9,
-   "days_to_pass": 337.8,
-   "median_days": 166.5,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 4.1,
+   "risk_pct": 2.0,
+   "pass_pct": 46.8,
+   "max_dd_pct": -39.19,
+   "days_to_pass": 49.2,
+   "median_days": 23.0,
+   "fail_max_pct": 38.9,
+   "fail_daily_pct": 3.9,
+   "cagr_pct": 32.2,
    "span_days": 636.0,
    "ladder": [
     {
@@ -69,7 +69,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 50.7,
      "cagr_pct": 4.1,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -153,7 +153,7 @@
      "fail_daily_pct": 3.9,
      "still_open_pct": 10.4,
      "cagr_pct": 32.2,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -276,14 +276,14 @@
    "trades_per_day": 3.01,
    "r_per_day": 0.0195,
    "sharpe": 0.83,
-   "risk_pct": 1.0,
-   "pass_pct": 67.2,
-   "max_dd_pct": -5.35,
-   "days_to_pass": 257.3,
-   "median_days": 173.0,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 7.0,
+   "risk_pct": 2.0,
+   "pass_pct": 65.0,
+   "max_dd_pct": -10.7,
+   "days_to_pass": 86.1,
+   "median_days": 56.0,
+   "fail_max_pct": 17.3,
+   "fail_daily_pct": 17.0,
+   "cagr_pct": 13.6,
    "span_days": 635.0,
    "ladder": [
     {
@@ -332,7 +332,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 32.8,
      "cagr_pct": 7.0,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 1.25,
@@ -380,7 +380,7 @@
      "fail_daily_pct": 17.0,
      "still_open_pct": 0.6,
      "cagr_pct": 13.6,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -491,14 +491,14 @@
    "trades_per_day": 2.77,
    "r_per_day": 0.0419,
    "sharpe": 1.22,
-   "risk_pct": 0.5,
-   "pass_pct": 45.6,
-   "max_dd_pct": -4.77,
-   "days_to_pass": 374.2,
-   "median_days": 170.5,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 43.5,
+   "max_dd_pct": -19.1,
+   "days_to_pass": 48.3,
+   "median_days": 21.0,
+   "fail_max_pct": 32.5,
    "fail_daily_pct": 0.0,
-   "cagr_pct": 7.7,
+   "cagr_pct": 31.7,
    "span_days": 719.0,
    "ladder": [
     {
@@ -523,7 +523,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 54.4,
      "cagr_pct": 7.7,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.75,
@@ -595,7 +595,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 24.0,
      "cagr_pct": 31.7,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -708,14 +708,14 @@
    "trades_per_day": 4.75,
    "r_per_day": 0.0285,
    "sharpe": 0.51,
-   "risk_pct": 0.25,
-   "pass_pct": 18.7,
-   "max_dd_pct": -4.23,
-   "days_to_pass": 1760.9,
-   "median_days": 330.0,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 2.5,
+   "risk_pct": 2.0,
+   "pass_pct": 47.9,
+   "max_dd_pct": -33.83,
+   "days_to_pass": 31.3,
+   "median_days": 15.0,
+   "fail_max_pct": 35.0,
+   "fail_daily_pct": 14.3,
+   "cagr_pct": 14.1,
    "span_days": 633.0,
    "ladder": [
     {
@@ -728,7 +728,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 81.3,
      "cagr_pct": 2.5,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -812,7 +812,7 @@
      "fail_daily_pct": 14.3,
      "still_open_pct": 2.8,
      "cagr_pct": 14.1,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -885,14 +885,14 @@
    "trades_per_day": 2.81,
    "r_per_day": 0.0036,
    "sharpe": 0.39,
-   "risk_pct": 1.25,
-   "pass_pct": 39.7,
-   "max_dd_pct": -5.37,
-   "days_to_pass": 551.4,
-   "median_days": 219.0,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 62.5,
+   "max_dd_pct": -8.58,
+   "days_to_pass": 324.8,
+   "median_days": 203.0,
+   "fail_max_pct": 14.7,
    "fail_daily_pct": 0.0,
-   "cagr_pct": 1.6,
+   "cagr_pct": 2.4,
    "span_days": 632.0,
    "ladder": [
     {
@@ -953,7 +953,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 60.3,
      "cagr_pct": 1.6,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 1.5,
@@ -989,7 +989,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 22.8,
      "cagr_pct": 2.4,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1062,14 +1062,14 @@
    "trades_per_day": 4.94,
    "r_per_day": -0.0099,
    "sharpe": -0.16,
-   "risk_pct": 0.25,
-   "pass_pct": 2.5,
-   "max_dd_pct": -9.52,
-   "days_to_pass": 1274.9,
-   "median_days": 32.0,
-   "fail_max_pct": 57.3,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -1.1,
+   "risk_pct": 2.0,
+   "pass_pct": 39.1,
+   "max_dd_pct": -76.17,
+   "days_to_pass": 35.8,
+   "median_days": 14.0,
+   "fail_max_pct": 29.2,
+   "fail_daily_pct": 30.9,
+   "cagr_pct": -15.2,
    "span_days": 636.0,
    "ladder": [
     {
@@ -1082,7 +1082,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 40.2,
      "cagr_pct": -1.1,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -1166,7 +1166,7 @@
      "fail_daily_pct": 30.9,
      "still_open_pct": 0.8,
      "cagr_pct": -15.2,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1239,14 +1239,14 @@
    "trades_per_day": 3.23,
    "r_per_day": -0.0333,
    "sharpe": -2.18,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -6.09,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 6.6,
+   "max_dd_pct": -48.75,
+   "days_to_pass": 838.4,
+   "median_days": 55.5,
+   "fail_max_pct": 87.2,
    "fail_daily_pct": 0.0,
-   "cagr_pct": -3.0,
+   "cagr_pct": -22.1,
    "span_days": 634.0,
    "ladder": [
     {
@@ -1259,7 +1259,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -3.0,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -1343,7 +1343,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 6.2,
      "cagr_pct": -22.1,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1416,14 +1416,14 @@
    "trades_per_day": 4.64,
    "r_per_day": 0.0451,
    "sharpe": 1.02,
-   "risk_pct": 0.25,
-   "pass_pct": 49.3,
-   "max_dd_pct": -4.9,
-   "days_to_pass": 337.8,
-   "median_days": 166.5,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 4.1,
+   "risk_pct": 2.0,
+   "pass_pct": 46.8,
+   "max_dd_pct": -39.19,
+   "days_to_pass": 49.2,
+   "median_days": 23.0,
+   "fail_max_pct": 38.9,
+   "fail_daily_pct": 3.9,
+   "cagr_pct": 32.2,
    "span_days": 636.0,
    "ladder": [
     {
@@ -1436,7 +1436,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 50.7,
      "cagr_pct": 4.1,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -1520,7 +1520,7 @@
      "fail_daily_pct": 3.9,
      "still_open_pct": 10.4,
      "cagr_pct": 32.2,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1593,14 +1593,14 @@
    "trades_per_day": 3.31,
    "r_per_day": 0.0369,
    "sharpe": 0.77,
-   "risk_pct": 0.25,
-   "pass_pct": 8.0,
-   "max_dd_pct": -4.68,
-   "days_to_pass": 3034.8,
-   "median_days": 244.0,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 40.8,
+   "max_dd_pct": -37.46,
+   "days_to_pass": 41.6,
+   "median_days": 17.0,
+   "fail_max_pct": 57.9,
    "fail_daily_pct": 0.0,
-   "cagr_pct": 3.3,
+   "cagr_pct": 23.8,
    "span_days": 633.0,
    "ladder": [
     {
@@ -1613,7 +1613,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 92.0,
      "cagr_pct": 3.3,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -1697,7 +1697,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 1.3,
      "cagr_pct": 23.8,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1770,14 +1770,14 @@
    "trades_per_day": 3.75,
    "r_per_day": -0.0287,
    "sharpe": -1.07,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -5.88,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -2.6,
+   "risk_pct": 2.0,
+   "pass_pct": 40.8,
+   "max_dd_pct": -47.01,
+   "days_to_pass": 159.1,
+   "median_days": 65.0,
+   "fail_max_pct": 26.7,
+   "fail_daily_pct": 13.1,
+   "cagr_pct": -20.5,
    "span_days": 633.0,
    "ladder": [
     {
@@ -1790,7 +1790,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -2.6,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -1874,7 +1874,7 @@
      "fail_daily_pct": 13.1,
      "still_open_pct": 19.4,
      "cagr_pct": -20.5,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -1947,14 +1947,14 @@
    "trades_per_day": 2.9,
    "r_per_day": -0.0172,
    "sharpe": -0.82,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -4.96,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -1.6,
+   "risk_pct": 2.0,
+   "pass_pct": 22.8,
+   "max_dd_pct": -39.7,
+   "days_to_pass": 192.7,
+   "median_days": 44.0,
+   "fail_max_pct": 72.0,
+   "fail_daily_pct": 2.4,
+   "cagr_pct": -12.8,
    "span_days": 634.0,
    "ladder": [
     {
@@ -1967,7 +1967,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -1.6,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -2051,7 +2051,7 @@
      "fail_daily_pct": 2.4,
      "still_open_pct": 2.8,
      "cagr_pct": -12.8,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -2124,14 +2124,14 @@
    "trades_per_day": 3.11,
    "r_per_day": 0.0555,
    "sharpe": 1.15,
-   "risk_pct": 0.25,
-   "pass_pct": 44.3,
-   "max_dd_pct": -4.39,
-   "days_to_pass": 596.5,
-   "median_days": 264.5,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 5.1,
+   "risk_pct": 2.0,
+   "pass_pct": 53.5,
+   "max_dd_pct": -35.12,
+   "days_to_pass": 26.2,
+   "median_days": 14.0,
+   "fail_max_pct": 21.4,
+   "fail_daily_pct": 24.2,
+   "cagr_pct": 41.4,
    "span_days": 635.0,
    "ladder": [
     {
@@ -2144,7 +2144,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 55.7,
      "cagr_pct": 5.1,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -2228,7 +2228,7 @@
      "fail_daily_pct": 24.2,
      "still_open_pct": 0.9,
      "cagr_pct": 41.4,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -2301,14 +2301,14 @@
    "trades_per_day": 3.01,
    "r_per_day": 0.0195,
    "sharpe": 0.83,
-   "risk_pct": 1.0,
-   "pass_pct": 67.2,
-   "max_dd_pct": -5.35,
-   "days_to_pass": 257.3,
-   "median_days": 173.0,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 7.0,
+   "risk_pct": 2.0,
+   "pass_pct": 65.0,
+   "max_dd_pct": -10.7,
+   "days_to_pass": 86.1,
+   "median_days": 56.0,
+   "fail_max_pct": 17.3,
+   "fail_daily_pct": 17.0,
+   "cagr_pct": 13.6,
    "span_days": 635.0,
    "ladder": [
     {
@@ -2357,7 +2357,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 32.8,
      "cagr_pct": 7.0,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 1.25,
@@ -2405,7 +2405,7 @@
      "fail_daily_pct": 17.0,
      "still_open_pct": 0.6,
      "cagr_pct": 13.6,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -2478,14 +2478,14 @@
    "trades_per_day": 2.89,
    "r_per_day": -0.0062,
    "sharpe": -0.22,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -3.69,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -0.6,
+   "risk_pct": 2.0,
+   "pass_pct": 25.6,
+   "max_dd_pct": -29.54,
+   "days_to_pass": 90.0,
+   "median_days": 23.0,
+   "fail_max_pct": 65.1,
+   "fail_daily_pct": 5.4,
+   "cagr_pct": -6.4,
    "span_days": 633.0,
    "ladder": [
     {
@@ -2498,7 +2498,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -0.6,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -2582,7 +2582,7 @@
      "fail_daily_pct": 5.4,
      "still_open_pct": 3.9,
      "cagr_pct": -6.4,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -2655,14 +2655,14 @@
    "trades_per_day": 3.48,
    "r_per_day": -0.0167,
    "sharpe": -1.14,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -3.97,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 15.5,
+   "max_dd_pct": -31.73,
+   "days_to_pass": 239.3,
+   "median_days": 37.0,
+   "fail_max_pct": 80.0,
    "fail_daily_pct": 0.0,
-   "cagr_pct": -1.5,
+   "cagr_pct": -12.0,
    "span_days": 633.0,
    "ladder": [
     {
@@ -2675,7 +2675,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -1.5,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -2759,7 +2759,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 4.6,
      "cagr_pct": -12.0,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -2832,14 +2832,14 @@
    "trades_per_day": 4.18,
    "r_per_day": -0.0646,
    "sharpe": -1.43,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -11.25,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 41.3,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -5.8,
+   "risk_pct": 2.0,
+   "pass_pct": 16.1,
+   "max_dd_pct": -89.97,
+   "days_to_pass": 80.8,
+   "median_days": 13.0,
+   "fail_max_pct": 46.4,
+   "fail_daily_pct": 23.2,
+   "cagr_pct": -40.7,
    "span_days": 633.0,
    "ladder": [
     {
@@ -2852,7 +2852,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 58.7,
      "cagr_pct": -5.8,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -2936,7 +2936,7 @@
      "fail_daily_pct": 23.2,
      "still_open_pct": 14.3,
      "cagr_pct": -40.7,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3009,14 +3009,14 @@
    "trades_per_day": 3.28,
    "r_per_day": -0.011,
    "sharpe": -0.67,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -2.74,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 9.0,
+   "max_dd_pct": -21.94,
+   "days_to_pass": 378.6,
+   "median_days": 34.0,
+   "fail_max_pct": 87.4,
    "fail_daily_pct": 0.0,
-   "cagr_pct": -1.0,
+   "cagr_pct": -8.4,
    "span_days": 634.0,
    "ladder": [
     {
@@ -3029,7 +3029,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -1.0,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -3113,7 +3113,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 3.6,
      "cagr_pct": -8.4,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3186,14 +3186,14 @@
    "trades_per_day": 3.51,
    "r_per_day": -0.0269,
    "sharpe": -0.68,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -7.65,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -2.5,
+   "risk_pct": 2.0,
+   "pass_pct": 22.6,
+   "max_dd_pct": -61.17,
+   "days_to_pass": 44.2,
+   "median_days": 10.0,
+   "fail_max_pct": 65.2,
+   "fail_daily_pct": 7.4,
+   "cagr_pct": -21.0,
    "span_days": 729.0,
    "ladder": [
     {
@@ -3206,7 +3206,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -2.5,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -3290,7 +3290,7 @@
      "fail_daily_pct": 7.4,
      "still_open_pct": 4.8,
      "cagr_pct": -21.0,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3363,14 +3363,14 @@
    "trades_per_day": 3.6,
    "r_per_day": -0.0271,
    "sharpe": -2.11,
-   "risk_pct": 0.25,
-   "pass_pct": 0.0,
-   "max_dd_pct": -6.13,
-   "days_to_pass": null,
-   "median_days": null,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": -2.5,
+   "risk_pct": 2.0,
+   "pass_pct": 14.0,
+   "max_dd_pct": -49.02,
+   "days_to_pass": 475.3,
+   "median_days": 66.5,
+   "fail_max_pct": 75.0,
+   "fail_daily_pct": 4.9,
+   "cagr_pct": -18.3,
    "span_days": 728.0,
    "ladder": [
     {
@@ -3383,7 +3383,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 100.0,
      "cagr_pct": -2.5,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -3467,7 +3467,7 @@
      "fail_daily_pct": 4.9,
      "still_open_pct": 6.0,
      "cagr_pct": -18.3,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3540,14 +3540,14 @@
    "trades_per_day": 3.37,
    "r_per_day": 0.0507,
    "sharpe": 0.73,
-   "risk_pct": 0.25,
-   "pass_pct": 23.3,
-   "max_dd_pct": -5.34,
-   "days_to_pass": 1376.1,
-   "median_days": 320.5,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 4.5,
+   "risk_pct": 2.0,
+   "pass_pct": 43.3,
+   "max_dd_pct": -42.73,
+   "days_to_pass": 37.0,
+   "median_days": 16.0,
+   "fail_max_pct": 49.7,
+   "fail_daily_pct": 4.8,
+   "cagr_pct": 30.1,
    "span_days": 729.0,
    "ladder": [
     {
@@ -3560,7 +3560,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 76.7,
      "cagr_pct": 4.5,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -3644,7 +3644,7 @@
      "fail_daily_pct": 4.8,
      "still_open_pct": 2.2,
      "cagr_pct": 30.1,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3717,14 +3717,14 @@
    "trades_per_day": 2.77,
    "r_per_day": 0.0419,
    "sharpe": 1.22,
-   "risk_pct": 0.5,
-   "pass_pct": 45.6,
-   "max_dd_pct": -4.77,
-   "days_to_pass": 374.2,
-   "median_days": 170.5,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 43.5,
+   "max_dd_pct": -19.1,
+   "days_to_pass": 48.3,
+   "median_days": 21.0,
+   "fail_max_pct": 32.5,
    "fail_daily_pct": 0.0,
-   "cagr_pct": 7.7,
+   "cagr_pct": 31.7,
    "span_days": 719.0,
    "ladder": [
     {
@@ -3749,7 +3749,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 54.4,
      "cagr_pct": 7.7,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.75,
@@ -3821,7 +3821,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 24.0,
      "cagr_pct": 31.7,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -3894,14 +3894,14 @@
    "trades_per_day": 3.61,
    "r_per_day": 0.0356,
    "sharpe": 0.79,
-   "risk_pct": 0.25,
-   "pass_pct": 30.3,
-   "max_dd_pct": -5.78,
-   "days_to_pass": 657.0,
-   "median_days": 199.0,
-   "fail_max_pct": 0.0,
-   "fail_daily_pct": 0.0,
-   "cagr_pct": 3.2,
+   "risk_pct": 2.0,
+   "pass_pct": 39.1,
+   "max_dd_pct": -46.21,
+   "days_to_pass": 33.2,
+   "median_days": 13.0,
+   "fail_max_pct": 44.1,
+   "fail_daily_pct": 1.5,
+   "cagr_pct": 23.2,
    "span_days": 722.0,
    "ladder": [
     {
@@ -3914,7 +3914,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 69.7,
      "cagr_pct": 3.2,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -3998,7 +3998,7 @@
      "fail_daily_pct": 1.5,
      "still_open_pct": 15.2,
      "cagr_pct": 23.2,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
@@ -4071,14 +4071,14 @@
    "trades_per_day": 3.19,
    "r_per_day": 0.0291,
    "sharpe": 0.69,
-   "risk_pct": 0.25,
-   "pass_pct": 44.8,
-   "max_dd_pct": -3.08,
-   "days_to_pass": 569.3,
-   "median_days": 255.0,
-   "fail_max_pct": 0.0,
+   "risk_pct": 2.0,
+   "pass_pct": 35.5,
+   "max_dd_pct": -24.65,
+   "days_to_pass": 107.1,
+   "median_days": 38.0,
+   "fail_max_pct": 51.6,
    "fail_daily_pct": 0.0,
-   "cagr_pct": 2.6,
+   "cagr_pct": 18.4,
    "span_days": 728.0,
    "ladder": [
     {
@@ -4091,7 +4091,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 55.2,
      "cagr_pct": 2.6,
-     "picked": true
+     "picked": false
     },
     {
      "risk_pct": 0.5,
@@ -4175,7 +4175,7 @@
      "fail_daily_pct": 0.0,
      "still_open_pct": 12.9,
      "cagr_pct": 18.4,
-     "picked": false
+     "picked": true
     },
     {
      "risk_pct": 2.5,
