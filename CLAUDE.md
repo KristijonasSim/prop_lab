@@ -220,6 +220,26 @@ Standing pattern from that repo: **every leg that ever worked came from a data f
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have
 now died here, and the one crypto book that looked alive died to a look-ahead fix.
 
+**THE DEAD-BAR FIX WAS INCOMPLETE UNTIL 2026-09-08. THE EXIT PATH WAS NEVER
+GUARDED.** The 2026-09-07 work guarded the DECISION bar and the FILL bar and
+stopped there, so a stop, target or trail could still be "hit" by a padded
+weekend bar. Measured on the boards' own walk-forwards: **H-002 1,079 of 17,432
+exits (6.2%)** and **H-016 1,532 of 8,610 (17.8%)**. Both are now zero.
+
+* **Which field of the bar the exit rule touches decides how much it matters.**
+  A trailing stop reads every bar's `high`/`low`, and a padded bar has
+  `hi == lo ==` the frozen price, so it sits on the trail and force-closes a live
+  trade. H-016's walk-forward went **12 of 16 cells clearing PF 1.20 at 2x to 14
+  of 16**, median cell **1.275 → 1.430**, and the board record **175.9 → 127.6
+  expected days**. A session-horizon time exit reads only the `close`, and a
+  padded bar's close IS the last real close - so H-002 did not move at all
+  (PF 2.016, **143.6 days**, unchanged). Same bug, opposite magnitude.
+* **Never estimate this by subtracting the affected trades' R.** On H-016 that
+  arithmetic said dead-bar exits contributed +59.03R of +127.08R, i.e. that
+  fixing it would halve the edge. Re-running showed the opposite: they were
+  premature stop-outs on a price nobody traded. **The counterfactual has to be
+  re-run, not subtracted.**
+
 **FX/METALS DATA CARRIES A CLOSED MARKET (2026-09-07, `stage20_deadfix.py`).**
 Dukascopy pads the closed FX weekend with synthetic bars: zero volume, O=H=L=C at
 the last traded price. **21.5% of the XAUUSD series is these.** Two rules now hold

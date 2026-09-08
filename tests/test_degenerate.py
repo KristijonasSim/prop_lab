@@ -164,3 +164,60 @@ def test_a_flat_run_of_any_length_is_never_entered(kernel, flat_run):
     dead[lo:hi] = True
     assert not dead[tr[:, T_ENTRY_I].astype(int)].any()
     assert not dead[tr[:, T_EXIT_I].astype(int)].any()
+
+
+# --------------------------------------------------------------------------- #
+# the exit path - found 2026-09-08, and the 2026-09-07 fix did not cover it
+# --------------------------------------------------------------------------- #
+def _dead_block_series(n=600, lo=300, hi=420, seed=3, drift=-6.0):
+    """A trend that walks hard against a long, then a closed market.
+
+    Shaped to put a stop INSIDE the dead block: price falls into the weekend, the
+    padded bars repeat the last traded price, and a stop sitting at that level is
+    'touched' by bars on which nothing traded at all.
+    """
+    rng = np.random.default_rng(seed)
+    close = 2000 + np.cumsum(rng.normal(drift, 3.0, n))
+    close[lo:hi] = close[lo - 1]
+    df = frame(close, spread=0.002)
+    for col in ("open", "high", "low", "close"):
+        df.iloc[lo:hi, df.columns.get_loc(col)] = close[lo - 1]
+    df.iloc[lo:hi, df.columns.get_loc("volume")] = 0.0
+    return df, lo, hi
+
+
+@pytest.mark.parametrize("kernel", KERNELS, ids=IDS)
+@pytest.mark.parametrize("cfgname", ["cfg", "cfg_alt"])
+def test_no_exit_lands_on_a_zero_volume_bar(kernel, cfgname):
+    """CLAUDE.md rule 1 applies to the EXIT as well as the entry.
+
+    The 2026-09-07 fix guarded the decision bar and the fill bar and stopped
+    there. Neither kernel guarded the bar a position is CLOSED on, so a stop or a
+    target could be 'hit' by Dukascopy's padded weekend - bars with zero volume
+    and the last traded price repeated, on which no order could have filled.
+
+    Measured on the real board books before the fix:
+      H-016  776 of 3,916 exits (19.8%) on a zero-volume bar
+      H-002  1,079 of 17,432 (6.2%), and 119.12R of the 15m leg's 194.19R
+    """
+    # Several shapes, because one series that happens to produce no trades
+    # would SKIP - and a skipped check verifies nothing while looking like a
+    # pass. core/verification.py treats a skip as a failure for exactly this
+    # reason, so the test has to guarantee it actually exercises something.
+    total = 0
+    for seed, drift in ((3, -6.0), (5, +6.0), (11, -3.0), (17, +3.0)):
+        df, lo, hi = _dead_block_series(seed=seed, drift=drift)
+        tr = kernel.run(df, getattr(kernel, cfgname), 1.0, 0.5)
+        if len(tr) == 0:
+            continue
+        total += len(tr)
+        dead = np.zeros(len(df), dtype=bool)
+        dead[lo:hi] = True
+        bad = dead[tr[:, T_EXIT_I].astype(int)]
+        assert not bad.any(), (
+            f"{kernel.name} [{cfgname}] seed {seed}: {bad.sum()} of {len(tr)} "
+            f"trades exit on a bar where nothing traded. No order could have "
+            f"filled there.")
+    assert total > 0, (
+        f"{kernel.name} [{cfgname}]: no series produced a trade, so this check "
+        f"verified nothing. Widen _dead_block_series rather than accept it.")

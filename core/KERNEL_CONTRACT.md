@@ -85,10 +85,27 @@ segfaulted on stop-and-reverse, which can flip many times in one session.
 
 ### 1.5 Data honesty
 
-* **`live` array, uint8, 1 = the bar really traded.** Both kernels refuse to
-  decide on a dead bar and refuse to fill on one. Dukascopy pads the closed FX
-  weekend with zero-volume bars carrying the last price repeated — **21.5% of
-  XAUUSD**. Crypto has none. Added 2026-09-07.
+* **`live` array, uint8, 1 = the bar really traded.** A kernel refuses to decide
+  on a dead bar, refuses to fill on one, **and refuses to EXIT on one**.
+  Dukascopy pads the closed FX weekend with zero-volume bars carrying the last
+  price repeated — **21.5% of XAUUSD**. Crypto has none. Entry and fill guards
+  added 2026-09-07; **the exit guard was missing until 2026-09-08** and cost
+  1,079 of H-002's 17,432 exits and **1,532 of H-016's 8,610**.
+  * **The exit is where it bites hardest, and the two kernels show why.** A
+    trailing stop reads every bar's `high` and `low`, so a padded bar whose
+    `hi == lo ==` the frozen price sits exactly on a trail and force-closes a
+    live trade — H-016 lost 17.8% of its exits that way and the correction
+    moved its walk-forward from 12 of 16 cells clearing PF 1.20 at 2x to
+    **14 of 16**. A session-horizon time exit reads only the `close`, and a
+    padded bar's close IS the last real close, so H-002's aggregate barely
+    moved. Same bug, opposite magnitude, and the difference is which field of
+    the bar the exit rule touches.
+  * **Do not estimate this by subtracting the R of the affected trades.** On
+    H-016 that arithmetic said the dead-bar exits contributed +59.03R of a
+    +127.08R total — i.e. that fixing it would halve the edge. Re-running with
+    the guard did the opposite: those exits were premature stop-outs on a price
+    nobody traded, and removing them made the book better. The counterfactual is
+    not the subtraction; it has to be re-run.
 * **A volatility guard needs a tolerance in PRICE terms, not `<= 0.0`.** Any
   quantity of the form `sqrt(A/B − C²)` is a difference of near-equal accumulated
   sums; its cancellation floor is `price·sqrt(eps)`, about 3e-5 on gold. Use

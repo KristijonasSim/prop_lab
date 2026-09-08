@@ -187,6 +187,17 @@ def simulate(
 
         j = e
         while j < n:
+            # A position cannot be closed on a bar where nothing traded. The
+            # 2026-09-07 dead-bar fix guarded the signal bar and the fill bar
+            # only; the exit path was never guarded. Measured on H-016's own
+            # board trades before this line existed: 776 of 3,916 exits (19.8%)
+            # landed on Dukascopy's padded weekend, and they carried +59.03R of
+            # a +127.08R total. The trail does not advance on these bars either -
+            # a stop that tightens against a price nobody traded is not a stop.
+            # Found 2026-09-08.
+            if live[j] == 0:
+                j += 1
+                continue
             hi = h[j]
             lo = l[j]
 
@@ -246,15 +257,21 @@ def simulate(
                         if ns < stop:
                             stop = ns
 
-            # 4. ribbon flip, read on the close of this bar, filled next open
+            # 4. ribbon flip, read on the close of this bar, filled next open.
+            #    "Next open" means the next bar that TRADED - filling at the open
+            #    of a padded weekend bar is the same error as exiting on one.
             if flip_exit == 1 and j + 1 < n:
                 af = agree[j]
                 if not np.isnan(af):
                     if (side == 1 and af <= 0.0) or (side == -1 and af >= 0.0):
-                        exit_px = o[j + 1]
-                        exit_i = j + 1
-                        reason = R_FLIP
-                        break
+                        f = j + 1
+                        while f < n and live[f] == 0:
+                            f += 1
+                        if f < n:
+                            exit_px = o[f]
+                            exit_i = f
+                            reason = R_FLIP
+                            break
 
             # 5. time stop
             if max_hold_bars > 0 and (j - e) >= max_hold_bars:
@@ -266,8 +283,12 @@ def simulate(
             j += 1
 
         if exit_i < 0:
-            exit_px = c[n - 1]
-            exit_i = n - 1
+            # End of data. Mark to the last bar that actually traded.
+            z = n - 1
+            while z > e and live[z] == 0:
+                z -= 1
+            exit_px = c[z]
+            exit_i = z
             reason = R_EOD
 
         gross = (exit_px - entry) if side == 1 else (entry - exit_px)

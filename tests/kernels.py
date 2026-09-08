@@ -42,9 +42,10 @@ class Kernel:
 # vwap  (H-002)
 # --------------------------------------------------------------------------- #
 def _vwap_run(df: pd.DataFrame, cfg: dict, fee_bps: float, slip_bps: float):
-    from strategies.vwap import sweep as VS
-    full = dict(VS.DEFAULTS) | cfg
-    return VS.run_one(df, VS.features(df), {}, full, fee_bps, slip_bps)
+    # Through the Strategy declaration (item 4), not around it: if the adapter
+    # bypassed it, the interface would be untested decoration.
+    from strategies.vwap.strategy import STRATEGY
+    return STRATEGY.run(df, cfg, fee_bps, slip_bps)
 
 
 VWAP = Kernel(
@@ -61,17 +62,9 @@ VWAP = Kernel(
 # --------------------------------------------------------------------------- #
 # ribbon  (H-016)
 # --------------------------------------------------------------------------- #
-_RIBBON_BASE = dict(mode=0, entry_thr=0.8, require_flip=1, squeeze_n=0.0,
-                    min_strength=0.0, trail_mode=1, trail_k=8.0, stop_k=2.0,
-                    trail_start_r=0.0, rr=0.0, max_hold_bars=0, flip_exit=1,
-                    dir_mode=0)
-
-
 def _ribbon_run(df: pd.DataFrame, cfg: dict, fee_bps: float, slip_bps: float):
-    from strategies.ribbon import sweep as RS
-    full = dict(_RIBBON_BASE) | cfg
-    return RS.run_one(RS.ribbon_inputs(df), full, fee_bps, slip_bps,
-                      full.get("min_risk_bps", 3.0))
+    from strategies.ribbon.strategy import STRATEGY
+    return STRATEGY.run(df, cfg, fee_bps, slip_bps)
 
 
 RIBBON = Kernel(

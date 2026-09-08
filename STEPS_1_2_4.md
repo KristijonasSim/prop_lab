@@ -221,7 +221,34 @@ the board automatically, and `pytest` runs the five checks against both kernels.
 
 ---
 
-## ITEM 4 — one `Strategy` interface
+## ITEM 4 — one `Strategy` interface — **steps 1-3 and 5 done 2026-09-08**
+
+`core/strategy.py` holds the `Strategy` Protocol, the fixed column indices, a
+`conforms()` check over the trade array and `as_frame()`. Both kernels declare
+themselves through `strategies/<x>/strategy.py`, and `tests/kernels.py` now goes
+THROUGH those declarations rather than around them - an interface the tests
+bypass is untested decoration. `tests/test_contract.py` asserts conformance.
+The golden trade lists did not move, which is the whole point of a declaration:
+no arithmetic was touched.
+
+**Step 5 — extracting the shared pieces — was measured and declined.** The plan
+assumed cost application, R computation and the min-risk floor were worth
+pulling into one place. Counted, they are **one line each per kernel**:
+
+```
+strategies/vwap/engine.py    393 lines   cost 1  fees 1  min-risk 1  R 1
+strategies/ribbon/engine.py  337 lines   cost 1  fees 1  min-risk 1  R 1
+```
+
+Moving three lines out of a `@njit` kernel means either jitted helper calls in
+the hottest loop in the project, with no guarantee numba inlines them, or
+nothing. The protection that actually matters is already in place and is
+behavioural rather than structural: `tests/test_costs.py` asserts cost
+monotonicity and the affine-in-cost identity **for both kernels**, so the two
+implementations cannot drift apart without a test going red. Recorded rather
+than skipped.
+
+### Steps as planned
 
 **Goal.** Kernels become a tested shared library instead of each hypothesis
 reinventing the engine. **This is a refactor, not a fix.** It makes future work

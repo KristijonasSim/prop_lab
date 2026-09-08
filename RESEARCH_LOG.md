@@ -2317,3 +2317,80 @@ that the spread ate.
 4. **The crowd gate lifts a fourth unrelated strategy** (0.708 to 0.772). It has
    now improved a VWAP book, a dead band fade, an order-flow book and a level
    sweep. That is the most reliable single finding in this project.
+
+---
+
+## 2026-09-08 — the dead-bar fix was half a fix, and which field of the bar decides how much it cost
+
+Found while preparing the NautilusTrader port of the ribbon kernel (the one
+remaining evidence gap on H-016). Reading `strategies/ribbon/engine.py` line by
+line to reimplement it, the `live` guard appeared at the signal bar and the fill
+bar and **nowhere in the exit loop.**
+
+### What was wrong
+
+Dukascopy pads the closed FX weekend with synthetic bars: zero volume, and
+`O = H = L = C` at the last traded price. 21.5% of the XAUUSD series is these.
+The 2026-09-07 work established two rules and implemented the first half of one:
+
+* the DECISION bar must have traded — implemented;
+* the FILL bar must have traded — implemented;
+* **the bar a position is CLOSED on must have traded — never implemented.**
+
+Measured on the boards' own walk-forward output, before any change:
+
+| hypothesis | exits landing on a zero-volume bar |
+|---|---|
+| H-002 vwap | 1,079 of 17,432 (6.2%) |
+| H-016 ribbon | 1,532 of 8,610 (17.8%) |
+
+Both are zero after the fix.
+
+### The mechanism, and why the two kernels differ by so much
+
+**It depends entirely on which field of the bar the exit rule reads.**
+
+* **H-016 exits on a TRAILING STOP**, which is tested against every bar's `high`
+  and `low`. A padded bar has `hi == lo ==` the frozen last price, so it sits
+  exactly on a trail that has crept up to that level and force-closes a trade
+  that was still alive. 17.8% of exits.
+* **H-002 mostly exits on a SESSION HORIZON**, a time exit that reads only the
+  `close`. A padded bar's close *is* the last real close, so marking to it
+  produces the same price as marking to the last live bar. The exit timestamp was
+  wrong; the exit price was not.
+
+### The results
+
+| | before | after |
+|---|---|---|
+| **H-016** cells clearing PF 1.20 at 2x | 12 of 16 | **14 of 16** |
+| **H-016** median cell PF@2x | 1.275 | **1.430** |
+| **H-016** real vs paired null (survivors) | 12 vs 5.0 | **14 vs 3.3** |
+| **H-016** board record | PF 1.811, 330 trades, 175.9 expected days | **PF 1.870, 378 trades, 127.6 days** |
+| **H-002** cells clearing PF 1.20 at 2x | 2 of 5 | 2 of 5 |
+| **H-002** board record | PF 2.016, 143.6 days | **PF 2.016, 143.6 days** |
+
+H-002 did not move. H-016 improved on every axis and is still `TOO SLOW`.
+
+### The methodological point, which is the part worth keeping
+
+**Do not estimate a bug like this by subtracting the affected trades' R.**
+
+The first measurement said H-016's dead-bar exits carried **+59.03R of a
++127.08R total** — read naively, fixing the bug halves the edge. Re-running with
+the guard did the opposite: those exits were *premature stop-outs at a price
+nobody traded*, and letting the positions ride through the closed session made
+the book better, not worse. The subtraction had the sign of the correction
+backwards.
+
+The counterfactual to a fill-assumption bug is a re-run. There is no arithmetic
+shortcut, because removing an exit does not delete the trade — it changes where
+the trade ends.
+
+### Still not fixed, and now measured rather than assumed
+
+A position that rides through the weekend resolves on the first bar that trades.
+If that bar OPENS beyond the stop, both kernels still fill **at the stop price**,
+not at the gap. That is optimistic and it is the next thing to price. It was
+already listed as a caveat on H-016's board card ("gold gaps over weekends and
+the -2.00R is optimistic by an unknown amount"); the amount is still unknown.

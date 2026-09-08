@@ -319,6 +319,19 @@ def simulate(
             reason = R_TIME
             j = entry_i
             while j < horizon:
+                # A position cannot be closed on a bar where nothing traded.
+                # The 2026-09-07 dead-bar fix guarded the DECISION bar (i) and
+                # the FILL bar (entry_i) and stopped there, so a stop or a
+                # target could still be "hit" by Dukascopy's padded weekend -
+                # zero volume, O=H=L=C at the last traded price, no order
+                # fillable at any price. Measured on H-002's own walk-forward
+                # before this line existed: 1,079 of 17,432 exits landed on one,
+                # and on the 15m leg they carried 119.12R of 194.19R. The
+                # position now rides through the closed session and resolves on
+                # the next bar that actually traded. Found 2026-09-08.
+                if live[j] == 0:
+                    j += 1
+                    continue
                 if side == 1:
                     hit_stop = l[j] <= stop
                     hit_tgt = has_target == 1 and h[j] >= target
@@ -353,6 +366,11 @@ def simulate(
                 j += 1
             if reason == R_TIME:
                 exit_i = horizon - 1 if j >= horizon else j
+                # The time stop can land on a padded bar too. Walk back to the
+                # last bar that traded; entry_i is live by construction, so this
+                # always terminates somewhere valid.
+                while exit_i > entry_i and live[exit_i] == 0:
+                    exit_i -= 1
                 exit_px = c[exit_i]
 
             gross = (exit_px - entry) if side == 1 else (entry - exit_px)
