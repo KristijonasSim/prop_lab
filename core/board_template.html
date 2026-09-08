@@ -19,8 +19,11 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);
   font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  margin:0;padding:0 24px 60px}
-.wrap{max-width:1180px;margin:0 auto}
+  margin:0;padding:0 20px 60px}
+/* Wide enough that sixteen columns fit without a horizontal scrollbar on a
+   normal screen. The table is the page; it should not be squeezed into a
+   reading-width column and then scrolled sideways. */
+.wrap{max-width:1760px;margin:0 auto}
 header{padding:30px 0 16px;border-bottom:1px solid var(--line);margin-bottom:22px}
 h1{margin:0;font-size:20px;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13px;margin-top:5px}
@@ -37,11 +40,14 @@ h2{font-size:17px;margin:24px 0 3px;letter-spacing:-.01em}
   font-family:"JetBrains Mono",ui-monospace,monospace}
 .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;
   background:var(--surface);box-shadow:var(--shadow)}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--line);
+table{border-collapse:collapse;width:100%;font-size:13px;table-layout:auto}
+th,td{padding:10px 10px;text-align:right;border-bottom:1px solid var(--line);
   white-space:nowrap;font-variant-numeric:tabular-nums}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);
   font-weight:600;background:var(--bg);position:sticky;top:0}
+/* the two leading text columns can breathe; every number column stays tight */
+th:first-child,td:first-child{padding-left:15px}
+th:last-child,td:last-child{padding-right:15px}
 th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--bg)}
@@ -50,9 +56,9 @@ tbody tr:hover{background:var(--bg)}
 .good{color:var(--good)} .warn{color:var(--warn)} .fail{color:var(--fail)}
 .dim{color:var(--muted)}
 .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
-.pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;
-  border:1px solid var(--line);color:var(--muted);margin-left:7px;
-  font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.03em}
+.pill{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);margin-left:5px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.02em}
 .pill.no{color:var(--fail);border-color:var(--fail)}
 .foot{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 .empty{background:var(--surface);border:1px solid var(--line);border-radius:6px;
@@ -103,25 +109,25 @@ const COLS = [
   {h:'Market',   f:r => r.sym
       ? `<span class="mkt">${esc(r.sym)} ${esc(r.tf)}</span>`
       : '<span class="dim">none resolved</span>'},
-  {h:'Days to pass', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
+  {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
   {h:'Pass %',   f:r => n(r.pass_pct, 1)},
   {h:'Max DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
       : `<span class="${Math.abs(r.max_dd_pct) > (F.maxloss*100||6) ? 'fail':''}">${n(r.max_dd_pct,2)}</span>`},
   {h:'PF',       f:r => r.pf == null ? '<span class="dim">—</span>'
       : `<span class="${r.pf >= 1.2 ? 'good' : (r.pf >= 1 ? '' : 'fail')}">${n(r.pf,3)}</span>`},
-  {h:'PF 2× cost', f:r => n(r.pf_2x, 3)},
+  {h:'PF 2×', f:r => n(r.pf_2x, 3)},
   {h:'CAGR %',   f:r => r.cagr_pct == null ? '<span class="dim">—</span>'
       : `<span class="${r.cagr_pct > 0 ? 'good':'fail'}">${n(r.cagr_pct,1)}</span>`},
   {h:'Win %',    f:r => n(r.win_pct, 1)},
   {h:'Avg R',    f:r => n(r.avg_r, 3)},
-  {h:'Trades/day', f:r => n(r.trades_per_day, 2)},
+  {h:'Tr/day', f:r => n(r.trades_per_day, 2)},
   {h:'Trades',   f:r => r.trades == null ? '<span class="dim">—</span>' : r.trades},
   {h:'Risk %',   f:r => n(r.risk_pct, 2)},
   {h:'Sharpe',   f:r => n(r.sharpe, 2)},
-  {h:'Cost bps', f:r => r.cost_rt_bps == null ? '<span class="dim">—</span>'
+  {h:'Cost', f:r => r.cost_rt_bps == null ? '<span class="dim">—</span>'
       : `${n(r.cost_rt_bps,2)}${r.cost_measured ? '' : '<span class="pill">assumed</span>'}`},
-  {h:'Beats null', f:r => r.beats_null === undefined ? '<span class="dim">—</span>'
+  {h:'vs null', f:r => r.beats_null === undefined ? '<span class="dim">—</span>'
       : (r.beats_null ? '<span class="good">yes</span>'
                       : '<span class="fail">no</span>')},
 ];
