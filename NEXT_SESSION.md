@@ -18,6 +18,12 @@ Written 2026-09-08 at session close. Read `ENGINES.md` for the machine,
   (floor 100, topn 5, 0.75% risk). **Gold no longer reaches 60% at all.**
 * The board is `backtests/board.html`. It no longer auto-refreshes (removed on
   Kris's instruction 2026-09-08) — reload it by hand and check the build time.
+* **The board shows H-027 XAUUSD only.** Kris, 2026-09-08 evening: one thing on
+  the page to work on instead of four hypotheses across ten markets. It is a
+  RENDER filter — `core.build_board.SHOW`. Nothing was deleted: every record is
+  still in `backtests/*/hypothesis.json` and every row is still in
+  `STRATEGY_LOG.md` and `RESEARCH_LOG.md`. Set `SHOW = None` and rebuild to get
+  the whole board back with no re-run.
 
 ---
 

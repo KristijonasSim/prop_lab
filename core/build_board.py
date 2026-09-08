@@ -5,6 +5,9 @@ and writes `backtests/board.html`. Deliberately thin: the numbers are computed
 upstream and this only lays them out, so the page and the board can never
 disagree about what a strategy scored.
 
+WHAT IS ON THE PAGE IS NOW A CHOICE — see `SHOW` below. Nothing is deleted from
+disk by this file; it only decides what renders.
+
 Run: .venv/bin/python core/build_board.py
 """
 from __future__ import annotations
@@ -22,6 +25,47 @@ sys.path.insert(0, str(ROOT))
 from core.prop_rules import ONE_STEP                           # noqa: E402
 
 BT = ROOT / "backtests"
+
+#: WHAT THE BOARD SHOWS. `None` means everything on disk, which is what this file
+#: did until 2026-09-08.
+#:
+#: **Kris's instruction, 2026-09-08 evening: show H-027 gold and nothing else.**
+#: He wants one thing on the page to work on rather than four hypotheses across
+#: ten markets. Read it as focus, not as a verdict on the rest.
+#:
+#: This is a RENDER filter and nothing more. Every `backtests/*/hypothesis.json`
+#: stays on disk, every row stays in `STRATEGY_LOG.md` and `RESEARCH_LOG.md`, and
+#: setting this back to `None` brings the whole board back with no re-run. That
+#: matters because of the standing rule in `README.md` §2 — a rejected hypothesis
+#: that is invisible stops being part of the denominator, and this project has
+#: re-proposed dead ideas before.
+#:
+#: Format: `{sid: {symbols to keep}}`. A sid that is absent does not render at
+#: all. An empty set keeps every symbol in that sid.
+SHOW: dict[str, set[str]] | None = {"vwapbreak": {"XAUUSD"}}
+
+
+def _filter(h: dict) -> dict | None:
+    """Cut a hypothesis record down to what `SHOW` allows, or drop it entirely.
+
+    Filters `rows` (the promoted per-class picks) and `cells` (every market x
+    timeframe searched) alike, so the evidence on the page always belongs to the
+    markets on the page. Returns None when nothing survives.
+    """
+    if SHOW is None:
+        return h
+    keep = SHOW.get(h.get("sid"))
+    if keep is None:
+        return None
+    if not keep:
+        return h
+    out = dict(h)
+    for k in ("rows", "cells"):
+        out[k] = [r for r in h.get(k, []) if r.get("sym") in keep]
+    if not out["rows"]:
+        return None
+    out["filtered_to"] = sorted(keep)
+    return out
 
 
 def _clean(o):
@@ -43,8 +87,13 @@ def _clean(o):
 
 def main() -> int:
     files = sorted(BT.glob("*/hypothesis.json"))
-    hyps = [json.loads(p.read_text()) for p in files]
+    found = [json.loads(p.read_text()) for p in files]
+    hyps = [x for x in (_filter(h) for h in found) if x is not None]
     hyps.sort(key=lambda h: h.get("hid", ""))
+    if SHOW is not None:
+        hidden = len(found) - len(hyps)
+        print(f"  SHOW filter active: {hidden} of {len(found)} records hidden "
+              f"from the page (all still on disk)")
 
     r = ONE_STEP[0]
     data = {
