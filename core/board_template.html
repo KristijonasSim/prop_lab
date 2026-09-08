@@ -1,0 +1,171 @@
+<title>Hypothesis board</title>
+<style>
+:root{
+  --bg:#faf9f7; --surface:#fff; --ink:#16150f; --muted:#6b6862; --line:#e3e0d8;
+  --good:#1a7f4b; --warn:#a8730a; --fail:#b3261e; --accent:#2b5fd9;
+  --shadow:0 1px 2px rgba(0,0,0,.05);
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#14140f; --surface:#1c1c17; --ink:#f0eee6; --muted:#96938b; --line:#2e2e27;
+  --good:#4ec27f; --warn:#d99b25; --fail:#f0705f; --accent:#7aa2f7;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}}
+:root[data-theme="dark"]{
+  --bg:#14140f; --surface:#1c1c17; --ink:#f0eee6; --muted:#96938b; --line:#2e2e27;
+  --good:#4ec27f; --warn:#d99b25; --fail:#f0705f; --accent:#7aa2f7;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  margin:0;padding:0 24px 60px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding:30px 0 16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+h1{margin:0;font-size:20px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0 6px}
+.tab{background:var(--surface);color:var(--muted);border:1px solid var(--line);
+  border-radius:999px;padding:7px 15px;font-size:13px;cursor:pointer;
+  font-family:inherit;display:flex;gap:8px;align-items:center}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab .hid{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;opacity:.75}
+h2{font-size:17px;margin:24px 0 3px;letter-spacing:-.01em}
+.tagline{color:var(--muted);font-size:13px;margin:0 0 4px}
+.meta{color:var(--muted);font-size:12px;margin:0 0 16px;
+  font-family:"JetBrains Mono",ui-monospace,monospace}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;
+  background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--line);
+  white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  font-weight:600;background:var(--bg);position:sticky;top:0}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--bg)}
+.cls{font-weight:700}
+.mkt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:var(--muted)}
+.good{color:var(--good)} .warn{color:var(--warn)} .fail{color:var(--fail)}
+.dim{color:var(--muted)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+.pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);margin-left:7px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.03em}
+.pill.no{color:var(--fail);border-color:var(--fail)}
+.foot{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:40px;margin-top:24px;box-shadow:var(--shadow);max-width:720px}
+.empty h2{margin:0 0 8px}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--muted);font-size:12px}
+details table{margin-top:8px;font-size:12px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hypothesis board</h1>
+    <div class="sub" id="firm"></div>
+  </header>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="panel"></div>
+</div>
+
+<script>
+const D = /*__DATA__*/ {"hypotheses":[],"firm":{}};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n = (v, d = 2) => (v === null || v === undefined || Number.isNaN(v))
+  ? '<span class="dim">—</span>' : Number(v).toFixed(d);
+
+const F = D.firm || {};
+$('firm').textContent =
+  `Scored against ${F.name || 'the firm'} — ${(F.target*100||0).toFixed(0)}% target, `
+  + `${(F.daily*100||0).toFixed(0)}% daily drawdown, ${(F.maxloss*100||0).toFixed(0)}% max drawdown, one step. `
+  + `Target: resolve in 5–14 days.`;
+
+// Days to pass IS the phase gate, so it is the column that gets coloured.
+function daysClass(d){
+  if (d === null || d === undefined) return 'dim';
+  if (d <= 14) return 'good';
+  if (d <= 50) return 'warn';
+  return 'fail';
+}
+
+const COLS = [
+  {h:'Class',    f:r => `<span class="cls">${esc(r.asset_class)}</span>`},
+  {h:'Market',   f:r => r.sym
+      ? `<span class="mkt">${esc(r.sym)} ${esc(r.tf)}</span>`
+      : '<span class="dim">none resolved</span>'},
+  {h:'Days to pass', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
+      : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
+  {h:'Pass %',   f:r => n(r.pass_pct, 1)},
+  {h:'Max DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
+      : `<span class="${Math.abs(r.max_dd_pct) > (F.maxloss*100||6) ? 'fail':''}">${n(r.max_dd_pct,2)}</span>`},
+  {h:'PF',       f:r => r.pf == null ? '<span class="dim">—</span>'
+      : `<span class="${r.pf >= 1.2 ? 'good' : (r.pf >= 1 ? '' : 'fail')}">${n(r.pf,3)}</span>`},
+  {h:'PF 2× cost', f:r => n(r.pf_2x, 3)},
+  {h:'CAGR %',   f:r => r.cagr_pct == null ? '<span class="dim">—</span>'
+      : `<span class="${r.cagr_pct > 0 ? 'good':'fail'}">${n(r.cagr_pct,1)}</span>`},
+  {h:'Win %',    f:r => n(r.win_pct, 1)},
+  {h:'Avg R',    f:r => n(r.avg_r, 3)},
+  {h:'Trades/day', f:r => n(r.trades_per_day, 2)},
+  {h:'Trades',   f:r => r.trades == null ? '<span class="dim">—</span>' : r.trades},
+  {h:'Risk %',   f:r => n(r.risk_pct, 2)},
+  {h:'Sharpe',   f:r => n(r.sharpe, 2)},
+  {h:'Cost bps', f:r => r.cost_rt_bps == null ? '<span class="dim">—</span>'
+      : `${n(r.cost_rt_bps,2)}${r.cost_measured ? '' : '<span class="pill">assumed</span>'}`},
+  {h:'Beats null', f:r => r.beats_null === undefined ? '<span class="dim">—</span>'
+      : (r.beats_null ? '<span class="good">yes</span>'
+                      : '<span class="fail">no</span>')},
+];
+
+function considered(rows){
+  const all = rows.flatMap(r => (r.considered || []).map(c =>
+    typeof c === 'string' ? {sym:c} : c));
+  if (!all.length) return '';
+  return `<details><summary>Every market tested, before the best in each class was promoted</summary>
+    <div class="scroll"><table><thead><tr>
+      <th>Market</th><th>PF</th><th>Days to pass</th></tr></thead><tbody>
+      ${all.map(c => `<tr><td class="mkt">${esc(c.sym)} ${esc(c.tf ?? '')}</td>
+        <td>${n(c.pf,3)}</td><td>${c.days_to_pass == null ? '<span class="dim">—</span>'
+          : `<span class="${daysClass(c.days_to_pass)}">${Number(c.days_to_pass).toFixed(1)}</span>`}</td></tr>`).join('')}
+    </tbody></table></div></details>`;
+}
+
+function paint(h){
+  $('panel').innerHTML = `
+    <h2>${esc(h.name)}</h2>
+    <p class="tagline">${esc(h.tagline || '')}</p>
+    <p class="meta">${esc(h.hid)} · ${(h.timeframes||[]).join(' / ')}
+      · limit entry, market exit · walk-forward, config re-chosen blind each quarter</p>
+    <div class="scroll"><table><thead><tr>
+      ${COLS.map(c => `<th>${esc(c.h)}</th>`).join('')}
+    </tr></thead><tbody>
+      ${(h.rows||[]).map(r => `<tr>${COLS.map(c => `<td>${c.f(r)}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>
+    ${considered(h.rows || [])}
+    <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
+      — the phase gate — not by profit factor. Every market also ran the identical
+      walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.</p>`;
+}
+
+const H = D.hypotheses || [];
+if (!H.length){
+  document.querySelector('.wrap').innerHTML +=
+    `<div class="empty"><h2>The board is empty.</h2>
+     <p>No hypothesis has been run through the pipeline yet.</p></div>`;
+} else {
+  $('tabs').innerHTML = H.map((h, i) =>
+    `<button class="tab" role="tab" aria-selected="${i === 0}">
+       <span class="hid">${esc(h.hid)}</span><span>${esc(h.name)}</span></button>`).join('');
+  [...document.querySelectorAll('.tab')].forEach((b, i) => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', 'false'));
+    b.setAttribute('aria-selected', 'true');
+    paint(H[i]);
+  }));
+  paint(H[0]);
+}
+</script>
