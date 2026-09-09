@@ -32,6 +32,13 @@ STUDIES: dict[str, list[dict]] = {
                   "<b>Today's stop is half of one bar wide</b>, so noise kills the "
                   "trade. A wider stop wins more often but takes the same number "
                   "of days.")},
+        {"file": "assets.json", "kind": "markets",
+         "title": "Does the gold rule work anywhere else?", "date": "2026-09-09",
+         "note": ("The traded rule - wide stop, five settings, floor 30 / top 5 - "
+                  "run unchanged on every market in the universe, scored at 2% "
+                  "risk under a 1-step 2% target.<br><b>It ports to ETHUSDT 1h "
+                  "and partly to SOL 1h and GBPUSD 4h. Silver 1h, BTC 1h, WTI 4h "
+                  "and two FX cells lose to their own null.</b>")},
         {"file": "quality.json", "title": "Fewer trades, better trades — does it help?",
          "baseline": "baseline", "date": "2026-09-09",
          "note": ("Trade less, trade better: a higher entry bar, and only one "
@@ -59,6 +66,25 @@ def for_sid(sid: str) -> list[dict]:
         if not path.exists():
             continue
         raw = json.loads(path.read_text())
+        if spec.get("kind") == "markets":
+            # one row per market x timeframe, not per arm: a different question
+            # (where does this rule work) and a different shape on disk.
+            rows = []
+            for key, r in raw.items():
+                sym, _, tf = key.partition("|")
+                rows.append({"tf": tf, "arm": sym, "baseline": sym == "XAUUSD",
+                             "trades_per_day": r.get("tpd"), "win_pct": r.get("win"),
+                             "avg_r": r.get("avg_r"), "pf_2x": r.get("pf_2x"),
+                             "days_to_pass": r.get("days"), "band": r.get("band"),
+                             "pass_pct": r.get("pass_pct"),
+                             "stalled_pct": None, "days60": None, "pass60": None,
+                             "risk60": None, "band60": None, "rule60": None,
+                             "beats_null": r.get("beats_null")})
+            rows.sort(key=lambda r: (-(r["pf_2x"] or 0)))
+            out.append({"title": spec["title"], "note": spec["note"],
+                        "date": spec["date"], "rows": rows, "kind": "markets",
+                        "source": f"backtests/{sid}/{spec['file']}"})
+            continue
         rows = []
         for key, res in raw.items():
             tf, _, arm = key.partition("|")

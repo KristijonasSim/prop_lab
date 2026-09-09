@@ -562,7 +562,8 @@ function studies(h){
     <p class="risknote" style="max-width:1100px">${s.note}
       <span class="dim mono" style="font-size:11px">${esc(s.source)}</span></p>
     <div class="scroll"><table><thead><tr>
-      <th>TF</th><th>Version</th><th>Trades/day</th><th>Win %</th><th>Avg R</th>
+      <th>TF</th><th>${s.kind === 'markets' ? 'Market' : 'Version'}</th>
+      <th>Trades/day</th><th>Win %</th><th>Avg R</th>
       <th>PF at 2x cost</th><th>Days to pass</th><th>Pass %</th>
       <th>Never finished %</th><th>60% pass in</th><th>Beats noise</th>
     </tr></thead><tbody>
