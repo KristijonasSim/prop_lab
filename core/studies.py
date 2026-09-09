@@ -78,8 +78,17 @@ def for_sid(sid: str) -> list[dict]:
                 "band": res.get("band"),
                 "pass_pct": res.get("pass_pct"),
                 "stalled_pct": _stalled(res),
+                # The 60% route in full. "60% in 18.3 days" is not readable
+                # without the size it is taken at and the pass rate it buys -
+                # 18.3 days at 4% risk with 60.1% passing is a different
+                # proposition from 12.9 days at 4% with 34.8% passing, and the
+                # column was showing only the first number of each.
                 "days60": b60["days60"] if b60 else None,
                 "pass60": b60["pass60"] if b60 else None,
+                "risk60": b60.get("risk60") if b60 else None,
+                "band60": b60.get("band60") if b60 else None,
+                "rule60": (f"floor {b60['floor']} / top {b60['topn']}"
+                           if b60 else None),
                 "beats_null": res.get("beats_null"),
             })
         rows.sort(key=lambda r: (r["tf"], not r["baseline"], r["arm"]))

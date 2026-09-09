@@ -11520,6 +11520,9 @@
        "stalled_pct": 0.0,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       },
       {
@@ -11546,6 +11549,19 @@
        "stalled_pct": 0.0,
        "days60": 69.0,
        "pass60": 62.3,
+       "risk60": 0.25,
+       "band60": {
+        "days_lo": 46.8,
+        "days_hi": 116.4,
+        "days_med": 67.4,
+        "pass_lo": 35.0,
+        "pass_hi": 79.8,
+        "pass_med": 58.6,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 3",
        "beats_null": true
       },
       {
@@ -11572,6 +11588,58 @@
        "stalled_pct": 4.9,
        "days60": 18.3,
        "pass60": 60.1,
+       "risk60": 4.0,
+       "band60": {
+        "days_lo": 15.9,
+        "days_hi": 25.4,
+        "days_med": 19.5,
+        "pass_lo": 35.3,
+        "pass_hi": 58.8,
+        "pass_med": 46.6,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 30 / top 1",
+       "beats_null": true
+      },
+      {
+       "tf": "1h",
+       "arm": "wider still",
+       "baseline": false,
+       "trades_per_day": 3.03,
+       "win_pct": 29.9,
+       "avg_r": 0.0382,
+       "pf_2x": 1.521,
+       "days_to_pass": 21.8,
+       "band": {
+        "days_lo": 17.3,
+        "days_hi": 30.6,
+        "days_med": 22.3,
+        "pass_lo": 41.0,
+        "pass_hi": 67.4,
+        "pass_med": 53.5,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "pass_pct": 55.0,
+       "stalled_pct": 5.3,
+       "days60": 29.9,
+       "pass60": 70.2,
+       "risk60": 1.5,
+       "band60": {
+        "days_lo": 22.6,
+        "days_hi": 45.2,
+        "days_med": 30.2,
+        "pass_lo": 43.2,
+        "pass_hi": 74.9,
+        "pass_med": 57.0,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 10",
        "beats_null": true
       },
       {
@@ -11598,6 +11666,19 @@
        "stalled_pct": 1.6,
        "days60": 54.6,
        "pass60": 60.4,
+       "risk60": 0.5,
+       "band60": {
+        "days_lo": 39.4,
+        "days_hi": 92.3,
+        "days_med": 57.2,
+        "pass_lo": 29.0,
+        "pass_hi": 65.6,
+        "pass_med": 47.2,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 10",
        "beats_null": true
       },
       {
@@ -11624,6 +11705,9 @@
        "stalled_pct": 1.4,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       },
       {
@@ -11650,6 +11734,58 @@
        "stalled_pct": 8.6,
        "days60": 32.9,
        "pass60": 66.9,
+       "risk60": 0.75,
+       "band60": {
+        "days_lo": 26.5,
+        "days_hi": 52.2,
+        "days_med": 36.1,
+        "pass_lo": 50.7,
+        "pass_hi": 84.4,
+        "pass_med": 68.2,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 5",
+       "beats_null": true
+      },
+      {
+       "tf": "4h",
+       "arm": "wider still",
+       "baseline": false,
+       "trades_per_day": 2.77,
+       "win_pct": 41.7,
+       "avg_r": 0.0596,
+       "pf_2x": 2.094,
+       "days_to_pass": 32.7,
+       "band": {
+        "days_lo": 23.4,
+        "days_hi": 42.1,
+        "days_med": 31.2,
+        "pass_lo": 44.3,
+        "pass_hi": 75.5,
+        "pass_med": 59.5,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "pass_pct": 64.1,
+       "stalled_pct": 5.8,
+       "days60": 25.4,
+       "pass60": 62.9,
+       "risk60": 2.5,
+       "band60": {
+        "days_lo": 18.5,
+        "days_hi": 31.6,
+        "days_med": 23.1,
+        "pass_lo": 43.2,
+        "pass_hi": 69.0,
+        "pass_med": 57.2,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 5",
        "beats_null": true
       }
      ],
@@ -11684,6 +11820,9 @@
        "stalled_pct": 0.0,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       },
       {
@@ -11710,6 +11849,9 @@
        "stalled_pct": 0.9,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       },
       {
@@ -11736,6 +11878,19 @@
        "stalled_pct": 0.0,
        "days60": 23.2,
        "pass60": 64.7,
+       "risk60": 0.5,
+       "band60": {
+        "days_lo": 20.4,
+        "days_hi": 35.9,
+        "days_med": 26.4,
+        "pass_lo": 38.7,
+        "pass_hi": 66.1,
+        "pass_med": 52.7,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 10",
        "beats_null": true
       },
       {
@@ -11762,6 +11917,9 @@
        "stalled_pct": 1.7,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       },
       {
@@ -11788,6 +11946,19 @@
        "stalled_pct": 1.6,
        "days60": 54.6,
        "pass60": 60.4,
+       "risk60": 0.5,
+       "band60": {
+        "days_lo": 39.4,
+        "days_hi": 92.3,
+        "days_med": 57.2,
+        "pass_lo": 29.0,
+        "pass_hi": 65.6,
+        "pass_med": 47.2,
+        "never_pct": 0.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 100 / top 10",
        "beats_null": true
       },
       {
@@ -11814,6 +11985,19 @@
        "stalled_pct": 3.5,
        "days60": 308.8,
        "pass60": 64.0,
+       "risk60": 0.25,
+       "band60": {
+        "days_lo": 148.4,
+        "days_hi": 311.9,
+        "days_med": 308.9,
+        "pass_lo": 0.0,
+        "pass_hi": 65.0,
+        "pass_med": 27.5,
+        "never_pct": 39.5,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 30 / top 1",
        "beats_null": true
       },
       {
@@ -11840,6 +12024,19 @@
        "stalled_pct": 1.1,
        "days60": 256.7,
        "pass60": 62.3,
+       "risk60": 0.25,
+       "band60": {
+        "days_lo": 106.9,
+        "days_hi": 331.3,
+        "days_med": 206.4,
+        "pass_lo": 0.0,
+        "pass_hi": 51.1,
+        "pass_med": 22.8,
+        "never_pct": 12.0,
+        "resamples": 200,
+        "mean_block": 10
+       },
+       "rule60": "floor 30 / top 1",
        "beats_null": true
       },
       {
@@ -11866,6 +12063,9 @@
        "stalled_pct": 1.9,
        "days60": null,
        "pass60": null,
+       "risk60": null,
+       "band60": null,
+       "rule60": null,
        "beats_null": true
       }
      ],
@@ -11874,7 +12074,7 @@
    ]
   }
  ],
- "built": "2026-09-09 11:30:15",
+ "built": "2026-09-09 11:45:36",
  "firm": {
   "name": "Thunderbolt (1 step)",
   "target": 0.06,

@@ -507,7 +507,9 @@ function studies(h){
         <td class="${r.stalled_pct > 5 ? 'warn' : 'dim'}">${n(r.stalled_pct,1)}</td>
         <td>${r.days60 == null ? '<span class="dim">never</span>'
               : `<b class="${r.days60 <= 14 ? 'good' : (r.days60 <= 35 ? 'warn' : 'fail')}"
-                   title="${r.pass60}% pass">${Number(r.days60).toFixed(1)}</b>`}</td>
+                   title="${esc(r.rule60 || '')}">${Number(r.days60).toFixed(1)}</b>
+                 ${bandTxt(r.band60, 'days')}
+                 <span class="band">${n(r.pass60,1)}% @ ${n(r.risk60,2)}% risk</span>`}</td>
         <td>${r.beats_null ? '<span class="good">yes</span>' : '<span class="fail">no</span>'}</td>
       </tr>`).join('')}
     </tbody></table></div></details>`).join('');
