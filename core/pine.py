@@ -56,30 +56,39 @@ FIELDS: dict[str, dict[str, tuple]] = {
 }
 
 
-#: A CONFIGURATION KRIS HAS CHOSEN TO TRADE, which overrides everything the
-#: record would otherwise fill in.
+#: THE CHOSEN STRATEGY fills the indicator, not the pipeline's own pick.
 #:
-#: 2026-09-09: he is running three demo accounts on H-027 gold 1h and wants the
-#: indicator to ship exactly what those accounts trade. The settings are the
-#: modal fold picks of the ONE arm that reaches his 60% goal fastest -
-#: `research/exits.py`, the wide-stop arm, XAUUSD 1h, floor 30 / top 1: 60.1% of
-#: accounts pass in 18.3 expected days at 4% risk per trade, band 15.9-25.4.
-#:
-#: It is pinned rather than derived because the shipped grid does NOT choose it:
-#: given every stop width from 0.75 to 20 sigma the blind selector picks 0.75,
-#: since it ranks configurations on profit factor and the tight-stop lottery has
-#: the best profit factor. That is a real open problem (the selector is aiming at
-#: something other than the goal) and until it is fixed, deriving the defaults
-#: would ship the wrong thing quietly. Pinning ships the right thing loudly.
-PINNED: dict[str, dict] = {
-    "vwapbreak": {
-        "params": {"THR": "1.25", "STOP_SIG": "8", "MAX_HOLD": "384",
-                   "HOUR_LO": "0", "HOUR_HI": "7", "MIN_RVOL": "0"},
-        "label": ("XAUUSD 1h, wide stop, floor 30 / top 1 — 60.1% of accounts "
-                  "pass in 18.3 days at 4% risk (band 15.9–25.4). Pinned by Kris "
-                  "2026-09-09 for the three-account demo test."),
-    },
-}
+#: `core/chosen.py` holds what Kris trades - XAUUSD 1h, five settings in
+#: parallel, 2% total risk - and the reason it is pinned rather than derived is
+#: written there: the blind selector ranks on profit factor, and profit factor is
+#: maximised by a tight stop that wins 5% of the time. That is the opposite of
+#: what a prop evaluation rewards, so deriving the indicator's defaults from the
+#: board would quietly ship the wrong thing.
+def _chosen_params(sid: str) -> tuple[dict, str] | None:
+    """Placeholder values for the sid Kris has chosen, or None."""
+    from core.chosen import CHOSEN
+
+    if CHOSEN.get("sid") != sid:
+        return None
+    m = CHOSEN["measured"]
+    params: dict[str, str] = {}
+    for i, cfg in enumerate(CHOSEN["settings"], start=1):
+        params[f"THR{i}"] = f"{cfg['thr']:g}"
+        params[f"STOP{i}"] = f"{cfg['stop_sig']:g}"
+        params[f"HOLD{i}"] = str(int(cfg["max_hold"]))
+        params[f"HLO{i}"] = str(int(cfg["hour_lo"]))
+        params[f"HHI{i}"] = str(int(cfg["hour_hi"]))
+        params[f"RVOL{i}"] = f"{cfg['min_rvol']:g}"
+    params["RISK_EACH"] = f"{CHOSEN['risk_each_pct']:g}"
+    params["RISK_TOTAL"] = f"{CHOSEN['risk_pct']:g}"
+    params["TRAINED_TO"] = CHOSEN["trained_to"]
+    params["REFRESH_ON"] = CHOSEN["refresh_on"]
+    label = (f"{CHOSEN['market']} {CHOSEN['tf']}, {CHOSEN['rule']}, "
+             f"{CHOSEN['risk_pct']:g}% risk — {m['pass_pct']}% of accounts pass "
+             f"in {m['days_to_pass']} expected days "
+             f"(band {m['days_band'][0]}–{m['days_band'][1]}), "
+             f"{m['trades_per_day']} trades/day")
+    return params, label
 
 
 def _sid_base(sid: str) -> str:
@@ -150,10 +159,10 @@ def for_record(rec: dict) -> dict | None:
         return None
     text = src.read_text()
 
-    pin = PINNED.get(sid)
+    pin = _chosen_params(sid)
     if pin:
-        params = dict(pin["params"])
-        label, folds = pin["label"], []
+        params, label = dict(pin[0]), pin[1]
+        folds = []
     else:
         rule, label = _headline_rule(rec)
         folds = (rule or {}).get("folds") or []

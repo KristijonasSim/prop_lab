@@ -11600,17 +11600,45 @@
     "XAUUSD"
    ],
    "pine": {
-    "text": "// H-027 \u2014 VWAP BAND BREAKOUT. Signals only, no orders.\n//\n// Paste into TradingView: Pine Editor -> new indicator -> paste -> Add to chart.\n//\n// WHAT THIS IS. The exact entry rule the blind walk-forward trades, drawn on a\n// chart so it can be eyeballed. It is an INDICATOR, not a strategy: it marks the\n// bar the rule fires on and draws the level the stop would sit at. It places no\n// orders and reports no profit, because a TradingView strategy tester would\n// charge different costs, fill differently and re-select nothing - and any\n// number it printed would then be compared against this project's numbers by\n// somebody, which is exactly the comparison that is not valid.\n//\n// THE RULE, in full:\n//   * VWAP is anchored to the UTC day and so is its volume-weighted sigma.\n//   * z = (close - vwap) / sigma, measured on the CLOSED bar.\n//   * long when z >= threshold, short when z <= -threshold.\n//   * the fill is the NEXT bar's open. The marker is on the signal bar, so the\n//     trade you would have is one bar to its right.\n//   * stop = entry -/+ stop_sigma * sigma_at_the_signal_bar. There is no target;\n//     removing it is the finding the hypothesis is built on.\n//   * exit otherwise at the horizon, in bars.\n//   * optional filters: a UTC session window, and a minimum relative volume on\n//     the signal bar.\n//\n// WHAT WILL NOT MATCH THE BACKTEST, and why it is not a bug:\n//   * TradingView's feed is a different data vendor with different volume. This\n//     rule is volume-weighted, so the VWAP and sigma will differ slightly.\n//   * The backtest refuses to trade a bar that never traded (Dukascopy pads the\n//     closed FX weekend with zero-volume bars). TradingView does not show those\n//     bars at all, which is the same thing by a different route.\n//   * The backtest charges a measured spread plus commission both sides. Nothing\n//     here is charged anything.\n//\n// Defaults below are the configuration the blind selector chose most often on\n// XAUUSD 1h, wide stop, floor 30 / top 1 \u2014 60.1% of accounts pass in 18.3 days at 4% risk (band 15.9\u201325.4). Pinned by Kris 2026-09-09 for the three-account demo test. \u2014 see the board. They are a starting point, not a recommendation.\n\n//@version=5\nindicator(\"H-027 VWAP band breakout \u2014 signals\", shorttitle=\"H-027 break\",\n     overlay=true, max_lines_count=500, max_labels_count=500)\n\n// ---- inputs ---------------------------------------------------------------\nthr      = input.float(1.25, \"Threshold z (enter beyond this many sigma)\", minval=0.1, step=0.05, group=\"Rule\")\nstopSig  = input.float(8, \"Stop, in sigma\", minval=0.1, step=0.05, group=\"Rule\")\nholdBars = input.int(384, \"Horizon, in bars\", minval=1, group=\"Rule\")\nhourLo   = input.int(0, \"Session window, UTC hour from\", minval=0, maxval=23, group=\"Filters\")\nhourHi   = input.int(7, \"Session window, UTC hour to (equal = no window)\", minval=0, maxval=23, group=\"Filters\")\nminRvol  = input.float(0, \"Minimum relative volume on the signal bar (0 = off)\", minval=0.0, step=0.1, group=\"Filters\")\nrvolLen  = input.int(480, \"Relative-volume baseline, bars\", minval=20, group=\"Filters\")\nshowStop = input.bool(true, \"Draw the stop level while a hypothetical trade is open\", group=\"Display\")\nshowBand = input.bool(true, \"Draw the entry bands\", group=\"Display\")\nshowLabels = input.bool(true, \"BUY / SELL labels on the signal bar\", group=\"Display\")\ncolorBars  = input.bool(true, \"Colour the signal candle\", group=\"Display\")\nshowEntry  = input.bool(true, \"Mark the entry bar (the next bar's open)\", group=\"Display\")\nshowRaw    = input.bool(false, \"Show every bar the condition is true (NOT the trade count)\", group=\"Display\")\nshowExit   = input.bool(true, \"Mark where the trade closes\", group=\"Display\")\nshowStats  = input.bool(true, \"Count the trades on this chart (top right)\", group=\"Display\")\n\n// ---- anchored VWAP and its volume-weighted sigma --------------------------\n// UTC day index straight off the bar's epoch, so the anchor does not move with\n// the chart's timezone the way session() would.\nutcDay  = math.floor(time / 86400000)\nnewSess = na(utcDay[1]) or utcDay != utcDay[1]\n\nvar float pv  = 0.0\nvar float vv  = 0.0\nvar float p2v = 0.0\nvar float lastV = na\n\n// A zero-volume bar is weighted by the last non-zero volume, matching\n// strategies/vwap/sweep.py::vwap_series. On a venue that reports real volume\n// this branch never fires.\nvRaw = nz(volume, 0.0)\nv = vRaw > 0 ? vRaw : nz(lastV, 1.0)\nif vRaw > 0\n    lastV := vRaw\n\ntp = (high + low + close) / 3.0\nif newSess\n    pv  := 0.0\n    vv  := 0.0\n    p2v := 0.0\npv  := pv + tp * v\nvv  := vv + v\np2v := p2v + tp * tp * v\n\nvwap  = vv > 0 ? pv / vv : na\nvarr  = vv > 0 ? p2v / vv - vwap * vwap : na\nsigma = math.sqrt(math.max(nz(varr), 0.0))\n// the same guard the kernel uses: sigma is a difference of two near-equal\n// accumulated sums, so anything under a millionth of price is float noise\nsigOk = not na(vwap) and sigma > vwap * 1e-6\nz     = sigOk ? (close - vwap) / sigma : na\n\n// ---- filters --------------------------------------------------------------\nhh     = hour(time, \"UTC\")\ninSess = hourLo == hourHi ? true :\n   hourLo < hourHi ? (hh >= hourLo and hh < hourHi) : (hh >= hourLo or hh < hourHi)\n\n// baseline is SHIFTED by one bar: a bar is never judged on its own completed\n// volume. Reading the signal bar's own volume is the mistake that inflated an\n// earlier hypothesis' profit factor from 0.627 to 2.765.\nrvolBase = ta.sma(vRaw, rvolLen)[1]\nrvol     = rvolBase > 0 ? vRaw / rvolBase : 0.0\nrvolOk   = minRvol <= 0.0 or rvol >= minRvol\n\nlongSig  = not na(z) and z >= thr and inSess and rvolOk\nshortSig = not na(z) and z <= -thr and inSess and rvolOk\n\n// ---- drawing --------------------------------------------------------------\npVwap = plot(vwap, \"VWAP (UTC day anchor)\", color=color.new(color.orange, 0), linewidth=2)\nupper = sigOk ? vwap + thr * sigma : na\nlower = sigOk ? vwap - thr * sigma : na\npUp = plot(showBand ? upper : na, \"Upper band\", color=color.new(color.teal, 30))\npDn = plot(showBand ? lower : na, \"Lower band\", color=color.new(color.teal, 30))\nfill(pUp, pDn, color=color.new(color.teal, 94), title=\"Band\")\n\n// ---- the hypothetical trade, so the horizon and stop are visible ----------\n// Entry is the NEXT bar's open, which is why nothing is drawn on the signal bar\n// itself. One position at a time, exactly as the kernel runs it.\nvar int   posDir   = 0\nvar float posStop  = na\nvar int   posBars  = 0\nvar float posEntry = na\nvar float posRisk  = na\n\n// ---- what this rule actually does on THIS chart ---------------------------\n// KRIS, 2026-09-09: \"are you sure it's 5 trades a day? May 8 to May 23 is\n// basically zero.\" He was right, and the two numbers were measuring different\n// things. The BOARD's 5.39 trades/day is the ten-configuration book - the\n// selection rule that trades the ten best configs at once. THIS chart is ONE\n// configuration, and one configuration takes 0.55 trades a day on gold 1h:\n// one every 1.8 days, with a p90 gap of 70 bars and a longest gap of 428.\n//\n// The gap he saw is the rule working: it is IN a position 75% of all bars, and\n// a winner that runs for a fortnight produces no new signals while it runs.\n//\n// So the counts belong on the chart rather than in a commit message. Every\n// number in this table is computed from the bars in front of you.\nvar int   nTrades = 0\nvar int   nWins   = 0\nvar float sumR    = 0.0\nvar int   barsIn  = 0\nvar int   sumHold = 0\n\nclosedLong  = false\nclosedShort = false\nif posDir != 0\n    posBars := posBars + 1\n    barsIn  := barsIn + 1\n    hitStop = posDir == 1 ? low <= posStop : high >= posStop\n    if hitStop or posBars >= holdBars\n        // the kernel's fill assumptions: a stop the bar GAPPED past fills at the\n        // open, not at the level, and a horizon exit fills at the close\n        exitPx = hitStop ? ((posDir == 1 and open < posStop) or\n           (posDir == -1 and open > posStop) ? open : posStop) : close\n        rMult = posRisk > 0 ? (exitPx - posEntry) * posDir / posRisk : 0.0\n        nTrades := nTrades + 1\n        nWins   := nWins + (rMult > 0 ? 1 : 0)\n        sumR    := sumR + rMult\n        sumHold := sumHold + posBars\n        closedLong  := posDir == 1\n        closedShort := posDir == -1\n        posDir  := 0\n        posStop := na\n        posBars := 0\n\nif posDir == 0 and (longSig[1] or shortSig[1])\n    side  = longSig[1] ? 1 : -1\n    risk  = stopSig * nz(sigma[1])\n    entryPx = open\n    if risk > 0\n        posDir   := side\n        posEntry := entryPx\n        posStop  := side == 1 ? entryPx - risk : entryPx + risk\n        posBars  := 0\n        posRisk  := risk\n\nplot(showStop and posDir != 0 ? posStop : na, \"Stop level\", color=color.new(color.red, 20),\n     style=plot.style_linebr, linewidth=1)\nplot(showStop and posDir != 0 ? posEntry : na, \"Entry\", color=color.new(color.gray, 40),\n     style=plot.style_linebr, linewidth=1)\nbgcolor(posDir == 1 ? color.new(color.teal, 85) : posDir == -1 ? color.new(color.red, 85) : na,\n     title=\"In a hypothetical position\")\n\n// ---- what actually gets traded -------------------------------------------\n// KRIS, 2026-09-09, looking at the first version: \"on every buy/sell we are\n// buying and selling? maybe it's a bit too often\". He was right to ask, and the\n// chart was wrong, not the rule.\n//\n// The rule's CONDITION stays true for as long as price is beyond the band -\n// often ten bars in a row. The kernel does not trade ten times: it opens one\n// position and then jumps to that trade's exit bar before it looks for another\n// signal. The first version of this indicator drew the condition, so a single\n// trade appeared as a run of labels and the chart implied a trade rate roughly\n// ten times what the backtest actually takes.\n//\n// A label now means A TRADE THE RULE WOULD OPEN: the condition is true AND\n// nothing is open. Turn on \"Show every bar the condition is true\" to see the\n// raw excursions again as faint dots - useful for understanding the rule,\n// misleading as a trade count, which is why it is off by default.\ntradeLong  = longSig and posDir == 0\ntradeShort = shortSig and posDir == 0\n\nplotshape(showLabels and tradeLong, title=\"BUY\", style=shape.labelup,\n     location=location.belowbar, color=color.new(color.teal, 0),\n     textcolor=color.white, text=\"BUY\", size=size.small)\nplotshape(showLabels and tradeShort, title=\"SELL\", style=shape.labeldown,\n     location=location.abovebar, color=color.new(color.red, 0),\n     textcolor=color.white, text=\"SELL\", size=size.small)\n\nbarcolor(colorBars and tradeLong ? color.new(color.teal, 0) :\n   colorBars and tradeShort ? color.new(color.red, 0) : na, title=\"Signal candle\")\n\nplotshape(showEntry and tradeLong[1], title=\"Entry bar, long\", style=shape.triangleup,\n     location=location.belowbar, color=color.new(color.teal, 45), size=size.tiny)\nplotshape(showEntry and tradeShort[1], title=\"Entry bar, short\", style=shape.triangledown,\n     location=location.abovebar, color=color.new(color.red, 45), size=size.tiny)\n\nplotshape(showRaw and longSig and not tradeLong, title=\"Condition true, no trade\",\n     style=shape.circle, location=location.belowbar,\n     color=color.new(color.teal, 70), size=size.tiny)\nplotshape(showRaw and shortSig and not tradeShort, title=\"Condition true, no trade\",\n     style=shape.circle, location=location.abovebar,\n     color=color.new(color.red, 70), size=size.tiny)\n\n// ---- exit marks, so a quiet stretch explains itself ------------------------\nplotshape(showExit and closedLong, title=\"Exit, long\", style=shape.xcross,\n     location=location.abovebar, color=color.new(color.teal, 20), size=size.tiny)\nplotshape(showExit and closedShort, title=\"Exit, short\", style=shape.xcross,\n     location=location.belowbar, color=color.new(color.red, 20), size=size.tiny)\n\nvar table stats = table.new(position.top_right, 2, 7, border_width=1,\n     frame_width=1, frame_color=color.new(color.gray, 60))\n// The first bar's timestamp is carried forward rather than read back with\n// `time[bar_index]`: a history reference that deep makes Pine guess a\n// max_bars_back and it is the usual cause of \"cannot determine referencing\n// length\" on a long chart.\nvar float firstTime = na\nif na(firstTime)\n    firstTime := time\n\nif showStats and barstate.islast\n    spanDays = math.max((time - firstTime) / 86400000.0, 1.0)\n    bg = color.new(color.black, 20)\n    table.cell(stats, 0, 0, \"H-027 on this chart\", text_color=color.white,\n         bgcolor=color.new(color.blue, 40), text_size=size.small)\n    table.cell(stats, 1, 0, \"\", bgcolor=color.new(color.blue, 40))\n    table.cell(stats, 0, 1, \"trades\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 1, str.tostring(nTrades), text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 2, \"per day\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 2, str.tostring(nTrades * 1.0 / spanDays, \"#.##\"), text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 3, \"win rate\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 3, nTrades > 0 ? str.tostring(nWins * 100.0 / nTrades, \"#.#\") + \"%\" : \"\u2014\",\n         text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 4, \"avg R\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 4, nTrades > 0 ? str.tostring(sumR / nTrades * 1.0, \"+#.###\") : \"\u2014\",\n         text_color=sumR > 0 ? color.teal : color.red, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 5, \"avg hold, bars\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 5, nTrades > 0 ? str.tostring(sumHold * 1.0 / nTrades, \"#.#\") : \"\u2014\",\n         text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 6, \"bars in a position\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 6, str.tostring(barsIn * 100.0 / (bar_index + 1), \"#.#\") + \"%\",\n         text_color=color.white, bgcolor=bg, text_size=size.small)\n\nalertcondition(tradeLong,  \"H-027 long signal\",  \"H-027: close is 1.25+ sigma above the anchored VWAP\")\nalertcondition(tradeShort, \"H-027 short signal\", \"H-027: close is 1.25+ sigma below the anchored VWAP\")\n",
+    "text": "// H-027 \u2014 VWAP BAND BREAKOUT, the five-setting book. Signals only, no orders.\n//\n// Paste into TradingView: Pine Editor -> new indicator -> paste -> Add to chart.\n// Built for XAUUSD 1h, floor 30 / top 5, 2% risk \u2014 59.8% of accounts pass in 21.7 expected days (band 16.8\u201331.4), 0.93 trades/day.\n//\n// WHAT THIS IS. The strategy as it is actually traded: FIVE configurations of\n// the same rule running side by side, each risking a fifth of the account. It is\n// an INDICATOR - it marks the bar a setting fires on, draws the stop that\n// setting would use, and counts what happened. It places no orders and prints no\n// profit, because a Pine strategy's profit factor would end up compared with\n// this project's, and the two are not comparable: another vendor's volume on a\n// volume-weighted rule, different fills, no costs, no blind re-selection.\n//\n// THE RULE, for one setting:\n//   * VWAP anchored to the UTC day; sigma is the volume-weighted spread of price\n//     about it.\n//   * z = (close - vwap) / sigma, on the CLOSED bar.\n//   * long when z >= threshold, short when z <= -threshold.\n//   * fill at the NEXT bar's open. No target. Stop at (stop x sigma) measured on\n//     the signal bar. Exit at the horizon if the stop never trades.\n//   * optional UTC session window and minimum relative volume.\n//   * ONE POSITION AT A TIME PER SETTING. A setting already in a trade ignores\n//     its own signals until it is out - which is why a label here means a trade\n//     and not just a bar where the condition held.\n//\n// WHY FIVE. One setting takes 0.15 trades a day: two or three inside a whole\n// evaluation, so the account resolves on luck whichever way it goes. Five give\n// the same pass rate on six times the trades and blow up less often.\n//\n// WHAT WILL NOT MATCH THE BACKTEST, and none of it is a bug: TradingView's feed\n// is a different vendor with different volume, and this rule is volume-weighted;\n// the backtest refuses to trade bars that never traded, which TradingView does\n// not draw at all; and the backtest charges a measured spread on both sides\n// while nothing here is charged anything.\n//\n// THE SETTINGS EXPIRE. They were ranked on the twelve months to 2026-08-30\n// and are traded unchanged for one quarter. Re-rank on 2026-12-01.\n\n//@version=5\nindicator(\"H-027 VWAP band breakout \u2014 5-setting book\", shorttitle=\"H-027 x5\",\n     overlay=true, max_bars_back=1000)\n\n// ---- the five settings ----------------------------------------------------\ngrp1 = \"Setting 1\"\ngrp2 = \"Setting 2\"\ngrp3 = \"Setting 3\"\ngrp4 = \"Setting 4\"\ngrp5 = \"Setting 5\"\n\non1  = input.bool(true, \"on\", inline=\"a\", group=grp1)\nthr1 = input.float(1, \"threshold \u03c3\", inline=\"a\", group=grp1)\nst1  = input.float(3, \"stop \u03c3\", inline=\"b\", group=grp1)\nhd1  = input.int(384, \"hold bars\", inline=\"b\", group=grp1)\nlo1  = input.int(0, \"UTC from\", inline=\"c\", group=grp1)\nhi1  = input.int(0, \"to (equal = all day)\", inline=\"c\", group=grp1)\nrv1  = input.float(0, \"min rel. volume\", inline=\"d\", group=grp1)\n\non2  = input.bool(true, \"on\", inline=\"a\", group=grp2)\nthr2 = input.float(1.5, \"threshold \u03c3\", inline=\"a\", group=grp2)\nst2  = input.float(4, \"stop \u03c3\", inline=\"b\", group=grp2)\nhd2  = input.int(384, \"hold bars\", inline=\"b\", group=grp2)\nlo2  = input.int(0, \"UTC from\", inline=\"c\", group=grp2)\nhi2  = input.int(0, \"to (equal = all day)\", inline=\"c\", group=grp2)\nrv2  = input.float(1, \"min rel. volume\", inline=\"d\", group=grp2)\n\non3  = input.bool(true, \"on\", inline=\"a\", group=grp3)\nthr3 = input.float(0.5, \"threshold \u03c3\", inline=\"a\", group=grp3)\nst3  = input.float(3, \"stop \u03c3\", inline=\"b\", group=grp3)\nhd3  = input.int(384, \"hold bars\", inline=\"b\", group=grp3)\nlo3  = input.int(0, \"UTC from\", inline=\"c\", group=grp3)\nhi3  = input.int(0, \"to (equal = all day)\", inline=\"c\", group=grp3)\nrv3  = input.float(1, \"min rel. volume\", inline=\"d\", group=grp3)\n\non4  = input.bool(true, \"on\", inline=\"a\", group=grp4)\nthr4 = input.float(0.75, \"threshold \u03c3\", inline=\"a\", group=grp4)\nst4  = input.float(4, \"stop \u03c3\", inline=\"b\", group=grp4)\nhd4  = input.int(384, \"hold bars\", inline=\"b\", group=grp4)\nlo4  = input.int(7, \"UTC from\", inline=\"c\", group=grp4)\nhi4  = input.int(16, \"to (equal = all day)\", inline=\"c\", group=grp4)\nrv4  = input.float(1, \"min rel. volume\", inline=\"d\", group=grp4)\n\non5  = input.bool(true, \"on\", inline=\"a\", group=grp5)\nthr5 = input.float(1.5, \"threshold \u03c3\", inline=\"a\", group=grp5)\nst5  = input.float(4, \"stop \u03c3\", inline=\"b\", group=grp5)\nhd5  = input.int(384, \"hold bars\", inline=\"b\", group=grp5)\nlo5  = input.int(0, \"UTC from\", inline=\"c\", group=grp5)\nhi5  = input.int(0, \"to (equal = all day)\", inline=\"c\", group=grp5)\nrv5  = input.float(0, \"min rel. volume\", inline=\"d\", group=grp5)\n\n// ---- display --------------------------------------------------------------\ngD = \"Display\"\nshowLabels = input.bool(true, \"BUY / SELL labels\", group=gD)\ncolorBars  = input.bool(true, \"Colour the signal candle\", group=gD)\nshowEntry  = input.bool(true, \"Mark the entry bar (next open)\", group=gD)\nshowExit   = input.bool(true, \"Mark where a trade closes\", group=gD)\nshowStops  = input.bool(true, \"Draw the stops of open trades\", group=gD)\nshowStats  = input.bool(true, \"Count trades on this chart\", group=gD)\nbandOf     = input.int(1, \"Draw the bands of setting #\", minval=1, maxval=5, group=gD)\nrvolLen    = input.int(480, \"Relative-volume baseline, bars\", minval=20, group=gD)\n\n// ---- anchored VWAP and its sigma, shared by all five ----------------------\nutcDay  = math.floor(time / 86400000)\nnewSess = na(utcDay[1]) or utcDay != utcDay[1]\n\nvar float pv = 0.0\nvar float vv = 0.0\nvar float p2v = 0.0\nvar float lastV = na\n\nvRaw = nz(volume, 0.0)\nv = vRaw > 0 ? vRaw : nz(lastV, 1.0)\nif vRaw > 0\n    lastV := vRaw\n\ntp = (high + low + close) / 3.0\nif newSess\n    pv  := 0.0\n    vv  := 0.0\n    p2v := 0.0\npv  := pv + tp * v\nvv  := vv + v\np2v := p2v + tp * tp * v\n\nvwap  = vv > 0 ? pv / vv : na\nvarr  = vv > 0 ? p2v / vv - vwap * vwap : na\nsigma = math.sqrt(math.max(nz(varr), 0.0))\nsigOk = not na(vwap) and sigma > vwap * 1e-6      // the kernel's SD_EPS_FRAC\nz     = sigOk ? (close - vwap) / sigma : na\n\nhh       = hour(time, \"UTC\")\nrvolBase = ta.sma(vRaw, rvolLen)[1]   // shifted: never judge a bar on its own volume\nrvol     = rvolBase > 0 ? vRaw / rvolBase : 0.0\n\n// ---- per-setting state ----------------------------------------------------\nvar pDir  = array.new_int(5, 0)\nvar pStop = array.new_float(5, na)\nvar pEnt  = array.new_float(5, na)\nvar pRisk = array.new_float(5, na)\nvar pBars = array.new_int(5, 0)\nvar pend  = array.new_int(5, 0)\n\nvar int   nTrades = 0\nvar int   nWins   = 0\nvar float sumR    = 0.0\nvar int   sumHold = 0\nvar int   barsIn  = 0\n\nthrA = array.from(thr1, thr2, thr3, thr4, thr5)\nstA  = array.from(st1, st2, st3, st4, st5)\nhdA  = array.from(hd1, hd2, hd3, hd4, hd5)\nloA  = array.from(lo1, lo2, lo3, lo4, lo5)\nhiA  = array.from(hi1, hi2, hi3, hi4, hi5)\nrvA  = array.from(rv1, rv2, rv3, rv4, rv5)\nonA  = array.from(on1, on2, on3, on4, on5)\n\nnOpenL  = 0\nnOpenS  = 0\nnEnterL = 0\nnEnterS = 0\nnExit   = 0\nnSigL   = 0\nnSigS   = 0\n\nfor i = 0 to 4\n    if array.get(onA, i)\n        // 1. manage an open trade\n        if array.get(pDir, i) != 0\n            array.set(pBars, i, array.get(pBars, i) + 1)\n            dir  = array.get(pDir, i)\n            stop = array.get(pStop, i)\n            hitStop = dir == 1 ? low <= stop : high >= stop\n            timeout = array.get(pBars, i) >= array.get(hdA, i)\n            if hitStop or timeout\n                // a stop the bar GAPPED past fills at the open, not at the level\n                gapped = (dir == 1 and open < stop) or (dir == -1 and open > stop)\n                exitPx = hitStop ? (gapped ? open : stop) : close\n                risk = array.get(pRisk, i)\n                rM = risk > 0 ? (exitPx - array.get(pEnt, i)) * dir / risk : 0.0\n                nTrades := nTrades + 1\n                nWins   := nWins + (rM > 0 ? 1 : 0)\n                sumR    := sumR + rM\n                sumHold := sumHold + array.get(pBars, i)\n                nExit   := nExit + 1\n                array.set(pDir, i, 0)\n                array.set(pStop, i, na)\n                array.set(pBars, i, 0)\n\n        // 2. fill what this setting queued on the previous bar\n        if array.get(pDir, i) == 0 and array.get(pend, i) != 0\n            side = array.get(pend, i)\n            risk = array.get(stA, i) * nz(sigma[1])\n            if risk > 0\n                array.set(pDir, i, side)\n                array.set(pEnt, i, open)\n                array.set(pRisk, i, risk)\n                array.set(pStop, i, side == 1 ? open - risk : open + risk)\n                array.set(pBars, i, 0)\n                if side == 1\n                    nEnterL := nEnterL + 1\n                else\n                    nEnterS := nEnterS + 1\n        array.set(pend, i, 0)\n\n        // 3. decide on this closed bar\n        if array.get(pDir, i) == 0 and sigOk\n            lo_ = array.get(loA, i)\n            hi_ = array.get(hiA, i)\n            inSess = lo_ == hi_ ? true : lo_ < hi_ ? (hh >= lo_ and hh < hi_) : (hh >= lo_ or hh < hi_)\n            rvOk = array.get(rvA, i) <= 0.0 or rvol >= array.get(rvA, i)\n            t = array.get(thrA, i)\n            if inSess and rvOk\n                if z >= t\n                    array.set(pend, i, 1)\n                    nSigL := nSigL + 1\n                else if z <= -t\n                    array.set(pend, i, -1)\n                    nSigS := nSigS + 1\n\n        if array.get(pDir, i) == 1\n            nOpenL := nOpenL + 1\n        else if array.get(pDir, i) == -1\n            nOpenS := nOpenS + 1\n\nif nOpenL + nOpenS > 0\n    barsIn := barsIn + 1\n\n// ---- drawing --------------------------------------------------------------\nbThr = array.get(thrA, bandOf - 1)\nplot(vwap, \"VWAP (UTC day)\", color=color.new(color.orange, 0), linewidth=2)\npUp = plot(sigOk ? vwap + bThr * sigma : na, \"Upper band\", color=color.new(color.teal, 40))\npDn = plot(sigOk ? vwap - bThr * sigma : na, \"Lower band\", color=color.new(color.teal, 40))\nfill(pUp, pDn, color=color.new(color.teal, 95), title=\"Band\")\n\n// One label per BAR, not per setting: three settings firing together is one\n// thing to look at.\nsigL = nSigL > 0\nsigS = nSigS > 0\nplotshape(showLabels and sigL, title=\"BUY\", style=shape.labelup, location=location.belowbar,\n     color=color.new(color.teal, 0), textcolor=color.white, text=\"BUY\", size=size.small)\nplotshape(showLabels and sigS, title=\"SELL\", style=shape.labeldown, location=location.abovebar,\n     color=color.new(color.red, 0), textcolor=color.white, text=\"SELL\", size=size.small)\nbarcolor(colorBars and sigL ? color.new(color.teal, 0) :\n   colorBars and sigS ? color.new(color.red, 0) : na, title=\"Signal candle\")\nplotshape(showEntry and nEnterL > 0, title=\"Entry, long\", style=shape.triangleup,\n     location=location.belowbar, color=color.new(color.teal, 45), size=size.tiny)\nplotshape(showEntry and nEnterS > 0, title=\"Entry, short\", style=shape.triangledown,\n     location=location.abovebar, color=color.new(color.red, 45), size=size.tiny)\nplotshape(showExit and nExit > 0, title=\"Exit\", style=shape.xcross,\n     location=location.abovebar, color=color.new(color.gray, 20), size=size.tiny)\n\nplot(showStops and array.get(pDir, 0) != 0 ? array.get(pStop, 0) : na, \"Stop 1\",\n     color=color.new(color.red, 30), style=plot.style_linebr)\nplot(showStops and array.get(pDir, 1) != 0 ? array.get(pStop, 1) : na, \"Stop 2\",\n     color=color.new(color.red, 45), style=plot.style_linebr)\nplot(showStops and array.get(pDir, 2) != 0 ? array.get(pStop, 2) : na, \"Stop 3\",\n     color=color.new(color.red, 60), style=plot.style_linebr)\nplot(showStops and array.get(pDir, 3) != 0 ? array.get(pStop, 3) : na, \"Stop 4\",\n     color=color.new(color.red, 70), style=plot.style_linebr)\nplot(showStops and array.get(pDir, 4) != 0 ? array.get(pStop, 4) : na, \"Stop 5\",\n     color=color.new(color.red, 80), style=plot.style_linebr)\n\nbgcolor(nOpenL > nOpenS ? color.new(color.teal, 88) :\n   nOpenS > nOpenL ? color.new(color.red, 88) : na, title=\"Book net long / short\")\n\n// ---- the count, on the chart ---------------------------------------------\nvar float firstTime = na\nif na(firstTime)\n    firstTime := time\n\nvar table stats = table.new(position.top_right, 2, 8, border_width=1,\n     frame_width=1, frame_color=color.new(color.gray, 60))\nif showStats and barstate.islast\n    spanDays = math.max((time - firstTime) / 86400000.0, 1.0)\n    bg = color.new(color.black, 20)\n    hdr = color.new(color.blue, 40)\n    table.cell(stats, 0, 0, \"H-027 book here\", text_color=color.white, bgcolor=hdr, text_size=size.small)\n    table.cell(stats, 1, 0, \"5 settings\", text_color=color.white, bgcolor=hdr, text_size=size.small)\n    table.cell(stats, 0, 1, \"trades\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 1, str.tostring(nTrades), text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 2, \"per day\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 2, str.tostring(nTrades * 1.0 / spanDays, \"#.##\"), text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 3, \"win rate\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 3, nTrades > 0 ? str.tostring(nWins * 100.0 / nTrades, \"#.#\") + \"%\" : \"\u2014\", text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 4, \"avg R\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 4, nTrades > 0 ? str.tostring(sumR / nTrades * 1.0, \"+#.###\") : \"\u2014\", text_color=sumR > 0 ? color.teal : color.red, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 5, \"avg hold, bars\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 5, nTrades > 0 ? str.tostring(sumHold * 1.0 / nTrades, \"#.#\") : \"\u2014\", text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 6, \"open now\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 6, str.tostring(nOpenL) + \" long / \" + str.tostring(nOpenS) + \" short\", text_color=color.white, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 0, 7, \"risk each\", text_color=color.silver, bgcolor=bg, text_size=size.small)\n    table.cell(stats, 1, 7, \"0.4% of 2%\", text_color=color.white, bgcolor=bg, text_size=size.small)\n\nalertcondition(sigL, \"H-027 long signal\", \"H-027: a setting went long\")\nalertcondition(sigS, \"H-027 short signal\", \"H-027: a setting went short\")\nalertcondition(sigL or sigS, \"H-027 any signal\", \"H-027: new signal\")\n",
     "params": {
-     "THR": "1.25",
-     "STOP_SIG": "8",
-     "MAX_HOLD": "384",
-     "HOUR_LO": "0",
-     "HOUR_HI": "7",
-     "MIN_RVOL": "0"
+     "THR1": "1",
+     "STOP1": "3",
+     "HOLD1": "384",
+     "HLO1": "0",
+     "HHI1": "0",
+     "RVOL1": "0",
+     "THR2": "1.5",
+     "STOP2": "4",
+     "HOLD2": "384",
+     "HLO2": "0",
+     "HHI2": "0",
+     "RVOL2": "1",
+     "THR3": "0.5",
+     "STOP3": "3",
+     "HOLD3": "384",
+     "HLO3": "0",
+     "HHI3": "0",
+     "RVOL3": "1",
+     "THR4": "0.75",
+     "STOP4": "4",
+     "HOLD4": "384",
+     "HLO4": "7",
+     "HHI4": "16",
+     "RVOL4": "1",
+     "THR5": "1.5",
+     "STOP5": "4",
+     "HOLD5": "384",
+     "HLO5": "0",
+     "HHI5": "0",
+     "RVOL5": "0",
+     "RISK_EACH": "0.4",
+     "RISK_TOTAL": "2",
+     "TRAINED_TO": "2026-08-30",
+     "REFRESH_ON": "2026-12-01"
     },
     "source": "strategies/vwapbreak/indicator.pine",
-    "defaults_from": "XAUUSD 1h, wide stop, floor 30 / top 1 \u2014 60.1% of accounts pass in 18.3 days at 4% risk (band 15.9\u201325.4). Pinned by Kris 2026-09-09 for the three-account demo test.",
+    "defaults_from": "XAUUSD 1h, floor 30 / top 5, 2% risk \u2014 59.8% of accounts pass in 21.7 expected days (band 16.8\u201331.4), 0.93 trades/day",
     "pinned": true,
     "n_folds": 0
    },
@@ -12198,7 +12226,7 @@
    ]
   }
  ],
- "built": "2026-09-09 13:10:35",
+ "built": "2026-09-09 14:03:16",
  "firm": {
   "name": "Thunderbolt (1 step)",
   "target": 0.06,
@@ -12215,5 +12243,109 @@
    2.295
   ],
   "note": "six information-free gates on gold, 2% risk, full blind walk-forward"
+ },
+ "chosen": {
+  "sid": "vwapbreak",
+  "hid": "H-027",
+  "name": "VWAP band breakout \u2014 gold 1h, five settings",
+  "market": "XAUUSD",
+  "tf": "1h",
+  "rule": "floor 30 / top 5",
+  "risk_pct": 2.0,
+  "risk_each_pct": 0.4,
+  "trained_to": "2026-08-30",
+  "train_months": 12,
+  "refresh_on": "2026-12-01",
+  "settings": [
+   {
+    "thr": 1.0,
+    "stop_sig": 3.0,
+    "max_hold": 384,
+    "hour_lo": 0,
+    "hour_hi": 0,
+    "min_rvol": 0.0
+   },
+   {
+    "thr": 1.5,
+    "stop_sig": 4.0,
+    "max_hold": 384,
+    "hour_lo": 0,
+    "hour_hi": 0,
+    "min_rvol": 1.0
+   },
+   {
+    "thr": 0.5,
+    "stop_sig": 3.0,
+    "max_hold": 384,
+    "hour_lo": 0,
+    "hour_hi": 0,
+    "min_rvol": 1.0
+   },
+   {
+    "thr": 0.75,
+    "stop_sig": 4.0,
+    "max_hold": 384,
+    "hour_lo": 7,
+    "hour_hi": 16,
+    "min_rvol": 1.0
+   },
+   {
+    "thr": 1.5,
+    "stop_sig": 4.0,
+    "max_hold": 384,
+    "hour_lo": 0,
+    "hour_hi": 0,
+    "min_rvol": 0.0
+   }
+  ],
+  "measured": {
+   "pass_pct": 59.8,
+   "days_to_pass": 21.7,
+   "days_band": [
+    16.8,
+    31.4
+   ],
+   "pass_band": [
+    42.9,
+    70.7
+   ],
+   "median_days": 13,
+   "blown_pct": 33.9,
+   "never_finished_pct": 6.3,
+   "trades_per_day": 0.93,
+   "trades": 591,
+   "win_pct": 20.3,
+   "avg_r": 0.319,
+   "pf": 2.951,
+   "curve_dd_pct": -39.16
+  },
+  "alternatives": [
+   {
+    "what": "safest",
+    "risk_pct": 1.0,
+    "pass_pct": 69.1,
+    "days": 32.6,
+    "blown_pct": 23.2
+   },
+   {
+    "what": "chosen",
+    "risk_pct": 2.0,
+    "pass_pct": 59.8,
+    "days": 21.7,
+    "blown_pct": 33.9
+   },
+   {
+    "what": "fastest at 60%",
+    "risk_pct": 4.0,
+    "pass_pct": 45.9,
+    "days": 17.4,
+    "blown_pct": 51.0
+   }
+  ],
+  "caveats": [
+   "The 21.7-day band (16.8-31.4) overlaps the measured luck zone (13.3-26.5 expected days). The edge beats its null; the SPEED has not been shown to differ from noise.",
+   "H-027's kernel has never been checked against a second engine. That check has caught three real bugs in this repo.",
+   "The blind selector does not choose this stop width by itself - it was forced and then measured. Fixing what the selector optimises is open work."
+  ]
  }
 }

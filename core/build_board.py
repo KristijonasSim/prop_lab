@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT))
 from core import noiseband as NB                               # noqa: E402
 from core import pine as PINE                                  # noqa: E402
 from core import studies as STUDIES                            # noqa: E402
+from core.chosen import CHOSEN                                 # noqa: E402
 from core.prop_rules import ONE_STEP                           # noqa: E402
 from core.scorecard import rank_tiers                          # noqa: E402
 
@@ -158,6 +159,10 @@ def main() -> int:
         # inside it has not been shown to differ from a gate that knows nothing.
         "noise_floor": {"days": list(NB.FLOOR_DAYS), "pf_2x": list(NB.FLOOR_PF_2X),
                         "note": NB.FLOOR_NOTE},
+        # WHAT KRIS TRADES, at the top of the page. Chosen 2026-09-09 and pinned
+        # in core/chosen.py, because the pipeline's own pick optimises profit
+        # factor and a prop evaluation does not pay for profit factor.
+        "chosen": CHOSEN,
     }
     tpl = (ROOT / "core" / "board_template.html").read_text()
     out = BT / "board.html"

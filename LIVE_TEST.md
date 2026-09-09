@@ -3,9 +3,24 @@
 Kris, 2026-09-09: *"I will launch 3 demo accounts with the same strategy and in
 18 days we should know for all 3 if they passed or not."*
 
-This is the exact specification those accounts trade. Everything here is the
-modal pick of the blind walk-forward's wide-stop arm on XAUUSD 1h
-(`strategies/vwapbreak/research/exits.py`, floor 30 / top 1).
+**UPDATED 2026-09-09 evening.** The single-setting version below was replaced:
+Kris chose **floor 30 / top 5 at 2% risk** after the top-N study. One setting
+takes 0.15 trades a day - two or three inside a whole evaluation - so the account
+resolves on luck either way. Five settings give the same pass rate on six times
+the trades and blow up less often.
+
+**The live specification now lives in `core/chosen.py`**, is rendered at the top
+of the board, and fills the Pine indicator automatically. What follows is kept
+because the reasoning about the test itself has not changed.
+
+| | chosen | what it replaced |
+|---|---|---|
+| rule | floor 30 / **top 5** | floor 30 / top 1 |
+| risk | **2%** total, 0.4% per setting | 4% |
+| pass rate | **59.8%** | 60.1% |
+| expected days | 21.7 (band 16.8-31.4) | 18.3 (band 15.9-25.4) |
+| blown | **33.9%** | 39.6% |
+| trades | **0.93/day**, ~17 in 18 days | 0.15/day, ~3 in 18 days |
 
 ---
 

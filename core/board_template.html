@@ -121,6 +121,20 @@ details table{margin-top:8px;font-size:12px}
   padding:9px 13px;margin:14px 0 2px;font-size:12.5px;color:var(--muted);
   line-height:1.55;max-width:1100px}
 .floorline b{color:var(--warn)}
+.chosen{background:var(--surface);border:2px solid var(--good);border-radius:8px;
+  padding:16px 18px;margin:0 0 22px;box-shadow:var(--shadow)}
+.chosen h3{margin:0 0 2px;font-size:16px}
+.chosen .who{color:var(--muted);font-size:12.5px;margin-bottom:12px}
+.chosen .kpis{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:12px}
+.chosen .kpi{min-width:96px}
+.chosen .kpi .v{font-size:22px;font-weight:700;line-height:1.15}
+.chosen .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.03em}
+.chosen .kpi .b{font-size:10.5px;color:var(--muted);
+  font-family:"JetBrains Mono",ui-monospace,monospace}
+.chosen table{font-size:12px;margin-top:4px}
+.chosen .warn-list{margin:10px 0 0;padding-left:18px;color:var(--muted);
+  font-size:11.5px;line-height:1.6}
 .pinebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}
 .pinebtn{background:var(--accent);color:#fff;border:1px solid var(--accent);
   border-radius:5px;padding:7px 13px;font-size:12.5px;cursor:pointer;
@@ -140,6 +154,7 @@ pre.pine{background:var(--bg);border:1px solid var(--line);border-radius:5px;
     <div class="built" id="built"></div>
     <div class="floorline" id="floor"></div>
   </header>
+  <div id="chosen"></div>
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="panel"></div>
 </div>
@@ -210,6 +225,53 @@ function daysClass(d){
   if (d <= 14) return 'good';
   if (d <= 50) return 'warn';
   return 'fail';
+}
+
+// WHAT KRIS TRADES. Top of the page, above every hypothesis tab, because the
+// board's own promoted row answers a different question - it is chosen by the
+// pipeline's profit-factor ranking, and a prop evaluation does not pay for
+// profit factor. See core/chosen.py.
+const C = D.chosen;
+if (C){
+  const m = C.measured;
+  const kpi = (v, l, b) => `<div class="kpi"><div class="v">${v}</div>
+    <div class="l">${l}</div>${b ? `<div class="b">${b}</div>` : ''}</div>`;
+  $('chosen').innerHTML = `<div class="chosen">
+    <h3>What we trade — ${esc(C.market)} ${esc(C.tf)}</h3>
+    <div class="who">${esc(C.rule)} · <b>${C.risk_pct}% risk per trade</b>
+      (${C.risk_each_pct}% on each of 5 settings) · settings ranked on the 12 months
+      to ${esc(C.trained_to)} · <b>re-rank ${esc(C.refresh_on)}</b>, not before</div>
+    <div class="kpis">
+      ${kpi(`<span class="good">${m.pass_pct}%</span>`, 'accounts pass',
+            `${m.pass_band[0]}–${m.pass_band[1]}%`)}
+      ${kpi(`${m.days_to_pass}`, 'days to funded', `${m.days_band[0]}–${m.days_band[1]}`)}
+      ${kpi(`${m.median_days}`, 'median days when it passes')}
+      ${kpi(`<span class="fail">${m.blown_pct}%</span>`, 'blown')}
+      ${kpi(`${m.trades_per_day}`, 'trades / day', `${m.trades} in 3 years`)}
+      ${kpi(`${m.win_pct}%`, 'win rate', `avg R ${m.avg_r}`)}
+      ${kpi(`${m.pf}`, 'profit factor')}
+    </div>
+    <div class="scroll"><table><thead><tr>
+      <th>#</th><th>Threshold</th><th>Stop</th><th>Hold</th><th>Session (UTC)</th>
+      <th>Min rel. volume</th><th>Risk</th></tr></thead><tbody>
+      ${C.settings.map((s, i) => `<tr>
+        <td class="mkt">${i + 1}</td>
+        <td>${s.thr}σ</td><td>${s.stop_sig}σ</td><td>${s.max_hold} bars</td>
+        <td>${s.hour_lo === s.hour_hi ? 'all day'
+              : String(s.hour_lo).padStart(2,'0') + '–' + String(s.hour_hi).padStart(2,'0')}</td>
+        <td>${s.min_rvol ? '≥ ' + s.min_rvol : '—'}</td>
+        <td class="mono dim">${C.risk_each_pct}%</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="scroll" style="margin-top:10px"><table><thead><tr>
+      <th>Same rule at other sizes</th><th>Risk</th><th>Pass %</th><th>Days</th>
+      <th>Blown %</th></tr></thead><tbody>
+      ${C.alternatives.map(a => `<tr class="${a.what === 'chosen' ? '' : 'dim'}">
+        <td class="mkt">${esc(a.what)}${a.what === 'chosen' ? '<span class="pill">trading this</span>' : ''}</td>
+        <td class="mono">${a.risk_pct.toFixed(2)}%</td>
+        <td>${a.pass_pct}</td><td>${a.days}</td><td>${a.blown_pct}</td></tr>`).join('')}
+    </tbody></table></div>
+    <ul class="warn-list">${C.caveats.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+  </div>`;
 }
 
 const COLS = [
@@ -459,8 +521,9 @@ function pineBar(h){
   const ps = Object.entries(p.params || {}).map(([k, v]) => `${k.toLowerCase()} ${v}`).join(', ');
   return `<div class="pinebar">
       <button class="pinebtn" id="pinebtn" onclick="copyPine(this)">Copy Pine indicator</button>
-      <span class="dim" style="font-size:12px">Paste into TradingView. Shows signals only.
-        Settings = what the test picked most often on <b>${esc(p.defaults_from)}</b>${ps ? ' (' + esc(ps) + ')' : ''}.</span>
+      <span class="dim" style="font-size:12px">Paste into TradingView. Shows signals only —
+        no orders, no equity curve. It ships <b>the five settings above</b>:
+        ${esc(p.defaults_from)}.</span>
     </div>
     <textarea class="pinesrc" id="pinesrc" readonly>${esc(p.text)}</textarea>
     <details><summary>Read the Pine source before pasting it</summary>
