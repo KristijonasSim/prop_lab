@@ -73,6 +73,17 @@ Two rules follow and neither is optional:
   in this repo's history has been reported that way, which is the mechanism
   behind every result it has had to retract.
 
+**AS OF 2026-09-09 THE BOARD ENFORCES THIS** — `core/noiseband.py`. Every ranked
+number on the page carries its own 10–90% band, computed by resampling that
+cell's daily returns in blocks and re-running the same prop simulation
+(`_states` is `riskladder.run_accounts` vectorised, pinned account-for-account by
+`tests/test_noiseband.py`). Rows whose bands overlap share a TIER and
+`core/scorecard.rank_tiers` refuses to order them — tiers are formed against the
+tier LEADER, because overlap is not transitive and comparing neighbours would
+chain a whole table into one tier. A band is stored per LADDER RUNG, so forcing a
+different risk on the page moves the band with the number, and `core/repick.py`
+carries it through a policy change.
+
 **The one thing that is NOT subject to this: the risk ladder.** Re-simulating the
 same trade series at a different position size selects nothing and searches
 nothing — it is arithmetic on a fixed series. Gold 1h needs 38.0 expected days at
@@ -358,6 +369,34 @@ The edge survives — 13 of 16 against a null's 3.0 — the speed never existed.
 **A TARGET keeps its level**: it is a limit order, a gap through it fills better,
 and taking that bonus would be optimism in the other direction.
 
+**RESOLVED 2026-09-09 — and neither was a look-ahead.** Both were diagnosed by
+dumping each engine's state at the disputed bar; the workings are in
+`SESSION_2026-09-09.md`.
+
+* **30m, MODE_PULLBACK / MODE_RECLAIM, anchor 13:30 — the RULE was ill-posed,
+  not either engine.** Both modes ask whether the PREVIOUS bar closed above or
+  below its VWAP. Over the padded weekend every bar is O=H=L=C at one frozen
+  price, so the session VWAP *is* that price and the true answer is neither. What
+  decided it was the last bit of the accumulation - pandas `cumsum` in the kernel
+  against an incremental sum in the port, one ulp apart (4.5e-13 on gold) in
+  whichever direction. `engine.PX_EPS_FRAC = 1e-9` now gives the comparison a
+  tolerance in price terms: a strict test must beat the floor, a non-strict one
+  absorbs it. 3,095 of 45,024 30m bars are ties at that anchor and all but 2 are
+  padded bars, so the blast radius is the weekend open and nothing else.
+* **15m, MODE_BREAK, rolling 384-bar anchor — the PORT's bookkeeping.** The
+  kernel caps a hold at the end of the session (`horizon = stop_bar`) and books
+  the trade at the last usable bar; the port left the horizon uncapped and then
+  dropped whatever was still open when the stream stopped. One trade of 416, the
+  last one, entered seven bars from the end. The port now caps at `n_bars - 1`.
+
+**The lesson generalises: an entry-bar disagreement is not automatically a
+causality bug.** One of these was a rule that had no answer and one was a
+convention at the end of the data. Both were found by printing both engines'
+state at the bar, which took minutes; both had been carried as unresolved for a
+day because the disagreement was reported as a count rather than as a mechanism.
+
+**The original entry, kept for the record:**
+
 **OPEN, 2026-09-08: two configurations disagree with the vwap NautilusTrader
 port on entry bars.** Found the moment 15m and 30m were added to the port's `TFS`
 map, which had listed only 5m/1h/4h — **two of the board book's four legs had
@@ -390,7 +429,8 @@ in every engine that touches FX or metals, and any new one must carry them:
    take a `live` array. Before the fix H-016's XAUUSD 1h leg took **25.19R of
    54.25R** from dead-bar entries and its 4h leg **11.87R of 2.15R** — that leg
    was negative without them.
-2. **A volatility guard needs a tolerance in price terms, not `<= 0.0`.** A
+2. **A volatility guard needs a tolerance in price terms, not `<= 0.0`** - and
+   so does any comparison against a VWAP (`PX_EPS_FRAC`, 2026-09-09). A
    quantity like `vwstd = sqrt(p2v/v − vwap²)` is a difference of near-equal
    accumulated sums, so its cancellation floor is `price·sqrt(eps)` ≈ 3e-5 on
    gold. `sd <= 0.0` let that noise act as a real band on sessions that never

@@ -66,8 +66,9 @@ from nautilus_trader.trading.strategy import Strategy                   # noqa: 
 from core.nautilus_setup import make_engine, add_bars_for, fx_instrument  # noqa: E402
 from strategies.vwap.sweep import features, run_one, DEFAULTS           # noqa: E402
 from strategies.vwap.stage3_timeframes import load_tf                   # noqa: E402
-from strategies.vwap.engine import (SD_EPS_FRAC, T_ENTRY_I, T_EXIT_I, T_DIR,  # noqa: E402
-                                    T_ENTRY_PX, T_EXIT_PX, T_R, T_REASON)
+from strategies.vwap.engine import (PX_EPS_FRAC, SD_EPS_FRAC, T_ENTRY_I,  # noqa: E402
+                                    T_EXIT_I, T_DIR, T_ENTRY_PX, T_EXIT_PX,
+                                    T_R, T_REASON)
 
 OUT = ROOT / "backtests" / "queue"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -303,8 +304,21 @@ class GoldVwap(Strategy):
                     up, dn = self.pending_band
                     self.target_px = dn if self.side == -1 else up
                     self.has_target = 1
-                self.horizon = (i + c.max_hold_bars if c.max_hold_bars > 0
-                                else c.n_bars - 1)
+                # THE HORIZON IS CAPPED AT THE END OF THE DATA, like the
+                # kernel's. `horizon = stop_bar` there, tightened to
+                # `entry_i + max_hold_bars` only when that lands INSIDE the
+                # session - so a hold that runs off the end of the series
+                # resolves at the last usable bar rather than never. This port
+                # left the horizon uncapped and then dropped whatever was still
+                # open when the stream stopped, which is how the 15m
+                # MODE_BREAK config came to disagree on exactly one trade of
+                # 416 - the last one, entered seven bars from the end. It was
+                # logged as an unresolved second-engine disagreement; it is
+                # this port's bookkeeping, not a kernel bug, and no board number
+                # ever depended on it.
+                h = (i + c.max_hold_bars if c.max_hold_bars > 0
+                     else c.n_bars - 1)
+                self.horizon = min(h, c.n_bars - 1)
                 self.prev_side = self.side       # kernel sets it on entry
         self.pending = 0
 
@@ -429,18 +443,26 @@ class GoldVwap(Strategy):
         elif c.mode == MODE_BREAK:
             want = 1 if cl > upper else (-1 if cl < lower else 0)
         elif c.mode == MODE_RECLAIM:
+            # engine.PX_EPS_FRAC. The kernel accumulates its VWAP with pandas
+            # and this port accumulates it incrementally, so on a padded bar -
+            # where the close IS the VWAP - the two land one ulp apart and the
+            # comparison is decided by rounding. Same tolerance, same side.
             if i > self.sess_start + c.warmup_bars and prev is not None \
                     and prev_vw == prev_vw:
-                if self.stretched_up and cl < v and prev[3] >= prev_vw:
+                ce = v * PX_EPS_FRAC
+                pe = prev_vw * PX_EPS_FRAC
+                if self.stretched_up and cl < v - ce and prev[3] >= prev_vw - pe:
                     want = -1
-                elif self.stretched_dn and cl > v and prev[3] <= prev_vw:
+                elif self.stretched_dn and cl > v + ce and prev[3] <= prev_vw + pe:
                     want = 1
         elif c.mode == MODE_PULLBACK:
             if i > self.sess_start + c.warmup_bars and prev is not None \
                     and prev_vw == prev_vw:
-                if prev[3] > prev_vw and lo <= v and cl > v:
+                ce = v * PX_EPS_FRAC
+                pe = prev_vw * PX_EPS_FRAC
+                if prev[3] > prev_vw + pe and lo <= v + ce and cl > v + ce:
                     want = 1
-                elif prev[3] < prev_vw and hi >= v and cl < v:
+                elif prev[3] < prev_vw - pe and hi >= v - ce and cl < v - ce:
                     want = -1
         if want == 0:
             return
@@ -457,7 +479,9 @@ class GoldVwap(Strategy):
         self.pending_rank = rank_next
 
     def on_stop(self):
-        # the kernel's final session ends at n-1 and never exits past it
+        # Nothing should still be open: the horizon is capped at n_bars - 1, so
+        # the time exit fires on the last usable bar exactly as the kernel's
+        # does. This stays as a guard, not as a policy.
         self.side = 0
 
     def _close(self, px: float, exit_i: int, reason: int):

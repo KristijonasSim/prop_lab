@@ -315,3 +315,26 @@ def test_every_ladder_row_carries_both_structures():
     assert len(rows) == len(RISK_LADDER)
     for x in rows:
         assert "one_step" in x and "expected_days" in x["one_step"]
+
+
+def test_verify_board_restates_the_firm_it_audits():
+    """`core/verify_board.py` deliberately imports nothing from this package -
+    an auditor that shares code with the thing it audits proves nothing. The
+    cost of that independence is drift, and it drifted: the file was still
+    pricing the board on the modelled 8%+5% two-step for a day after Kris chose
+    Thunderbolt, so it would have disagreed with every board number for a reason
+    that had nothing to do with the strategy.
+
+    This is the only tie between the two files, and it is a comparison of four
+    numbers, not an import in the audit path."""
+    from core import verify_board as VB
+    from core.prop_rules import ONE_STEP as FIRM
+
+    assert VB.TARGET == FIRM[0].profit_target
+    assert VB.MAX_LOSS == FIRM[0].max_loss
+    assert VB.DAILY_LOSS == FIRM[0].daily_loss
+    assert VB.MIN_TRADING_DAYS == FIRM[0].min_trading_days
+    assert VB.ONE_STEP[0] == {"target": FIRM[0].profit_target,
+                              "daily": FIRM[0].daily_loss,
+                              "maxloss": FIRM[0].max_loss,
+                              "mindays": FIRM[0].min_trading_days}

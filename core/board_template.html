@@ -1,4 +1,8 @@
+<meta charset="utf-8">
 <title>Hypothesis board</title>
+<!-- The charset is not optional: this page is opened over file://, where a
+     browser has no HTTP header to read it from and falls back to a legacy
+     encoding. Every em dash on the board rendered as "â€"" until 2026-09-09. -->
 <!-- The page is a static file opened over file://, so an already-open tab keeps
      showing whatever was rendered when it was opened. The auto-refresh that used
      to cover that was removed on Kris's instruction 2026-09-08 - it stole focus
@@ -104,6 +108,29 @@ details table{margin-top:8px;font-size:12px}
   line-height:1.65;max-width:1000px}
 .notes li{margin-bottom:5px}
 .notes b{color:var(--ink)}
+/* THE BAND. Printed under every number the board ranks on, in the same cell,
+   because a band that lives in a tooltip gets read by nobody. */
+.band{display:block;font-size:10px;color:var(--muted);opacity:.85;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:400;
+  letter-spacing:-.01em}
+.tier{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:3px;
+  border:1px solid var(--line);color:var(--muted);
+  font-family:"JetBrains Mono",ui-monospace,monospace}
+.tier.t1{border-color:var(--accent);color:var(--accent)}
+.floorline{background:var(--surface);border:1px solid var(--warn);border-radius:5px;
+  padding:9px 13px;margin:14px 0 2px;font-size:12.5px;color:var(--muted);
+  line-height:1.55;max-width:1100px}
+.floorline b{color:var(--warn)}
+.pinebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}
+.pinebtn{background:var(--accent);color:#fff;border:1px solid var(--accent);
+  border-radius:5px;padding:7px 13px;font-size:12.5px;cursor:pointer;
+  font-family:inherit;font-weight:600}
+.pinebtn:hover{filter:brightness(1.08)}
+.pinebtn.done{background:var(--good);border-color:var(--good)}
+.pinesrc{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+pre.pine{background:var(--bg);border:1px solid var(--line);border-radius:5px;
+  padding:12px;overflow:auto;max-height:420px;font-size:11.5px;line-height:1.5;
+  font-family:"JetBrains Mono",ui-monospace,monospace;white-space:pre}
 </style>
 
 <div class="wrap">
@@ -111,6 +138,7 @@ details table{margin-top:8px;font-size:12px}
     <h1>Hypothesis board</h1>
     <div class="sub" id="firm"></div>
     <div class="built" id="built"></div>
+    <div class="floorline" id="floor"></div>
   </header>
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="panel"></div>
@@ -138,6 +166,45 @@ $('firm').textContent =
   + `${(F.daily*100||0).toFixed(0)}% daily drawdown, ${(F.maxloss*100||0).toFixed(0)}% max drawdown, one step. `
   + `Target: resolve in 5–14 days.`;
 
+// THE NOISE FLOOR AND THE BANDS.
+//
+// Measured 2026-09-08: six gates carrying no information by construction scored
+// between 13.3 and 26.5 expected days through this same machine. Every real
+// candidate that day landed inside that spread, and so did the 62.6%-pass
+// headline of the day before, which evaporated when the grid was widened.
+//
+// So no number on this page is quoted alone any more. Under each ranked number
+// is the 10th-90th percentile of a block bootstrap of that cell's own daily
+// returns (core/noiseband.py), and rows whose bands overlap carry the same TIER
+// and are not claimed to differ.
+const NF = D.noise_floor || {};
+$('floor').innerHTML = NF.days
+  ? `<b>Noise floor ${NF.days[0]}\u2013${NF.days[1]} expected days</b> \u2014 ${esc(NF.note||'')}.
+     A headline inside that range has not been shown to differ from a gate that knows
+     nothing. Small type under each number is its own 10\u201390% band; rows sharing a
+     <span class="tier">T1</span>-style tier could not be told apart and are NOT ranked
+     against each other.`
+  : '';
+
+function bandTxt(b, f){
+  if (!b) return '<span class="band dim" title="not measured on this record - rerun the hypothesis to add one">no band</span>';
+  const lo = b[f+'_lo'], hi = b[f+'_hi'];
+  if (lo == null || hi == null)
+    return `<span class="band dim" title="${b.never_pct}% of resamples never funded an account">unfundable</span>`;
+  const t = `${b.resamples} stationary-bootstrap resamples, mean block ${b.mean_block} days`
+    + (b.never_pct ? `; ${b.never_pct}% of resamples never funded an account` : '');
+  return `<span class="band" title="${t}">${Number(lo).toFixed(1)}\u2013${Number(hi).toFixed(1)}</span>`;
+}
+function tierChip(t){
+  // No chip where there is no number to rank. Stamping T1..T8 down a column of
+  // "never" reads as a ranking of things that were never compared.
+  return t == null ? '<span class="dim">—</span>'
+                   : `<span class="tier ${t === 1 ? 't1' : ''}">T${t}</span>`;
+}
+function inFloor(d){
+  return NF.days && d != null && d >= NF.days[0] && d <= NF.days[1];
+}
+
 // Days to pass IS the phase gate, so it is the column that gets coloured.
 function daysClass(d){
   if (d === null || d === undefined) return 'dim';
@@ -152,8 +219,11 @@ const COLS = [
       ? `<span class="mkt" title="${esc(r.rule ? 'selection rule: ' + r.rule : '')}">${esc(r.sym)} ${esc(r.tf || '')}</span>`
       : `<span class="dim">${esc(r.note || 'none resolved')}</span>`},
   {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
-      : `<b class="${daysClass(r.days_to_pass)}">${Number(r.days_to_pass).toFixed(1)}</b>`},
-  {h:'Pass %',   f:r => n(r.pass_pct, 1)},
+      : `<b class="${daysClass(r.days_to_pass)}"
+           title="${inFloor(r.days_to_pass) ? 'inside the measured noise floor' : ''}"
+           >${Number(r.days_to_pass).toFixed(1)}</b>${inFloor(r.days_to_pass) ? '<span class="pill">noise floor</span>' : ''}
+         ${bandTxt(r.band, 'days')}`},
+  {h:'Pass %',   f:r => `${n(r.pass_pct, 1)}${r.band ? bandTxt(r.band, 'pass') : ''}`},
   // THE GOAL COLUMNS. Kris's target is a PAIR - 60% pass AND 14 days - and
   // neither number alone answers it: a row can pass 79% of the time in 32 days,
   // or resolve in 8 days and pass 40%. `Days` above is the AUTO-picked level,
@@ -164,7 +234,8 @@ const COLS = [
       return b == null ? '<span class="dim">never</span>'
         : `<b class="${b.days_to_pass <= 14 ? 'good' : (b.days_to_pass <= 30 ? 'warn' : 'fail')}"
              title="${b.pass_pct}% pass at ${b.risk_pct}% risk, curve DD ${b.max_dd_pct}%, blown ${(b.fail_max_pct+b.fail_daily_pct).toFixed(1)}%"
-             >${Number(b.days_to_pass).toFixed(1)}</b>`; }},
+             >${Number(b.days_to_pass).toFixed(1)}</b>
+           ${bandTxt(b.band, 'days')}`; }},
   {h:'@ risk',   f:r => { const b = fastest60(r);
       return b == null ? '<span class="dim">—</span>'
         : `<span class="mono dim">${b.risk_pct.toFixed(2)}%</span>`; }},
@@ -213,7 +284,8 @@ function ruleTable(rows){
       the headline row uses the busiest, which is not the fastest</summary>
     <div class="scroll"><table><thead><tr>
       <th>Market</th><th>Rule</th><th>Trades</th><th>Tr/day</th><th>PF</th>
-      <th>Win %</th><th>Avg R</th><th>60% in</th><th>@ risk</th></tr></thead><tbody>
+      <th>Win %</th><th>Avg R</th><th>60% in</th><th>@ risk</th>
+      <th>Tier</th></tr></thead><tbody>
       ${withRules.flatMap(r => r.rules.map(x => `<tr>
         <td class="mkt">${esc(r.sym)} ${esc(r.tf)}</td>
         <td class="mono dim">floor ${x.floor} / top ${x.topn}</td>
@@ -222,22 +294,34 @@ function ruleTable(rows){
         <td>${n(x.win_pct,1)}</td><td>${n(x.avg_r,3)}</td>
         <td>${x.days60 == null ? '<span class="dim">never</span>'
               : `<b class="${x.days60 <= 14 ? 'good' : (x.days60 <= 30 ? 'warn' : 'fail')}"
-                   title="${x.pass60}% pass">${Number(x.days60).toFixed(1)}</b>`}</td>
+                   title="${x.pass60}% pass">${Number(x.days60).toFixed(1)}</b>
+                 ${bandTxt(x.band60, 'days')}`}</td>
         <td class="mono dim">${x.risk60 == null ? '—' : x.risk60.toFixed(2) + '%'}</td>
+        <td>${tierChip(x.tier60)}</td>
       </tr>`)).join('')}
     </tbody></table></div></details>`;
 }
 
-function considered(rows){
-  const all = rows.flatMap(r => (r.considered || []).map(c =>
-    typeof c === 'string' ? {sym:c} : c));
+// The per-class "considered" list carries only sym/tf/pf/days - the band and the
+// tier live on the full cell record, so they are joined back on here rather than
+// duplicated into every row at build time.
+function considered(rows, h){
+  const byKey = {};
+  (h.cells || []).forEach(c => { byKey[`${c.sym}|${c.tf}`] = c; });
+  const all = rows.flatMap(r => (r.considered || []).map(c => {
+    const thin = typeof c === 'string' ? {sym:c} : c;
+    const full = byKey[`${thin.sym}|${thin.tf}`];
+    return full ? Object.assign({}, thin, {band: full.band, tier: full.tier}) : thin;
+  }));
   if (!all.length) return '';
   return `<details><summary>Every market tested, before the best in each class was promoted</summary>
     <div class="scroll"><table><thead><tr>
-      <th>Market</th><th>PF</th><th>Days to pass</th></tr></thead><tbody>
+      <th>Market</th><th>PF</th><th>Days to pass</th><th>Tier</th></tr></thead><tbody>
       ${all.map(c => `<tr><td class="mkt">${esc(c.sym)} ${esc(c.tf ?? '')}</td>
         <td>${n(c.pf,3)}</td><td>${c.days_to_pass == null ? '<span class="dim">—</span>'
-          : `<span class="${daysClass(c.days_to_pass)}">${Number(c.days_to_pass).toFixed(1)}</span>`}</td></tr>`).join('')}
+          : `<span class="${daysClass(c.days_to_pass)}">${Number(c.days_to_pass).toFixed(1)}</span>
+             ${bandTxt(c.band, 'days')}`}</td>
+        <td>${tierChip(c.tier)}</td></tr>`).join('')}
     </tbody></table></div></details>`;
 }
 
@@ -273,6 +357,9 @@ function atRisk(r){
     days_to_pass: lv.days_to_pass, median_days: lv.median_days,
     fail_max_pct: lv.fail_max_pct, fail_daily_pct: lv.fail_daily_pct,
     still_open_pct: lv.still_open_pct,
+    // the band belongs to the RUNG, so forcing a risk level has to swap it too
+    // - otherwise the page would print one level's number under another's band.
+    band: lv.band,
     cagr_pct: lv.cagr_pct, _forced: !lv.picked});
 }
 
@@ -326,7 +413,9 @@ function wireRiskCells(h){
 // identical to a broken one. It does not any more.
 function progress(h){
   if (h.complete) return '';
-  const done = (h.cells || []).length;
+  // cells_done is the RUN's count; h.cells may have been cut by the render
+  // filter in core/build_board.SHOW, which is not progress.
+  const done = h.cells_done != null ? h.cells_done : (h.cells || []).length;
   const total = Object.values(h.universe || {}).reduce((a, v) => a + v.length, 0)
                 * (h.timeframes || []).length;
   const pct = total ? Math.round(done / total * 100) : 0;
@@ -341,6 +430,55 @@ function notes(h){
   if (!h.notes || !h.notes.length) return '';
   return `<details open><summary>What the research established</summary>
     <ul class="notes">${h.notes.map(n => `<li>${n}</li>`).join('')}</ul></details>`;
+}
+
+// THE PINE BUTTON. Kris's request, 2026-09-09: one click, paste into
+// TradingView, look at the rule on a chart. It copies an INDICATOR - signals and
+// the stop level, no orders and no equity curve - because a Pine STRATEGY would
+// print a profit factor that somebody would then compare with this board's, and
+// the two are not comparable: another vendor's volume on a volume-weighted rule,
+// different fills, no costs, and no blind re-selection. See core/pine.py.
+//
+// The copy goes through a hidden textarea and execCommand first: this page is
+// opened over file:// as often as over http://127.0.0.1, and the async clipboard
+// API is refused on file://. The textarea path works in both.
+function pineBar(h){
+  const p = h.pine;
+  if (!p) return `<p class="risknote">No TradingView indicator ships with this
+    hypothesis yet — add <span class="mono">strategies/&lt;sid&gt;/indicator.pine</span>
+    and it appears here. A generic VWAP script under this name would be read as
+    this hypothesis, which is why there is no fallback.</p>`;
+  const ps = Object.entries(p.params || {}).map(([k, v]) => `${k.toLowerCase()} ${v}`).join(', ');
+  return `<div class="pinebar">
+      <button class="pinebtn" id="pinebtn" onclick="copyPine(this)">Copy Pine indicator</button>
+      <span class="dim" style="font-size:12px">Defaults are what the blind selector
+        chose most often across ${p.n_folds} folds on <b>${esc(p.defaults_from)}</b>${ps ? ' — ' + esc(ps) : ''}.
+        Signals only; it places no orders and prints no profit, on purpose.</span>
+    </div>
+    <textarea class="pinesrc" id="pinesrc" readonly>${esc(p.text)}</textarea>
+    <details><summary>Read the Pine source before pasting it</summary>
+      <pre class="pine">${esc(p.text)}</pre></details>`;
+}
+
+function copyPine(btn){
+  const ta = document.getElementById('pinesrc');
+  if (!ta) return;
+  let ok = false;
+  try {
+    ta.select(); ta.setSelectionRange(0, ta.value.length);
+    ok = document.execCommand('copy');
+  } catch (e) { ok = false; }
+  if (!ok && navigator.clipboard) {
+    navigator.clipboard.writeText(ta.value).then(
+      () => { btn.textContent = 'Copied ✓'; btn.classList.add('done'); },
+      () => { btn.textContent = 'Copy failed — open the source below'; });
+    return;
+  }
+  btn.textContent = ok ? 'Copied ✓ — paste into TradingView’s Pine Editor'
+                       : 'Copy failed — open the source below';
+  btn.classList.toggle('done', ok);
+  setTimeout(() => { btn.textContent = 'Copy Pine indicator';
+                     btn.classList.remove('done'); }, 6000);
 }
 
 function paint(h){
@@ -358,8 +496,9 @@ function paint(h){
     </tr></thead><tbody>
       ${(h.rows||[]).map(atRisk).map(r => `<tr>${COLS.map(c => `<td>${c.f(r)}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
+    ${pineBar(h)}
     ${ruleTable(h.rows || [])}
-    ${considered(h.rows || [])}
+    ${considered(h.rows || [], h)}
     <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
       — the phase gate — not by profit factor. Every market also ran the identical
       walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.

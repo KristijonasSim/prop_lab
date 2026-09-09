@@ -1,0 +1,178 @@
+// H-002 — ANCHORED VWAP BANDS, all five entry modes. Signals only, no orders.
+//
+// Paste into TradingView: Pine Editor -> new indicator -> paste -> Add to chart.
+//
+// WHAT THIS IS. The entry rules H-002's walk-forward chooses between, drawn on a
+// chart. It is an INDICATOR: it marks the bar a rule fires on and draws the
+// level the stop would sit at. It places no orders and reports no profit -
+// TradingView's tester would charge different costs, fill differently and
+// re-select nothing, and any number it printed would end up being compared with
+// this project's, which is not a valid comparison.
+//
+// THE FIVE MODES, exactly as the kernel evaluates them on the closed bar:
+//   TREND     close crosses to the other side of the VWAP (one flip per side,
+//             per session)
+//   FADE      close beyond a band, taken AGAINST the move
+//   BREAK     close beyond a band, taken WITH the move   <- the walk-forward
+//             picks this one in 100 of 140 folds, which is what H-027 is about
+//   RECLAIM   price was beyond a band earlier in the session and now closes back
+//             through the VWAP
+//   PULLBACK  the session is trending away from the VWAP and price touches back
+//             to it
+//
+// In every mode the fill is the NEXT bar's open, so the marker sits one bar to
+// the left of the trade it implies.
+//
+// WHAT WILL NOT MATCH THE BACKTEST, and why none of it is a bug: a different
+// data vendor with different volume (this is a volume-weighted rule); the
+// backtest's refusal to trade bars that never traded, which TradingView does not
+// draw at all; and costs, which are charged in the backtest and not here.
+//
+// Defaults are the configuration the blind selector chose most often on
+// {{MARKET}} — see the board. A starting point, not a recommendation.
+
+//@version=5
+indicator("H-002 anchored VWAP bands — signals", shorttitle="H-002 VWAP",
+     overlay=true, max_lines_count=500, max_labels_count=500)
+
+// ---- inputs ---------------------------------------------------------------
+modeS   = input.string("{{MODE}}", "Entry mode", options=["TREND","FADE","BREAK","RECLAIM","PULLBACK"], group="Rule")
+bandK   = input.float({{BAND_K}}, "Band width, in sigma", minval=0.1, step=0.1, group="Rule")
+stopK   = input.float({{STOP_K}}, "Stop, in sigma", minval=0.1, step=0.1, group="Rule")
+holdBars= input.int({{MAX_HOLD}}, "Horizon in bars (0 = hold to the session end)", minval=0, group="Rule")
+anchorH = input.int({{ANCHOR_HOUR}}, "Session anchor, UTC hour", minval=0, maxval=23, group="Anchor")
+anchorM = input.int({{ANCHOR_MIN}}, "Session anchor, minute", minval=0, maxval=59, group="Anchor")
+warmup  = input.int({{WARMUP}}, "Warm-up bars after the anchor before any signal", minval=0, group="Anchor")
+minRvol = input.float({{MIN_RVOL}}, "Minimum relative volume on the signal bar (0 = off)", minval=0.0, step=0.1, group="Filters")
+rvolLen = input.int(1920, "Relative-volume baseline, bars", minval=20, group="Filters")
+showStop= input.bool(true, "Draw the stop level while a hypothetical trade is open", group="Display")
+
+// ---- the session anchor ---------------------------------------------------
+hh = hour(time, "UTC")
+mm = minute(time, "UTC")
+atAnchor = hh == anchorH and mm == anchorM
+var int sessBar = 0
+newSess = atAnchor and not atAnchor[1]
+
+// ---- anchored VWAP and its volume-weighted sigma --------------------------
+var float pv  = 0.0
+var float vv  = 0.0
+var float p2v = 0.0
+var float lastV = na
+
+vRaw = nz(volume, 0.0)
+v = vRaw > 0 ? vRaw : nz(lastV, 1.0)      // zero-volume bars keep the last size
+if vRaw > 0
+    lastV := vRaw
+
+tp = (high + low + close) / 3.0
+if newSess
+    pv  := 0.0
+    vv  := 0.0
+    p2v := 0.0
+    sessBar := 0
+else
+    sessBar += 1
+pv  += tp * v
+vv  += v
+p2v += tp * tp * v
+
+vwap  = vv > 0 ? pv / vv : na
+varr  = vv > 0 ? p2v / vv - vwap * vwap : na
+sigma = math.sqrt(math.max(nz(varr), 0.0))
+sigOk = not na(vwap) and sigma > vwap * 1e-6      // the kernel's SD_EPS_FRAC
+upper = sigOk ? vwap + bandK * sigma : na
+lower = sigOk ? vwap - bandK * sigma : na
+
+// PX_EPS_FRAC. Comparing a close with a VWAP that IS that close - which happens
+// on a frozen, untraded bar - is decided by the last bit of the accumulation,
+// and the two engines this repo runs disagreed on exactly that. A price
+// tolerance makes the answer the same everywhere.
+pxEps = sigOk ? vwap * 1e-9 : na
+
+// ---- per-session state ----------------------------------------------------
+var bool stretchUp = false
+var bool stretchDn = false
+var int  prevSide  = 0
+if newSess
+    stretchUp := false
+    stretchDn := false
+    prevSide  := 0
+if sigOk
+    if high >= upper
+        stretchUp := true
+    if low <= lower
+        stretchDn := true
+
+// ---- filters --------------------------------------------------------------
+rvolBase = ta.sma(vRaw, rvolLen)[1]
+rvol     = rvolBase > 0 ? vRaw / rvolBase : 0.0
+rvolOk   = minRvol <= 0.0 or rvol >= minRvol
+warmOk   = sessBar >= warmup
+
+// ---- the five modes -------------------------------------------------------
+want = 0
+if sigOk and warmOk
+    if modeS == "TREND"
+        w = close > vwap + pxEps ? 1 : close < vwap - pxEps ? -1 : 0
+        want := w != 0 and w != prevSide ? w : 0
+    else if modeS == "FADE"
+        want := close > upper ? -1 : close < lower ? 1 : 0
+    else if modeS == "BREAK"
+        want := close > upper ? 1 : close < lower ? -1 : 0
+    else if modeS == "RECLAIM"
+        want := stretchUp and close < vwap - pxEps and close[1] >= nz(vwap[1]) - pxEps ? -1 :
+           stretchDn and close > vwap + pxEps and close[1] <= nz(vwap[1]) + pxEps ? 1 : 0
+    else if modeS == "PULLBACK"
+        want := close[1] > nz(vwap[1]) + pxEps and low <= vwap + pxEps and close > vwap + pxEps ? 1 :
+           close[1] < nz(vwap[1]) - pxEps and high >= vwap - pxEps and close < vwap - pxEps ? -1 : 0
+
+longSig  = want == 1 and rvolOk
+shortSig = want == -1 and rvolOk
+if longSig or shortSig
+    prevSide := want
+
+// ---- drawing --------------------------------------------------------------
+plot(vwap, "VWAP", color=color.new(color.orange, 0), linewidth=2)
+pUp = plot(upper, "Upper band", color=color.new(color.teal, 30))
+pDn = plot(lower, "Lower band", color=color.new(color.teal, 30))
+fill(pUp, pDn, color=color.new(color.teal, 94), title="Band")
+
+plotshape(longSig,  "Long signal",  style=shape.triangleup,   location=location.belowbar,
+     color=color.new(color.teal, 0), size=size.tiny)
+plotshape(shortSig, "Short signal", style=shape.triangledown, location=location.abovebar,
+     color=color.new(color.red, 0),  size=size.tiny)
+
+// ---- the hypothetical trade ----------------------------------------------
+var int   posDir   = 0
+var float posStop  = na
+var float posEntry = na
+var int   posBars  = 0
+
+if posDir != 0
+    posBars += 1
+    hitStop = posDir == 1 ? low <= posStop : high >= posStop
+    timeout = holdBars > 0 and posBars >= holdBars
+    if hitStop or timeout or newSess
+        posDir  := 0
+        posStop := na
+        posBars := 0
+
+if posDir == 0 and (longSig[1] or shortSig[1])
+    dir  = longSig[1] ? 1 : -1
+    risk = stopK * nz(sigma[1])
+    if risk > 0
+        posDir   := dir
+        posEntry := open
+        posStop  := dir == 1 ? open - risk : open + risk
+        posBars  := 0
+
+plot(showStop and posDir != 0 ? posStop : na, "Stop level", color=color.new(color.red, 20),
+     style=plot.style_linebr, linewidth=1)
+plot(showStop and posDir != 0 ? posEntry : na, "Entry", color=color.new(color.gray, 40),
+     style=plot.style_linebr, linewidth=1)
+bgcolor(posDir == 1 ? color.new(color.teal, 93) : posDir == -1 ? color.new(color.red, 93) : na,
+     title="In a hypothetical position")
+
+alertcondition(longSig,  "H-002 long signal",  "H-002 anchored VWAP: long signal on the closed bar")
+alertcondition(shortSig, "H-002 short signal", "H-002 anchored VWAP: short signal on the closed bar")

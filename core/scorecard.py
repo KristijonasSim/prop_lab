@@ -11,10 +11,11 @@ cannot be traded now no matter how good it looks.
 
     component        weight   what it measures
     ---------------  ------   ------------------------------------------------
-    speed              30     median days for a simulated account to reach 8%
+    speed              30     median days for a simulated account to reach the
+                              firm's 6% profit target
     pass rate          18     share of simulated accounts that pass
-    breach safety      12     share that blow the 8% max-loss cap (inverted)
-    drawdown           10     peak drawdown against the 8% cap
+    breach safety      12     share that blow the max-loss cap (inverted)
+    drawdown           10     peak drawdown against that cap
     evidence           20     walk-forward PF, cost robustness, null margin,
                               quarter-by-quarter consistency
     raw profit         10     profit factor and Sharpe
@@ -26,7 +27,15 @@ evidence component scores zero rather than being skipped.
 """
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core import noiseband as NB                                # noqa: E402
+from core.riskladder import DD_CAP                              # noqa: E402
 
 # component -> weight. They sum to 100 and the total is rescaled to 0-10.
 WEIGHTS = {
@@ -50,7 +59,11 @@ PACE_DELETE = 50.0     # past here a hypothesis is not worth carrying. Kris's
                        # cosmetic: read it as "this cannot fund an account on the
                        # timescale the business needs".
 DEAD_DAYS = 180.0      # past here, speed scores zero
-DD_CAP = 0.08          # the prop max-loss cap
+#: The firm's max-loss cap, IMPORTED rather than restated. It was hardcoded at
+#: 0.08 here while `core/riskladder.DD_CAP` moved to Thunderbolt's 0.06 on
+#: 2026-09-08, so the drawdown component was scoring every record against a cap
+#: the board no longer uses - generously, since 8% forgives a drawdown that ends
+#: an account at this firm.
 BREACH_DEAD = 0.30     # a 30% breach rate scores zero on safety
 EVIDENCE_GATE = 0.25   # below this the walk-forward record is effectively absent
 EVIDENCE_CAP = 3.0     # and the total cannot exceed this, whatever else it scores
@@ -117,9 +130,10 @@ def score_breach(fail_max: float | None, fail_daily: float | None = None) -> flo
 
 
 def score_drawdown(max_dd: float | None) -> float:
-    """Peak drawdown against the cap. Half the cap is a full mark; twice the cap
-    is zero. Sitting exactly on the cap deliberately scores middling, because a
-    strategy whose drawdown equals the limit has no margin for a bad run."""
+    """Peak drawdown against the firm's cap (`riskladder.DD_CAP`, 6% at
+    Thunderbolt). Half the cap is a full mark; twice the cap is zero. Sitting
+    exactly on the cap deliberately scores middling, because a strategy whose
+    drawdown equals the limit has no margin for a bad run."""
     if max_dd is None:
         return 0.0
     dd = abs(max_dd)
@@ -163,6 +177,11 @@ class Scorecard:
     #: expected days to a funded account, carried so the pace gate can read it
     expected_days: float | None = None
 
+    #: the sampling band around that number, when the caller measured one. A
+    #: card that prints `expected_days` without this is quoting a point estimate
+    #: the project has agreed not to trust on its own.
+    band: dict | None = None
+
     #: which verification checks have not passed, for the card to name them
     unverified: tuple = ()
 
@@ -174,6 +193,8 @@ class Scorecard:
                                unverified=self.unverified_capped),
             "too_slow": too_slow(self.expected_days),
             "expected_days": self.expected_days,
+            "band": self.band,
+            "inside_noise_floor": NB.inside_floor(self.expected_days),
             "evidence_capped": self.evidence_capped,
             "null_capped": self.null_capped,
             "stale_capped": self.stale_capped,
@@ -236,6 +257,68 @@ def verdict(total: float, expected_days: float | None = None,
     return "Dead"
 
 
+# ---------------------------------------------------------------------------
+# RANKING, AND WHEN IT REFUSES TO HAPPEN
+#
+# The board's whole job is to say which cell is better. On 2026-09-08 that job
+# was shown to be unsafe as it stood: six gates carrying no information scored
+# between 13.3 and 26.5 expected days, and every real candidate measured that
+# day landed inside that spread. A table sorted by expected days will always
+# print SOME order; without a band the reader cannot tell an ordering from a
+# shuffle.
+#
+# So ranking here is by TIER, not by row. Two cells whose sampling bands overlap
+# go in the same tier and the board must not claim one beats the other.
+# ---------------------------------------------------------------------------
+
+def separable(a: dict, b: dict, *, band_key: str = "band",
+              field: str = "days") -> bool:
+    """True only when two rows' bands are disjoint - i.e. when saying one is
+    faster than the other is supportable. A row with no band is never separable
+    from anything: 'not measured' is not 'the same', but it licenses no claim
+    either, and the safe direction is to refuse the comparison."""
+    return not NB.overlap(a.get(band_key), b.get(band_key), field)
+
+
+def rank_tiers(rows: list[dict], *, band_key: str = "band",
+               value_key: str = "days_to_pass", field: str = "days",
+               reverse: bool = False) -> list[list[dict]]:
+    """Rows grouped into tiers, best first. Within a tier, nothing is claimed.
+
+    THE GROUPING RULE, and why it is the leader and not the neighbour. Band
+    overlap is not transitive - A can overlap B and B overlap C while A and C
+    are disjoint - so 'group everything that overlaps its neighbour' can chain
+    an entire table into one tier through a run of wide bands. This compares
+    every row against the TIER LEADER, the best row in the tier: a row joins the
+    tier when it cannot be told apart from the leader, and otherwise opens a new
+    one. That keeps the claim the board makes exactly readable - *tier 2 is
+    slower than the best row in tier 1, and nothing is claimed inside a tier*.
+
+    `value_key` orders the rows (ascending: fewer expected days is better; pass
+    `reverse=True` for a metric where more is better). Rows with no value sort
+    last and always tier alone, because an absent number cannot be compared.
+    """
+    have = [r for r in rows if r.get(value_key) is not None]
+    missing = [r for r in rows if r.get(value_key) is None]
+    have.sort(key=lambda r: r[value_key], reverse=reverse)
+
+    out: list[list[dict]] = []
+    for r in have:
+        if out and not separable(out[-1][0], r, band_key=band_key, field=field):
+            out[-1].append(r)
+        else:
+            out.append([r])
+    out.extend([[r] for r in missing])
+    return out
+
+
+def tier_index(rows: list[dict], **kw) -> dict[int, int]:
+    """`id(row) -> tier number`, 1-based, for a table that wants to label rows
+    in place rather than regroup them."""
+    return {id(r): i + 1 for i, tier in enumerate(rank_tiers(rows, **kw))
+            for r in tier}
+
+
 def compute(m: dict) -> Scorecard:
     """`m` is the measured-numbers dict assembled per strategy. Missing keys are
     treated as absent, which scores zero for that component."""
@@ -294,5 +377,6 @@ def compute(m: dict) -> Scorecard:
     return Scorecard(components=c, total=total, evidence_capped=capped,
                      null_capped=null_capped, stale_capped=stale_capped,
                      unverified_capped=unverified_capped, unverified=unverified,
+                     band=m.get("band"),
                      expected_days=expected_days(m.get("median_days_pass"),
                                                  m.get("pass_rate")))

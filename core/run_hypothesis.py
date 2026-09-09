@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core import fingerprint as FP                             # noqa: E402
+from core import noiseband as NB                                # noqa: E402
 from core.markets import (ASSET_CLASS, COSTS, EXEC_MODE,        # noqa: E402
                           TF_BPH, load)
 from core.pipeline import Market, Pipeline, pf                 # noqa: E402
@@ -71,7 +72,23 @@ def cagr(daily_r: pd.Series, risk: float) -> float:
 
 
 def metrics(trades: pd.DataFrame) -> dict:
-    """Everything the board reports, from one stitched walk-forward series."""
+    """Everything the board reports, from one stitched walk-forward series.
+
+    Two things here are not headline numbers and are worth naming.
+
+    `band` is the sampling band of the headline (`core/noiseband.py`): resample
+    these same daily returns in blocks, re-run the same prop simulation, and
+    report where the answer lands. CLAUDE.md's rule since 2026-09-08 is that a
+    per-cell number without one is not quotable, because six information-free
+    gates spanned 13.3 to 26.5 expected days and every real candidate that day
+    sat inside that spread.
+
+    `daily` is the stitched daily series itself, stored so that a change of risk
+    policy, band width or firm structure is a RE-READ rather than a re-run -
+    the same reason `core/repick.py` can re-price the whole board in a second.
+    It is ~730 rounded floats per selection rule and it is the cheapest
+    insurance in the repo.
+    """
     if not len(trades):
         return {}
     t = trades.sort_values("exit_ts")
@@ -100,6 +117,16 @@ def metrics(trades: pd.DataFrame) -> dict:
         "fail_daily_pct": round(pick["fail_daily"] * 100, 1),
         "cagr_pct": round(cagr(daily, pick["risk"]), 1),
         "span_days": round(span, 0),
+        # the headline's own sampling band, at the rung `pick` chose
+        "band": NB.band(daily, pick["risk"]),
+        # THE STITCHED DAILY SERIES, as a comma-joined string rather than a JSON
+        # list. Same numbers; a list at `indent=1` costs one LINE per day and
+        # turned a 143KB record into 3.9MB, which is a real cost paid on every
+        # re-run for a convenience nobody reads by eye. Kept at cell level only -
+        # that is what a two-leg book is assembled from - and dropped from the
+        # per-rule blocks, whose bands are already stored.
+        "daily": {"t0": str(daily.index[0].date()),
+                  "r": ",".join(f"{x:g}" for x in np.round(daily.values, 5))},
         # EVERY risk level, not just the chosen one, so the board can be
         # re-scored in the browser without re-running anything.
         #
@@ -119,6 +146,12 @@ def metrics(trades: pd.DataFrame) -> dict:
             "still_open_pct": round(x["still_open"] * 100, 1),
             "cagr_pct": round(cagr(daily, x["risk"]), 1),
             "picked": x["risk"] == pick["risk"],
+            # A BAND PER RUNG, not only for the rung the scorer picked. The page
+            # lets Kris force any risk level and the "60% in" column chooses its
+            # own rung by result, so any rung can end up being the quoted one -
+            # and a quoted number without its band is the thing CLAUDE.md now
+            # forbids. Twelve bootstraps, about a second per selection rule.
+            "band": NB.band(daily, x["risk"]),
         } for x in ladder],
     }
 
@@ -285,7 +318,29 @@ def run_market(strategy, sym: str, tf: str, pipe_kw: dict,
             L = [x for x in m.get("ladder", [])
                  if x["pass_pct"] >= 60.0 and x["days_to_pass"]]
             b = min(L, key=lambda x: x["days_to_pass"]) if L else None
+            # The band at the rung the row actually quotes. The "60% in" column
+            # is the one Kris reads against his goal, and it is chosen from
+            # twelve rungs by its own result - so it is the number that most
+            # needs its uncertainty stated next to it.
+            band60 = (NB.from_trades(g.r.values, g.exit_ts, b["risk_pct"] / 100.0)
+                      if b else None)
+            # WHAT THE BLIND SELECTOR ACTUALLY CHOSE, quarter by quarter.
+            # `rules` recorded the OUTCOME of each selection rule and never the
+            # configuration behind it, so a promising row could not be inspected,
+            # reproduced or traded without re-running the walk-forward. The fold
+            # frame has carried the winning config all along; it was being
+            # thrown away here.
+            fsel = real.folds
+            picks = []
+            if len(fsel):
+                sub = fsel[(fsel.floor == fl) & (fsel.topn == tn)]
+                drop = {"sym", "tf", "floor", "topn"}
+                picks = [{k: (None if pd.isna(v) else v) for k, v in row.items()
+                          if k not in drop}
+                         for row in sub.to_dict("records")]
             rules.append({"floor": int(fl), "topn": int(tn),
+                          "band": m.get("band"), "band60": band60,
+                          "folds": picks,
                           "trades": m["trades"], "tpd": m["trades_per_day"],
                           "pf": m["pf"], "win_pct": m["win_pct"],
                           "avg_r": m["avg_r"], "days_to_pass": m["days_to_pass"],

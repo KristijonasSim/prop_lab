@@ -1,216 +1,107 @@
 # Next session — start here
 
-Written 2026-09-08 at session close. Read `ENGINES.md` for the machine,
-`CLAUDE.md` for the rules. This file is only what to do next.
+Written 2026-09-09 at session close. `ENGINES.md` is the machine, `CLAUDE.md` the
+rules, `SESSION_2026-09-09.md` the workings behind everything below. This file is
+only what to do next.
 
 ---
 
-## The state in five lines
+## The state in six lines
 
-* **Engines 2 and 3 are built and green.** 130 tests, CI on every push, blind
-  walk-forward pipeline, fingerprinting, verification gate. Engine 1 (hypothesis
-  generator) is not started.
-* **The firm is real:** Thunderbolt, 1 step, **6% target, 3% daily drawdown, 6%
-  max drawdown**, unlimited time, €21.89 an account.
-* **Kris's goal: ≥60% pass rate within 14 days.** NOT MET, and further away
-  than it looked on 2026-09-08 — see TASK 1 below.
-* **Best blind result reaching 60%: ETHUSDT 1h, 62.1% pass in 27.4 days**
-  (floor 100, topn 5, 0.75% risk). **Gold no longer reaches 60% at all.**
-* The board is `backtests/board.html`. It no longer auto-refreshes (removed on
-  Kris's instruction 2026-09-08) — reload it by hand and check the build time.
-* **The board shows H-027 XAUUSD only.** Kris, 2026-09-08 evening: one thing on
-  the page to work on instead of four hypotheses across ten markets. It is a
-  RENDER filter — `core.build_board.SHOW`. Nothing was deleted: every record is
-  still in `backtests/*/hypothesis.json` and every row is still in
-  `STRATEGY_LOG.md` and `RESEARCH_LOG.md`. Set `SHOW = None` and rebuild to get
-  the whole board back with no re-run.
+* **Bands are on the board.** Every ranked number carries its own 10–90% band
+  (`core/noiseband.py`) and rows that cannot be told apart share a tier.
+  `core/scorecard.rank_tiers` refuses to order them.
+* **Both second-engine disagreements are closed and neither was a look-ahead.**
+  `pytest -m slow` is **7 passed** — clean end to end for the first time.
+* **The board had been showing pre-fix numbers.** The fold-selector fix landed 16
+  minutes after the last record was written and was never re-run. Both
+  hypotheses have now been re-run on current code; every cell moved.
+* **Kris's goal — ≥60% pass inside 14 days — is not met**, and the old
+  "ETHUSDT 1h, 62.1% in 27.4 days" headline does not survive the re-run.
+* Every hypothesis page now has a **Copy Pine indicator** button: a TradingView
+  *indicator* (signals and the stop level, no orders, no equity curve), with its
+  defaults taken from what the blind selector chose most often.
+* The board is `backtests/board.html`; it does not auto-refresh, so check the
+  build time in the header. Serve it with
+  `python3 -m http.server 8899 --bind 127.0.0.1` from `backtests/`.
 
----
+## The two numbers that matter
 
-## TASK 1 — DONE 2026-09-08 evening. IT FAILED ITS OWN HYPOTHESIS.
+**H-027, promoted rows, at the 2% risk floor:**
 
-Both levers were run (`strategies/vwapbreak/hypothesis.py`, 37 min, then
-`core/build_board.py`). The prediction was that `topn` 3 or 5 would cut the
-blown rate and carry gold over 60% inside 14 days. **It did the opposite.**
-
-### Gold 1h, promoted rule, before and after the wider grid
-
-| risk | pass% before | pass% after | blown% before | blown% after | days before | days after |
+| class | market | expected days | band | pass % | PF@2x | beats null |
 |---|---|---|---|---|---|---|
-| 0.25% | 70.5 | **47.4** | 24.0 | **45.5** | 32.6 | 38.0 |
-| 0.50% | **62.6** | **54.8** | 35.3 | 45.2 | 19.2 | 25.6 |
-| 0.75% | 55.1 | 51.8 | 43.5 | 48.2 | 14.5 | 19.3 |
-| 1.00% | 53.7 | 49.6 | 48.8 | 50.4 | 13.0 | 18.1 |
+| Metals | XAUUSD 1h | **14.1** | 11.6–20.2 | 42.5 | 1.715 | yes |
+| Crypto | SOLUSDT 1h | 13.9 | 10.8–17.9 | 36.0 | 0.902 | yes |
+| FX | AUDUSD 4h | 17.4 | 13.4–22.1 | 34.5 | 0.924 | yes |
 
-**Gold 1h's peak pass rate went 70.5% → 54.8%. It no longer touches 60% at any
-risk level on the ladder.** PF@2x also fell, 1.903 → 1.679.
-
-### The middle of TOPN was tested and it does not help
-
-All eight selection rules on gold 1h, blind:
-
-| floor | topn | trades/day | PF | days to pass | pass% |
-|---|---|---|---|---|---|
-| 30 | 1 | 0.46 | 1.054 | 54.3 | 35.0 |
-| 30 | 3 | 1.53 | 1.210 | 60.2 | 39.1 |
-| 30 | 5 | 2.37 | 1.383 | 53.3 | 45.0 |
-| 30 | 10 | 4.86 | 1.683 | 55.0 | 40.0 |
-| 100 | 1 | 0.57 | 1.210 | 47.4 | 43.2 |
-| 100 | 3 | 1.64 | 1.356 | 42.0 | 45.3 |
-| 100 | 5 | 2.75 | 1.502 | 44.0 | 47.7 |
-| **100** | **10** | **5.42** | **1.772** | **38.0** | 47.4 |
-
-`topn=10` still wins. 3 and 5 sit between, exactly as expected on PF and
-trades/day, and **neither converts that into a lower blown rate or a higher pass
-rate.** The "ten correlated positions against a 3% daily cap" story predicted
-they would. They did not, so that story is wrong or incomplete.
-
-### What this actually means — read this before running anything else
-
-**The 62.6% / 19.2-day headline did not survive widening the grid.** Nothing
-about the market changed; only the number of configurations the blind selector
-could choose from. That is the signature of a number that was partly a lucky
-draw from a narrow grid, and it is the same failure mode this repo has retracted
-results for before.
-
-Corollary about the old `HOLD_HOURS` note: 192 being chosen in **all seven
-folds** was read as a binding grid edge worth relieving. Relieving it made the
-out-of-sample result worse, so 192 was a lucky pick, not a constrained one.
-**A binding grid edge is not by itself evidence that the edge continues.**
-
-### Where the 60% goal now stands
-
-Only three markets reach 60% pass on any selection rule at any risk, and **none
-inside 14 days**:
-
-| market | floor | topn | risk | pass% | days |
-|---|---|---|---|---|---|
-| **ETHUSDT 1h** | 100 | 5 | 0.75% | **62.1** | **27.4** |
-| ETHUSDT 1h | 100 | 1 | 0.50% | 61.0 | 34.4 |
-| ETHUSDT 4h | 100 | 5 | 0.25% | 67.1 | 83.5 |
-| SOLUSDT 4h | 100 | 1 | 0.25% | 65.6 | 83.0 |
-| BTCUSDT 1h | 30 | 5 | 0.25% | 75.6 | 175.2 |
-
-**The fastest route to 60% is now ETH 1h at 27.4 days, not gold.** Note this is
-crypto, on a hypothesis whose crypto ancestor (H-002) died to a look-ahead fix —
-H-027 is a different formalisation (follow, no target, long hold) so it is not
-automatically covered by that verdict, but it deserves the same suspicion.
-
-### Silver woke up
-
-XAGUSD went from losing to clearing the gate on the wider grid: 1h PF@2x
-**0.831 → 1.371** (78.5 days), 4h **0.802 → 1.240**. It is charged its full
-**measured** 9.108bps spread, so the old "costed at half its spread" objection in
-`TASKS.md` no longer applies. **But it moved for the same reason gold moved, in
-the other direction** — treat it as grid noise until something separates the two.
+**Every rung on either board that reaches 60% pass:** three, and the fastest is
+**54.6 expected days** (H-027 XAUUSD 4h at 0.50% risk, 60.4% pass, band
+39.4–92.3 days, pass band 29.0–65.6%). At 2% risk **nothing reaches 60%**.
 
 ---
 
-## TASK 2 — DONE 2026-09-08 late. Filters screened, and the noise floor measured.
+## TASK 1 — the ranking metric is not doing its job. Decide what replaces it.
 
-Kris asked for filters — MAs, fibonacci, order flow, London/NY sessions — and
-then for the economics: is a higher profit factor worth the days it costs?
-Full workings in `RESEARCH_LOG.md` 2026-09-08 (fourth entry).
+**Fourteen of H-027's twenty cells are one tier**: 13.9 to 23.8 expected days,
+no pair distinguishable. That tier holds XAUUSD 1h at PF@2x **1.715** and GBPUSD
+4h at **0.692** — one makes money at double cost, one loses at it, and the
+board's own ranking metric cannot tell them apart.
 
-**Answers:**
+The cause is in the definition: `expected_days = median_days / pass_rate`, and at
+a 2% position a losing book funds the occasional account on variance before it
+dies. Speed is blind to edge.
 
-* **25 filters screened. 24 of 25 raise PF by cutting R per day**, i.e. they make
-  the evaluation slower. Sessions are slower on both timeframes. Fibonacci
-  sign-flips across timeframes. The one survivor, MA200 slope alignment, **lost
-  to a shuffled version of itself** and is dead.
-* **Order flow cannot be tested on gold** — no bid/ask volume on disk, only
-  one-minute bid candles. Backlog H-030.
-* **correlation(PF@2x, expected days) = +0.231 over 18 arms.** Higher PF goes
-  with MORE days. Compare on expected days and euros, never on PF.
-* **THE NOISE FLOOR: six information-free gates span 13.3 to 26.5 expected days.**
-  Every real candidate built today lands inside it. Nothing from 2026-09-08 is
-  distinguishable from noise, the selector fix included.
+What is NOT blind: PF@2x and the paired null. But `RESEARCH_LOG.md` 2026-09-08
+measured `correlation(PF@2x, expected days) = +0.231` — higher profit factor goes
+with MORE days — so PF cannot simply replace speed either.
 
-**The one real gain, and it is Kris's:** raising risk per trade. Gold 1h needs
-**38.0** expected days at 0.25% risk, **16.6** at 2%, **13.0** at 3%. The risk
-ladder re-simulates a FIXED trade series at a different size — nothing is
-selected, so the noise floor does not apply. 58% of accounts blow at 2%, which is
-2.4 accounts and EUR 52 per funded account.
+**This is a decision for Kris, not a search.** The options are on the table:
+rank on expected days but only between tiers; rank on a joint criterion (edge
+first, speed as the tie-break inside a tier); or accept that the board ranks
+nothing and reports tiers plus evidence. Do not run another sweep before this is
+settled — every sweep since 2026-09-08 has produced differences smaller than the
+tier width.
 
-### What to do next, in order
+## TASK 2 — nothing re-runs a stale record, and the board does not check
 
-1. **STOP SEARCHING FOR AN EDGE UNTIL THE NOISE FLOOR IS ON THE BOARD.** It is
-   measured (13.3–26.5 expected days) and it is larger than every difference this
-   project has ever reported. `core/board.py` should carry a per-cell band, and
-   `core/scorecard.py` should refuse to rank two cells whose bands overlap. Until
-   that exists every board number invites the same mistake.
-2. **Take the risk lever, it is the only real gain here.** 0.25% → 2% is 38.0 →
-   16.6 expected days on the same trades. `core/riskladder.pick` chooses the rung
-   and it optimises something other than expected days — find out what, and
-   whether Kris's ≥2% should simply be a floor. This is `IDEAS.md` item B and it
-   is now the highest-value open item in the project.
-3. **Do not chase filters, sessions, fibonacci or the topn/hold axis.** All
-   tested end to end, all in `CLAUDE.md`'s known-dead list now.
-4. **Persist the per-fold chosen configuration.** `cells[].rules` records the
-   outcome of each selection rule but not *what* it chose. Per-rule ladders are
-   now stored (2026-09-08) — the config is not.
-5. Only after 1 and 2: the two-leg XAUUSD 1h + 4h book, anchor variations,
-   trailing stop. Each needs its noise band, not a point estimate.
+The record on disk is what the page renders. `core/build_board.py` never looks at
+the fingerprint, so a hypothesis whose kernel changed keeps showing its old
+numbers until somebody remembers. That is exactly how the board spent a day on a
+replaced selector.
 
----
+Two lines of work, in order:
+1. `build_board` should mark a stale record on the page, using the fingerprint
+   the record already carries (`core/fingerprint.py`, and `core/build_scoreboard`
+   already does this for the other page).
+2. A `make board` style entry point that re-runs any hypothesis whose
+   fingerprint no longer matches, then rebuilds. Roughly 25 minutes per
+   hypothesis on this box, and both can run in parallel.
 
-## What H-027 is, and why it is not H-002 retuned
+## TASK 3 — the firm questions, still unanswered and still blocking
 
-Three findings from the deep dive, each measured rather than assumed:
+* Static or trailing max drawdown? Worth 17 points of pass rate.
+* Minimum trading days? Modelled as none.
+* A consistency rule?
+* **Is XAUUSD tradeable on Thunderbolt at all?** Both boards' best rows are gold.
 
-* **The direction is FOLLOW, not fade.** On identical bars, thresholds and
-  holds, follow beat fade in **79 of 100 paired cells** (25 of 25 on ETH 4h and
-  XAUUSD 1h). H-002's own walk-forward already agreed — it picks `MODE_BREAK` in
-  100 of 140 folds. **H-002 is named after a trade it does not make.**
-* **A fixed target was destroying the payoff.** Average R rose monotonically with
-  reward:risk to the edge of every grid. Removing the target moved XAUUSD 1h from
-  **+0.155R to +0.684R**. The shape is one winner in nine carried a long way.
-* **It survives its null.** The identical 375-cell search on phase-randomised
-  markets found **0 hits in 1,125 cells** across three seeds; its fastest route
-  to 60% pass was 30.8 days against the real 12.9.
+## Then, and only then
 
-**And one that contradicts the repo's own prior:** the blind selector picked the
-**Asia session (00–07 UTC) in all seven folds** on gold 1h. Asia was put in the
-grid *because* H-001 found it the worst session for ORB. Seven independent folds
-choosing it is a regime, not a fit. Worth understanding — nobody has explained it.
+* The two-leg XAUUSD 1h + 4h book — with its band, not a point estimate.
+* Engine 1 (hypothesis generator): still not started.
+* The ~90 superseded stage scripts still on disk.
 
 ---
 
 ## Do NOT redo these
 
-* **Class-wide baskets.** Failed twice, same mechanism both times. Equal
-  weighting divides the book's R/day by the leg count while drawdown falls by far
-  less, and the classes contain markets that lose alone. H-027's baskets never
-  resolve an account at all. A *two-leg book of two strong legs* is a different
-  proposition and is untested.
-* **Execution cost as a route to pace.** Measured and closed: 14bps → **0bps**
-  moves a book only 57 → 32 days. Free execution buys 33–44% of the days; the
-  target needs ~85%. Take the maker fill because it is free and measured safe —
-  do not expect it to fix pace.
-* **Fading a VWAP extreme.** 0 of 100 cells cleared PF 1.20 and beat their null;
-  gold is negative at every threshold and hold.
+Unchanged from 2026-09-08, and the list has grown:
 
----
-
-## Open bugs and gaps
-
-| | |
-|---|---|
-| 2 second-engine disagreements | vwap 30m (4 trades of 330) and 15m (1 of 416). Both at boundaries, neither reaches the board. Fail in `pytest -m slow` on purpose. |
-| Nightly slow suite | has never completed clean end to end |
-| `core/verify_board.py` | still hardcodes the old 8%/4%/8% firm spec — will disagree with the board for the wrong reason |
-| Engine 1 | not started; `core/target_profile.py` and `CANDIDATES.md` exist, no gate |
-| The ~90 old stage scripts | still on disk, superseded by `core/pipeline.py` |
-
----
-
-## House rules that are easy to break
-
-* **Always rebuild and open the UI before reporting.** Kris reads the board, not
-  the chat. `.venv/bin/python core/build_board.py`.
-* **Always push to `main`.** Every change, straight away.
-* **Answer in short key points.** See `HOW_TO_ANSWER.md`. A long reply is a bug.
-* **Three years of data, one common window**, snapped to a month start so adding
-  a market never moves another market's numbers.
-* **Never quote a number that has not beaten its own paired null**, and never one
-  chosen on the window it was scored on.
+* **Entry filters on H-027 gold, as a family.** 25 screened, 24 of 25 raise PF by
+  cutting R per day; the one survivor lost to a shuffled copy of itself.
+* **Class-wide baskets.** Failed twice on the same mechanism.
+* **Execution cost as a route to pace.** 14bps → 0bps moves a book 57 → 32 days;
+  the target needs ~85% of the days, not 40%.
+* **The topn / hold axis.** Widening the grid took the headline away rather than
+  improving it, which is what a lucky draw from a narrow grid looks like.
+* **Quoting a per-cell number without its band.** The board now refuses to.

@@ -22,7 +22,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from core import noiseband as NB                               # noqa: E402
+from core import pine as PINE                                  # noqa: E402
 from core.prop_rules import ONE_STEP                           # noqa: E402
+from core.scorecard import rank_tiers                          # noqa: E402
 
 BT = ROOT / "backtests"
 
@@ -60,12 +63,50 @@ def _filter(h: dict) -> dict | None:
     if not keep:
         return h
     out = dict(h)
+    # How many cells the RUN has finished, before this filter cuts them down.
+    # The page's progress bar reads it, and without this a complete twenty-cell
+    # run showing one market read as "2/20 done" - the filter looking like a
+    # half-finished run.
+    out["cells_done"] = len(h.get("cells", []))
     for k in ("rows", "cells"):
         out[k] = [r for r in h.get(k, []) if r.get("sym") in keep]
     if not out["rows"]:
         return None
     out["filtered_to"] = sorted(keep)
     return out
+
+
+def _tiers(h: dict) -> dict:
+    """Stamp a TIER on every row the page ranks, and rank nothing inside one.
+
+    `core/scorecard.rank_tiers` groups rows whose sampling bands overlap; this
+    only writes the group number onto the record so the page can show it. The
+    page must not do the grouping itself - the rule about what may be called
+    faster than what belongs next to the score, not in a template.
+
+    Two rankings are stamped, because the board answers two questions:
+      * `tier`   - over every market x timeframe in the hypothesis, on the
+                   headline expected days and its band;
+      * `tier60` - over the selection rules of one promoted market, on the "60%
+                   in" number and ITS band, which is the column Kris reads
+                   against his goal.
+    """
+    cells = [c for c in h.get("cells", [])]
+    for i, tier in enumerate(rank_tiers(cells), start=1):
+        for c in tier:
+            # a row with no number was never compared with anything, and
+            # `rank_tiers` puts each of those in a tier of its own. Stamping
+            # that would print a ranking of absences.
+            if c.get("days_to_pass") is not None:
+                c["tier"] = i
+    for row in h.get("rows", []):
+        rules = row.get("rules") or []
+        for i, tier in enumerate(rank_tiers(rules, band_key="band60",
+                                            value_key="days60"), start=1):
+            for r in tier:
+                if r.get("days60") is not None:
+                    r["tier60"] = i
+    return h
 
 
 def _clean(o):
@@ -88,7 +129,13 @@ def _clean(o):
 def main() -> int:
     files = sorted(BT.glob("*/hypothesis.json"))
     found = [json.loads(p.read_text()) for p in files]
-    hyps = [x for x in (_filter(h) for h in found) if x is not None]
+    hyps = [_tiers(x) for x in (_filter(h) for h in found) if x is not None]
+    # THE PINE INDICATOR EACH HYPOTHESIS SHIPS, filled in from its own folds.
+    # Kris's request, 2026-09-09: a button on every hypothesis that copies a
+    # TradingView INDICATOR - not a strategy - so the rule can be eyeballed on a
+    # chart. See core/pine.py for why it is deliberately not a strategy.
+    for h in hyps:
+        h["pine"] = PINE.for_record(h)
     hyps.sort(key=lambda h: h.get("hid", ""))
     if SHOW is not None:
         hidden = len(found) - len(hyps)
@@ -102,6 +149,11 @@ def main() -> int:
         "built": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         "firm": {"name": "Thunderbolt (1 step)", "target": r.profit_target,
                  "daily": r.daily_loss, "maxloss": r.max_loss},
+        # THE MEASURED NOISE FLOOR, on the page rather than in a markdown file.
+        # Every per-cell band is read against this line: a headline sitting
+        # inside it has not been shown to differ from a gate that knows nothing.
+        "noise_floor": {"days": list(NB.FLOOR_DAYS), "pf_2x": list(NB.FLOOR_PF_2X),
+                        "note": NB.FLOOR_NOTE},
     }
     tpl = (ROOT / "core" / "board_template.html").read_text()
     out = BT / "board.html"

@@ -31,6 +31,31 @@ MODE_TREND, MODE_FADE, MODE_BREAK, MODE_RECLAIM, MODE_PULLBACK = 0, 1, 2, 3, 4
 # Minimum volume-weighted sigma, as a fraction of the VWAP, that is treated as
 # real rather than as float cancellation noise. See the guard in `simulate`.
 SD_EPS_FRAC = 1e-6
+# Minimum distance from the VWAP, as a fraction of it, that counts as being
+# above or below rather than as accumulation noise.
+#
+# WHY IT HAS TO EXIST, measured 2026-09-09. `MODE_RECLAIM` and `MODE_PULLBACK`
+# both ask whether the PREVIOUS bar closed above or below its VWAP. Over
+# Dukascopy's padded weekend every bar is O=H=L=C at one frozen price, so the
+# session VWAP IS that price and the true answer is "neither" - the two numbers
+# are equal in exact arithmetic. What decided it instead was the last bit of the
+# accumulation: this kernel sums with pandas `groupby().cumsum()`, the
+# NautilusTrader port sums incrementally, and the two land one ulp apart in
+# whichever direction. On XAUUSD 30m that produced FOUR trades in 330 where the
+# two engines disagreed about a trade nobody could justify either way, and the
+# same shape appeared on the RECLAIM config. It was logged as an unresolved
+# second-engine disagreement for a day; it is neither engine's bug, it is the
+# rule being ill-posed on a bar that never traded.
+#
+# 1e-9 of price is 3e-6 on gold: seven orders of magnitude above the ulp noise
+# (4.5e-13) and more than two below one tick (0.001), so it can never suppress a
+# real difference. Ties now resolve the same way in any engine: a strict
+# comparison must beat the floor, a non-strict one absorbs it.
+#
+# It is the same lesson as SD_EPS_FRAC and CLAUDE.md already states it: a
+# quantity built from a difference of near-equal accumulated sums needs a
+# tolerance in PRICE terms, never a bare `<=` against zero.
+PX_EPS_FRAC = 1e-9
 FILL_LIMIT, FILL_CLOSE = 0, 1
 TGT_SESSION, TGT_VWAP, TGT_OPPOSITE, TGT_RR = 0, 1, 2, 3
 
@@ -211,11 +236,19 @@ def simulate(
             elif mode == MODE_RECLAIM:
                 # was beyond a band earlier in the session, now closes back through VWAP
                 if i > begin and i + 1 < stop_bar:
-                    if stretched_up == 1 and c[i] < v and c[i - 1] >= vwap[i - 1]:
+                    # Both comparisons carry PX_EPS_FRAC. The previous bar can be
+                    # padded weekend data whose close IS its own VWAP, and which
+                    # side of it that lands on is otherwise decided by the last
+                    # bit of an accumulated sum. A strict test must beat the
+                    # floor; a non-strict one absorbs it.
+                    ce = v * PX_EPS_FRAC
+                    pv = vwap[i - 1]
+                    pe = pv * PX_EPS_FRAC
+                    if stretched_up == 1 and c[i] < v - ce and c[i - 1] >= pv - pe:
                         side = -1
                         entry = o[i + 1]
                         entry_i = i + 1
-                    elif stretched_dn == 1 and c[i] > v and c[i - 1] <= vwap[i - 1]:
+                    elif stretched_dn == 1 and c[i] > v + ce and c[i - 1] <= pv + pe:
                         side = 1
                         entry = o[i + 1]
                         entry_i = i + 1
@@ -223,11 +256,14 @@ def simulate(
             elif mode == MODE_PULLBACK:
                 # session is trending away from VWAP; take the first touch back to it
                 if i > begin and i + 1 < stop_bar:
-                    if c[i - 1] > vwap[i - 1] and l[i] <= v and c[i] > v:
+                    ce = v * PX_EPS_FRAC
+                    pv = vwap[i - 1]
+                    pe = pv * PX_EPS_FRAC
+                    if c[i - 1] > pv + pe and l[i] <= v + ce and c[i] > v + ce:
                         side = 1
                         entry = o[i + 1]
                         entry_i = i + 1
-                    elif c[i - 1] < vwap[i - 1] and h[i] >= v and c[i] < v:
+                    elif c[i - 1] < pv - pe and h[i] >= v - ce and c[i] < v - ce:
                         side = -1
                         entry = o[i + 1]
                         entry_i = i + 1

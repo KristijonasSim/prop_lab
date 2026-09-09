@@ -31,8 +31,14 @@ from core.riskladder import MIN_RISK, pick_stored                  # noqa: E402
 
 BT = ROOT / "backtests"
 #: The headline keys a record copies out of its chosen ladder rung.
+#:
+#: `band` is one of them and it has to be. The sampling band belongs to the RUNG
+#: - a 2% position and a 0.25% one have different distributions of expected days
+#: - so a repick that moved the number without moving the band would print one
+#: rung's headline underneath another rung's uncertainty, which is a worse lie
+#: than quoting no band at all.
 HEADLINE = ("risk_pct", "pass_pct", "max_dd_pct", "days_to_pass", "median_days",
-            "fail_max_pct", "fail_daily_pct", "cagr_pct")
+            "fail_max_pct", "fail_daily_pct", "cagr_pct", "band")
 
 
 def repick(node: dict) -> tuple[bool, str | None]:

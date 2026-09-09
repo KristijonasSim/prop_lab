@@ -7,11 +7,25 @@ principles with each step printed.
 
 Run:  .venv/bin/python core/verify_board.py
 
-It should reproduce the board's headline exactly: PF 2.016, max drawdown 7.518 R,
-R per day +0.15627, and 136.9 expected days two-step at the largest risk that
-keeps peak drawdown inside the 8% cap (1.064%). The board itself reports 143.6 at
-1.00%, because `core/riskladder` only offers discrete risk rungs and 1.064% is not
-one of them. If any of those numbers moves, the board is wrong or this is.
+WHAT IT SHOULD PRINT, and what it means when it does not. The three quantities
+that do not depend on position size are the audit: **PF 2.016, max drawdown
+7.518 R, R per day +0.15627** on the four-leg gold book of 2026-09-07. If any of
+those moves, either the board is wrong or this file is.
+
+THE FIRM CHANGED UNDER IT, 2026-09-08. Everything below the R-level numbers is
+priced at Thunderbolt's one step - 6% target, 3% daily, 6% max - and the file was
+still on the modelled 8%+5% two-step until 2026-09-09. On the real rules the same
+book needs **54.7 expected days at 0.798% risk** (the largest size whose peak
+drawdown fits the 6% cap) and **21.6 at the 2% policy floor**, against 136.9 and
+97.4 under the old modelled firm. Nothing about the strategy moved; only the
+rules it is scored against.
+
+IT DOES NOT AUDIT TODAY'S BOARD ROW, AND IS NOT MEANT TO. The board's H-002 gold
+row is a single 4h cell produced by Engine 2 (`core/run_hypothesis.py`); the book
+here is the four-leg 5m/30m/1h/4h construction of 2026-09-07, weighted by signal
+to cost. They are different books over different windows and their numbers should
+NOT be expected to match. What this file verifies is that a book this repo
+published can be rebuilt from its raw trades by code that shares nothing with it.
 
 REWRITTEN 2026-09-07. It used to audit the five-leg book of 2026-09-01 —
 BTCUSDT 4h, ETHUSDT 1h/30m, SOLUSDT 4h, XAUUSD 5m. **Four of those five legs died
@@ -63,12 +77,20 @@ recovers any cost level exactly. No re-simulation, and no approximation.
 
 THE EVALUATION STRUCTURE
 ------------------------
-The firm target is a TWO-STEP evaluation (8% then 5%) on cTrader, decided
-2026-09-01. Step 2 runs the same book forward with a fresh drawdown budget and
-a breach in either step kills the account, so time-to-funded roughly doubles.
-Both structures are printed: the one-step number is kept only so older board
-figures stay comparable. The percentages are NOT verified against any signed
-firm's spec — only the structure is.
+THE FIRM IS THUNDERBOLT, one step: 6% target, 3% daily drawdown, 6% max
+drawdown, unlimited time, chosen by Kris 2026-09-08. That is the headline
+structure here.
+
+The old modelled 8%-then-5% two-step is printed underneath it, because it is
+what every board number before 2026-09-08 was scored on and because Kris will
+run several firms - the next may well be two-step. In that structure step 2 runs
+the same book forward with a fresh drawdown budget and a breach in either step
+kills the account, so time-to-funded roughly doubles.
+
+STILL UNVERIFIED against the signed spec, and each is worth asking: whether the
+max drawdown is static or trailing (modelled as both, the stricter reading),
+whether there is a minimum trading-day count (modelled as none), and whether a
+consistency rule applies.
 """
 from __future__ import annotations
 
@@ -82,9 +104,20 @@ ROOT = Path(__file__).resolve().parents[1]
 TRADES = ROOT / "backtests" / "vwap" / "stage6_trades_xauusd_deadfix.parquet"
 STITCHED = ROOT / "backtests" / "vwap" / "stage6_stitched_xauusd_deadfix.csv"
 
-TARGET = 0.08        # prop profit target
-MAX_LOSS = 0.08      # prop max-loss cap
-DAILY_LOSS = 0.04    # prop daily-loss cap
+# THE FIRM, chosen by Kris 2026-09-08: Thunderbolt, one step. Restated here
+# rather than imported, because this file audits the repo and must not depend on
+# it - `test_verify_board.py` pins these four numbers against
+# `core/prop_rules.ONE_STEP` so the independence cannot turn into drift.
+#
+# It was 8% / 8% / 4% until 2026-09-09, which was the modelled two-step guess
+# the project used before it had a real spec. An auditor scoring the board
+# against rules the board does not use disagrees with it for the wrong reason -
+# and the disagreement flatters, since 8% forgives a drawdown that ends an
+# account at 6%.
+TARGET = 0.06        # prop profit target
+MAX_LOSS = 0.06      # prop max-loss cap
+DAILY_LOSS = 0.03    # prop daily-loss cap
+MIN_TRADING_DAYS = 0  # unlimited time limit, modelled as no minimum
 GATE = 1.20
 SYM = "XAUUSD"
 ASSUMED_RT = 3.00    # bps round trip the walk-forward charged on XAUUSD
@@ -116,11 +149,15 @@ def max_drawdown_R(r):
     return float((eq - np.maximum.accumulate(eq)).min())
 
 
-# The firm structure, restated here rather than imported: this file audits the
-# repo and must not depend on it. Mirrors core/prop_rules.ONE_STEP / TWO_STEP.
-ONE_STEP = ({"target": 0.08, "daily": 0.04, "maxloss": 0.08, "mindays": 5},)
-TWO_STEP = ({"target": 0.08, "daily": 0.04, "maxloss": 0.08, "mindays": 5},
-            {"target": 0.05, "daily": 0.04, "maxloss": 0.08, "mindays": 5})
+# The firm structure. ONE_STEP is Thunderbolt and is what the board reports.
+# LEGACY_TWO_STEP is the pre-2026-09-08 modelled 8%+5%, kept so older board
+# numbers stay readable and because Kris will run several firms - the next one
+# may well be two-step. Mirrors core/prop_rules.ONE_STEP / TWO_STEP.
+ONE_STEP = ({"target": TARGET, "daily": DAILY_LOSS, "maxloss": MAX_LOSS,
+             "mindays": MIN_TRADING_DAYS},)
+LEGACY_TWO_STEP = ({"target": 0.08, "daily": 0.04, "maxloss": 0.08, "mindays": 5},
+                   {"target": 0.05, "daily": 0.04, "maxloss": 0.08, "mindays": 5})
+TWO_STEP = LEGACY_TWO_STEP    # the old name, so nothing that imports it breaks
 
 
 def simulate_accounts(daily_r: pd.Series, risk: float, phases=ONE_STEP,
@@ -291,8 +328,8 @@ def main():
         print(f"    risk = {MAX_LOSS:.2%} / {abs(dd):.3f} R = {risk_cap*100:.3f}% per trade")
         print(f"  At that risk the account gains {rpd*risk_cap*100:.4f}% per day,")
         print(f"  so a straight line to +{TARGET:.0%} takes "
-              f"{TARGET/(rpd*risk_cap):.0f} days  (ONE phase; the two-step")
-        print(f"  evaluation has to do this again for +5% before funding).")
+              f"{TARGET/(rpd*risk_cap):.0f} days  (the firm is ONE step; the old")
+        print(f"  modelled two-step had to do this again for +5% before funding).")
 
         print(f"\n  THE GOVERNING IDENTITY (trades per day does not appear):")
         print(f"    days = maxDD_in_R / R_per_day * (target / cap)")
@@ -300,10 +337,14 @@ def main():
               f" = {abs(dd)/rpd*(TARGET/MAX_LOSS):.0f} days")
 
         daily = pd.Series(r, index=sel.exit_ts).resample("1D").sum()
-        for phases, label in ((ONE_STEP, "ONE-STEP 8% — the old assumption, kept for comparison"),
-                              (TWO_STEP, "TWO-STEP 8% then 5% — THE STRUCTURE THE BOARD USES")):
+        # 2% is on the list because it is the board's policy floor
+        # (`core/riskladder.MIN_RISK`, Kris 2026-09-08) and every published
+        # headline is now read at or above it. An audit that only prices the
+        # cap-respecting rung audits a number the board no longer quotes.
+        for phases, label in ((ONE_STEP, "ONE-STEP 6% — THE FIRM (Thunderbolt), what the board reports"),
+                              (LEGACY_TWO_STEP, "TWO-STEP 8% then 5% — the pre-2026-09-08 modelled firm, for comparison")):
             print(f"\n  Simulation, fresh account every trading day — {label}:")
-            for risk in (0.005, risk_cap, 0.0125, 0.015):
+            for risk in (0.005, risk_cap, 0.0125, 0.015, 0.02):
                 a = simulate_accounts(daily, risk, phases=phases)
                 md = a["median_days"]
                 exp = md / a["pass_rate"] if a["pass_rate"] else float("nan")
@@ -312,8 +353,10 @@ def main():
                       f"{(a['fail_max']+a['fail_daily'])*100:5.1f}%  "
                       f"unresolved {a['still_open']*100:4.0f}%  "
                       f"median {md:6.1f}d  expected {exp:6.1f}d")
-        print("\n  The second 5% step is not half the work of the first 8% one:")
-        print("  it is another chance to breach, and the drawdown is paid twice.")
+        print("\n  The second step of the old modelled firm was not half the work of")
+        print("  the first: it is another chance to breach, and the drawdown is paid")
+        print("  twice. Thunderbolt has one step and a smaller target, and tighter")
+        print("  caps - which way that nets out is computed above, not assumed.")
 
     rule("STEP 3 — what would be needed to pass in 14 days")
     # same book as STEP 2; `r` and `span_days` are still bound to it
