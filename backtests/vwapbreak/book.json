@@ -1,0 +1,66 @@
+{
+ "corr": -0.01389865441344091,
+ "both_trade_share": 0.07671232876712329,
+ "rows": [
+  {
+   "tag": "gold 1h alone",
+   "risk_pct": 3.0,
+   "pass_pct": 51.9,
+   "blown_pct": 37.4,
+   "never_pct": 10.7,
+   "median_days": 7.0,
+   "days": 13.5,
+   "band": {
+    "days_lo": 11.0,
+    "days_hi": 16.7,
+    "days_med": 13.2,
+    "pass_lo": 46.9,
+    "pass_hi": 66.2,
+    "pass_med": 57.3,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  {
+   "tag": "ETH 1h alone",
+   "risk_pct": 3.0,
+   "pass_pct": 59.2,
+   "blown_pct": 39.3,
+   "never_pct": 1.5,
+   "median_days": 10.0,
+   "days": 16.9,
+   "band": {
+    "days_lo": 14.7,
+    "days_hi": 22.5,
+    "days_med": 17.2,
+    "pass_lo": 41.6,
+    "pass_hi": 63.7,
+    "pass_med": 53.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  {
+   "tag": "50/50 book",
+   "risk_pct": 3.0,
+   "pass_pct": 67.8,
+   "blown_pct": 26.2,
+   "never_pct": 6.0,
+   "median_days": 7.0,
+   "days": 10.3,
+   "band": {
+    "days_lo": 9.2,
+    "days_hi": 13.1,
+    "days_med": 10.9,
+    "pass_lo": 57.7,
+    "pass_hi": 77.1,
+    "pass_med": 67.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ ]
+}

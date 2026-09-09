@@ -1,0 +1,254 @@
+[
+ {
+  "cap": 5,
+  "trades": 591,
+  "tpd": 0.93,
+  "risk_pct": 1.5,
+  "pass_pct": 67.5,
+  "blown_pct": 25.9,
+  "worst_day_pct": -2.94,
+  "days": 17.0,
+  "band": {
+   "days_lo": 13.4,
+   "days_hi": 22.3,
+   "days_med": 16.9,
+   "pass_lo": 54.3,
+   "pass_hi": 82.0,
+   "pass_med": 68.5,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 5,
+  "trades": 591,
+  "tpd": 0.93,
+  "risk_pct": 2.0,
+  "pass_pct": 65.8,
+  "blown_pct": 29.5,
+  "worst_day_pct": -3.93,
+  "days": 15.2,
+  "band": {
+   "days_lo": 11.6,
+   "days_hi": 18.6,
+   "days_med": 14.8,
+   "pass_lo": 51.9,
+   "pass_hi": 76.4,
+   "pass_med": 64.5,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 5,
+  "trades": 591,
+  "tpd": 0.93,
+  "risk_pct": 3.0,
+  "pass_pct": 59.8,
+  "blown_pct": 37.5,
+  "worst_day_pct": -5.89,
+  "days": 11.7,
+  "band": {
+   "days_lo": 9.3,
+   "days_hi": 14.0,
+   "days_med": 11.3,
+   "pass_lo": 47.6,
+   "pass_hi": 67.1,
+   "pass_med": 57.7,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 3,
+  "trades": 402,
+  "tpd": 0.63,
+  "risk_pct": 1.5,
+  "pass_pct": 68.3,
+  "blown_pct": 24.3,
+  "worst_day_pct": -2.64,
+  "days": 23.4,
+  "band": {
+   "days_lo": 17.8,
+   "days_hi": 32.1,
+   "days_med": 22.8,
+   "pass_lo": 54.8,
+   "pass_hi": 86.6,
+   "pass_med": 73.5,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 3,
+  "trades": 402,
+  "tpd": 0.63,
+  "risk_pct": 2.0,
+  "pass_pct": 66.7,
+  "blown_pct": 26.6,
+  "worst_day_pct": -3.52,
+  "days": 21.0,
+  "band": {
+   "days_lo": 16.0,
+   "days_hi": 27.9,
+   "days_med": 20.2,
+   "pass_lo": 50.6,
+   "pass_hi": 79.2,
+   "pass_med": 66.9,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 3,
+  "trades": 402,
+  "tpd": 0.63,
+  "risk_pct": 3.0,
+  "pass_pct": 62.3,
+  "blown_pct": 33.3,
+  "worst_day_pct": -5.28,
+  "days": 16.1,
+  "band": {
+   "days_lo": 13.2,
+   "days_hi": 20.9,
+   "days_med": 16.2,
+   "pass_lo": 46.8,
+   "pass_hi": 71.0,
+   "pass_med": 58.5,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 2,
+  "trades": 291,
+  "tpd": 0.46,
+  "risk_pct": 1.5,
+  "pass_pct": 76.8,
+  "blown_pct": 15.5,
+  "worst_day_pct": -2.56,
+  "days": 22.1,
+  "band": {
+   "days_lo": 17.9,
+   "days_hi": 32.9,
+   "days_med": 23.0,
+   "pass_lo": 64.3,
+   "pass_hi": 92.0,
+   "pass_med": 80.7,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 2,
+  "trades": 291,
+  "tpd": 0.46,
+  "risk_pct": 2.0,
+  "pass_pct": 75.1,
+  "blown_pct": 17.5,
+  "worst_day_pct": -3.41,
+  "days": 20.0,
+  "band": {
+   "days_lo": 16.2,
+   "days_hi": 27.9,
+   "days_med": 20.8,
+   "pass_lo": 58.9,
+   "pass_hi": 86.4,
+   "pass_med": 73.7,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 2,
+  "trades": 291,
+  "tpd": 0.46,
+  "risk_pct": 3.0,
+  "pass_pct": 68.5,
+  "blown_pct": 27.9,
+  "worst_day_pct": -5.12,
+  "days": 14.6,
+  "band": {
+   "days_lo": 12.8,
+   "days_hi": 20.2,
+   "days_med": 16.0,
+   "pass_lo": 53.6,
+   "pass_hi": 77.5,
+   "pass_med": 65.1,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 1,
+  "trades": 180,
+  "tpd": 0.28,
+  "risk_pct": 1.5,
+  "pass_pct": 78.1,
+  "blown_pct": 10.6,
+  "worst_day_pct": -2.56,
+  "days": 28.2,
+  "band": {
+   "days_lo": 23.9,
+   "days_hi": 46.7,
+   "days_med": 32.9,
+   "pass_lo": 63.2,
+   "pass_hi": 94.7,
+   "pass_med": 82.4,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 1,
+  "trades": 180,
+  "tpd": 0.28,
+  "risk_pct": 2.0,
+  "pass_pct": 73.2,
+  "blown_pct": 15.5,
+  "worst_day_pct": -3.41,
+  "days": 25.3,
+  "band": {
+   "days_lo": 20.4,
+   "days_hi": 36.8,
+   "days_med": 27.1,
+   "pass_lo": 58.3,
+   "pass_hi": 89.3,
+   "pass_med": 77.1,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ },
+ {
+  "cap": 1,
+  "trades": 180,
+  "tpd": 0.28,
+  "risk_pct": 3.0,
+  "pass_pct": 75.1,
+  "blown_pct": 17.5,
+  "worst_day_pct": -5.12,
+  "days": 20.0,
+  "band": {
+   "days_lo": 16.4,
+   "days_hi": 28.4,
+   "days_med": 21.2,
+   "pass_lo": 58.9,
+   "pass_hi": 85.7,
+   "pass_med": 72.6,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  }
+ }
+]

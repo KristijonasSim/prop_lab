@@ -109,6 +109,19 @@ class Pipeline:
     #: The 2x series is already computed on the train slice by `_trades`, so this
     #: costs nothing to honour. Default "2x" is the documented rule; "1x" is kept
     #: only so the old behaviour can be reproduced for comparison.
+    #: What the selector MAXIMISES. Added 2026-09-09.
+    #:
+    #: "2x"/"1x" rank on profit factor, which is what this pipeline has always
+    #: done - and profit factor is the wrong objective for a prop evaluation. It
+    #: is maximised by a very tight stop that wins 5% of the time and pays hugely
+    #: when it wins; an evaluation pays for reaching a target before a drawdown,
+    #: which is R per day against drawdown. Given every stop width from 0.75 to
+    #: 20 sigma the profit-factor selector picks 0.75, so the traded settings had
+    #: to be pinned by hand in core/chosen.py. That pin is the symptom.
+    #:
+    #: "rday"  ranks on R per day on the train slice, at double cost.
+    #: "days"  ranks on the identity that actually sets time-to-funded:
+    #:         days = maxDD_in_R / R_per_day, minimised.
     SELECT_ON = "2x"
 
     def __init__(self, strategy, *, train_months: int = TRAIN_MONTHS,
@@ -117,8 +130,9 @@ class Pipeline:
                  null_kind: str = "paired", select_on: str | None = None):
         self.s = strategy
         self.select_on = select_on or self.SELECT_ON
-        if self.select_on not in ("1x", "2x"):
-            raise ValueError(f"select_on must be '1x' or '2x', got {select_on!r}")
+        if self.select_on not in ("1x", "2x", "rday", "days"):
+            raise ValueError(f"select_on must be one of 1x, 2x, rday, days - "
+                             f"got {select_on!r}")
         self.train_months = train_months
         self.test_months = test_months
         self.floors = tuple(floors)
@@ -172,6 +186,25 @@ class Pipeline:
         return (tr[:, T_R], tr[:, T_EXIT_I].astype(int),
                 tr[:, T_ENTRY_I].astype(int), r2)
 
+    def _score(self, r: np.ndarray, days: float) -> float:
+        """Higher is better, whatever the objective. `r` is the train slice's R
+        series at the cost the selector ranks on."""
+        if self.select_on in ("1x", "2x"):
+            return pf(r)
+        rpd = float(r.sum()) / days
+        if self.select_on == "rday":
+            return rpd
+        if self.select_on == "days":
+            # days = maxDD_in_R / R_per_day. A config that loses on the train
+            # slice has no finite time-to-target and is ranked last rather than
+            # given a flattering negative.
+            if rpd <= 0:
+                return -np.inf
+            eq = np.concatenate(([0.0], np.cumsum(r)))
+            dd = float((eq - np.maximum.accumulate(eq)).min())
+            return rpd / max(abs(dd), 1e-9)      # bigger = fewer days
+        raise ValueError(f"unknown select_on {self.select_on!r}")
+
     # -- the walk-forward -------------------------------------------------- #
     def walk_forward(self, m: Market, shuffled: str | None = None,
                      tag: str = "") -> FoldResult:
@@ -212,6 +245,8 @@ class Pipeline:
             # vwap's anchored VWAP is shared by every config on the same bars and
             # rebuilding it 12,960 times would dominate the runtime.
             cache_tr = self._cache()
+            train_days = max((train.index[-1] - train.index[pad_tr]).total_seconds()
+                             / 86400.0, 1e-9)
             pfs = np.full(len(cfgs), np.nan)
             cnts = np.zeros(len(cfgs), dtype=int)
             for ci, cfg in enumerate(cfgs):
@@ -223,10 +258,9 @@ class Pipeline:
                     # fall back to 1x for that configuration rather than dropping
                     # it - a config that vanishes at 2x is a finding, not an
                     # eligibility question, and it is caught downstream.
-                    if self.select_on == "2x" and np.isfinite(r2).all():
-                        pfs[ci] = pf(r2)
-                    else:
-                        pfs[ci] = pf(r)
+                    use = r2 if (self.select_on != "1x"
+                                 and np.isfinite(r2).all()) else r
+                    pfs[ci] = self._score(use, train_days)
 
             span = (test.index[-1] - test.index[pad_te]).total_seconds() / 86400.0
             cache_te = self._cache()
