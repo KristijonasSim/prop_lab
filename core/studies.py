@@ -32,6 +32,21 @@ STUDIES: dict[str, list[dict]] = {
                   "<b>Today's stop is half of one bar wide</b>, so noise kills the "
                   "trade. A wider stop wins more often but takes the same number "
                   "of days.")},
+        {"file": "book.json", "kind": "book",
+         "title": "Two markets in one account — gold 1h + ETH 1h", "date": "2026-09-09",
+         "note": ("The only two cells that clear profit factor 2.0 at double cost "
+                  "AND beat their own null, traded together at half risk each."
+                  "<br><b>Better than either leg on every axis: 72.7% pass in "
+                  "12.4 days at 2% risk, against gold's 61.9% in 17.8.</b> Their "
+                  "daily returns correlate -0.014 and both trade on only 7.7% of "
+                  "days, so the diversification is measured, not hoped for.")},
+        {"file": "concurrency.json", "kind": "concurrency",
+         "title": "How many positions at once?", "date": "2026-09-09",
+         "note": ("The five settings pile into gold together, and the DAILY cap "
+                  "is what kills accounts - worst day -3.93% against a 3% limit."
+                  "<br><b>Capping at two open positions lifts pass 65.8% to "
+                  "75.1% and cuts blown accounts 29.5% to 17.5% - and costs 5 "
+                  "days.</b> The book above beats every arm here.")},
         {"file": "assets.json", "kind": "markets",
          "title": "Does the gold rule work anywhere else?", "date": "2026-09-09",
          "note": ("The traded rule - wide stop, five settings, floor 30 / top 5 - "
@@ -66,6 +81,27 @@ def for_sid(sid: str) -> list[dict]:
         if not path.exists():
             continue
         raw = json.loads(path.read_text())
+        if spec.get("kind") in ("book", "concurrency"):
+            rows = []
+            for r in (raw["rows"] if spec["kind"] == "book" else raw):
+                if not r or r.get("days") is None:
+                    continue
+                label = (f"{r['tag']} @ {r['risk_pct']:g}%" if spec["kind"] == "book"
+                         else f"max {r['cap']} open @ {r['risk_pct']:g}%")
+                rows.append({"tf": "1h", "arm": label,
+                             "baseline": "gold 1h alone" in label or r.get("cap") == 5,
+                             "trades_per_day": r.get("tpd"), "win_pct": None,
+                             "avg_r": None, "pf_2x": None,
+                             "days_to_pass": r.get("days"), "band": r.get("band"),
+                             "pass_pct": r.get("pass_pct"),
+                             "stalled_pct": r.get("never_pct"),
+                             "days60": None, "pass60": None, "risk60": None,
+                             "band60": None, "rule60": None,
+                             "blown_pct": r.get("blown_pct"), "beats_null": None})
+            out.append({"title": spec["title"], "note": spec["note"],
+                        "date": spec["date"], "rows": rows, "kind": spec["kind"],
+                        "source": f"backtests/{sid}/{spec['file']}"})
+            continue
         if spec.get("kind") == "markets":
             # one row per market x timeframe, not per arm: a different question
             # (where does this rule work) and a different shape on disk.

@@ -565,7 +565,8 @@ function studies(h){
       <th>TF</th><th>${s.kind === 'markets' ? 'Market' : 'Version'}</th>
       <th>Trades/day</th><th>Win %</th><th>Avg R</th>
       <th>PF at 2x cost</th><th>Days to pass</th><th>Pass %</th>
-      <th>Never finished %</th><th>60% pass in</th><th>Beats noise</th>
+      <th>${s.kind === 'book' || s.kind === 'concurrency' ? 'Blown %' : 'Never finished %'}</th>
+      <th>60% pass in</th><th>Beats noise</th>
     </tr></thead><tbody>
       ${s.rows.map(r => `<tr>
         <td class="mkt">${esc(r.tf)}</td>
@@ -576,13 +577,14 @@ function studies(h){
         <td class="${r.pf_2x >= 1.2 ? 'good' : (r.pf_2x >= 1 ? '' : 'fail')}">${n(r.pf_2x,3)}</td>
         <td><b class="${daysClass(r.days_to_pass)}">${n(r.days_to_pass,1)}</b>${bandTxt(r.band,'days')}</td>
         <td>${n(r.pass_pct,1)}</td>
-        <td class="${r.stalled_pct > 5 ? 'warn' : 'dim'}">${n(r.stalled_pct,1)}</td>
+        <td class="${(r.blown_pct != null ? r.blown_pct > 25 : r.stalled_pct > 5) ? 'warn' : 'dim'}">${n(r.blown_pct != null ? r.blown_pct : r.stalled_pct, 1)}</td>
         <td>${r.days60 == null ? '<span class="dim">never</span>'
               : `<b class="${r.days60 <= 14 ? 'good' : (r.days60 <= 35 ? 'warn' : 'fail')}"
                    title="${esc(r.rule60 || '')}">${Number(r.days60).toFixed(1)}</b>
                  ${bandTxt(r.band60, 'days')}
                  <span class="band">${n(r.pass60,1)}% @ ${n(r.risk60,2)}% risk</span>`}</td>
-        <td>${r.beats_null ? '<span class="good">yes</span>' : '<span class="fail">no</span>'}</td>
+        <td>${r.beats_null == null ? '<span class="dim">—</span>'
+              : (r.beats_null ? '<span class="good">yes</span>' : '<span class="fail">no</span>')}</td>
       </tr>`).join('')}
     </tbody></table></div></details>`).join('');
 }
