@@ -87,14 +87,40 @@ CHOSEN = {
          "days": 17.4, "blown_pct": 51.0},
     ],
 
+    # --- THE SAME STRATEGY ON ELEVEN YEARS INSTEAD OF THREE ---------------- #
+    # Measured 2026-09-09 (`research/longhistory.py`, 40 quarters against 8).
+    # This is the more reliable estimate and it is WORSE than the three-year one:
+    # the band halves, and the headline moves outside the old band's middle.
+    # `measured` above is left exactly as it was, because it is what the frozen
+    # record was built on and rewriting history in place is how numbers stop
+    # meaning anything.
+    "long_history": {
+        "years": 11, "quarters": 40, "trades": 3213,
+        "pass_pct": 60.0, "days_to_pass": 20.0, "days_band": [18.2, 23.2],
+        "blown_pct": 40.0, "pf": 1.41, "win_pct": 17.8,
+        "trades_per_day": 0.88,
+        "note": ("Three years said 14.5 expected days with a band of 12.4-19.7. "
+                 "Eleven years says 20.0 with a band of 18.2-23.2 - just outside "
+                 "the old band. The edge survives (60% of accounts still pass) "
+                 "and the profit factor falls from 2.25 to 1.41. Read the "
+                 "eleven-year number as the honest one."),
+    },
+
     "caveats": [
         "The 21.7-day band (16.8-31.4) overlaps the measured luck zone "
         "(13.3-26.5 expected days). The edge beats its null; the SPEED has not "
         "been shown to differ from noise.",
-        "H-027's kernel has never been checked against a second engine. That "
-        "check has caught three real bugs in this repo.",
+        "The eleven-year study says 20.0 expected days, not 21.7 measured on "
+        "three - and its band (18.2-23.2) is half as wide. Read `long_history` "
+        "as the honest number and `measured` as the record the settings were "
+        "chosen on.",
+        "A two-market book (this plus ETHUSDT 1h at half risk each) measured "
+        "72.7% pass in 12.4 days against this leg's 61.9% in 17.8 - better on "
+        "every axis, correlation -0.014. Not adopted; it changes the frozen "
+        "strategy and is Kris's call.",
         "The blind selector does not choose this stop width by itself - it was "
-        "forced and then measured. Fixing what the selector optimises is open "
-        "work.",
+        "forced and then measured. Ranking on days instead of profit factor "
+        "(`Pipeline.SELECT_ON = 'days'`) is measured and better on 4h; on 1h the "
+        "difference is inside the band. Still open.",
     ],
 }

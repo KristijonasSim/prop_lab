@@ -1,0 +1,54 @@
+[
+ {
+  "label": "3 years (the board's window)",
+  "bars": 22537,
+  "from": "2023-08-31",
+  "to": "2026-08-31",
+  "folds": 8,
+  "trades": 756,
+  "tpd": 1.04,
+  "pf": 2.253,
+  "win_pct": 18.3,
+  "pass_pct": 62.0,
+  "blown_pct": 37.6,
+  "days": 14.5,
+  "band": {
+   "days_lo": 12.4,
+   "days_hi": 19.7,
+   "days_med": 15.6,
+   "pass_lo": 47.9,
+   "pass_hi": 69.8,
+   "pass_med": 59.6,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  },
+  "band_width_pct": 46.8
+ },
+ {
+  "label": "full history",
+  "bars": 78120,
+  "from": "2015-09-01",
+  "to": "2026-08-31",
+  "folds": 40,
+  "trades": 3213,
+  "tpd": 0.88,
+  "pf": 1.41,
+  "win_pct": 17.8,
+  "pass_pct": 60.0,
+  "blown_pct": 40.0,
+  "days": 20.0,
+  "band": {
+   "days_lo": 18.2,
+   "days_hi": 23.2,
+   "days_med": 20.4,
+   "pass_lo": 48.5,
+   "pass_hi": 59.8,
+   "pass_med": 54.1,
+   "never_pct": 0.0,
+   "resamples": 200,
+   "mean_block": 10
+  },
+  "band_width_pct": 24.5
+ }
+]
