@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from core import noiseband as NB                               # noqa: E402
 from core import pine as PINE                                  # noqa: E402
+from core import studies as STUDIES                            # noqa: E402
 from core.prop_rules import ONE_STEP                           # noqa: E402
 from core.scorecard import rank_tiers                          # noqa: E402
 
@@ -136,6 +137,9 @@ def main() -> int:
     # chart. See core/pine.py for why it is deliberately not a strategy.
     for h in hyps:
         h["pine"] = PINE.for_record(h)
+        # The research arms that decide what this hypothesis becomes. They lived
+        # in JSON files and a log nobody opens; Kris reads the board.
+        h["studies"] = STUDIES.for_sid(h.get("sid", ""))
     hyps.sort(key=lambda h: h.get("hid", ""))
     if SHOW is not None:
         hidden = len(found) - len(hyps)

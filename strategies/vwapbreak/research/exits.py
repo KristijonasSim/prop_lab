@@ -67,6 +67,12 @@ UNIVERSE = {"FX": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"],
             "Crypto": ["BTCUSDT", "ETHUSDT", "SOLUSDT"]}
 
 WIDE_SIGMA = (2.5, 3.0, 4.0, 6.0, 8.0)
+#: THE EDGE OF THE WIDE GRID BOUND on the first run - the selector took 8 sigma,
+#: the widest offered, in 24 of 56 1h folds. Per the 2026-09-08 lesson a binding
+#: edge is not itself evidence the edge continues (relieving HOLD_HOURS made the
+#: out-of-sample result WORSE), so it is relieved and re-measured rather than
+#: assumed.
+WIDER_SIGMA = (6.0, 8.0, 10.0, 12.0, 16.0, 20.0)
 ATR_MULTS = (0.5, 1.0, 1.5, 2.0, 3.0, 4.0)
 ATR_LEN = 14
 
@@ -123,6 +129,7 @@ ARMS = (
     ("baseline", ExitVariant("vwapbreak")),
     ("wide sigma", ExitVariant("vwapbreak_wide", stops=WIDE_SIGMA)),
     ("ATR stop", ExitVariant("vwapbreak_atr", stops=ATR_MULTS, atr=True)),
+    ("wider still", ExitVariant("vwapbreak_wider", stops=WIDER_SIGMA)),
 )
 
 

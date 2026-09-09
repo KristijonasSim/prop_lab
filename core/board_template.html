@@ -481,6 +481,38 @@ function copyPine(btn){
                      btn.classList.remove('done'); }, 6000);
 }
 
+// RESEARCH ARMS. Each study compares variants of THIS hypothesis on identical
+// folds and costs. Bands first: two arms whose bands overlap have not been shown
+// to differ, so the table marks the baseline and states the overlap rather than
+// declaring a winner.
+function studies(h){
+  const st = h.studies || [];
+  if (!st.length) return '';
+  return st.map(s => `<details open><summary>${esc(s.title)} — ${esc(s.date)}</summary>
+    <p class="risknote" style="max-width:1100px">${s.note}
+      <span class="dim mono" style="font-size:11px">${esc(s.source)}</span></p>
+    <div class="scroll"><table><thead><tr>
+      <th>TF</th><th>Arm</th><th>Tr/day</th><th>Win %</th><th>Avg R</th><th>PF 2×</th>
+      <th>Exp. days</th><th>Pass %</th><th>Stalled %</th><th>60% in</th><th>vs null</th>
+    </tr></thead><tbody>
+      ${s.rows.map(r => `<tr>
+        <td class="mkt">${esc(r.tf)}</td>
+        <td class="mkt">${esc(r.arm)}${r.baseline ? '<span class="pill">baseline</span>' : ''}</td>
+        <td>${n(r.trades_per_day,2)}</td>
+        <td>${n(r.win_pct,1)}</td>
+        <td>${n(r.avg_r,3)}</td>
+        <td class="${r.pf_2x >= 1.2 ? 'good' : (r.pf_2x >= 1 ? '' : 'fail')}">${n(r.pf_2x,3)}</td>
+        <td><b class="${daysClass(r.days_to_pass)}">${n(r.days_to_pass,1)}</b>${bandTxt(r.band,'days')}</td>
+        <td>${n(r.pass_pct,1)}</td>
+        <td class="${r.stalled_pct > 5 ? 'warn' : 'dim'}">${n(r.stalled_pct,1)}</td>
+        <td>${r.days60 == null ? '<span class="dim">never</span>'
+              : `<b class="${r.days60 <= 14 ? 'good' : (r.days60 <= 35 ? 'warn' : 'fail')}"
+                   title="${r.pass60}% pass">${Number(r.days60).toFixed(1)}</b>`}</td>
+        <td>${r.beats_null ? '<span class="good">yes</span>' : '<span class="fail">no</span>'}</td>
+      </tr>`).join('')}
+    </tbody></table></div></details>`).join('');
+}
+
 function paint(h){
   const _h = h;
   $('panel').innerHTML = `
@@ -497,6 +529,7 @@ function paint(h){
       ${(h.rows||[]).map(atRisk).map(r => `<tr>${COLS.map(c => `<td>${c.f(r)}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
     ${pineBar(h)}
+    ${studies(h)}
     ${ruleTable(h.rows || [])}
     ${considered(h.rows || [], h)}
     <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
