@@ -147,7 +147,20 @@ class VwapBreakStrategy:
         out = np.zeros((n, N_COLS))
         k, i = 0, 1
         while i < n - 1:
-            if not (np.isfinite(z[i]) and live[i] and live[i + 1]):
+            # THE DECISION BAR MAY ONLY SEE ITSELF. This read used to be
+            # `live[i] and live[i + 1]`, which asked at the close of bar i
+            # whether bar i+1 would trade - a one-bar look-ahead on volume, and
+            # not a harmless one: 21.4% of the gold series is Dukascopy's padded
+            # weekend, and on the traded threshold 4.0% of otherwise-valid
+            # signals were being refused for a reason that is only knowable
+            # afterwards. Found 2026-09-09 by the NautilusTrader cross-check,
+            # which cannot reproduce it because a streaming engine has no bar
+            # i+1 to read (`strategies/vwapbreak/nautilus_check.py`).
+            #
+            # The fill bar is still refused if it turns out to be dead - see
+            # below - which is the repo's standing rule: never decide on a bar
+            # that did not trade, and never fill on one either.
+            if not (np.isfinite(z[i]) and live[i]):
                 i += 1
                 continue
             side = 1 if z[i] >= thr else (-1 if z[i] <= -thr else 0)
@@ -167,6 +180,12 @@ class VwapBreakStrategy:
                 i += 1
                 continue
             e = i + 1
+            if not live[e]:
+                # the order would have to fill on a bar that never traded, so it
+                # does not fill at all. The scan continues from the next bar
+                # rather than pretending the signal never happened.
+                i += 1
+                continue
             entry = o[e]
             risk = ssig * sd[i]
             floor = entry * minr / 1e4
