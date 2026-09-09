@@ -49,6 +49,7 @@ showStop= input.bool(true, "Draw the stop level while a hypothetical trade is op
 showLabels = input.bool(true, "BUY / SELL labels on the signal bar", group="Display")
 colorBars  = input.bool(true, "Colour the signal candle", group="Display")
 showEntry  = input.bool(true, "Mark the entry bar (the next bar's open)", group="Display")
+showRaw    = input.bool(false, "Show every bar the condition is true (NOT the trade count)", group="Display")
 
 // ---- the session anchor ---------------------------------------------------
 hh = hour(time, "UTC")
@@ -141,34 +142,6 @@ pUp = plot(upper, "Upper band", color=color.new(color.teal, 30))
 pDn = plot(lower, "Lower band", color=color.new(color.teal, 30))
 fill(pUp, pDn, color=color.new(color.teal, 94), title="Band")
 
-// ---- the signal, made obvious on the candle -------------------------------
-// Kris, 2026-09-09: the triangles were too small to see. Three layers now, each
-// switchable, because they answer different questions:
-//
-//   BUY / SELL label   where the rule fired, on the CLOSED bar
-//   coloured candle    the same bar, so it reads while scrolling without
-//                      hunting for a marker
-//   entry arrow        the NEXT bar, which is where the trade actually starts
-//
-// The signal bar and the fill bar are deliberately marked differently. Reading
-// one as the other is the single easiest way to make a rule look better than it
-// is - it is the bug class this repo has found three times - and a chart that
-// draws them identically invites exactly that mistake.
-plotshape(showLabels and longSig, title="BUY", style=shape.labelup,
-     location=location.belowbar, color=color.new(color.teal, 0),
-     textcolor=color.white, text="BUY", size=size.small)
-plotshape(showLabels and shortSig, title="SELL", style=shape.labeldown,
-     location=location.abovebar, color=color.new(color.red, 0),
-     textcolor=color.white, text="SELL", size=size.small)
-
-barcolor(colorBars and longSig ? color.new(color.teal, 0) :
-   colorBars and shortSig ? color.new(color.red, 0) : na, title="Signal candle")
-
-plotshape(showEntry and longSig[1], title="Entry bar, long", style=shape.triangleup,
-     location=location.belowbar, color=color.new(color.teal, 45), size=size.tiny)
-plotshape(showEntry and shortSig[1], title="Entry bar, short", style=shape.triangledown,
-     location=location.abovebar, color=color.new(color.red, 45), size=size.tiny)
-
 // ---- the hypothetical trade ----------------------------------------------
 var int   posDir   = 0
 var float posStop  = na
@@ -199,6 +172,47 @@ plot(showStop and posDir != 0 ? posEntry : na, "Entry", color=color.new(color.gr
      style=plot.style_linebr, linewidth=1)
 bgcolor(posDir == 1 ? color.new(color.teal, 93) : posDir == -1 ? color.new(color.red, 93) : na,
      title="In a hypothetical position")
+
+// ---- what actually gets traded -------------------------------------------
+// KRIS, 2026-09-09, looking at the first version: "on every buy/sell we are
+// buying and selling? maybe it's a bit too often". He was right to ask, and the
+// chart was wrong, not the rule.
+//
+// The rule's CONDITION stays true for as long as price is beyond the band -
+// often ten bars in a row. The kernel does not trade ten times: it opens one
+// position and then jumps to that trade's exit bar before it looks for another
+// signal. The first version of this indicator drew the condition, so a single
+// trade appeared as a run of labels and the chart implied a trade rate roughly
+// ten times what the backtest actually takes.
+//
+// A label now means A TRADE THE RULE WOULD OPEN: the condition is true AND
+// nothing is open. Turn on "Show every bar the condition is true" to see the
+// raw excursions again as faint dots - useful for understanding the rule,
+// misleading as a trade count, which is why it is off by default.
+tradeLong  = longSig and posDir == 0
+tradeShort = shortSig and posDir == 0
+
+plotshape(showLabels and tradeLong, title="BUY", style=shape.labelup,
+     location=location.belowbar, color=color.new(color.teal, 0),
+     textcolor=color.white, text="BUY", size=size.small)
+plotshape(showLabels and tradeShort, title="SELL", style=shape.labeldown,
+     location=location.abovebar, color=color.new(color.red, 0),
+     textcolor=color.white, text="SELL", size=size.small)
+
+barcolor(colorBars and tradeLong ? color.new(color.teal, 0) :
+   colorBars and tradeShort ? color.new(color.red, 0) : na, title="Signal candle")
+
+plotshape(showEntry and tradeLong[1], title="Entry bar, long", style=shape.triangleup,
+     location=location.belowbar, color=color.new(color.teal, 45), size=size.tiny)
+plotshape(showEntry and tradeShort[1], title="Entry bar, short", style=shape.triangledown,
+     location=location.abovebar, color=color.new(color.red, 45), size=size.tiny)
+
+plotshape(showRaw and longSig and not tradeLong, title="Condition true, no trade",
+     style=shape.circle, location=location.belowbar,
+     color=color.new(color.teal, 70), size=size.tiny)
+plotshape(showRaw and shortSig and not tradeShort, title="Condition true, no trade",
+     style=shape.circle, location=location.abovebar,
+     color=color.new(color.red, 70), size=size.tiny)
 
 alertcondition(longSig,  "H-002 long signal",  "H-002 anchored VWAP: long signal on the closed bar")
 alertcondition(shortSig, "H-002 short signal", "H-002 anchored VWAP: short signal on the closed bar")
