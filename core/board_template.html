@@ -347,7 +347,17 @@ function dataSpan(h){
 const ROW_RISK = {};       // asset class -> chosen risk %, or absent for 'auto'
 
 function atRisk(r){
-  const want = ROW_RISK[r.asset_class];
+  let want = ROW_RISK[r.asset_class];
+  // KRIS, 2026-09-09: "in this table I always want to see the best settings."
+  // So a row defaults to the fastest size that gets 60% of accounts through -
+  // his stated goal - rather than to the size the risk ladder picks, which
+  // answers a different question (the smallest size above the 2% floor that
+  // resolves accounts at all). The dropdown still overrides it, and when no
+  // size on the row reaches 60% the ladder's own pick stands.
+  if (want === undefined){
+    const g = fastest60(r);
+    if (g) want = g.risk_pct;
+  }
   if (want === undefined || !r.ladder) return r;
   const lv = r.ladder.find(x => Math.abs(x.risk_pct - want) < 1e-9);
   if (!lv) return r;
@@ -403,7 +413,8 @@ function wireRiskCells(h){
   $('risknote').innerHTML =
     'Set <b>risk per trade</b> in the Risk column \u2014 that row only. '
     + 'Bigger risk = fewer days, more blown accounts. '
-    + '<span class="dim">\u2713 = the size the board picked. Red drawdown = over the limit.</span>';
+    + '<span class="dim">Rows start at the fastest size where 60% of accounts pass; '
+    + '\u2713 marks the ladder\u2019s own pick. Red drawdown = over the limit.</span>';
 }
 
 // A half-filled table is the normal state of a twenty-cell run, and it looked

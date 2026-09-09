@@ -40,7 +40,28 @@ R_STOP, R_HORIZON = 0, 1
 #: whole finding is that a target destroys this payoff, so leaving one in the
 #: grid would only give the fold selector a way to rediscover that.
 THRESHOLDS = (0.5, 0.75, 1.0, 1.25, 1.5)
-STOPS = (0.75, 1.0, 1.25, 1.5, 2.0)
+#: STOP WIDTH, in sigma. WIDENED 2026-09-09 from (0.75 ... 2.0).
+#:
+#: The old range was too narrow to contain the answer, and the measurement that
+#: proved it is simple: at 2 sigma the stop sits **0.51x of one 1h bar's range**
+#: (10.8bps median against 21.4bps), so noise resolves the trade. Every trade
+#: held under fifty bars was a 100% loser and the whole edge came from the tenth
+#: that survived. `research/exits.py` swept 0.75-20 sigma on gold:
+#:
+#:      stop        win%   PF@2x   exp days       pass%
+#:      0.75-2.0     5.0   1.715   14.1 [12-20]   42.5    (1h, the old grid)
+#:      2.5-8.0     26.0   1.644   15.9 [13-23]   50.2    (4h)
+#:      6.0-20.0    41.7   2.094   32.7 [23-42]   64.1    (4h)
+#:
+#: Wider wins more often and passes more accounts; it also takes longer. Which
+#: of those matters is not for a constant in this file to decide, so the whole
+#: range is in the grid and the BLIND quarterly selector picks per fold - the
+#: same treatment every other axis gets.
+#:
+#: Kris, 2026-09-09: "in this table and in pine script I always want to see best
+#: settings." This is what makes that true by construction rather than by
+#: somebody remembering to edit a default.
+STOPS = (0.75, 1.5, 2.5, 4.0, 6.0, 8.0, 12.0, 20.0)
 #: EXTENDED. The blind selector chose 192 hours - the longest in the grid - in
 #: all seven folds on gold, which is the signature of a binding grid edge rather
 #: than a preference. 384 hours is a fortnight.

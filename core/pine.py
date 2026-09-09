@@ -56,6 +56,32 @@ FIELDS: dict[str, dict[str, tuple]] = {
 }
 
 
+#: A CONFIGURATION KRIS HAS CHOSEN TO TRADE, which overrides everything the
+#: record would otherwise fill in.
+#:
+#: 2026-09-09: he is running three demo accounts on H-027 gold 1h and wants the
+#: indicator to ship exactly what those accounts trade. The settings are the
+#: modal fold picks of the ONE arm that reaches his 60% goal fastest -
+#: `research/exits.py`, the wide-stop arm, XAUUSD 1h, floor 30 / top 1: 60.1% of
+#: accounts pass in 18.3 expected days at 4% risk per trade, band 15.9-25.4.
+#:
+#: It is pinned rather than derived because the shipped grid does NOT choose it:
+#: given every stop width from 0.75 to 20 sigma the blind selector picks 0.75,
+#: since it ranks configurations on profit factor and the tight-stop lottery has
+#: the best profit factor. That is a real open problem (the selector is aiming at
+#: something other than the goal) and until it is fixed, deriving the defaults
+#: would ship the wrong thing quietly. Pinning ships the right thing loudly.
+PINNED: dict[str, dict] = {
+    "vwapbreak": {
+        "params": {"THR": "1.25", "STOP_SIG": "8", "MAX_HOLD": "384",
+                   "HOUR_LO": "0", "HOUR_HI": "7", "MIN_RVOL": "0"},
+        "label": ("XAUUSD 1h, wide stop, floor 30 / top 1 — 60.1% of accounts "
+                  "pass in 18.3 days at 4% risk (band 15.9–25.4). Pinned by Kris "
+                  "2026-09-09 for the three-account demo test."),
+    },
+}
+
+
 def _sid_base(sid: str) -> str:
     """A basket page trades the same rule as its parent, so it ships the same
     indicator. `vwapbreak_basket` -> `vwapbreak`."""
@@ -63,21 +89,36 @@ def _sid_base(sid: str) -> str:
 
 
 def _headline_rule(rec: dict) -> tuple[dict | None, str]:
-    """The promoted row's busiest selection rule, and a label for it.
+    """The selection rule the indicator should ship the settings of.
 
-    Busiest, not best: `core.run_hypothesis.best_cell` promotes the rule with the
-    most trades precisely so the choice is independent of the outcome, and the
-    defaults shipped here should be the ones the board's headline is computed
-    from rather than the flattering ones.
+    KRIS, 2026-09-09: "in this table and in the Pine script I always want to see
+    the BEST settings." So the rule that reaches his goal - 60% of accounts
+    passing - the fastest wins, across every promoted market and every selection
+    rule on it. That is a choice made on the walk-forward's own out-of-sample
+    result, which is why the board reports it with a band next to it rather than
+    as a promise.
+
+    When no rule anywhere reaches 60%, this falls back to the BUSIEST rule on the
+    fastest market - busiest, not best, because with nothing to aim at the
+    remaining choice should not be made on its own outcome.
     """
     rows = [r for r in rec.get("rows", []) if r.get("rules")]
-    rows = [r for r in rows if r.get("days_to_pass")] or rows
     if not rows:
         return None, ""
+
+    goal = [(r, x) for r in rows for x in r["rules"] if x.get("days60")]
+    if goal:
+        row, rule = min(goal, key=lambda p: p[1]["days60"])
+        label = (f"{row.get('sym')} {row.get('tf')} (floor {rule['floor']} / "
+                 f"top {rule['topn']}, 60% pass in {rule['days60']:.1f} days "
+                 f"at {rule['risk60']:.2f}% risk)")
+        return rule, label
+
+    rows = [r for r in rows if r.get("days_to_pass")] or rows
     row = min(rows, key=lambda r: r.get("days_to_pass") or 1e9)
-    rules = row["rules"]
-    rule = max(rules, key=lambda x: x.get("trades") or 0)
-    label = f"{row.get('sym')} {row.get('tf')} (floor {rule['floor']} / top {rule['topn']})"
+    rule = max(row["rules"], key=lambda x: x.get("trades") or 0)
+    label = (f"{row.get('sym')} {row.get('tf')} (floor {rule['floor']} / "
+             f"top {rule['topn']} — no setting reaches 60% pass)")
     return rule, label
 
 
@@ -109,13 +150,17 @@ def for_record(rec: dict) -> dict | None:
         return None
     text = src.read_text()
 
-    rule, label = _headline_rule(rec)
-    folds = (rule or {}).get("folds") or []
-    fields = FIELDS.get(sid, {})
-    params: dict[str, str] = {}
-    for token, (key, kind, default) in fields.items():
-        v = _modal(folds, key)
-        params[token] = _fmt(kind, v) if v is not None else _fmt(kind, default)
+    pin = PINNED.get(sid)
+    if pin:
+        params = dict(pin["params"])
+        label, folds = pin["label"], []
+    else:
+        rule, label = _headline_rule(rec)
+        folds = (rule or {}).get("folds") or []
+        params = {}
+        for token, (key, kind, default) in FIELDS.get(sid, {}).items():
+            v = _modal(folds, key)
+            params[token] = _fmt(kind, v) if v is not None else _fmt(kind, default)
     params["MARKET"] = label or (rec.get("universe") and "the promoted market") or ""
 
     for token, value in params.items():
@@ -129,5 +174,6 @@ def for_record(rec: dict) -> dict | None:
         "params": {k: v for k, v in params.items() if k != "MARKET"},
         "source": str(src.relative_to(ROOT)),
         "defaults_from": label,
+        "pinned": bool(pin),
         "n_folds": len(folds),
     }
