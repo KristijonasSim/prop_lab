@@ -34,6 +34,34 @@ Kristijonas is the trader and the only judge. Claude researches, proposes, codes
 - Flag weaknesses unprompted: small samples, IS/OOS gaps, overfitting risk, lookahead.
 - Log every variation tested, pass or fail. The failures are the denominator.
 
+## THE ONE THING — set by Kris 2026-09-09
+
+**H-027 (VWAP band breakout) is the project's single focus from here.** No
+hypothesis-hopping. His words: *"i don't want to jump from hypothesis to
+hypothesis, i want to work on one thing for a long time and make perfection, and
+then post it on TradingView, gather community, also use this indicator myself."*
+
+That sets three deliverables, in this order:
+
+1. **A rule he trades himself.** Measured the way everything here is measured -
+   blind walk-forward, paired null, costs at 1x/2x/3x, expected days with its
+   noise band.
+2. **A published TradingView indicator** (`strategies/vwapbreak/indicator.pine`)
+   good enough to put his name on. Signals only - no orders, no equity curve.
+3. **A community around it**, which means the description and the honesty of the
+   claims matter as much as the numbers.
+
+**What this changes about how to work.** A new hypothesis is now OUT OF SCOPE
+unless Kris asks. Work goes into H-027's own axes - and the entry axis is close
+to exhausted (thresholds, sessions, 25 filters, relative volume, fresh-cross all
+tested), while **the exit axis is barely touched**: today it is a fixed sigma
+stop plus a fixed bar horizon, and no trailing stop, partial exit or VWAP-recross
+exit has ever been run on it.
+
+**What has NOT changed:** the noise floor still governs. An "improvement" whose
+band overlaps the baseline's is not an improvement, and a published indicator
+built on one is worse than no indicator at all.
+
 ## Current phase constraint
 
 **PACE TARGET, set by Kris 2026-09-07: evaluations that resolve in 5-14 days.**
