@@ -162,9 +162,9 @@ $('built').textContent = D.built
 
 const F = D.firm || {};
 $('firm').textContent =
-  `Scored against ${F.name || 'the firm'} — ${(F.target*100||0).toFixed(0)}% target, `
-  + `${(F.daily*100||0).toFixed(0)}% daily drawdown, ${(F.maxloss*100||0).toFixed(0)}% max drawdown, one step. `
-  + `Target: resolve in 5–14 days.`;
+  `${F.name || 'the firm'} · make ${(F.target*100||0).toFixed(0)}% · `
+  + `lose ${(F.daily*100||0).toFixed(0)}% in a day or `
+  + `${(F.maxloss*100||0).toFixed(0)}% total and you are out · goal: pass in 5–14 days`;
 
 // THE NOISE FLOOR AND THE BANDS.
 //
@@ -179,11 +179,10 @@ $('firm').textContent =
 // and are not claimed to differ.
 const NF = D.noise_floor || {};
 $('floor').innerHTML = NF.days
-  ? `<b>Noise floor ${NF.days[0]}\u2013${NF.days[1]} expected days</b> \u2014 ${esc(NF.note||'')}.
-     A headline inside that range has not been shown to differ from a gate that knows
-     nothing. Small type under each number is its own 10\u201390% band; rows sharing a
-     <span class="tier">T1</span>-style tier could not be told apart and are NOT ranked
-     against each other.`
+  ? `<b>Luck zone: ${NF.days[0]}\u2013${NF.days[1]} days.</b>
+     A strategy that knows nothing scored in here, so anything in this range may be luck.
+     <br>Small grey numbers = the range a figure could really be.
+     Same <span class="tier">T1</span> tier = too close to call.`
   : '';
 
 function bandTxt(b, f){
@@ -218,7 +217,7 @@ const COLS = [
   {h:'Market',   f:r => r.sym
       ? `<span class="mkt" title="${esc(r.rule ? 'selection rule: ' + r.rule : '')}">${esc(r.sym)} ${esc(r.tf || '')}</span>`
       : `<span class="dim">${esc(r.note || 'none resolved')}</span>`},
-  {h:'Days', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
+  {h:'Days to pass', f:r => r.days_to_pass == null ? '<span class="dim">—</span>'
       : `<b class="${daysClass(r.days_to_pass)}"
            title="${inFloor(r.days_to_pass) ? 'inside the measured noise floor' : ''}"
            >${Number(r.days_to_pass).toFixed(1)}</b>${inFloor(r.days_to_pass) ? '<span class="pill">noise floor</span>' : ''}
@@ -230,13 +229,13 @@ const COLS = [
   // which answers a different question (the fastest whose drawdown fits the cap).
   // These scan the whole stored ladder for the fastest level that actually
   // reaches 60% pass.
-  {h:'60% in',   f:r => { const b = fastest60(r);
+  {h:'60% pass in',   f:r => { const b = fastest60(r);
       return b == null ? '<span class="dim">never</span>'
         : `<b class="${b.days_to_pass <= 14 ? 'good' : (b.days_to_pass <= 30 ? 'warn' : 'fail')}"
              title="${b.pass_pct}% pass at ${b.risk_pct}% risk, curve DD ${b.max_dd_pct}%, blown ${(b.fail_max_pct+b.fail_daily_pct).toFixed(1)}%"
              >${Number(b.days_to_pass).toFixed(1)}</b>
            ${bandTxt(b.band, 'days')}`; }},
-  {h:'@ risk',   f:r => { const b = fastest60(r);
+  {h:'at risk',   f:r => { const b = fastest60(r);
       return b == null ? '<span class="dim">—</span>'
         : `<span class="mono dim">${b.risk_pct.toFixed(2)}%</span>`; }},
   // What happened to the accounts. These three plus 'never resolved' sum to
@@ -249,26 +248,26 @@ const COLS = [
                  return `<span class="${b > 20 ? 'fail' : (b > 5 ? 'warn' : '')}"
                    title="max-DD ${n(r.fail_max_pct,1)}% + daily ${n(r.fail_daily_pct,1)}%"
                    >${b.toFixed(1)}</span>`; })()},
-  {h:'Stalled %', f:r => { const v = stalled(r);
+  {h:'Never finished %', f:r => { const v = stalled(r);
       return v == null ? '<span class="dim">—</span>'
         : `<span class="${v > 50 ? 'fail' : (v > 25 ? 'warn' : '')}"
             title="never reached the 6% target inside 400 days">${n(v,1)}</span>`; }},
-  {h:'Curve DD %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
+  {h:'Curve drop %', f:r => r.max_dd_pct == null ? '<span class="dim">—</span>'
       : `<span class="dim" title="peak-to-trough of the strategy's whole 3-year equity curve at this risk. NOT one account's drawdown - an account lives weeks, not years, and never meets the whole curve. The blown % column is the account-level number.">${n(r.max_dd_pct,2)}</span>`},
-  {h:'PF',       f:r => r.pf == null ? '<span class="dim">—</span>'
+  {h:'Profit factor',       f:r => r.pf == null ? '<span class="dim">—</span>'
       : `<span class="${r.pf >= 1.2 ? 'good' : (r.pf >= 1 ? '' : 'fail')}">${n(r.pf,3)}</span>`},
-  {h:'PF 2×', f:r => n(r.pf_2x, 3)},
-  {h:'CAGR %',   f:r => r.cagr_pct == null ? '<span class="dim">—</span>'
+  {h:'PF at 2x cost', f:r => n(r.pf_2x, 3)},
+  {h:'Growth %/yr',   f:r => r.cagr_pct == null ? '<span class="dim">—</span>'
       : `<span class="${r.cagr_pct > 0 ? 'good':'fail'}">${n(r.cagr_pct,1)}</span>`},
   {h:'Win %',    f:r => n(r.win_pct, 1)},
   {h:'Avg R',    f:r => n(r.avg_r, 3)},
-  {h:'Tr/day', f:r => n(r.trades_per_day, 2)},
+  {h:'Trades/day', f:r => n(r.trades_per_day, 2)},
   {h:'Trades',   f:r => r.trades == null ? '<span class="dim">—</span>' : r.trades},
-  {h:'Risk %',   f:r => riskCell(r)},
+  {h:'Risk/trade',   f:r => riskCell(r)},
   {h:'Sharpe',   f:r => n(r.sharpe, 2)},
   {h:'Cost', f:r => r.cost_rt_bps == null ? '<span class="dim">—</span>'
       : `${n(r.cost_rt_bps,2)}${r.cost_measured ? '' : '<span class="pill">assumed</span>'}`},
-  {h:'vs null', f:r => r.beats_null === undefined ? '<span class="dim">—</span>'
+  {h:'Beats noise', f:r => r.beats_null === undefined ? '<span class="dim">—</span>'
       : (r.beats_null ? '<span class="good">yes</span>'
                       : '<span class="fail">no</span>')},
 ];
@@ -402,11 +401,9 @@ function wireRiskCells(h){
       paint(h);
     }));
   $('risknote').innerHTML =
-    'Change <b>risk per trade</b> in any row\u2019s Risk column \u2014 it affects '
-    + '<b>that row only</b>. \u2713 is the level the ladder chose: the fastest one '
-    + 'whose drawdown still fits inside the firm\u2019s 6% cap. Profit factor, win '
-    + 'rate, average R, trades/day and Sharpe do not move with risk \u2014 only '
-    + 'pass rate, drawdown, days and CAGR do. A red drawdown breaches the cap.';
+    'Set <b>risk per trade</b> in the Risk column \u2014 that row only. '
+    + 'Bigger risk = fewer days, more blown accounts. '
+    + '<span class="dim">\u2713 = the size the board picked. Red drawdown = over the limit.</span>';
 }
 
 // A half-filled table is the normal state of a twenty-cell run, and it looked
@@ -451,9 +448,8 @@ function pineBar(h){
   const ps = Object.entries(p.params || {}).map(([k, v]) => `${k.toLowerCase()} ${v}`).join(', ');
   return `<div class="pinebar">
       <button class="pinebtn" id="pinebtn" onclick="copyPine(this)">Copy Pine indicator</button>
-      <span class="dim" style="font-size:12px">Defaults are what the blind selector
-        chose most often across ${p.n_folds} folds on <b>${esc(p.defaults_from)}</b>${ps ? ' — ' + esc(ps) : ''}.
-        Signals only; it places no orders and prints no profit, on purpose.</span>
+      <span class="dim" style="font-size:12px">Paste into TradingView. Shows signals only.
+        Settings = what the test picked most often on <b>${esc(p.defaults_from)}</b>${ps ? ' (' + esc(ps) + ')' : ''}.</span>
     </div>
     <textarea class="pinesrc" id="pinesrc" readonly>${esc(p.text)}</textarea>
     <details><summary>Read the Pine source before pasting it</summary>
@@ -492,8 +488,9 @@ function studies(h){
     <p class="risknote" style="max-width:1100px">${s.note}
       <span class="dim mono" style="font-size:11px">${esc(s.source)}</span></p>
     <div class="scroll"><table><thead><tr>
-      <th>TF</th><th>Arm</th><th>Tr/day</th><th>Win %</th><th>Avg R</th><th>PF 2×</th>
-      <th>Exp. days</th><th>Pass %</th><th>Stalled %</th><th>60% in</th><th>vs null</th>
+      <th>TF</th><th>Version</th><th>Trades/day</th><th>Win %</th><th>Avg R</th>
+      <th>PF at 2x cost</th><th>Days to pass</th><th>Pass %</th>
+      <th>Never finished %</th><th>60% pass in</th><th>Beats noise</th>
     </tr></thead><tbody>
       ${s.rows.map(r => `<tr>
         <td class="mkt">${esc(r.tf)}</td>
@@ -534,14 +531,11 @@ function paint(h){
     ${studies(h)}
     ${ruleTable(h.rows || [])}
     ${considered(h.rows || [], h)}
-    <p class="foot">Best market in each class is promoted, chosen by <b>days to pass</b>
-      — the phase gate — not by profit factor. Every market also ran the identical
-      walk-forward on a phase-randomised copy of itself; <b>beats null</b> is that comparison.
-      <br><b>60% in</b> is the goal column: the fastest risk level anywhere on that row's
-      ladder that reaches at least 60% pass, with the level itself in the next column.
-      It is <i>not</i> the auto-picked risk, which answers a different question — the
-      fastest level whose drawdown fits the cap. Hover it for the pass rate and drawdown
-      you would be accepting.</p>
+    <p class="foot"><b>Days to pass</b> = days until you hold one funded account,
+      counting the accounts that blow up on the way.
+      <br><b>60% pass in</b> = the fastest setting where 6 accounts in 10 survive.
+      <br><b>Beats noise</b> = the same test on shuffled prices found less. Hover any
+      number for the detail.</p>
     ${notes(h)}`;
   wireRiskCells(_h);
 }

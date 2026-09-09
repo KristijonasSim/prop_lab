@@ -28,19 +28,15 @@ STUDIES: dict[str, list[dict]] = {
     "vwapbreak": [
         {"file": "exits.json", "title": "Exit study — how wide should the stop be?",
          "baseline": "baseline", "date": "2026-09-09",
-         "note": ("The shipped stop is 10.8bps median against a 21.4bps 1h bar "
-                  "range - half of one bar - and every trade held under fifty "
-                  "bars is a 100% loser. Identical entries, folds and costs; "
-                  "only the stop changes. <b>No speed claim: every band overlaps "
-                  "every other band.</b> What moves is the shape a person has to "
-                  "sit through, and the fastest route to 60% pass.")},
+         "note": ("Same entries, same costs. Only the stop changes.<br>"
+                  "<b>Today's stop is half of one bar wide</b>, so noise kills the "
+                  "trade. A wider stop wins more often but takes the same number "
+                  "of days.")},
         {"file": "quality.json", "title": "Fewer trades, better trades — does it help?",
          "baseline": "baseline", "date": "2026-09-09",
-         "note": ("Kris's question after seeing the indicator on a chart. Higher "
-                  "threshold (1.5-3.0 sigma) and one-trade-per-excursion, against "
-                  "the shipped grid. <b>No: every band overlaps, and the pass "
-                  "rate falls hard on the higher-bar arms.</b> The blind selector "
-                  "already declines a higher threshold when offered one.")},
+         "note": ("Trade less, trade better: a higher entry bar, and only one "
+                  "trade per move.<br><b>It does not help.</b> Same days, fewer "
+                  "accounts pass.")},
     ],
 }
 
