@@ -48,6 +48,9 @@ minRvol  = input.float({{MIN_RVOL}}, "Minimum relative volume on the signal bar 
 rvolLen  = input.int(480, "Relative-volume baseline, bars", minval=20, group="Filters")
 showStop = input.bool(true, "Draw the stop level while a hypothetical trade is open", group="Display")
 showBand = input.bool(true, "Draw the entry bands", group="Display")
+showLabels = input.bool(true, "BUY / SELL labels on the signal bar", group="Display")
+colorBars  = input.bool(true, "Colour the signal candle", group="Display")
+showEntry  = input.bool(true, "Mark the entry bar (the next bar's open)", group="Display")
 
 // ---- anchored VWAP and its volume-weighted sigma --------------------------
 // UTC day index straight off the bar's epoch, so the anchor does not move with
@@ -108,10 +111,33 @@ pUp = plot(showBand ? upper : na, "Upper band", color=color.new(color.teal, 30))
 pDn = plot(showBand ? lower : na, "Lower band", color=color.new(color.teal, 30))
 fill(pUp, pDn, color=color.new(color.teal, 94), title="Band")
 
-plotshape(longSig,  "Long signal",  style=shape.triangleup,   location=location.belowbar,
-     color=color.new(color.teal, 0), size=size.tiny)
-plotshape(shortSig, "Short signal", style=shape.triangledown, location=location.abovebar,
-     color=color.new(color.red, 0),  size=size.tiny)
+// ---- the signal, made obvious on the candle -------------------------------
+// Kris, 2026-09-09: the triangles were too small to see. Three layers now, each
+// switchable, because they answer different questions:
+//
+//   BUY / SELL label   where the rule fired, on the CLOSED bar
+//   coloured candle    the same bar, so it reads while scrolling without
+//                      hunting for a marker
+//   entry arrow        the NEXT bar, which is where the trade actually starts
+//
+// The signal bar and the fill bar are deliberately marked differently. Reading
+// one as the other is the single easiest way to make a rule look better than it
+// is - it is the bug class this repo has found three times - and a chart that
+// draws them identically invites exactly that mistake.
+plotshape(showLabels and longSig, title="BUY", style=shape.labelup,
+     location=location.belowbar, color=color.new(color.teal, 0),
+     textcolor=color.white, text="BUY", size=size.small)
+plotshape(showLabels and shortSig, title="SELL", style=shape.labeldown,
+     location=location.abovebar, color=color.new(color.red, 0),
+     textcolor=color.white, text="SELL", size=size.small)
+
+barcolor(colorBars and longSig ? color.new(color.teal, 0) :
+   colorBars and shortSig ? color.new(color.red, 0) : na, title="Signal candle")
+
+plotshape(showEntry and longSig[1], title="Entry bar, long", style=shape.triangleup,
+     location=location.belowbar, color=color.new(color.teal, 45), size=size.tiny)
+plotshape(showEntry and shortSig[1], title="Entry bar, short", style=shape.triangledown,
+     location=location.abovebar, color=color.new(color.red, 45), size=size.tiny)
 
 // ---- the hypothetical trade, so the horizon and stop are visible ----------
 // Entry is the NEXT bar's open, which is why nothing is drawn on the signal bar
