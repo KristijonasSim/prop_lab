@@ -52,6 +52,8 @@ showLabels = input.bool(true, "BUY / SELL labels on the signal bar", group="Disp
 colorBars  = input.bool(true, "Colour the signal candle", group="Display")
 showEntry  = input.bool(true, "Mark the entry bar (the next bar's open)", group="Display")
 showRaw    = input.bool(false, "Show every bar the condition is true (NOT the trade count)", group="Display")
+showExit   = input.bool(true, "Mark where the trade closes", group="Display")
+showStats  = input.bool(true, "Count the trades on this chart (top right)", group="Display")
 
 // ---- anchored VWAP and its volume-weighted sigma --------------------------
 // UTC day index straight off the bar's epoch, so the anchor does not move with
@@ -119,11 +121,45 @@ var int   posDir   = 0
 var float posStop  = na
 var int   posBars  = 0
 var float posEntry = na
+var float posRisk  = na
 
+// ---- what this rule actually does on THIS chart ---------------------------
+// KRIS, 2026-09-09: "are you sure it's 5 trades a day? May 8 to May 23 is
+// basically zero." He was right, and the two numbers were measuring different
+// things. The BOARD's 5.39 trades/day is the ten-configuration book - the
+// selection rule that trades the ten best configs at once. THIS chart is ONE
+// configuration, and one configuration takes 0.55 trades a day on gold 1h:
+// one every 1.8 days, with a p90 gap of 70 bars and a longest gap of 428.
+//
+// The gap he saw is the rule working: it is IN a position 75% of all bars, and
+// a winner that runs for a fortnight produces no new signals while it runs.
+//
+// So the counts belong on the chart rather than in a commit message. Every
+// number in this table is computed from the bars in front of you.
+var int   nTrades = 0
+var int   nWins   = 0
+var float sumR    = 0.0
+var int   barsIn  = 0
+var int   sumHold = 0
+
+closedLong  = false
+closedShort = false
 if posDir != 0
     posBars := posBars + 1
+    barsIn  := barsIn + 1
     hitStop = posDir == 1 ? low <= posStop : high >= posStop
     if hitStop or posBars >= holdBars
+        // the kernel's fill assumptions: a stop the bar GAPPED past fills at the
+        // open, not at the level, and a horizon exit fills at the close
+        exitPx = hitStop ? ((posDir == 1 and open < posStop) or
+           (posDir == -1 and open > posStop) ? open : posStop) : close
+        rMult = posRisk > 0 ? (exitPx - posEntry) * posDir / posRisk : 0.0
+        nTrades := nTrades + 1
+        nWins   := nWins + (rMult > 0 ? 1 : 0)
+        sumR    := sumR + rMult
+        sumHold := sumHold + posBars
+        closedLong  := posDir == 1
+        closedShort := posDir == -1
         posDir  := 0
         posStop := na
         posBars := 0
@@ -137,12 +173,13 @@ if posDir == 0 and (longSig[1] or shortSig[1])
         posEntry := entryPx
         posStop  := side == 1 ? entryPx - risk : entryPx + risk
         posBars  := 0
+        posRisk  := risk
 
 plot(showStop and posDir != 0 ? posStop : na, "Stop level", color=color.new(color.red, 20),
      style=plot.style_linebr, linewidth=1)
 plot(showStop and posDir != 0 ? posEntry : na, "Entry", color=color.new(color.gray, 40),
      style=plot.style_linebr, linewidth=1)
-bgcolor(posDir == 1 ? color.new(color.teal, 93) : posDir == -1 ? color.new(color.red, 93) : na,
+bgcolor(posDir == 1 ? color.new(color.teal, 85) : posDir == -1 ? color.new(color.red, 85) : na,
      title="In a hypothetical position")
 
 // ---- what actually gets traded -------------------------------------------
@@ -186,5 +223,44 @@ plotshape(showRaw and shortSig and not tradeShort, title="Condition true, no tra
      style=shape.circle, location=location.abovebar,
      color=color.new(color.red, 70), size=size.tiny)
 
-alertcondition(longSig,  "H-027 long signal",  "H-027: close is {{THR}}+ sigma above the anchored VWAP")
-alertcondition(shortSig, "H-027 short signal", "H-027: close is {{THR}}+ sigma below the anchored VWAP")
+// ---- exit marks, so a quiet stretch explains itself ------------------------
+plotshape(showExit and closedLong, title="Exit, long", style=shape.xcross,
+     location=location.abovebar, color=color.new(color.teal, 20), size=size.tiny)
+plotshape(showExit and closedShort, title="Exit, short", style=shape.xcross,
+     location=location.belowbar, color=color.new(color.red, 20), size=size.tiny)
+
+var table stats = table.new(position.top_right, 2, 7, border_width=1,
+     frame_width=1, frame_color=color.new(color.gray, 60))
+// The first bar's timestamp is carried forward rather than read back with
+// `time[bar_index]`: a history reference that deep makes Pine guess a
+// max_bars_back and it is the usual cause of "cannot determine referencing
+// length" on a long chart.
+var float firstTime = na
+if na(firstTime)
+    firstTime := time
+
+if showStats and barstate.islast
+    spanDays = math.max((time - firstTime) / 86400000.0, 1.0)
+    bg = color.new(color.black, 20)
+    table.cell(stats, 0, 0, "H-027 on this chart", text_color=color.white,
+         bgcolor=color.new(color.blue, 40), text_size=size.small)
+    table.cell(stats, 1, 0, "", bgcolor=color.new(color.blue, 40))
+    table.cell(stats, 0, 1, "trades", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 1, str.tostring(nTrades), text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 2, "per day", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 2, str.tostring(nTrades * 1.0 / spanDays, "#.##"), text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 3, "win rate", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 3, nTrades > 0 ? str.tostring(nWins * 100.0 / nTrades, "#.#") + "%" : "—",
+         text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 4, "avg R", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 4, nTrades > 0 ? str.tostring(sumR / nTrades * 1.0, "+#.###") : "—",
+         text_color=sumR > 0 ? color.teal : color.red, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 5, "avg hold, bars", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 5, nTrades > 0 ? str.tostring(sumHold * 1.0 / nTrades, "#.#") : "—",
+         text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 6, "bars in a position", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 6, str.tostring(barsIn * 100.0 / (bar_index + 1), "#.#") + "%",
+         text_color=color.white, bgcolor=bg, text_size=size.small)
+
+alertcondition(tradeLong,  "H-027 long signal",  "H-027: close is {{THR}}+ sigma above the anchored VWAP")
+alertcondition(tradeShort, "H-027 short signal", "H-027: close is {{THR}}+ sigma below the anchored VWAP")
