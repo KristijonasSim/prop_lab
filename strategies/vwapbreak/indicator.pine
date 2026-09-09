@@ -73,9 +73,9 @@ if newSess
     pv  := 0.0
     vv  := 0.0
     p2v := 0.0
-pv  += tp * v
-vv  += v
-p2v += tp * tp * v
+pv  := pv + tp * v
+vv  := vv + v
+p2v := p2v + tp * tp * v
 
 vwap  = vv > 0 ? pv / vv : na
 varr  = vv > 0 ? p2v / vv - vwap * vwap : na
@@ -122,7 +122,7 @@ var int   posBars  = 0
 var float posEntry = na
 
 if posDir != 0
-    posBars += 1
+    posBars := posBars + 1
     hitStop = posDir == 1 ? low <= posStop : high >= posStop
     if hitStop or posBars >= holdBars
         posDir  := 0
@@ -130,13 +130,13 @@ if posDir != 0
         posBars := 0
 
 if posDir == 0 and (longSig[1] or shortSig[1])
-    dir   = longSig[1] ? 1 : -1
+    side  = longSig[1] ? 1 : -1
     risk  = stopSig * nz(sigma[1])
-    entry = open
+    entryPx = open
     if risk > 0
-        posDir   := dir
-        posEntry := entry
-        posStop  := dir == 1 ? entry - risk : entry + risk
+        posDir   := side
+        posEntry := entryPx
+        posStop  := side == 1 ? entryPx - risk : entryPx + risk
         posBars  := 0
 
 plot(showStop and posDir != 0 ? posStop : na, "Stop level", color=color.new(color.red, 20),
