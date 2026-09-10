@@ -39,3 +39,5 @@ live/paper/vwapbreak_signals.jsonl
 .env*
 live/*_keys.json
 live/paper/bybit_state.json
+live/paper/bybit_cron.log
+live/paper/.bybit_cron.lock
