@@ -40,6 +40,8 @@ from __future__ import annotations
 
 import lzma
 import struct
+import time
+import random
 import sys
 import urllib.error
 import urllib.request
@@ -81,8 +83,10 @@ def _fetch(sym: str, t: datetime, retries: int = 4) -> bytes | None:
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None                  # weekend or holiday
+            # 429/503: retrying with no delay is what gets the client blocked
+            time.sleep(1.5 * (2 ** _) + random.random())
         except Exception:
-            continue
+            time.sleep(1.5 * (2 ** _) + random.random())
     return None
 
 

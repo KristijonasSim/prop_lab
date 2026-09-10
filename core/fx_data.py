@@ -31,6 +31,7 @@ import lzma
 import struct
 import time
 import urllib.error
+import random
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
@@ -44,10 +45,18 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 # files carry the spread too, but there are 24x as many of them and this network
 # path is slow enough that the tick route would take hours.
 URL = "https://datafeed.dukascopy.com/datafeed/{sym}/{y:04d}/{m:02d}/{d:02d}/BID_candles_min_1.bi5"
+# 2026-09-10: Dukascopy began returning 503 for the previous User-Agent (a
+# truncated Chrome/120 string) and for the Referer that went with it, and 429
+# for an unthrottled client. Every download path in the repo was dead. A current
+# full Chrome UA with no Referer is accepted; see _fetch for the backoff that
+# has to go with it.
 UA = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+    "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) "
+                   "Chrome/126.0.0.0 Safari/537.36"),
     "Accept": "*/*",
-    "Referer": "https://www.dukascopy.com/",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Connection": "close",
 }
 
 # price integers are scaled by 10**digits
@@ -85,6 +94,12 @@ CANDLE = struct.Struct(">Iiiiif")       # sec-from-midnight, O, C, L, H as ints 
 RAW_DIR = DATA_DIR / "dukascopy_raw"
 
 
+def _backoff(i: int) -> float:
+    """Exponential with jitter. Linear 0.5*(i+1) was not enough: Dukascopy
+    rate-limits hard and a client that retries fast simply stays blocked."""
+    return 1.5 * (2 ** i) + random.random()
+
+
 def _fetch(sym: str, ts: datetime, retries: int = 6) -> bytes | None:
     """Fetch one day, caching the compressed bytes. The decode format took two
     attempts to get right; caching means the second attempt was free."""
@@ -103,9 +118,9 @@ def _fetch(sym: str, ts: datetime, retries: int = 6) -> bytes | None:
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return b""          # no session that day (weekend, holiday)
-            time.sleep(0.5 * (i + 1))
+            time.sleep(_backoff(i))
         except Exception:
-            time.sleep(0.5 * (i + 1))
+            time.sleep(_backoff(i))
     return None                      # give up; caller records the gap
 
 
