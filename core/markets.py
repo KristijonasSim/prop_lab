@@ -123,6 +123,21 @@ COSTS: dict[str, Cost] = {
                     "futures maker/taker; spread ASSUMED; fills UNMEASURED"),
     "BNBUSDT": Cost(2.0, 5.0, 3.0, 12.0, False, "spread ASSUMED"),
     "XRPUSDT": Cost(2.0, 5.0, 3.0, 12.0, False, "spread ASSUMED"),
+    # ADDED 2026-09-10 for the H-027 cross-market diagnosis. Kris asked for a
+    # 6-7 market basket and these six were already cached and never tested; the
+    # index CFDs matter most, because a follow-the-break rule wants a market
+    # that trends and this repo has never run one on an index.
+    #
+    # EVERY NUMBER HERE IS ASSUMED and deliberately PESSIMISTIC: 1.5bps of
+    # half-spread on an index whose real Dukascopy spread is nearer 0.5-1.0, and
+    # FX half-spreads set at the top of the range measured on EUR/GBP. A cell
+    # that clears at these costs would clear at real ones; a cell that fails at
+    # these might not. Measure before trading any of them.
+    "NAS100": Cost(0.15, 0.15, 1.50, 3.0, False, "ASSUMED - index CFD, pessimistic"),
+    "SPX500": Cost(0.15, 0.15, 1.50, 3.0, False, "ASSUMED - index CFD, pessimistic"),
+    "US30":   Cost(0.15, 0.15, 1.50, 3.0, False, "ASSUMED - index CFD, pessimistic"),
+    "USDCHF": Cost(0.05, 0.05, 0.60, 1.5, False, "ASSUMED - spread never measured"),
+    "NZDUSD": Cost(0.05, 0.05, 0.70, 1.5, False, "ASSUMED - spread never measured"),
 }
 
 #: How trades are assumed to execute. `mixed` = limit entry, market exit.
@@ -136,7 +151,8 @@ ASSET_CLASS = {
     "XAUUSD": "Metals/Energy", "XAGUSD": "Metals/Energy",
     "WTI": "Metals/Energy", "BRENT": "Metals/Energy",
     "EURUSD": "FX", "GBPUSD": "FX", "USDJPY": "FX",
-    "AUDUSD": "FX", "USDCAD": "FX",
+    "AUDUSD": "FX", "USDCAD": "FX", "USDCHF": "FX", "NZDUSD": "FX",
+    "NAS100": "Indices", "SPX500": "Indices", "US30": "Indices",
     **{c: "Crypto" for c in CRYPTO},
 }
 

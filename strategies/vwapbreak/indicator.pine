@@ -33,11 +33,33 @@
 // not draw at all; and the backtest charges a measured spread on both sides
 // while nothing here is charged anything.
 //
+// TWO SIGNALS, TWO COLOURS. Adopted 2026-09-10 after the whole entry axis was
+// measured out:
+//
+//   TEAL / RED      the VWAP band break, five settings. The core rule.
+//   BLUE / PURPLE   the ASIAN RANGE break - the 00:00-07:00 UTC high and low as
+//                   a level, traded during the European and US day. Same kernel
+//                   and the same stop shape; only the band it measures from
+//                   changes.
+//
+// WHY BOTH. Their daily returns correlate 0.114 - two different trades on one
+// instrument. The Asian range is SLOWER than the VWAP break (22.4 expected days
+// against 20.0 over eleven years) and it is the more robust of the two: 71.4% of
+// accounts pass against 60.0%, its worst quarter concentration is 30% against
+// 48%, and its biggest single day is 23% of profit against 36%. Together they
+// take blown accounts from 37.8% to 22.6%.
+//
+// WHAT WAS TESTED AND IS NOT HERE, so nobody re-proposes it: fixed targets 1R to
+// 12R, a partial exit at 2R, trailing stops, the VWAP recross, eight anchor
+// definitions, volume profile and point of control, twenty-five entry filters,
+// six session windows, fibonacci zones, and sub-hour timeframes. All measured,
+// all flat or worse.
+//
 // THE SETTINGS EXPIRE. They were ranked on the twelve months to {{TRAINED_TO}}
 // and are traded unchanged for one quarter. Re-rank on {{REFRESH_ON}}.
 
 //@version=5
-indicator("H-027 VWAP band breakout — 5-setting book", shorttitle="H-027 x5",
+indicator("H-027 VWAP band breakout + Asian range", shorttitle="H-027",
      overlay=true, max_bars_back=1000)
 
 // ---- the five settings ----------------------------------------------------
@@ -87,6 +109,16 @@ lo5  = input.int({{HLO5}}, "UTC from", inline="c", group=grp5)
 hi5  = input.int({{HHI5}}, "to (equal = all day)", inline="c", group=grp5)
 rv5  = input.float({{RVOL5}}, "min rel. volume", inline="d", group=grp5)
 
+// ---- the second signal: the Asian range -----------------------------------
+grpA = "Asian range (second signal)"
+onA_   = input.bool(true, "on", inline="a", group=grpA)
+thrA_  = input.float({{ASIA_THR}}, "threshold (half-ranges)", inline="a", group=grpA)
+stA_   = input.float({{ASIA_STOP}}, "stop (half-ranges)", inline="b", group=grpA)
+hdA_   = input.int({{ASIA_HOLD}}, "hold bars", inline="b", group=grpA)
+aFrom  = input.int({{ASIA_FROM}}, "range from UTC", inline="c", group=grpA)
+aTo    = input.int({{ASIA_TO}}, "to UTC", inline="c", group=grpA)
+showRange = input.bool(true, "Draw the overnight range", group=grpA)
+
 // ---- display --------------------------------------------------------------
 gD = "Display"
 showLabels = input.bool(true, "BUY / SELL labels", group=gD)
@@ -131,6 +163,31 @@ hh       = hour(time, "UTC")
 rvolBase = ta.sma(vRaw, rvolLen)[1]   // shifted: never judge a bar on its own volume
 rvol     = rvolBase > 0 ? vRaw / rvolBase : 0.0
 
+// The overnight range grows through the window and is FIXED once the window
+// closes - the same thing the kernel does, and the reason it is causal: no bar
+// before {{ASIA_TO}}:00 can trade on a range that is still being built.
+var float aHi = na
+var float aLo = na
+var float aHiLive = na
+var float aLoLive = na
+if newSess
+    aHiLive := na
+    aLoLive := na
+    aHi := na
+    aLo := na
+inWindow = hh >= aFrom and hh < aTo
+if inWindow
+    aHiLive := na(aHiLive) ? high : math.max(aHiLive, high)
+    aLoLive := na(aLoLive) ? low : math.min(aLoLive, low)
+else
+    aHi := aHiLive
+    aLo := aLoLive
+
+aMid  = (na(aHi) or na(aLo)) ? na : (aHi + aLo) / 2.0
+aHalf = (na(aHi) or na(aLo)) ? na : (aHi - aLo) / 2.0
+aOk   = not na(aHalf) and aHalf > math.abs(nz(aMid)) * 1e-6
+zA    = aOk ? (close - aMid) / aHalf : na
+
 // ---- per-setting state ----------------------------------------------------
 var pDir  = array.new_int(5, 0)
 var pStop = array.new_float(5, na)
@@ -160,6 +217,20 @@ nEnterS = 0
 nExit   = 0
 nSigL   = 0
 nSigS   = 0
+
+// the Asian-range leg keeps its own single position and its own counters
+var int   aDir   = 0
+var float aStop  = na
+var float aEnt   = na
+var float aRisk  = na
+var int   aBars  = 0
+var int   aPend  = 0
+var int   aTrades = 0
+var int   aWins   = 0
+var float aSumR   = 0.0
+aSigL = false
+aSigS = false
+aExit = false
 
 for i = 0 to 4
     if array.get(onA, i)
@@ -221,7 +292,41 @@ for i = 0 to 4
         else if array.get(pDir, i) == -1
             nOpenS := nOpenS + 1
 
-if nOpenL + nOpenS > 0
+// ---- the Asian-range leg, same shape as one VWAP setting ------------------
+if onA_
+    if aDir != 0
+        aBars := aBars + 1
+        hitA = aDir == 1 ? low <= aStop : high >= aStop
+        outA = aBars >= hdA_
+        if hitA or outA
+            gappedA = (aDir == 1 and open < aStop) or (aDir == -1 and open > aStop)
+            pxA = hitA ? (gappedA ? open : aStop) : close
+            rA = aRisk > 0 ? (pxA - aEnt) * aDir / aRisk : 0.0
+            aTrades := aTrades + 1
+            aWins   := aWins + (rA > 0 ? 1 : 0)
+            aSumR   := aSumR + rA
+            aDir  := 0
+            aStop := na
+            aBars := 0
+            aExit := true
+    if aDir == 0 and aPend != 0
+        riskA = stA_ * nz(aHalf[1])
+        if riskA > 0
+            aDir  := aPend
+            aEnt  := open
+            aRisk := riskA
+            aStop := aPend == 1 ? open - riskA : open + riskA
+            aBars := 0
+    aPend := 0
+    if aDir == 0 and aOk
+        if zA >= thrA_
+            aPend := 1
+            aSigL := true
+        else if zA <= -thrA_
+            aPend := -1
+            aSigS := true
+
+if nOpenL + nOpenS > 0 or aDir != 0
     barsIn := barsIn + 1
 
 // ---- drawing --------------------------------------------------------------
@@ -248,6 +353,24 @@ plotshape(showEntry and nEnterS > 0, title="Entry, short", style=shape.triangled
 plotshape(showExit and nExit > 0, title="Exit", style=shape.xcross,
      location=location.abovebar, color=color.new(color.gray, 20), size=size.tiny)
 
+// ---- the Asian range, in its own colours ----------------------------------
+// Blue and purple, deliberately nothing like the teal/red of the VWAP break, so
+// a glance at the chart says WHICH rule fired.
+plot(showRange and not na(aHi) ? aHi : na, "Asian high",
+     color=color.new(color.blue, 35), style=plot.style_linebr, linewidth=1)
+plot(showRange and not na(aLo) ? aLo : na, "Asian low",
+     color=color.new(color.blue, 35), style=plot.style_linebr, linewidth=1)
+plotshape(showLabels and aSigL, title="ASIA BUY", style=shape.labelup,
+     location=location.belowbar, color=color.new(color.blue, 0),
+     textcolor=color.white, text="A-BUY", size=size.small)
+plotshape(showLabels and aSigS, title="ASIA SELL", style=shape.labeldown,
+     location=location.abovebar, color=color.new(color.purple, 0),
+     textcolor=color.white, text="A-SELL", size=size.small)
+plot(showStops and aDir != 0 ? aStop : na, "Asian stop",
+     color=color.new(color.blue, 30), style=plot.style_linebr)
+plotshape(showExit and aExit, title="Asian exit", style=shape.xcross,
+     location=location.belowbar, color=color.new(color.blue, 20), size=size.tiny)
+
 plot(showStops and array.get(pDir, 0) != 0 ? array.get(pStop, 0) : na, "Stop 1",
      color=color.new(color.red, 30), style=plot.style_linebr)
 plot(showStops and array.get(pDir, 1) != 0 ? array.get(pStop, 1) : na, "Stop 2",
@@ -267,7 +390,7 @@ var float firstTime = na
 if na(firstTime)
     firstTime := time
 
-var table stats = table.new(position.top_right, 2, 8, border_width=1,
+var table stats = table.new(position.top_right, 2, 10, border_width=1,
      frame_width=1, frame_color=color.new(color.gray, 60))
 if showStats and barstate.islast
     spanDays = math.max((time - firstTime) / 86400000.0, 1.0)
@@ -289,7 +412,13 @@ if showStats and barstate.islast
     table.cell(stats, 1, 6, str.tostring(nOpenL) + " long / " + str.tostring(nOpenS) + " short", text_color=color.white, bgcolor=bg, text_size=size.small)
     table.cell(stats, 0, 7, "risk each", text_color=color.silver, bgcolor=bg, text_size=size.small)
     table.cell(stats, 1, 7, "{{RISK_EACH}}% of {{RISK_TOTAL}}%", text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 8, "asian trades", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 8, str.tostring(aTrades), text_color=color.new(color.blue, 0), bgcolor=bg, text_size=size.small)
+    table.cell(stats, 0, 9, "asian win / avg R", text_color=color.silver, bgcolor=bg, text_size=size.small)
+    table.cell(stats, 1, 9, aTrades > 0 ? str.tostring(aWins * 100.0 / aTrades, "#.#") + "% / " + str.tostring(aSumR / aTrades, "+#.##") : "—", text_color=color.white, bgcolor=bg, text_size=size.small)
 
-alertcondition(sigL, "H-027 long signal", "H-027: a setting went long")
-alertcondition(sigS, "H-027 short signal", "H-027: a setting went short")
-alertcondition(sigL or sigS, "H-027 any signal", "H-027: new signal")
+alertcondition(sigL, "H-027 VWAP long", "H-027: VWAP band break long")
+alertcondition(sigS, "H-027 VWAP short", "H-027: VWAP band break short")
+alertcondition(aSigL, "H-027 Asian long", "H-027: Asian range break long")
+alertcondition(aSigS, "H-027 Asian short", "H-027: Asian range break short")
+alertcondition(sigL or sigS or aSigL or aSigS, "H-027 any signal", "H-027: new signal")

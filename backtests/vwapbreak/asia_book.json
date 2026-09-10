@@ -1,0 +1,205 @@
+{
+ "corr": {
+  "vwap 1h": {
+   "vwap 1h": 1.0,
+   "asia 1h": 0.114,
+   "vwap 4h": 0.072,
+   "asia 4h": 0.1918
+  },
+  "asia 1h": {
+   "vwap 1h": 0.114,
+   "asia 1h": 1.0,
+   "vwap 4h": 0.3891,
+   "asia 4h": 0.6796
+  },
+  "vwap 4h": {
+   "vwap 1h": 0.072,
+   "asia 1h": 0.3891,
+   "vwap 4h": 1.0,
+   "asia 4h": 0.2425
+  },
+  "asia 4h": {
+   "vwap 1h": 0.1918,
+   "asia 1h": 0.6796,
+   "vwap 4h": 0.2425,
+   "asia 4h": 1.0
+  }
+ },
+ "rows": [
+  {
+   "tag": "vwap 1h alone",
+   "risk_pct": 3.0,
+   "pass_pct": 59.5,
+   "blown_pct": 37.8,
+   "days": 11.8,
+   "band": {
+    "days_lo": 9.3,
+    "days_hi": 14.0,
+    "days_med": 11.3,
+    "pass_lo": 46.0,
+    "pass_hi": 68.2,
+    "pass_med": 56.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 16,
+   "windows_payable": 0,
+   "best_day_share_net": 0.421,
+   "total_r": 188.4,
+   "best_q_share": 0.567,
+   "without_best_q": 81.6,
+   "pos_q": "6/8"
+  },
+  {
+   "tag": "asia 1h alone",
+   "risk_pct": 3.0,
+   "pass_pct": 75.2,
+   "blown_pct": 18.5,
+   "days": 18.6,
+   "band": {
+    "days_lo": 15.2,
+    "days_hi": 25.6,
+    "days_med": 19.8,
+    "pass_lo": 60.0,
+    "pass_hi": 84.0,
+    "pass_med": 72.0,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 9,
+   "windows_payable": 0,
+   "best_day_share_net": 0.347,
+   "total_r": 28.1,
+   "best_q_share": 0.572,
+   "without_best_q": 12.0,
+   "pos_q": "6/8"
+  },
+  {
+   "tag": "asia 4h alone",
+   "risk_pct": 3.0,
+   "pass_pct": 76.8,
+   "blown_pct": 20.2,
+   "days": 19.5,
+   "band": {
+    "days_lo": 15.5,
+    "days_hi": 26.8,
+    "days_med": 20.7,
+    "pass_lo": 56.8,
+    "pass_hi": 82.6,
+    "pass_med": 70.9,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 15,
+   "windows_payable": 0,
+   "best_day_share_net": 0.188,
+   "total_r": 39.5,
+   "best_q_share": 0.445,
+   "without_best_q": 21.9,
+   "pos_q": "5/8"
+  },
+  {
+   "tag": "vwap 1h + asia 1h",
+   "risk_pct": 3.0,
+   "pass_pct": 66.9,
+   "blown_pct": 28.9,
+   "days": 13.5,
+   "band": {
+    "days_lo": 10.3,
+    "days_hi": 17.0,
+    "days_med": 12.7,
+    "pass_lo": 53.6,
+    "pass_hi": 78.2,
+    "pass_med": 67.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 19,
+   "windows_payable": 0,
+   "best_day_share_net": 0.366,
+   "total_r": 108.2,
+   "best_q_share": 0.522,
+   "without_best_q": 51.7,
+   "pos_q": "6/8"
+  },
+  {
+   "tag": "vwap 1h + asia 4h",
+   "risk_pct": 3.0,
+   "pass_pct": 68.3,
+   "blown_pct": 27.5,
+   "days": 14.6,
+   "band": {
+    "days_lo": 11.6,
+    "days_hi": 19.5,
+    "days_med": 14.3,
+    "pass_lo": 52.3,
+    "pass_hi": 76.1,
+    "pass_med": 65.9,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 22,
+   "windows_payable": 0,
+   "best_day_share_net": 0.348,
+   "total_r": 113.9,
+   "best_q_share": 0.532,
+   "without_best_q": 53.3,
+   "pos_q": "5/8"
+  },
+  {
+   "tag": "vwap 1h + asia 1h + asia 4h",
+   "risk_pct": 3.0,
+   "pass_pct": 73.6,
+   "blown_pct": 22.6,
+   "days": 14.9,
+   "band": {
+    "days_lo": 10.9,
+    "days_hi": 18.6,
+    "days_med": 13.8,
+    "pass_lo": 58.2,
+    "pass_hi": 81.8,
+    "pass_med": 71.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 21,
+   "windows_payable": 0,
+   "best_day_share_net": 0.31,
+   "total_r": 85.3,
+   "best_q_share": 0.498,
+   "without_best_q": 42.8,
+   "pos_q": "5/8"
+  },
+  {
+   "tag": "all four",
+   "risk_pct": 3.0,
+   "pass_pct": 67.0,
+   "blown_pct": 27.5,
+   "days": 14.9,
+   "band": {
+    "days_lo": 11.3,
+    "days_hi": 19.1,
+    "days_med": 14.4,
+    "pass_lo": 55.9,
+    "pass_hi": 79.1,
+    "pass_med": 67.3,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "windows": 23,
+   "windows_payable": 0,
+   "best_day_share_net": 0.286,
+   "total_r": 69.2,
+   "best_q_share": 0.511,
+   "without_best_q": 33.8,
+   "pos_q": "4/8"
+  }
+ ]
+}

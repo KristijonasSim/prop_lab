@@ -1,0 +1,400 @@
+{
+ "risk_pct": 2.0,
+ "cap": 0.2,
+ "payout_min_pct": 1.0,
+ "rows": [
+  {
+   "sym": "EURUSD",
+   "tf": "1h",
+   "trading_days": 636,
+   "total_profit_pct": 26.32,
+   "best_day_share_net": 1.675,
+   "best_day_share": 0.266,
+   "top5_share": 0.638,
+   "windows": 5,
+   "windows_payable": 0,
+   "window_shares": [
+    1.839,
+    3.88,
+    1.221,
+    1.99,
+    1.387
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 149
+  },
+  {
+   "sym": "EURUSD",
+   "tf": "4h",
+   "trading_days": 634,
+   "total_profit_pct": 35.99,
+   "best_day_share_net": 1.587,
+   "best_day_share": 0.28,
+   "top5_share": 0.658,
+   "windows": 3,
+   "windows_payable": 0,
+   "window_shares": [
+    2.679,
+    3.556,
+    1.037
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 54
+  },
+  {
+   "sym": "GBPUSD",
+   "tf": "1h",
+   "trading_days": 638,
+   "total_profit_pct": 31.1,
+   "best_day_share_net": 3.422,
+   "best_day_share": 0.43,
+   "top5_share": 0.693,
+   "windows": 2,
+   "windows_payable": 0,
+   "window_shares": [
+    1.515,
+    2.024
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 230
+  },
+  {
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "trading_days": 636,
+   "total_profit_pct": 51.19,
+   "best_day_share_net": 1.252,
+   "best_day_share": 0.302,
+   "top5_share": 0.673,
+   "windows": 6,
+   "windows_payable": 0,
+   "window_shares": [
+    1.706,
+    1.438,
+    10.383,
+    2.393,
+    2.25,
+    1.687
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 23
+  },
+  {
+   "sym": "USDJPY",
+   "tf": "1h",
+   "trading_days": 634,
+   "total_profit_pct": -3.19,
+   "best_day_share_net": null,
+   "best_day_share": 0.202,
+   "top5_share": 0.575,
+   "windows": 3,
+   "windows_payable": 0,
+   "window_shares": [
+    1.126,
+    1.2,
+    1.58
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 152
+  },
+  {
+   "sym": "USDJPY",
+   "tf": "4h",
+   "trading_days": 626,
+   "total_profit_pct": -24.78,
+   "best_day_share_net": null,
+   "best_day_share": 0.122,
+   "top5_share": 0.445,
+   "windows": 1,
+   "windows_payable": 0,
+   "window_shares": [
+    1.0
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 1
+  },
+  {
+   "sym": "AUDUSD",
+   "tf": "1h",
+   "trading_days": 636,
+   "total_profit_pct": -63.32,
+   "best_day_share_net": null,
+   "best_day_share": 0.12,
+   "top5_share": 0.431,
+   "windows": 5,
+   "windows_payable": 0,
+   "window_shares": [
+    1.132,
+    1.387,
+    1.0,
+    1.117,
+    1.952
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 18
+  },
+  {
+   "sym": "AUDUSD",
+   "tf": "4h",
+   "trading_days": 633,
+   "total_profit_pct": -22.41,
+   "best_day_share_net": null,
+   "best_day_share": 0.193,
+   "top5_share": 0.484,
+   "windows": 1,
+   "windows_payable": 0,
+   "window_shares": [
+    1.392
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 36
+  },
+  {
+   "sym": "XAUUSD",
+   "tf": "1h",
+   "trading_days": 634,
+   "total_profit_pct": 376.8,
+   "best_day_share_net": 0.421,
+   "best_day_share": 0.289,
+   "top5_share": 0.613,
+   "windows": 16,
+   "windows_payable": 0,
+   "window_shares": [
+    3.119,
+    1.073,
+    1.389,
+    1.04,
+    1.038,
+    1.125,
+    1.214,
+    1.036,
+    1.0,
+    0.922,
+    9.765,
+    1.0,
+    3.521,
+    2.659,
+    1.076,
+    1.0
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 16
+  },
+  {
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "trading_days": 637,
+   "total_profit_pct": 41.57,
+   "best_day_share_net": 0.689,
+   "best_day_share": 0.153,
+   "top5_share": 0.521,
+   "windows": 11,
+   "windows_payable": 0,
+   "window_shares": [
+    2.57,
+    13.7,
+    1.0,
+    6.541,
+    1.0,
+    1.0,
+    1.0,
+    1.429,
+    1.753,
+    3.208,
+    1.748
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 22
+  },
+  {
+   "sym": "XAGUSD",
+   "tf": "1h",
+   "trading_days": 634,
+   "total_profit_pct": 0.32,
+   "best_day_share_net": 56.103,
+   "best_day_share": 0.102,
+   "top5_share": 0.447,
+   "windows": 2,
+   "windows_payable": 0,
+   "window_shares": [
+    2.319,
+    1.277
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 562
+  },
+  {
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "trading_days": 636,
+   "total_profit_pct": 18.21,
+   "best_day_share_net": 2.514,
+   "best_day_share": 0.323,
+   "top5_share": 0.604,
+   "windows": 2,
+   "windows_payable": 0,
+   "window_shares": [
+    1.232,
+    1.15
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 25
+  },
+  {
+   "sym": "WTI",
+   "tf": "1h",
+   "trading_days": 636,
+   "total_profit_pct": -45.47,
+   "best_day_share_net": null,
+   "best_day_share": 0.251,
+   "top5_share": 0.608,
+   "windows": 0,
+   "windows_payable": 0,
+   "window_shares": [],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": null
+  },
+  {
+   "sym": "WTI",
+   "tf": "4h",
+   "trading_days": 637,
+   "total_profit_pct": -149.58,
+   "best_day_share_net": null,
+   "best_day_share": 0.252,
+   "top5_share": 0.527,
+   "windows": 0,
+   "windows_payable": 0,
+   "window_shares": [],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": null
+  },
+  {
+   "sym": "BTCUSDT",
+   "tf": "1h",
+   "trading_days": 730,
+   "total_profit_pct": -66.01,
+   "best_day_share_net": null,
+   "best_day_share": 0.133,
+   "top5_share": 0.375,
+   "windows": 1,
+   "windows_payable": 0,
+   "window_shares": [
+    1.025
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 113
+  },
+  {
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "trading_days": 711,
+   "total_profit_pct": -46.68,
+   "best_day_share_net": null,
+   "best_day_share": 0.095,
+   "top5_share": 0.389,
+   "windows": 1,
+   "windows_payable": 0,
+   "window_shares": [
+    2.254
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 99
+  },
+  {
+   "sym": "ETHUSDT",
+   "tf": "1h",
+   "trading_days": 730,
+   "total_profit_pct": 206.1,
+   "best_day_share_net": 0.847,
+   "best_day_share": 0.464,
+   "top5_share": 0.663,
+   "windows": 8,
+   "windows_payable": 0,
+   "window_shares": [
+    1.482,
+    1.112,
+    1.0,
+    1.517,
+    1.278,
+    1.514,
+    1.738,
+    1.035
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 17
+  },
+  {
+   "sym": "ETHUSDT",
+   "tf": "4h",
+   "trading_days": 721,
+   "total_profit_pct": -9.92,
+   "best_day_share_net": null,
+   "best_day_share": 0.13,
+   "top5_share": 0.409,
+   "windows": 3,
+   "windows_payable": 0,
+   "window_shares": [
+    1.289,
+    6.882,
+    1.599
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 2
+  },
+  {
+   "sym": "SOLUSDT",
+   "tf": "1h",
+   "trading_days": 714,
+   "total_profit_pct": 71.3,
+   "best_day_share_net": 0.781,
+   "best_day_share": 0.191,
+   "top5_share": 0.551,
+   "windows": 6,
+   "windows_payable": 0,
+   "window_shares": [
+    1.0,
+    1.432,
+    2.955,
+    1.0,
+    1.011,
+    2.461
+   ],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": 1
+  },
+  {
+   "sym": "SOLUSDT",
+   "tf": "4h",
+   "trading_days": 730,
+   "total_profit_pct": -44.1,
+   "best_day_share_net": null,
+   "best_day_share": 0.066,
+   "top5_share": 0.256,
+   "windows": 0,
+   "windows_payable": 0,
+   "window_shares": [],
+   "payouts_ruled": 0,
+   "first_payout_day": null,
+   "first_payout_day_free": null
+  }
+ ]
+}

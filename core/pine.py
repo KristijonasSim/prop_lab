@@ -79,6 +79,15 @@ def _chosen_params(sid: str) -> tuple[dict, str] | None:
         params[f"HLO{i}"] = str(int(cfg["hour_lo"]))
         params[f"HHI{i}"] = str(int(cfg["hour_hi"]))
         params[f"RVOL{i}"] = f"{cfg['min_rvol']:g}"
+    # the second signal, adopted 2026-09-10. Its own block in the indicator, in
+    # its own colours, so a chart shows which rule fired.
+    a = CHOSEN.get("second_signal") or {}
+    aset = a.get("settings", {})
+    params["ASIA_THR"] = f"{aset.get('thr', 1.0):g}"
+    params["ASIA_STOP"] = f"{aset.get('stop_sig', 3.0):g}"
+    params["ASIA_HOLD"] = str(int(aset.get("max_hold", 384)))
+    params["ASIA_FROM"] = str(int((a.get("window_utc") or [0, 7])[0]))
+    params["ASIA_TO"] = str(int((a.get("window_utc") or [0, 7])[1]))
     params["RISK_EACH"] = f"{CHOSEN['risk_each_pct']:g}"
     params["RISK_TOTAL"] = f"{CHOSEN['risk_pct']:g}"
     params["TRAINED_TO"] = CHOSEN["trained_to"]

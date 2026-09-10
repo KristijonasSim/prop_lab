@@ -1,0 +1,465 @@
+{
+ "cap": 0.2,
+ "risk_pct": 2.0,
+ "rows": [
+  {
+   "min_pct": 1.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 16,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 1.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 25,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 1.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 27,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 1.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 27,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 2.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 13,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 2.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 22,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 2.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 22,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 2.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 18,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 3.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 11,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 3.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 19,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 3.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 18,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 3.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 17,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 5.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 11,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 5.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 15,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 5.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 14,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 5.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 13,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 8.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 11,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 8.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 12,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 8.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 11,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 8.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 9,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 10.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 10,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 10.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 11,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 10.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 8,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 10.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 8,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 15.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 8,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 15.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 8,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 15.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 6,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 15.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 5,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 20.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 8,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 20.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 6,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 20.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 6,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 20.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 4,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 30.0,
+   "book": "gold 1h alone",
+   "legs": [
+    "XAUUSD|1h"
+   ],
+   "windows": 5,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 30.0,
+   "book": "gold + ETH",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h"
+   ],
+   "windows": 6,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 30.0,
+   "book": "top 3",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h"
+   ],
+   "windows": 5,
+   "payable": 0,
+   "median_wait_days": null
+  },
+  {
+   "min_pct": 30.0,
+   "book": "all 9 legs",
+   "legs": [
+    "XAUUSD|1h",
+    "ETHUSDT|1h",
+    "GBPUSD|4h",
+    "SOLUSDT|1h",
+    "XAUUSD|4h",
+    "EURUSD|4h",
+    "EURUSD|1h",
+    "GBPUSD|1h",
+    "XAGUSD|4h"
+   ],
+   "windows": 3,
+   "payable": 0,
+   "median_wait_days": null
+  }
+ ]
+}

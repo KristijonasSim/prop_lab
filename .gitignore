@@ -30,3 +30,6 @@ data/ticks/
 # fully reproducible from a script that is committed. Reverse this if the
 # rebuild time (~4 min/coin) turns out to matter more than the repo size.
 data/feeds/*_depth_5m.parquet
+
+# paper-trade signal log: a run artefact, not a result
+live/paper/vwapbreak_signals.jsonl

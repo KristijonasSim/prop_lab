@@ -1,0 +1,113 @@
+{
+ "leg": "XAUUSD|1h",
+ "rows": [
+  {
+   "firm": "Upcomers Ash 1-step 2%",
+   "platform": "cTrader",
+   "consistency": "20% best day (funded)",
+   "note": "fastest to funded and the one place this never gets paid",
+   "flat": {
+    "pass_pct": 55.8,
+    "blown_pct": 43.1,
+    "days": 10.7,
+    "risk_pct": 4.0
+   },
+   "sized": {
+    "pass_pct": 62.0,
+    "blown_pct": 34.9,
+    "days": 11.3,
+    "risk_pct": 4.0
+   }
+  },
+  {
+   "firm": "Upcomers Thunderbolt 1-step 5%",
+   "platform": "cTrader",
+   "consistency": "20% best day (funded)",
+   "note": "same consistency rule",
+   "flat": {
+    "pass_pct": 47.0,
+    "blown_pct": 49.8,
+    "days": 17.0,
+    "risk_pct": 4.0
+   },
+   "sized": {
+    "pass_pct": 55.0,
+    "blown_pct": 39.7,
+    "days": 18.2,
+    "risk_pct": 4.0
+   }
+  },
+  {
+   "firm": "FundingPips 1-Step Flex 10%",
+   "platform": "cTrader, MT5",
+   "consistency": null,
+   "note": "no consistency rule on the weekly-payout track",
+   "flat": {
+    "pass_pct": 44.0,
+    "blown_pct": 52.8,
+    "days": 20.5,
+    "risk_pct": 4.0
+   },
+   "sized": {
+    "pass_pct": 51.4,
+    "blown_pct": 43.4,
+    "days": 23.3,
+    "risk_pct": 4.0
+   }
+  },
+  {
+   "firm": "City Traders Imperium 1-step 8%",
+   "platform": "MT5, Match-Trader",
+   "consistency": null,
+   "note": "no daily cap; drawdown measured on closed balance, so this is conservative",
+   "flat": {
+    "pass_pct": 46.2,
+    "blown_pct": 50.6,
+    "days": 17.3,
+    "risk_pct": 4.0
+   },
+   "sized": {
+    "pass_pct": 56.9,
+    "blown_pct": 37.1,
+    "days": 22.8,
+    "risk_pct": 4.0
+   }
+  },
+  {
+   "firm": "FundingPips 2-Step Pro 6%+6%",
+   "platform": "cTrader, MT5",
+   "consistency": null,
+   "note": "",
+   "flat": {
+    "pass_pct": 45.7,
+    "blown_pct": 47.6,
+    "days": 70.0,
+    "risk_pct": 1.5
+   },
+   "sized": {
+    "pass_pct": 50.3,
+    "blown_pct": 16.6,
+    "days": 71.5,
+    "risk_pct": 1.5
+   }
+  },
+  {
+   "firm": "FTMO 2-step 10%+5%",
+   "platform": "cTrader, MT5",
+   "consistency": null,
+   "note": "",
+   "flat": {
+    "pass_pct": 45.7,
+    "blown_pct": 47.6,
+    "days": 70.0,
+    "risk_pct": 2.5
+   },
+   "sized": {
+    "pass_pct": 58.4,
+    "blown_pct": 16.6,
+    "days": 70.3,
+    "risk_pct": 2.5
+   }
+  }
+ ]
+}

@@ -1,0 +1,62 @@
+{
+ "bias": 1.495,
+ "tf": "5m",
+ "rows": [
+  {
+   "sym": "XAUUSD",
+   "est_bps": 2.323,
+   "measured_bps": 1.671,
+   "ratio": 1.39,
+   "bars": 211390,
+   "set": "calibration"
+  },
+  {
+   "sym": "EURUSD",
+   "est_bps": 0.76,
+   "measured_bps": 0.19,
+   "ratio": 4.0,
+   "bars": 223237,
+   "set": "calibration"
+  },
+  {
+   "sym": "GBPUSD",
+   "est_bps": 0.824,
+   "measured_bps": 0.515,
+   "ratio": 1.6,
+   "bars": 214491,
+   "set": "calibration"
+  },
+  {
+   "sym": "XAGUSD",
+   "est_bps": 5.303,
+   "measured_bps": 9.108,
+   "ratio": 0.58,
+   "bars": 192596,
+   "set": "calibration"
+  },
+  {
+   "sym": "BTCUSDT",
+   "est_bps": 12.025,
+   "debiased_bps": 8.043,
+   "assumed_bps": 4.0,
+   "bars": 316763,
+   "set": "crypto"
+  },
+  {
+   "sym": "ETHUSDT",
+   "est_bps": 13.325,
+   "debiased_bps": 8.912,
+   "assumed_bps": 4.0,
+   "bars": 268560,
+   "set": "crypto"
+  },
+  {
+   "sym": "SOLUSDT",
+   "est_bps": 20.907,
+   "debiased_bps": 13.983,
+   "assumed_bps": 6.0,
+   "bars": 212269,
+   "set": "crypto"
+  }
+ ]
+}
