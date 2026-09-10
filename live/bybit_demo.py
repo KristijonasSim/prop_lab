@@ -206,7 +206,7 @@ def asia_levels(df: pd.DataFrame) -> tuple[float, float]:
 # --------------------------------------------------------------------------- #
 # signals
 # --------------------------------------------------------------------------- #
-def vwap_signals(df: pd.DataFrame) -> list[dict]:
+def vwap_signals(df: pd.DataFrame, cold: bool = False) -> list[dict]:
     f = STRATEGY.features(df)
     z, sd, rvol, hour = f["z"], f["sd"], f["rvol"], f["hour"]
     i = len(df) - 1
@@ -225,6 +225,20 @@ def vwap_signals(df: pd.DataFrame) -> list[dict]:
                 continue
         if float(cfg["min_rvol"]) > 0.0 and rvol[i] < float(cfg["min_rvol"]):
             continue
+        # COLD START. A backtest runs continuously, so it takes a break on the
+        # FIRST bar that clears the threshold. A bot started in the middle of a
+        # move takes it on whatever bar it happens to wake up on - later, more
+        # extended, and with the stop measured from a worse price. On the first
+        # pass with no book, a signal that was ALREADY firing on the previous bar
+        # is therefore skipped and only a fresh cross is taken. This is not a
+        # rule change: from the second pass onward the bot behaves exactly as the
+        # kernel does, re-entering on an extended bar after an exit if that is
+        # what the rule says.
+        if cold and np.isfinite(z[i - 1]) and abs(z[i - 1]) >= thr \
+                and np.sign(z[i - 1]) == side:
+            out.append({"tag": f"vwap{n}", "skipped": "already firing at start-up",
+                        "side": side, "z": round(float(z[i]), 3)})
+            continue
         px = float(df.close.values[i])
         risk = max(float(cfg["stop_sig"]) * float(sd[i]), px * 3.0 / 1e4)
         out.append({"tag": f"vwap{n}", "signal": "VWAP band break", "side": side,
@@ -236,7 +250,7 @@ def vwap_signals(df: pd.DataFrame) -> list[dict]:
     return out
 
 
-def asia_signal(df: pd.DataFrame) -> list[dict]:
+def asia_signal(df: pd.DataFrame, cold: bool = False) -> list[dict]:
     s = CHOSEN["second_signal"]
     hi, lo = asia_levels(df)
     if not np.isfinite(hi) or hi <= lo:
@@ -250,6 +264,12 @@ def asia_signal(df: pd.DataFrame) -> list[dict]:
     side = 1 if z >= thr else (-1 if z <= -thr else 0)
     if side == 0:
         return []
+    if cold:
+        prev = float(df.close.values[-2])
+        zprev = (prev - mid) / half
+        if abs(zprev) >= thr and np.sign(zprev) == side:
+            return [{"tag": "asia", "skipped": "already firing at start-up",
+                     "side": side, "z": round(z, 3)}]
     risk = max(float(s["settings"]["stop_sig"]) * half, px * 3.0 / 1e4)
     return [{"tag": "asia", "signal": "Asian range break", "side": side,
              "z": round(z, 3), "risk_px": risk, "stop": px - side * risk,
@@ -372,7 +392,12 @@ def once(a) -> None:
               "(median range 6.8bps against 35.1 on weekdays). --weekends to allow.")
         return
 
-    sigs = vwap_signals(df) + asia_signal(df)
+    # cold = this process has no book AND has never written one. A restart with
+    # an existing book is not a cold start; a first-ever run is.
+    cold = not st["open"] and not st.get("started")
+    if cold:
+        print("  COLD START - only fresh crosses are taken on this pass")
+    sigs = vwap_signals(df, cold) + asia_signal(df, cold)
     if not sigs:
         print("  no signal on the last closed bar")
         return
@@ -393,6 +418,11 @@ def once(a) -> None:
     # ---- 2. open what fired ------------------------------------------- #
     opened: list[str] = []
     for s in sigs:
+        if s.get("skipped"):
+            print(f"  {'skipped':18} {s['tag']:6} "
+                  f"{'BUY' if s['side'] > 0 else 'SELL':4} z={s['z']:+.2f}  "
+                  f"{s['skipped']} - waiting for a fresh cross")
+            continue
         risk_pct = s["risk_pct"] * mult
         qty = eq * risk_pct / s["risk_px"]
         qty = max(MIN_QTY, round(qty / QTY_STEP) * QTY_STEP)
@@ -452,6 +482,7 @@ def once(a) -> None:
         set_backstop(host, widest)
         print(f"      backstop stop-loss set at {widest:.2f}")
     if a.arm:
+        st["started"] = st.get("started") or str(last)
         save_state(st)
 
 
