@@ -33,3 +33,9 @@ data/feeds/*_depth_5m.parquet
 
 # paper-trade signal log: a run artefact, not a result
 live/paper/vwapbreak_signals.jsonl
+
+# never commit exchange credentials
+*.env
+.env*
+live/*_keys.json
+live/paper/bybit_state.json
