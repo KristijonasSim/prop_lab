@@ -108,12 +108,20 @@ STATE = ROOT / "live" / "paper" / "bybit_state.json"
 #: with `10032: Demo trading are not supported`, so the acceptance has to happen
 #: on the live account before the demo will take an order.
 #:
-#: XAUTUSDT (Tether Gold) needs no agreement and was round-tripped on the demo
-#: account at our size on 2026-09-10. It costs a little more - 0.23bps spread
-#: against 0.02, $31M a day against $130M, 0.11bps impact against 0.01 - and it
-#: tracks spot gold just as closely (0.9733 against 0.9735). Its weakness is a
-#: WANDERING BASIS: over the sample it ran -0.61% to +0.34% against Dukascopy
-#: gold, which is about two stops of slow drift the backtest never saw.
+#: RESOLVED 2026-09-10: Kris accepted the terms on the live account and they
+#: CARRIED to demo - XAUUSDT filled and closed on the demo account minutes later.
+#: The diagnosis that they could not be accepted from demo was right; the fix was
+#: to accept them elsewhere. Note the failure mode when re-testing this: an
+#: undersized probe returns 110094 (minimum order value $5), NOT 110123, and the
+#: first check here read any non-zero code as "still blocked" and reported the
+#: opposite of the truth. Read the code, not the fact that one exists.
+#:
+#: XAUTUSDT (Tether Gold) needs no agreement and remains the fallback. It costs a
+#: little more - 0.23bps spread against 0.02, $31M a day against $130M, 0.11bps
+#: impact against 0.01 - and tracks spot gold just as closely (0.9733 against
+#: 0.9735). Its weakness is a WANDERING BASIS: over the sample it ran -0.61% to
+#: +0.34% against Dukascopy gold, about two stops of slow drift the backtest
+#: never saw. That is why XAUUSDT is the default now that it works.
 SYMBOL = os.environ.get("BYBIT_SYMBOL", "XAUUSDT")
 CATEGORY = "linear"
 RECV = "5000"
