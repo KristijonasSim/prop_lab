@@ -72,6 +72,7 @@ TWO THINGS THE FIRST DRY RUN EXPOSED, both fixed here rather than explained away
 Run:  .venv/bin/python live/bybit_demo.py                 dry run, both signals
       .venv/bin/python live/bybit_demo.py --arm           actually place orders
       .venv/bin/python live/bybit_demo.py --loop 300      every 5 minutes
+      .venv/bin/python live/bybit_demo.py --symbol XAUTUSDT --arm
 """
 from __future__ import annotations
 
@@ -101,7 +102,19 @@ DEMO_HOST = "https://api-demo.bybit.com"
 LIVE_HOST = "https://api.bybit.com"
 ENV = Path(os.path.expanduser("~/.config/prop_lab/bybit_demo.env"))
 STATE = ROOT / "live" / "paper" / "bybit_state.json"
-SYMBOL = "XAUUSDT"
+#: XAUUSDT is the better contract - 0.02bps spread, $130M a day, 0.01bps impact
+#: at our size - and it CANNOT BE TRADED ON DEMO. Its Trading Terms agreement has
+#: to be accepted first, and Bybit's own agreement endpoint answers demo requests
+#: with `10032: Demo trading are not supported`, so the acceptance has to happen
+#: on the live account before the demo will take an order.
+#:
+#: XAUTUSDT (Tether Gold) needs no agreement and was round-tripped on the demo
+#: account at our size on 2026-09-10. It costs a little more - 0.23bps spread
+#: against 0.02, $31M a day against $130M, 0.11bps impact against 0.01 - and it
+#: tracks spot gold just as closely (0.9733 against 0.9735). Its weakness is a
+#: WANDERING BASIS: over the sample it ran -0.61% to +0.34% against Dukascopy
+#: gold, which is about two stops of slow drift the backtest never saw.
+SYMBOL = os.environ.get("BYBIT_SYMBOL", "XAUUSDT")
 CATEGORY = "linear"
 RECV = "5000"
 QTY_STEP = 0.001           # XAU, from the instrument filter
@@ -403,6 +416,16 @@ def once(a) -> None:
         r = market(host, "Buy" if delta > 0 else "Sell", abs(delta), "net")
         if r.get("retCode") == 0:
             print(f"      NET ORDER ok {r['result'].get('orderId')}")
+        elif r.get("retCode") == 110123:
+            print(f"      NET ORDER REJECTED: {r.get('retMsg')}")
+            print("      XAUUSDT needs its Trading Terms accepted, and Bybit's "
+                  "agreement endpoint refuses demo requests (10032).")
+            print("      Either accept them on the LIVE account first, or run "
+                  "this with --symbol XAUTUSDT, which needs no agreement.")
+            for tag in opened:
+                st["open"].pop(tag, None)
+            save_state(st)
+            return
         else:
             # THE ORDER DID NOT FILL, SO THE BOOK MUST NOT REMEMBER IT. Without
             # this rollback a rejected order leaves phantom legs that the next
@@ -430,8 +453,13 @@ def main() -> int:
                     help="actually place orders on the DEMO account")
     ap.add_argument("--weekends", action="store_true",
                     help="allow signals on weekend bars (untested by the backtest)")
+    ap.add_argument("--symbol", default=None,
+                    help="XAUUSDT (needs the Trading Terms accepted on the LIVE "
+                         "account) or XAUTUSDT (works on demo today)")
     ap.add_argument("--loop", type=int, default=0, metavar="SECONDS")
     a = ap.parse_args()
+    if a.symbol:
+        globals()["SYMBOL"] = a.symbol
     while True:
         try:
             once(a)
