@@ -134,3 +134,88 @@ drawdown question is common to both, and H-031 answers it on better numbers.**
 of the three with new evidence measured today, it needs no download, its control
 is already in hand, and its most likely cause of death is known in advance and
 testable first. **Kris picks. Nothing is built until then.**
+
+---
+
+# BACKLOG — the SMC surface that has never been tested here
+
+Added 2026-09-10 at Kris's request: *"what about standard strategies like Order
+flow SMC, EMAS, etc — i see we dont choose these paths?"*
+
+**We did choose most of them.** They are the dead list. What follows is the
+part that genuinely has not been tested, kept here so it is not re-proposed from
+memory and not forgotten either.
+
+## First, what IS already tested, so nobody re-runs it
+
+| family | tested as | outcome |
+|---|---|---|
+| EMA / MA cross | H-003, 284k backtests, 9 markets, 4 exits | real median PF **0.705** vs phase-randomised **0.757** — worse than noise |
+| MA ribbon (20 MAs) | H-016 | **alive**, beats its null 13 of 16 cells vs 3.0 — and **260 expected days** |
+| MA position / slope / counter-trend as a filter | H-027 25-filter study | all lower R/day; the survivor lost to its own shuffled control |
+| Book depth imbalance (order flow) | H-024, 11 coins | real, monotone, beats its null — **0 of 935 cells clear 14bps** |
+| Crowd long/short ratio (order flow) | H-006 | real, PF 1.227 at 2x OOS — killed on **risk shape**, 63.5R drawdown |
+| Order flow on **gold** | — | **not testable.** No tick data on disk; gold trades naked |
+| Liquidity sweep / stop hunt | H-005, 541k backtests, 12 markets | real clears PF 1.20 on 1,702 configs, the null clears **19,062** |
+| Power of Three / AMD | H-026 | sign **flips** across BTC/ETH/SOL; 3 of 24 cells beat a permutation null |
+| Prior day/week highs & lows | H-011 | real, beats its null at every cost level — **too small for 28bps** |
+| Breakout + retest | BTC 3m-4h, every filter family | best robust PF ~0.85 |
+
+## The untested list
+
+Verified by grep on 2026-09-10 — **zero occurrences anywhere in this repo**:
+
+1. **Fair value gaps (FVG)** — a three-candle imbalance; price returns to fill it.
+2. **Order blocks** — the last opposing candle before a displacement move.
+3. **CHoCH / BOS** — change of character and break of structure as a trend-state
+   machine over swing highs and lows.
+4. **Killzones** — London and New York sub-session windows as an entry filter.
+5. **Premium / discount arrays** — position within a dealing range, i.e. only buy
+   the lower half of a leg.
+
+## Why these are NOT ranked above H-031 today
+
+Three reasons, and they should be argued with rather than ignored.
+
+* **The load-bearing primitive already failed.** Liquidity sweeps (H-005) and AMD
+  (H-026) *are* the mechanism underneath order blocks and FVGs. If the sweep does
+  not pay, a zone drawn around the sweep is unlikely to.
+* **"Price returns to a zone" is a family with a bad record here.** It is the same
+  claim as H-010 and as the fibonacci zones in the 25-filter study, which
+  **sign-flipped across timeframes** (fib100 beyond .618: −25.7 days on 1h,
+  **+344.6** on 4h) — H-026's signature for no effect.
+* **Killzones are closed by measurement already.** Every one of six session
+  windows tested on H-027 was **slower on both timeframes**. A killzone is a
+  session window with a different name.
+
+And a methodological warning that applies to all five: **they are defined loosely
+enough that a backtest can almost always be made to look good.** Which candle
+starts the order block, how deep a mitigation counts, whether a wick or a body
+breaks structure — every one of those is a free parameter. That flexibility is
+the thing this repo's null machinery exists to price. **Any test of these must
+fix every definition in writing BEFORE the first backtest**, and must be run
+against a paired null and the noise band, or it is worthless.
+
+## The one door that IS genuinely open
+
+`CLAUDE.md` already carries this caveat on H-026 and it has never been acted on:
+
+> Caveat: tested with a fixed hold to the session close and **no stop and no
+> target** — a stop-and-target version is untested and Kris trades one.
+
+That is the honest SMC path: it **re-opens a specific tested thing on a specified
+change**, rather than adding a new name to the pile. If an SMC hypothesis is
+wanted, run that one first — it inherits H-026's event definitions, its ~1,500
+events per coin, and its permutation null, so only the exit changes.
+
+## If these are run anyway, the order to run them in
+
+1. **H-026 with a stop and target** — re-opens existing work, definitions already
+   fixed, null already built.
+2. **FVG** — the only one of the five with a mechanical, unambiguous definition
+   (a three-candle gap is either there or it is not), so it is the least
+   corruptible by researcher choice.
+3. **Premium / discount** — testable as a pure filter on H-027's existing entries,
+   which makes it a one-day paired-lift study, not a new strategy.
+4. **Order blocks**, **CHoCH/BOS** — most free parameters, worst prior, do last.
+5. **Killzones** — do not run. Already closed by the six-window session study.
