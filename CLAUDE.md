@@ -351,6 +351,15 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   `strategies/orderflow/orderflow.py` is KEPT — it is the shared feed loader for
   twelve other hypotheses, not H-006's strategy.
 
+- **Liquidation-pressure fade** (H-031, 2026-09-11) — a 30m OI collapse with price
+  down, long 24h. Real but small: **+26.7bps gross per trade against +11.8 for a
+  block-shuffled null and +20.5 for a same-fall/stable-OI control**, 10 coins, 3y.
+  PF@2x **0.924** with no stop and **worse with every stop** (0.667–0.889, monotone
+  in stop width); R/day negative on all eight arms. 10 of 10 coins fire together
+  in a cascade. Killed on a criterion written before the run. It also closes
+  **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
+  `strategies/liqflush/`.
+
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have

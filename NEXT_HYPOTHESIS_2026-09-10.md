@@ -17,6 +17,11 @@ writing this file.
 
 ## 1. H-031 — LIQUIDATION-PRESSURE FADE  ← the pick
 
+> **DEAD 2026-09-11** on its pre-registered kill criterion — PF@2x 0.667–0.924
+> across eight stop arms, R/day negative on all of them, every stop worse than
+> none. The feed adds ~15bps over a random long against a 28bps round trip.
+> H-006-R (#3) closes with it. `strategies/liqflush/notes.md`.
+
 **The mechanism.** A leveraged position that gets liquidated is closed by an
 exchange engine at market, regardless of price. That seller is not expressing a
 view: they are **forced**. Forced flow overshoots and the overshoot is paid back
