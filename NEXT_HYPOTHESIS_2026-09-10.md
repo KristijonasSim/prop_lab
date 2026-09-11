@@ -79,6 +79,10 @@ dead.
 
 ## 2. H-030 — A FEED LAYER FOR GOLD
 
+> **DEAD 2026-09-11 (COT).** Eight pre-registered COT gates on the traded rule;
+> every one is slower than no gate (26.3–64.1 days vs 21.7). Refusing the
+> crowded side cuts PF@2x 2.872 → 1.766. `strategies/goldfeed/notes.md`.
+
 **Why it ranks second despite serving the only survivor.** Gold is the one market
 left and it **trades naked** — every file in `data/feeds/` is a Binance crypto
 symbol, and `data/dukascopy_raw/XAUUSD` holds one-minute BID candles, so there is

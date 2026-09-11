@@ -360,6 +360,15 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
 
+- **CFTC positioning as a gate on H-027** (H-030, 2026-09-11) — eight gates from
+  the weekly COT report (managed-money crowding, 1w/4w flow, total OI), used only
+  from release time. **Every gate is slower than no gate**: 26.3–64.1 expected
+  days against 21.7. Refusing the side managed money is crowded on cuts PF@2x
+  2.872 → 1.766 — gold breakouts WITH the crowd are the good ones. Free CME GC
+  volume/OI history does not exist; SPDR's GLD archive is now a PDF. So gold
+  still trades naked, and the one free feed that exists does not help it.
+  `strategies/goldfeed/`.
+
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have
