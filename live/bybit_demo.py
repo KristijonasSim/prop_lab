@@ -387,26 +387,39 @@ def once(a) -> None:
                   f"stop {p.get('stopLoss') or 'none'}  "
                   f"uPnL {float(p.get('unrealisedPnl') or 0):+.2f}")
 
-    if weekend and not a.weekends:
-        print("  weekend bar - skipped. The backtest never saw one "
+    # EXITS RUN ON EVERY PASS. They used to sit behind the weekend return and
+    # the "no signal" return below, so a leg whose stop was touched on a quiet
+    # bar stayed open until some later bar happened to fire. The kernel checks
+    # every leg's stop on every bar; the weekend rule is about ENTRIES the
+    # backtest never saw, not about leaving a stop unenforced.
+    no_entries = weekend and not a.weekends
+    if no_entries:
+        print("  weekend bar - no new entries. The backtest never saw one "
               "(median range 6.8bps against 35.1 on weekdays). --weekends to allow.")
-        return
-
-    # cold = this process has no book AND has never written one. A restart with
-    # an existing book is not a cold start; a first-ever run is.
-    cold = not st["open"] and not st.get("started")
-    if cold:
-        print("  COLD START - only fresh crosses are taken on this pass")
-    sigs = vwap_signals(df, cold) + asia_signal(df, cold)
-    if not sigs:
-        print("  no signal on the last closed bar")
+        sigs = []
+    else:
+        # cold = this process has no book AND has never written one. A restart
+        # with an existing book is not a cold start; a first-ever run is.
+        cold = not st["open"] and not st.get("started")
+        if cold:
+            print("  COLD START - only fresh crosses are taken on this pass")
+        sigs = vwap_signals(df, cold) + asia_signal(df, cold)
+        if not sigs:
+            print("  no signal on the last closed bar")
+    if not sigs and not st["open"]:
         return
 
     # ---- 1. close legs the rule says are finished --------------------- #
-    delta = 0.0                       # net XAU to trade this pass, + = buy
+    # EXITS ARE SENT HERE AND ONLY HERE. `closed` is for the log line; it must
+    # never reach the net order below. It used to be added into `delta`, so an
+    # armed exit was traded twice - once reduce-only here, once again in the
+    # net order - and the last leg's exit would have opened an unprotected
+    # position in the opposite direction with nothing in the book to close it.
+    closed = 0.0
+    delta = 0.0                       # net XAU to OPEN this pass, + = buy
     for tag, leg, why in due_exits(df, st["open"]):
         print(f"  EXIT {tag:6} {leg['side']} {leg['qty']:.3f} XAU - {why}")
-        delta += -leg["qty"] if leg["side"] == "Buy" else leg["qty"]
+        closed += -leg["qty"] if leg["side"] == "Buy" else leg["qty"]
         if a.arm:
             r = market(host, "Sell" if leg["side"] == "Buy" else "Buy",
                        leg["qty"], f"x-{tag}", reduce_only=True)
@@ -448,6 +461,8 @@ def once(a) -> None:
 
     # ---- 3. one netted order, and a backstop on what is left ---------- #
     total_risk = sum(l["qty"] * abs(l["entry_ref"] - l["stop"]) for l in st["open"].values())
+    if closed:
+        print(f"  closed this pass: {closed:+.3f} XAU (reduce-only, above)")
     print(f"  net this pass: {delta:+.3f} XAU   book: {len(st['open'])} legs, "
           f"risk at stops ${total_risk:,.0f} ({total_risk / eq * 100:.2f}% of equity)")
     if a.arm and abs(delta) >= MIN_QTY:

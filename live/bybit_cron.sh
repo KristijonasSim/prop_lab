@@ -14,14 +14,19 @@
 # the book intends. That is the real argument for a VPS, and it is a difference of
 # half a percent, not of solvency.
 #
-# Install:  (crontab -l 2>/dev/null; echo '2 * * * * /home/kris/prop_lab/live/bybit_cron.sh') | crontab -
-# Watch:    tail -f /home/kris/prop_lab/live/paper/bybit_cron.log
+# Install:  (crontab -l 2>/dev/null; echo "2 * * * * $HOME/prop_lab/live/bybit_cron.sh") | crontab -
+# Watch:    tail -f $HOME/prop_lab/live/paper/bybit_cron.log
 # Stop:     crontab -e   and delete the line
 set -uo pipefail
 
-ROOT=/home/kris/prop_lab
+# ROOT IS DERIVED, NOT WRITTEN DOWN. A hardcoded /home/kris/prop_lab was rsynced
+# to the VM, where the user is `ubuntu` and that path does not exist. cron kept
+# firing, `exec 9>` on the missing lock file failed, and the bot placed no
+# decision for 18 hours while a six-leg book sat open. The desk and the VM have
+# different home directories; the script's own location is the same on both.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$ROOT/live/paper/bybit_cron.log"
-mkdir -p "$(dirname "$LOG")"
+mkdir -p "$(dirname "$LOG")" || { echo "cannot create $(dirname "$LOG")" >&2; exit 1; }
 
 # one at a time: a slow API call must never overlap the next hour's pass and
 # double an order.
