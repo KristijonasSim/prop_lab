@@ -340,3 +340,48 @@ max). Thunderbolt's 6% target is a different shape, and a 39.8% blow-up rate is
 priced differently against a target three times further away. Whether dd≤20R's
 speed survives a different firm spec is untested — but it would need to clear the
 null margin problem first, and 1.18x is not promising.
+
+## The full risk ladder, checked because `score_budget` prints only the best rung
+
+The headline above quotes dd≤20R at its fastest rung, 3%. The other rungs were
+never printed, and blow-ups fall steeply with risk while days rise — so the open
+question was whether some rung satisfies all four conditions at once.
+
+This is not moving the goalposts. The four conditions are unchanged, and
+CLAUDE.md exempts the ladder from search-correction explicitly: *"re-simulating
+the same trade series at a different position size selects nothing and searches
+nothing — it is arithmetic on a fixed series."*
+
+| risk | days | band | pass % | blown % | faster | band disjoint | blown ≤ 27.6 |
+|---|---|---|---|---|---|---|---|
+| **baseline** | 11.8 | 10–16 | 67.8 | 27.6 | — | — | — |
+| 1.0% | 13.0 | 12.2–19.2 | 69.2 | **17.0** | no | no | yes |
+| **1.5%** | **10.1** | 9.1–13.3 | 69.2 | **24.4** | **yes** | **no** | **yes** |
+| 2.0% | 9.6 | 8.2–11.5 | 62.3 | 31.8 | yes | no | no |
+| 3.0% | 7.1 | **6.4–9.0** | 56.0 | 39.8 | yes | **yes** | no |
+
+**No rung clears all four.** The rung with a disjoint band blows up at 39.8%; the
+rung with survivable blow-ups overlaps. Walking the ladder trades disjointness
+against blow-ups and never buys both — the same trade-off, seen a third time.
+
+### The 1.5% rung, stated precisely
+
+It is the only configuration measured this session that is **better than the
+baseline on every axis except resolvability**: faster (10.1 vs 11.8), *fewer*
+blow-ups (24.4% vs 27.6%), and the same pass rate (69.2% vs 67.8%).
+
+Under this repo's rules that is **not an improvement** — overlapping bands mean
+not shown to differ, and that rule has killed better-looking things than this.
+It is also not worse, and saying "it failed" without saying that would be
+misleading.
+
+**What would resolve it is more data, not another arm.** The band is 9.1–13.3
+because this walk-forward runs three years and eight quarters. `RESEARCH_NEXT`
+2.1 already names gold history as *"the single biggest lever... only more data
+narrows it"*, `XAUUSD10Y` is on disk, and `longcandidates.py` has run 40 quarters
+before. That is the one open thread from this arm and it is cheap.
+
+**The null margin is the reason to keep expectations low.** 1.526 against 1.289
+is 1.18x, and that ratio is rung-independent — no amount of extra history repairs
+a thin margin over shuffled data. An eleven-year run could narrow the band; it
+cannot manufacture an edge.
