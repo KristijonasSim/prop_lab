@@ -146,3 +146,96 @@ real mechanisms and neither is likely to clear 14bps at a 4–72h horizon.
 
 The reason to run them together is that gate 2 costs an hour for all four, and
 the alternative is re-proposing them from memory in three weeks.
+
+---
+
+# RESULT, 2026-09-13 — ALL FOUR DEAD. And two of the errors were mine.
+
+The screen produced **7 apparent passes out of 96 tests**. None survives contact.
+
+## The headline the raw table would have given, and why it is wrong
+
+| arm | BTC | ETH |
+|---|---|---|
+| F+ inflow | h=4 pct **99.2** edge +19.38 | h=4 pct **100.0** edge +30.92 |
+| P− shorts pay | h=24 pct 96.0 edge +29.67 | h=24 pct 67.2 |
+| V− vrp thin | h=12 pct 93.2 | h=12 pct 96.2 edge +30.30 |
+| G^ bull cont | h=72 pct 96.8 edge +40.84 | h=12 pct 97.0 edge +14.58 |
+
+Read alone, that is four mechanisms clearing a 95th-percentile null. It is not.
+
+## MY FIRST ERROR — the gate priced the test and never the search
+
+96 tests at a 95th-percentile threshold yields **4.8 expected passes from pure
+noise**. Seven were observed; `P(≥7 | noise) = 0.205`. The pre-registered
+criterion in this very file contains no correction for the width of the search.
+
+That is the same distinction that killed H-028: `p=0.0000` for one slot alone
+and `p=0.187` best-of-48-slots. It was written down in `STRATEGY_LOG.md` three
+days ago and I rebuilt the gate without it.
+
+The binomial overstates its own precision — four horizons share events and
+cont/fade are exact negations, so the tests are not independent. It is a guide,
+not a proof. **The structural evidence below is what actually decides.**
+
+## MY SECOND ERROR — the null does not match hour-of-day
+
+`probe`'s null shifts events to random positions, which land on arbitrary hours.
+But every daily-feed event fires at **00:00 UTC**, and that hour is not average:
+
+| h=4 forward return | all bars | at 00:00 UTC | short-side gift |
+|---|---|---|---|
+| BTCUSDT | +1.56 | −3.15 | **+4.71 bps** |
+| ETHUSDT | +2.29 | −2.90 | **+5.19 bps** |
+
+The null draws from a population that drifts up; the events sit in an hour that
+drifts down; the arms are traded short. About **5 bps of every daily-feed short
+edge is the null being drawn from the wrong population.** Funding's 00/08/16
+hours are unbiased (−0.08 / −0.56), so H-036 is untouched by this.
+
+**Any future use of `probe` on an hour-concentrated event needs an hour-matched
+null.** That is the reusable lesson and it is worth more than the four deaths.
+
+## What killed each
+
+**H-038 fair value gaps — the size filter runs backwards.** A real gap effect
+must strengthen when filtered for gap size. It weakens on three of four:
+96.8→87.2, 97.0→91.8, 97.2→75.0. And `Gv bear cont` reaches pctile 97.2 on a
+**2.73 bps** edge, which never cleared the 14bps hurdle at all — a clean
+demonstration that a percentile without an edge is nothing. Continuation also
+clears at h=72 on BTC and h=12 on ETH. Dead.
+
+**H-036 the funding settlement — fails cross-market.** P− scores 96.0 on BTC and
+**67.2** on ETH at the same horizon. P+ is 94.8 on BTC on a 3.50 bps edge and
+56.5 on ETH with the sign inverted. Dead.
+
+**H-037 the variance risk premium — fails cross-market.** V− is 96.2 on ETH and
+93.2 on BTC; V+ is 91.0 and 54.8. Nothing consistent. Dead.
+
+**H-035 on-chain flows — the only coherent shape, and it is not robust.** F+ was
+the one arm that looked real: same horizon on both markets, pctile 99.2 and
+100.0, year split 5/6 and 4/6. So it got the test the others did not — push the
+knowable-lag out a day at a time:
+
+| stamp | BTC edge (pct) | ETH edge (pct) |
+|---|---|---|
+| **D+2** | **+19.38** (99.2) | **+30.92** (100.0) |
+| D+3 | **−2.68** (47.8) | **−15.80** (11.8) |
+| D+4 | +14.84 (95.5) | +32.57 (99.8) |
+| D+5 | +0.32 (64.8) | +5.52 (75.2) |
+
+**It alternates, identically on both markets.** A real information edge cannot
+vanish, invert, reappear and vanish again on alternate days. D+2 was an arbitrary
+choice of mine and D+3 reverses the sign. Subtract the ~5 bps of hour-of-day null
+bias on top and there is nothing to defend. Dead.
+
+And it was never honestly testable anyway: the feed is revised `flash` data read
+as though it had been live, exactly as this file warned before the run.
+
+## What is closed
+
+**All four, at gate 2.** No kernel was written, which is the point of the gate.
+
+Not claimed: that any of these carries nothing anywhere. H-035 deserves a rerun
+on paid point-in-time data if anyone ever buys it; H-037 was tested only as a
+same-hour directional event and not as a sizing input. Logged, not run.

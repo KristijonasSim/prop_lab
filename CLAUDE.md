@@ -360,6 +360,32 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
 
+- **Four candidates screened at gate 2** (H-035/036/037/038, 2026-09-13) — all
+  dead, and the two METHOD lessons are worth more than the four deaths.
+  * **H-035 on-chain exchange flows** (CoinMetrics netflow, free, daily). The
+    only arm with a coherent shape — pctile 99.2/100.0 at the same h=4 on both
+    markets — and it **alternates when the knowable-lag is pushed out a day**:
+    D+2 +19.4/+30.9, D+3 **−2.7/−15.8**, D+4 +14.8/+32.6. An edge that inverts on
+    alternate days is not information. Also never honestly testable: every value
+    is `flash`, revised later, and only the current value is served.
+  * **H-036 funding settlement as an EVENT** (not H-004's continuous level) —
+    fails cross-market, 96.0 on BTC and 67.2 on ETH.
+  * **H-037 variance risk premium** (implied − realised; not H-025's level) —
+    fails cross-market, 96.2 on ETH and 93.2 on BTC.
+  * **H-038 fair value gaps**, the first SMC primitive tested here, every
+    parameter fixed in advance — **the gap-size filter WEAKENS it 3 of 4**
+    (96.8→87.2, 97.0→91.8, 97.2→75.0), the opposite of a real effect.
+  * **LESSON 1 — price the SEARCH, not just the test.** 96 tests at a 95th
+    percentile expect **4.8 false passes**; 7 were observed, `P(≥7)=0.205`. This
+    is the H-028 distinction (`p=0.0000` one slot vs `p=0.187` best-of-48) and it
+    was rebuilt without the correction three days after being written down.
+  * **LESSON 2 — `core/probe.py`'s null does not match HOUR OF DAY.** It shifts
+    events to random positions; an event that always fires at 00:00 UTC is then
+    compared against a population drawn from every hour. At h=4 the 00:00 bar
+    means −3.15/−2.90 against an all-bar +1.56/+2.29, so any short-side daily arm
+    is gifted about **5 bps**. **An hour-concentrated event needs an
+    hour-matched null.** `strategies/screen/`.
+
 - **The term structure of leverage** (H-034, 2026-09-13) — dated quarterly
   futures against the perp, `basis_ann = (front − perp)/perp × 365/days`. The
   first feed here with a HARD arbitrage anchor: it must converge on a known date,

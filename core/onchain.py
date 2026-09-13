@@ -102,7 +102,7 @@ def build(sym: str, force: bool = False) -> pd.DataFrame:
     df["observed"] = df.index                       # the day it describes
     # THE SHIFT IS THE WHOLE POINT. Move the stamp forward so the index is the
     # first time the value could have been acted on, not the day it describes.
-    df.index = df.index + pd.Timedelta(days=KNOWABLE_LAG_DAYS)
+    df.index = df.index + pd.Timedelta(days=int(KNOWABLE_LAG_DAYS))
     df.index.name = "knowable_at"
     df.to_parquet(out)
     print(f"  {sym}: {len(df):,} daily rows, describes "
