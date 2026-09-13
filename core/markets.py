@@ -30,9 +30,22 @@ sys.path.insert(0, str(ROOT))
 DATA = ROOT / "data"
 
 #: label -> pandas resample rule / dukascopy filename suffix
-TF_RULE = {"5m": "5min", "15m": "15min", "30m": "30min", "1h": "1h", "4h": "4h"}
+TF_RULE = {"5m": "5min", "15m": "15min", "30m": "30min", "1h": "1h", "4h": "4h",
+           #: VOLUME-CLOCK BARS, built by `core/volbars.py`, not a resample rule.
+           #: Safe here only because TF_RULE is used as a pandas rule for CRYPTO
+           #: alone; for everything else it is just the filename suffix. Never
+           #: request one of these for a crypto symbol.
+           "vol1h": "vol1h", "dol1h": "dol1h"}
 #: bars per hour, for sizing hold horizons so they mean the same thing everywhere
-TF_BPH = {"5m": 12.0, "15m": 4.0, "30m": 2.0, "1h": 1.0, "4h": 0.25}
+#:
+#: THE VOLUME-CLOCK ENTRIES ARE AN AVERAGE, NOT A CONSTANT. A volume bar can span
+#: minutes at the NY open and hours in a dead Asian session, so `max_hold` on one
+#: of these is a horizon in VOLUME, not in time. 1.0 makes it average out to the
+#: 1h control and is exactly right on average and wrong on any single trade. No
+#: result on these bars may be reported without saying so —
+#: `strategies/vwapbreak/research/VOLBARS.md`.
+TF_BPH = {"5m": 12.0, "15m": 4.0, "30m": 2.0, "1h": 1.0, "4h": 0.25,
+          "vol1h": 1.0, "dol1h": 1.0}
 
 CRYPTO = ("BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT")
 
