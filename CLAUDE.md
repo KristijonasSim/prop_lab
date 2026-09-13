@@ -360,6 +360,35 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
 
+- **Three attempts to beat H-027** (2026-09-13, `strategies/beat/`) — all dead.
+  Kris: *"find something that beats our vwap."* "Beats" was fixed in advance as
+  faster in expected days with a **band that does not overlap**, scored under
+  budget-linear sizing.
+  * **The fold selector under the sizing rule adopted the day after it was
+    measured.** `rday` 10.4 days and `days` 10.6 against the shipped 11.8 — both
+    nominally faster, both bands overlapping. The thesis (sizing repairs the
+    days-selector's pass rate) was **wrong**: blow-ups stayed at 50.9% and 40.7%
+    against 27.6%, and PF collapsed 2.872 → 1.41/1.45.
+  * **The Asian range break on every market.** It does not travel. Gold beats its
+    own null by **3.5x at 1h and 4.8x at 4h**; no other market exceeds ~1.5x, and
+    BTC, SOL and AUDUSD lose to theirs. Silver is the near-miss (17.7 days vs
+    gold's 18.5) with a band almost entirely inside gold's — and silver already
+    fooled this repo once, at 59.9% pass while losing to its null.
+  * **R/day under a drawdown CAP** (`select_on="rday_capped"`, kept in the kernel
+    as a measured dead end). Opened because `_score`'s `days` branch returns
+    `rpd/|dd|`, a **scale-free ratio** that cannot see drawdown magnitude.
+    `dd≤20R` reached **7.1 days with a band of 6–9, disjoint from the baseline's
+    10–16** — the only arm all session to clear both conditions — and died on the
+    pre-registered blow-up condition at **39.8% vs 27.6%**, with its null margin
+    collapsing to **1.18x** against the baseline's 2.6x. The three caps trace a
+    monotone speed-versus-blow-up curve, so the constraint **parameterised** the
+    trade-off rather than escaping it, and the shipped selector dominates it.
+  * **LESSON — the objective axis is closed.** Four objectives measured: profit
+    factor, R/day, the days ratio, R/day under a cap. Profit factor is the best
+    of them on expected days at a survivable blow-up rate. Do not re-propose a
+    selector change without a mechanism that breaks the frequency-versus-
+    survivability trade-off, because all four sit on the same curve.
+
 - **Four candidates screened at gate 2** (H-035/036/037/038, 2026-09-13) — all
   dead, and the two METHOD lessons are worth more than the four deaths.
   * **H-035 on-chain exchange flows** (CoinMetrics netflow, free, daily). The

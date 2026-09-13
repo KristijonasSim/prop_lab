@@ -268,3 +268,75 @@ Better than arm 1's, because this fixes a defect that was *measured* rather than
 guessed — but still under 50/50. The cap may simply select the same
 low-drawdown, low-frequency configs the profit-factor selector already finds, in
 which case it reproduces the baseline and closes the objective question for good.
+
+---
+
+# ARM 3 RESULT, 2026-09-13 — FAIL. And it is the closest miss of the day.
+
+**Validation first:** `select_on=2x` returned 11.8 days, band 10–16, 67.8% pass,
+27.6% blown, PF 2.872, 0.93 tpd — identical to arm 1's baseline. The kernel edit
+did not move the default path, so this run is readable.
+
+| arm | risk % | days | band | pass % | blown % | open % | PF@2x | null | tpd |
+|---|---|---|---|---|---|---|---|---|---|
+| **`2x` shipped** | 3.0 | 11.8 | 10–16 | 67.8 | 27.6 | 4.6 | **2.872** | 1.107 | 0.93 |
+| dd≤5R | 3.0 | 18.3 | 13–23 | **76.5** | **15.4** | 8.2 | 1.492 | 0.799 | 0.81 |
+| dd≤10R | 3.0 | 12.8 | 10–16 | 70.3 | 26.4 | 3.3 | 1.617 | 0.902 | 1.10 |
+| dd≤20R | 3.0 | **7.1** | **6–9** | 56.0 | 39.8 | 4.2 | 1.526 | **1.289** | 1.68 |
+
+## dd≤20R cleared the two conditions everything else failed on
+
+**7.1 days against 11.8, with a band of 6–9 that does not touch the baseline's
+10–16.** Faster and resolvable — the first arm all day to manage both. Nothing
+else in this session came close.
+
+**It dies on the third condition, which was written in advance precisely to catch
+this**: *"an arm that gets faster by blowing up more has not solved the problem
+it was built to solve, it has just moved along the same trade-off `rday` and
+`days` already sit on."* Blown accounts **39.8% against 27.6%**.
+
+That was not a lucky guard. It is the whole reason the condition exists, and
+removing it now to claim a result would be the single most dishonest thing
+available in this repo.
+
+## Two things confirm the verdict rather than soften it
+
+**The null margin collapses.** dd≤20R scores PF@2x 1.526 against its own
+phase-randomised null of **1.289** — a margin of 1.18x. The shipped selector's is
+2.872 against 1.107, **2.6x**. Most of the capped arm's apparent edge is
+reproducible from shuffled data.
+
+**The caps trace a monotone trade-off, not an escape from one.**
+
+| cap | days | blown % |
+|---|---|---|
+| 5R | 18.3 | 15.4 |
+| 10R | 12.8 | 26.4 |
+| 20R | 7.1 | 39.8 |
+
+Loosening the cap buys speed with blow-ups, one for one. **The constraint did not
+escape the trade-off — it parameterised it.** The diagnosis in arm 1 was correct
+(the `days` ratio is scale-free and blind to drawdown magnitude) and the fix was
+still not enough, because the underlying problem is not the objective's shape. It
+is that on this rule, frequency and survivability are bought from each other.
+
+**And the shipped selector dominates the curve.** At comparable blow-up rates —
+10R's 26.4% against the baseline's 27.6% — the baseline is *faster* (11.8 vs
+12.8) with nearly three times the null margin. There is no cap at which the
+constrained objective is better than what is already shipped.
+
+## What this closes
+
+**The selector-objective axis, for good.** Four objectives have now been
+measured: profit factor (shipped), R per day, the days ratio, and R per day under
+a drawdown cap at three levels. The shipped one is the best of them on the only
+comparison that matters — expected days at a survivable blow-up rate, with a null
+margin that the others do not approach. `Pipeline.SELECT_ON` stays at `2x`, and
+`rday_capped` is kept in the kernel as a measured dead end rather than deleted,
+so it is not reinvented in three weeks.
+
+**Logged, not run:** every arm here is scored under ASH (2% target, 3% daily, 6%
+max). Thunderbolt's 6% target is a different shape, and a 39.8% blow-up rate is
+priced differently against a target three times further away. Whether dd≤20R's
+speed survives a different firm spec is untested — but it would need to clear the
+null margin problem first, and 1.18x is not promising.
