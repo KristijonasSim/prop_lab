@@ -127,12 +127,17 @@ class Pipeline:
     def __init__(self, strategy, *, train_months: int = TRAIN_MONTHS,
                  test_months: int = TEST_MONTHS, floors=FLOORS, topn=TOPN,
                  first_test: str | None = None, last_test: str | None = None,
-                 null_kind: str = "paired", select_on: str | None = None):
+                 null_kind: str = "paired", select_on: str | None = None,
+                 max_dd_r: float | None = None):
         self.s = strategy
         self.select_on = select_on or self.SELECT_ON
-        if self.select_on not in ("1x", "2x", "rday", "days"):
-            raise ValueError(f"select_on must be one of 1x, 2x, rday, days - "
-                             f"got {select_on!r}")
+        if self.select_on not in ("1x", "2x", "rday", "days", "rday_capped"):
+            raise ValueError(f"select_on must be one of 1x, 2x, rday, days, "
+                             f"rday_capped - got {select_on!r}")
+        if self.select_on == "rday_capped" and not max_dd_r:
+            raise ValueError("select_on='rday_capped' needs max_dd_r, the "
+                             "train-slice drawdown cap in R")
+        self.max_dd_r = max_dd_r
         self.train_months = train_months
         self.test_months = test_months
         self.floors = tuple(floors)
@@ -203,6 +208,25 @@ class Pipeline:
             eq = np.concatenate(([0.0], np.cumsum(r)))
             dd = float((eq - np.maximum.accumulate(eq)).min())
             return rpd / max(abs(dd), 1e-9)      # bigger = fewer days
+        if self.select_on == "rday_capped":
+            # WHY THIS IS NOT "days", measured 2026-09-13. That branch returns
+            # rpd / |dd|, a RATIO, so it is scale-free: R/day 1.0 against a
+            # -50R drawdown scores exactly like R/day 0.1 against -5R. A
+            # fixed-percentage prop account does not see those as equivalent -
+            # the first breaches the max-loss cap constantly. Ranking on "days"
+            # produced 40.7% blown accounts against the shipped selector's
+            # 27.6%, while looking faster on the headline.
+            #
+            # So drawdown becomes a CONSTRAINT rather than a denominator: a
+            # config whose train-slice drawdown exceeds the cap is rejected
+            # outright, and among the survivors the fastest wins.
+            if rpd <= 0:
+                return -np.inf
+            eq = np.concatenate(([0.0], np.cumsum(r)))
+            dd = abs(float((eq - np.maximum.accumulate(eq)).min()))
+            if dd > self.max_dd_r:
+                return -np.inf
+            return rpd
         raise ValueError(f"unknown select_on {self.select_on!r}")
 
     # -- the walk-forward -------------------------------------------------- #
