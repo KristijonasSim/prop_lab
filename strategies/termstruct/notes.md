@@ -111,3 +111,85 @@ whole thing is decidable without writing a kernel.
 
 Not claimed in advance: that a term structure carries anything. It is a
 measurement, and the measurement has not been made yet.
+
+---
+
+# RESULT, 2026-09-13 — DEAD at gate 2. Nothing clears Gate B.
+
+48,837 hourly rows per market, 2021-02 → 2026-08, 23 dated contracts.
+
+## Gate A — PASSED
+
+All six readings fire far above the floor of 40/year, on both markets.
+
+| reading | BTC events/yr | ETH events/yr | in state | median run |
+|---|---|---|---|---|
+| L+ rich | 153.2 | 139.1 | 15.5% | 2h |
+| L− cheap | 235.2 | 243.1 | 19.6% | 2h |
+| K shock down | 165.3 | 178.1 | 4.8% | 1h |
+| K′ shock up | 176.9 | 190.6 | 4.9% | 1h |
+| S steep | 62.1 | 57.4 | 10.3% | 2h |
+| S′ flat | 82.7 | 90.7 | 11.4% | 2h |
+
+**The predicted death did not happen.** Pace was the named most-likely killer and
+the basis fires plenty often. Over the full window it is also far wilder than the
+2025 sample suggested — stdev **8.38** against 1.76, range **−46.6% to +75.3%** —
+because 2021's bull and 2022's backwardation are in it.
+
+## Gate B — NOTHING SURVIVES
+
+### The level reading is not there at all
+
+L+ and L− never approach the gate on either market. Best percentile **78.2**, and
+most edges are negative or sit far inside their nulls. Whether leverage is
+currently expensive says nothing about the next 4 to 72 hours.
+
+### The closest thing, and why it still fails
+
+**ETHUSDT, S steep, h=72: edge 205.13 bps, pctile 95.2, hurdle 14.0.** It clears
+two of three conditions. It dies on the third:
+
+| year | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|
+| edge bps | **−49.35** | +325.36 | +254.69 | +224.81 |
+
+**3 of 4 years, with a sign flip in 2023.** That is H-026's signature.
+
+Three more things say the same, and any one of them is enough:
+
+* **The same reading fails outright on BTC.** S steep h=72 scores 139.22 bps
+  against a null p95 of **171.46** — the shuffled dates beat the real ones. A
+  mechanism that works on ETH and not BTC, on the same contract structure and the
+  same clock, is not a mechanism.
+* **The null is as big as the edge.** At h=72 the ETH edge is 205.13 and its own
+  null p95 is 201.96. A 72-hour horizon has enormous variance and the noise floor
+  is doing exactly the job it was built for.
+* **K flips across markets.** K shock down on BTC is the other near-miss —
+  h=72 edge 35.15, pctile 94.5, just under both thresholds — and on ETH the same
+  reading is **−11.26**. Opposite signs on two markets.
+
+### A criterion/data mismatch, and it is mine
+
+Gate B was written as "same sign in **≥4 of 6** years". The slope readings only
+span **2023–2026**: the back contract overlaps on 54% of rows and only from 2023,
+which the proposal flagged as a risk and the criterion then failed to account
+for. The rule should have been stated relative to the years each reading actually
+has. It changes nothing here — S steep failed at 3 of 4 — but the criterion was
+written sloppier than the study deserved and that is worth recording.
+
+## What is closed, and what is not
+
+**Closed: the term structure of leverage as an entry or a directional gate on the
+perp, at 4–72 hour horizons, on BTC and ETH.** The hard convergence anchor is
+real — the basis decays 153 → 8.6 bps into settlement, exactly as arbitrage says
+it must — but the *path* there carries nothing that survives a shuffled-date null
+at a 14bps hurdle.
+
+**Not claimed:** that the dated curve carries nothing anywhere. Untested here are
+longer horizons than 72h, the basis as a position-SIZE input rather than a
+direction, and the roll window itself. Those are new questions with new searches
+and they are logged, not run.
+
+The honest summary: the feed is real, obtainable, five years deep, free, and
+genuinely distinct from funding (0.004 correlation of changes). It still does not
+predict the perp.

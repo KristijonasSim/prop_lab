@@ -360,6 +360,21 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
 
+- **The term structure of leverage** (H-034, 2026-09-13) — dated quarterly
+  futures against the perp, `basis_ann = (front − perp)/perp × 365/days`. The
+  first feed here with a HARD arbitrage anchor: it must converge on a known date,
+  and it does (153 → 8.6 bps into settlement). Free, 22 of 22 quarterly cycles,
+  48,837 hourly rows per market 2021-02→2026-08, and genuinely NOT funding —
+  correlation **0.306 in levels, 0.004 in changes**, so H-004 and H-013 do not
+  cover it. **Pace passed** (57–243 events/year, against a floor of 40 fixed in
+  advance) and the edge test killed it. The level reading is absent (best pctile
+  78.2). The best arm, ETH curve-steepening at h=72, scored 205.13bps at pctile
+  95.2 and died on the year split (3 of 4, 2023 at −49.35); the same arm on BTC
+  scored 139.22 against a **null p95 of 171.46**, and K flips sign between BTC
+  (+35.15) and ETH (−11.26). At a 72h horizon the null is the same size as the
+  finding. **The dated contract is a feed, never a trade** — it turns over one
+  thousandth of the perp. `strategies/termstruct/`.
+
 - **CFTC positioning as a gate on H-027** (H-030, 2026-09-11) — eight gates from
   the weekly COT report (managed-money crowding, 1w/4w flow, total OI), used only
   from release time. **Every gate is slower than no gate**: 26.3–64.1 expected
