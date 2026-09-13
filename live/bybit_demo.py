@@ -387,15 +387,54 @@ def once(a) -> None:
                   f"stop {p.get('stopLoss') or 'none'}  "
                   f"uPnL {float(p.get('unrealisedPnl') or 0):+.2f}")
 
+    # THE EXCHANGE IS THE TRUTH ABOUT WHAT IS OPEN. Bybit nets, so the six legs
+    # live in a local file - and until 2026-09-13 nothing kept that file honest.
+    # On 2026-09-12 12:41 UTC the position was closed BY HAND from the Bybit UI
+    # at +$136.51, and the book still listed all six legs. Every later signal
+    # was skipped as "already open for this leg", so the bot could never trade
+    # again; its own exits could not clear it either, because a reduce-only
+    # order against a flat account is rejected and a rejected exit leaves the
+    # leg in the book. It would have sat dead until the 384h horizon in
+    # two weeks' time.
+    #
+    # A FLAT exchange is unambiguous - there is no position to enforce per-leg
+    # stops against - so the book is dropped and the next entry pass is treated
+    # as a cold start, for the same reason a first-ever run is: the bot is
+    # waking into a move that may already be extended.
+    #
+    # A PARTIAL mismatch is NOT unambiguous - a fill can be in flight, or a
+    # hand-sized trim can have landed - so it is never auto-resolved. It warns,
+    # and it opens nothing that pass. Exits still run: they are reduce-only and
+    # cannot grow a position it does not understand.
+    net_live = sum(float(p["size"]) * (1 if p["side"] == "Buy" else -1) for p in live)
+    net_book = sum(l["qty"] * (1 if l["side"] == "Buy" else -1)
+                   for l in st["open"].values())
+    desync = False
+    if st["open"] and not live:
+        print(f"  RECONCILE: the exchange is flat, the book holds "
+              f"{len(st['open'])} leg(s) - closed outside this bot. Dropping the "
+              f"book; the next entry pass is a cold start.")
+        st["open"] = {}
+        st.pop("started", None)
+        net_book = 0.0
+        if a.arm:
+            save_state(st)          # must survive an early return below
+    elif live and st["open"] and \
+            abs(net_live - net_book) > max(MIN_QTY, abs(net_book) * 0.01):
+        desync = True
+        print(f"  WARNING: the exchange holds {net_live:+.3f} XAU and the book "
+              f"says {net_book:+.3f}. No new legs this pass; exits still run.")
+
     # EXITS RUN ON EVERY PASS. They used to sit behind the weekend return and
     # the "no signal" return below, so a leg whose stop was touched on a quiet
     # bar stayed open until some later bar happened to fire. The kernel checks
     # every leg's stop on every bar; the weekend rule is about ENTRIES the
     # backtest never saw, not about leaving a stop unenforced.
-    no_entries = weekend and not a.weekends
-    if no_entries:
+    no_entries = (weekend and not a.weekends) or desync
+    if weekend and not a.weekends:
         print("  weekend bar - no new entries. The backtest never saw one "
               "(median range 6.8bps against 35.1 on weekdays). --weekends to allow.")
+    if no_entries:
         sigs = []
     else:
         # cold = this process has no book AND has never written one. A restart
