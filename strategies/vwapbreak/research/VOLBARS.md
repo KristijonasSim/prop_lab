@@ -108,3 +108,81 @@ Low. The one thing that argues for it is that every previous variant changed
 *what the band is*, while this changes *what a bar is* — the one input none of
 them touched. That is a genuinely different axis, which is why it is worth the
 day. It is not a reason to expect a result.
+
+---
+
+# RUN 1 IS VOID — a bug in this study, found 2026-09-13
+
+**The first run of `volclock.py` produced a number and the number was nonsense.**
+Recorded here rather than quietly re-run, because the failure is the third
+instance of one specific bug in this repo and the pattern is worth more than the
+result.
+
+## What it printed
+
+| tf | sigma bps | trades | win% | PF@2x | days |
+|---|---|---|---|---|---|
+| 1h (control) | 18.2 | 591 | 20.3 | 2.872 | 11.7 |
+| vol1h | **321.3** | 385 | **60.8** | 1.182 | **83.1** |
+| dol1h | **194.8** | 406 | 53.7 | 1.027 | 82.2 |
+
+Both arms "failed" the kill criterion. Neither result meant anything.
+
+## The cause
+
+`sweep.vwap_series` finds its session boundary by an **exact timestamp match**:
+
+```python
+at_anchor = (df.index.hour == anchor_hour) & (df.index.minute == anchor_minute)
+sess = at_anchor.cumsum()
+```
+
+Every 1h time bar carries one stamped exactly `00:00`, so on the control this
+fires **938 times** across the window. A volume bar is labelled at the first
+minute of its bucket — 21:37, 03:14 — and essentially never lands on `00:00`. It
+fired **8 times in three years** on `vol1h` and 19 on `dol1h`.
+
+So `cumsum` produced 8 sessions, the VWAP accumulated across months instead of
+resetting daily, and the band sigma measured multi-month dispersion of a series
+that ran $1,813 → $5,586. Median 326.6 bps against the control's 18.4.
+
+Everything downstream followed mechanically: stops are `2.5–8 × sigma`, so they
+became **8–25% wide**, nothing ever stopped out, every trade exited on the
+horizon, the win rate jumped to 60.8%, and R/day collapsed to 83 expected days.
+
+## Why it was caught
+
+The sigma column was in the printed table. 321 bps is 3.2%, and gold's intraday
+dispersion about its own VWAP is not 3.2%. **The diagnostic that caught it was
+printed beside the result rather than computed only when something looked
+wrong** — `subhour.py` put `sigma` and `s/cost` in its table for a different
+reason and that is what made this visible.
+
+## THE THIRD TIME
+
+`anchors.py::_snap` documents the same masking failure: a 13:30 anchor never
+occurs on a 1h series, the mask was empty, and the "NY anchor" arm printed 64.5%
+win rate and 402 expected days. Same mechanism, same shape of wrong answer — a
+high win rate and an absurd day count, which is what a stop that can never be
+hit looks like.
+
+**The lesson is not "check the anchor".** It is that `vwap_series` silently
+returns a whole-series VWAP when its mask misses, instead of failing. A mask that
+matches nothing is never intentional.
+
+## The fix
+
+`volclock.DayAnchored` resets on the **day change** rather than on a timestamp
+equal to `00:00`, reusing `anchors._vwap_on`. On time bars the two are provably
+identical — 938 sessions and 18.4 bps either way — and on an irregular clock the
+day change still means "reset at the start of the UTC day". Corrected sigma:
+**vol1h 21.0, dol1h 22.7**, against the control's 18.4.
+
+`strategies/vwap/sweep.py` is NOT touched. It is a declared kernel in
+`vwapbreak/manifest.py`, imported by every hypothesis on the board, and
+`anchors.py` already set the precedent that this arithmetic lives in research.
+
+**The wrapper is applied to the 1h control too.** The anchors are identical on
+time bars, so the control must reproduce 11.7 days and PF@2x 2.872. If it does
+not, the wrapper is wrong and run 2 is void as well. The check is built into the
+comparison rather than left to judgement.
