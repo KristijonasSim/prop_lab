@@ -30,8 +30,7 @@ from core.run_hypothesis import run_market, window                 # noqa: E402
 from strategies.vwapbreak.research.anchors import _vwap_on         # noqa: E402
 from strategies.vwapbreak.research.exits import (UNIVERSE,         # noqa: E402
                                                  WIDE_SIGMA, ExitVariant)
-from strategies.vwapbreak.research.subhour import (score,          # noqa: E402
-                                                   sigma_over_cost)
+from strategies.vwapbreak.research.subhour import score            # noqa: E402
 
 SYM = "XAUUSD"
 #: the control first, so the number every arm is judged against lands first

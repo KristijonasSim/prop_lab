@@ -70,7 +70,34 @@ why it must be measured rather than assumed.**
 
 **Cost:** one run of the existing pipeline per timeframe. Half a day, no new code.
 
-### 2. Volume bars instead of time bars **[NEVER DONE]**
+### 2. Volume bars instead of time bars **[DONE 2026-09-13 — DEAD]**
+
+> **The mechanism was present and it still did not pay.** Bar duration ran 26 min
+> at the NY open to 220 min at 21:00 UTC — an 8.5x spread — so the
+> heteroscedasticity the sigma band assumes away is real. Correcting for it
+> changes nothing that survives the noise floor.
+>
+> | tf | trades | tpd | PF@2x | null | days | band | pass% |
+> |---|---|---|---|---|---|---|---|
+> | **1h** control | 591 | 0.93 | **2.872** | 1.107 | **11.7** | 9–14 | 59.8 |
+> | vol1h | 598 | 0.94 | 1.945 | 0.819 | 13.1 | 11–18 | 60.9 |
+> | dol1h | 672 | 1.06 | 1.457 | 1.085 | 11.3 | 9–15 | **71.1** |
+>
+> Thresholds were calibrated to the control's bar count (17,699 / 17,698 against
+> 17,693 live), so the confound that killed item 1 is absent by construction —
+> and the trade counts confirm it: 591 / 598 / 672.
+>
+> **`dol1h` is the interesting failure.** Faster (11.3 vs 11.7) and pass rate
+> **59.8% → 71.1%** — and its band [9–15] overlaps the control's [9–14], so it is
+> not resolvable. Criterion 2, the rule that killed the percentage band. PF@2x
+> also falls monotonically 2.872 → 1.945 → 1.457: the clock buys pass rate by
+> spending edge quality, a trade the concurrency cap already offers without
+> rebuilding the bars.
+>
+> Run 1 was VOID on an anchor bug (`vwap_series` masks an exact `00:00` timestamp
+> that a volume bar never carries — 8 sessions in three years, 321bps sigma).
+> Pre-registration, the bug and the result: `research/VOLBARS.md`.
+> **This was the last open item in tier 1. Tier 1 is now fully closed.**
 
 Sample a bar every N contracts of volume rather than every hour. The VWAP, the
 band, the horizon and the stop are then all measured on the volume clock.

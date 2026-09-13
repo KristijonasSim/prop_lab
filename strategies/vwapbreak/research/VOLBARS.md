@@ -186,3 +186,60 @@ day change still means "reset at the start of the UTC day". Corrected sigma:
 time bars, so the control must reproduce 11.7 days and PF@2x 2.872. If it does
 not, the wrapper is wrong and run 2 is void as well. The check is built into the
 comparison rather than left to judgement.
+
+---
+
+# RESULT, run 2, 2026-09-13 — DEAD. Neither arm clears the criterion.
+
+**The control reproduced the board exactly**: 591 trades, PF@2x 2.872, 11.7 days
+[9–14], 59.8% pass. The day-change anchor is identical to the shipped one on time
+bars, as predicted, so the volume arms differ by the clock and nothing else. The
+run is readable.
+
+| tf | bars | sigma | s/cost | trades | tpd | win% | PF@2x | null | days | band | pass% |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **1h** control | 22,512 | 18.2 | 17.1 | 591 | 0.93 | 20.3 | **2.872** | 1.107 | **11.7** | 9–14 | 59.8 |
+| vol1h | 17,699 | 20.9 | 19.6 | 598 | 0.94 | 20.1 | 1.945 | 0.819 | 13.1 | 11–18 | 60.9 |
+| dol1h | 17,698 | 22.5 | 21.1 | 672 | 1.06 | 23.4 | 1.457 | 1.085 | 11.3 | 9–15 | **71.1** |
+
+## Against the criterion fixed before the run
+
+| arm | 1 faster | 2 band disjoint | 3 beats null | verdict |
+|---|---|---|---|---|
+| vol1h | no (13.1) | no | yes | **FAIL** |
+| dol1h | **yes (11.3)** | **no** | yes | **FAIL** |
+
+## `dol1h` is the interesting failure, and it is still a failure
+
+It is faster than the control, takes 14% more trades, and lifts pass rate
+**59.8% → 71.1%**. On the pass rate alone it looks like the best thing measured
+on this hypothesis in a week.
+
+Its band is **[9–15] against the control's [9–14]**. They overlap almost
+completely, so the difference is not resolvable and criterion 2 refuses it. This
+is the same rule that killed the flat percentage band in `squeeze.py`, and the
+noise-floor study exists precisely because a shuffled gate carrying no
+information once reached 60% pass in 14.5 days on this strategy.
+
+Two further things say the same: PF@2x falls monotonically **2.872 → 1.945 →
+1.457** across the three clocks, and `dol1h`'s margin over its own null collapses
+to 1.457 vs 1.085 against the control's 2.872 vs 1.107. **The clock buys pass
+rate by spending edge quality**, which is the trade the concurrency cap already
+offers without rebuilding the bars.
+
+## What this closes
+
+**The mechanism was present and still did not pay.** Bar duration ran 26 min at
+the NY open to 220 min at 21:00 UTC — an 8.5x spread — so the heteroscedasticity
+the sigma band assumes away is real and measurable. Correcting for it changes
+nothing that survives the noise floor.
+
+That is worth more than another dead variant. Every previous H-027 arm changed
+*what the band is*; this changed *what a bar is*, the one input none of them
+touched, and the answer is the same. **Tier 1 of `VWAP_BACKLOG.md` is now fully
+closed.**
+
+Not claimed: that volume bars carry nothing anywhere. This is one instrument, one
+rule, one three-year window, and `dol1h`'s pass-rate lift is a real number inside
+a band — it is unresolved, not disproved. Re-opening it needs a longer window to
+narrow the band, not another variant.
