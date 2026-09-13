@@ -26,9 +26,30 @@ directly it attacks the metric that decides everything* —
 
 ## TIER 1 — could move the headline number
 
-### 1. Run H-027 below 1h — 5m, 15m, 30m **[NEVER DONE]**
+### 1. Run H-027 below 1h — 5m, 15m, 30m **[DONE 2026-09-10 — DEAD]**
 
-**The single biggest gap in this hypothesis and I did not see it until today.** The
+> **RESULT, `research/subhour.py` → `backtests/vwapbreak/subhour.json`.** Nothing
+> below 1h is faster, and the reason is NOT the one predicted below.
+>
+> | tf | trades | tpd | PF@2x | null | days | band | pass % |
+> |---|---|---|---|---|---|---|---|
+> | **1h** | 591 | 0.93 | **2.872** | 1.107 | **11.7** | 9.3–14.0 | 59.8 |
+> | 30m | 643 | 1.02 | 1.348 | 0.805 | 13.2 | 11.3–17.3 | 60.8 |
+> | 15m | 606 | 0.95 | 2.003 | 0.875 | 12.5 | 11.0–16.9 | 56.1 |
+> | 5m | 701 | 1.10 | 1.862 | 0.666 | 16.9 | 13.9–20.7 | 65.1 |
+>
+> **The premise failed, not the cost arithmetic.** The whole case was "4x the
+> sessions is 4x the signals". It is not: trades/day goes 0.93 → 1.10 at 5m, a
+> 18% gain for a 12x finer bar, because `floor 30 / top 5` selection plus a
+> horizon measured in HOURS keeps the trade count roughly fixed no matter how
+> the bar is sliced. Sample size barely moves — 591 → 701.
+>
+> **And sigma/cost did NOT degrade** — 17.1 / 17.8 / 18.2 / 18.6 going down the
+> timeframes, slightly UP rather than falling towards 6. The predicted failure
+> mode never arrived; a different one did. Every sub-hour band overlaps 1h's, so
+> none of the differences is resolvable anyway.
+
+**The original entry, kept because the reasoning was sound and the prediction was wrong:** The
 board holds twenty cells: ten markets × **1h and 4h only**. The kernel, the grid,
 the walk-forward and the caches all support 5m, 15m and 30m — `data/` has
 `XAUUSD_dukascopy_5min`, `15min` and `30min` sitting there — and H-027 has never
@@ -92,7 +113,13 @@ Every number on the board is conditional on this one unmeasured input.
 **Cost:** one evening capturing quotes on a demo account.
 </details>
 
-### 4. Evaluation-aware position sizing **[NEVER DONE]**
+### 4. Evaluation-aware position sizing **[DONE 2026-09-10 — ADOPTED]**
+
+> **The best safety lever the project has found.** Budget-linear sizing — size in
+> proportion to the drawdown budget still remaining — took pass **65.8% → 77.0%**
+> and blown accounts **29.5% → 16.9%** for 1.7 expected days. `still_open` moves
+> only 4.7% → 6.2%, so it is not the fake-zero-fail trap CLAUDE.md warns about.
+> It is live in `core/chosen.py["sizing"]` and in the demo bot. `tier1.py`.
 
 Size each trade against the *remaining* daily and max-drawdown budget rather than a
 flat 2%: cut size when the day is already down 2%, and when the account is near its
@@ -109,7 +136,12 @@ honest version scales *within* a fixed schedule declared in advance and is score
 on the same PASS/FAIL simulation with real breaches. If it only survives by never
 trading, that shows up as `still_open` and it fails.
 
-### 5. Risk scaled by band width **[NEVER DONE]**
+### 5. Risk scaled by band width **[SETTLED 2026-09-10 — NO WORK NEEDED]**
+
+> **The strategy is already volatility targeted by construction.** The stop is
+> `k × sigma` and size is set so a stop-out costs `risk_pct`, so position size is
+> already ∝ 1/σ. There is nothing here to add. The `min_risk_bps` floor binds on
+> ~5% of bars. `tier1.py`.
 
 Position size ∝ 1/σ, so a wide-band session takes a smaller position.
 
@@ -120,7 +152,19 @@ untried way to cut the 37.8% blow-up rate without touching the signal.
 
 ---
 
-## TIER 2 — real VWAP variants, none of them tested
+## TIER 2 — real VWAP variants **[ALL CLOSED 2026-09-10 — `research/squeeze.py`]**
+
+> **Every item 6–13 below was run in one study on 2026-09-10** and the entry axis
+> of H-027 is now closed by measurement. 1h PF@2x: base **2.872**, pct 1.647, atr
+> 1.583, asym 1.346, sunday 1.304, stderr 1.230, compression 1.144, **swing
+> 1.009**, confluence 0.544. The swing anchor — rated the most promising VWAP idea
+> remaining when this file was written — scores 1.009; event anchors die the way
+> clock anchors did. Only the flat percentage band is faster on both timeframes
+> (9.3 vs 11.7 on 1h) and its band overlaps the baseline's, so the gain is not
+> resolvable. `backtests/vwapbreak/squeeze.json`.
+>
+> **Do not re-propose anything in this tier.** The text is kept for the reasoning,
+> not as work.
 
 ### 6. Anchored VWAP from the last swing high or low **[NEVER DONE]**
 
@@ -199,14 +243,29 @@ filter was tested and was slower; band-width percentile is not the same quantity
 
 ## TIER 3 — validation. Not edge, but nothing gets traded without it
 
-### 14. Second engine on the Asian range and on partial 2R
+### 14. Second engine on the Asian range and on partial 2R **[DONE 2026-09-10 — BOTH PASS]**
+
+> 20 of 20 arm-configurations match every bar through NautilusTrader, written from
+> the RULE rather than translated from the kernel. Entry-bar match **1.0000**,
+> exit-bar match 1.0000, `max |dR|` **7.0e-08** on the partial and **2.2e-16** on
+> the Asian range. Both are eligible to trade on the same standard as the shipped
+> rule. `nautilus_check2.py`.
 
 Both are candidates as of today and neither has been near NautilusTrader. The
 current pick matched 14 of 14 configurations bar for bar; a new arm has zero. **The
 look-ahead fix of 2026-09-06 took a whole crypto book off this board.** Nothing
 enters `core/chosen.py` without this.
 
-### 15. Eleven years of gold on whatever wins
+### 15. Eleven years of gold on whatever wins **[DONE 2026-09-10 — AND IT OVERTURNED THE DAY'S BEST FIND]**
+
+> 40 quarters instead of 8. **Nothing is faster than the baseline** (20.0 days
+> [18–23]); partial 2R and the Asian range sit OUTSIDE that band on the slow side
+> (21–27), so their slowness is real rather than noise. **Partial 2R was rejected
+> here**: over three years it doubled the win rate (20.3% → 41.9%) at the same
+> pace, but over eleven its PF falls to 1.168 and its worst quarter carries 64.5%
+> of the profit against the baseline's 48.3%. The Asian range is the most robust
+> arm the project has measured — 71.4% pass, lowest quarter concentration.
+> `longcandidates.py`.
 
 The three-year window said 14.5 expected days; eleven years said **20.0**, and the
 band halved. Every new arm measured today has two years behind it.
@@ -246,7 +305,14 @@ slope gate on this exact strategy lost to precisely that control.
 Beat its null on both timeframes today (1.829 and 1.618) but was slower than the
 baseline. Only the 24-hour accumulation was tested; the length was not swept.
 
-### 22. Gold's own feed layer (H-030 in the backlog)
+### 22. Gold's own feed layer (H-030) **[DONE 2026-09-11 — DEAD]**
+
+> Eight pre-registered COT gates on the traded rule's own OOS trades. **Every gate
+> is slower than no gate** — 26.3–64.1 expected days against 21.7. The crowding
+> story runs backwards: refusing the side managed money is crowded on cuts PF@2x
+> 2.872 → 1.766, so gold breakouts WITH the crowd are the good ones. Free CME GC
+> volume/OI history does not exist and SPDR's GLD archive is now a PDF, so gold
+> still trades naked. `strategies/goldfeed/notes.md`.
 COT positioning weekly, CME volume and open interest daily. Gold is the only
 survivor and it trades naked. Slow data, so it can only gate, not trigger —
 and it is the only genuinely *new information* available to this strategy.
