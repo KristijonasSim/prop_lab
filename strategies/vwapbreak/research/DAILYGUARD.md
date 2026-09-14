@@ -75,3 +75,83 @@ condition 2 is reported as "survival, not speed" and never as "beats H-027".**
 > If no threshold beats the baseline on either condition, on both timeframes,
 > the account-overlay axis is closed alongside the other five and H-027 is
 > finished being tuned.
+
+---
+
+# RESULT — 2026-09-14. Survival, not speed. Promising, not proven.
+
+`backtests/vwapbreak/dailyguard.json`. Gold, blind walk-forward, floors 30 /
+top 5, Thunderbolt one-step, data to 2026-09-13.
+
+| 1h | trades | risk | days | band | pass% | blown% | failDaily% |
+|---|---|---|---|---|---|---|---|
+| **none** | 957 | 3.0% | **17.8** | 13.9–23.3 | 50.7 | **49.3** | **23.3** |
+| −1.0% | 595 | 3.0% | 20.3 | 15.0–24.0 | 59.2 | **40.8** | **3.2** |
+| −1.5% | 694 | 3.0% | 18.6 | 14.8–24.1 | 53.9 | 46.1 | 8.5 |
+| −2.0% | 844 | 2.0% | 19.1 | 15.2–24.7 | 57.6 | 42.4 | 4.3 |
+| −2.5% | 813 | 3.0% | 18.5 | 14.3–23.3 | 51.2 | 48.8 | 18.6 |
+
+| 4h | trades | risk | days | band | pass% | blown% | failDaily% |
+|---|---|---|---|---|---|---|---|
+| **none** | 599 | 3.0% | **34.4** | 27.5–54.5 | 29.1 | **70.5** | **52.5** |
+| −1.0% | 477 | 2.0% | 51.2 | 35.2–83.1 | 50.7 | **48.3** | **0.0** |
+| −1.5% | 477 | 3.0% | 39.3 | 29.3–64.0 | 28.0 | 71.6 | 34.3 |
+| −2.0% | 521 | 3.0% | 39.9 | 28.3–63.4 | 27.6 | 72.0 | 42.2 |
+| −2.5% | 540 | 3.0% | 35.4 | 27.3–53.6 | 29.6 | 70.0 | 40.9 |
+
+## Against the two conditions fixed before the run
+
+**Condition 1 — fewer expected days with a non-overlapping band: FAILED
+everywhere.** Not one arm is faster than no guard on either timeframe. Every
+band overlaps. The guard does not make the evaluation quicker and nothing here
+may be read as if it does.
+
+**Condition 2 — same expected days with a materially lower blow-up rate: MET by
+−1.0% on both timeframes.** Bands overlap the baseline's in both cases, and:
+
+* 1h: blow-ups **49.3% → 40.8%**, pass 50.7 → 59.2
+* 4h: blow-ups **70.5% → 48.3%**, pass 29.1 → 50.7
+
+Per the pre-registration this is reported as **"survival, not speed"** and is
+**not** a claim that anything beats H-027.
+
+## Why this is weaker than the table looks — three reasons, all pre-registered
+
+**1. The curve is NOT monotone, and monotonicity was the stated test.** On 4h,
+blow-ups at −2.5/−2.0/−1.5 are 70.0/72.0/71.6 — indistinguishable from the
+baseline's 70.5 — and then −1.0% drops to 48.3. **That is a step at one
+threshold with its neighbours flat, which the pre-registration named as the
+H-038 signature for noise.** 1h wobbles too: 48.8 → 42.4 → 46.1 → 40.8 is
+broadly falling but not clean.
+
+There is a plausible mechanism for a threshold effect — a guard only helps if it
+triggers *before* the account is already dead, and the loose ones rarely do —
+but a mechanism invented after seeing the table is not evidence. **A finer
+sweep (−0.5, −0.75, −1.0, −1.25) is what would settle whether this is a curve
+or a spike, and it has not been run.**
+
+**2. The falling daily-failure rate is arithmetic, not evidence.** A guard that
+stops trading on bad days *must* cut daily-cap breaches; 23.3% → 3.2% is the
+mechanism working, not the edge being real. Only the TOTAL blow-up rate counts,
+and that moved far less.
+
+**3. The risk rung is a confound.** `score` picks the fastest rung per arm, and
+the −1.0% arm landed on **2.0% risk on 4h against the baseline's 3.0%**. Lower
+risk cuts blow-ups on its own. That comparison is not clean and the arm should
+be re-read at a rung held fixed.
+
+## Verdict
+
+**Not a win, and the first thing on this hypothesis in weeks that is not simply
+dead.** The direction is consistent across both timeframes and the mechanism is
+the one H-039 predicted. It is held back by a non-monotone curve and a risk-rung
+confound, either of which could explain the whole result.
+
+**Next, in order, and neither is optional before this is believed:**
+
+1. the finer threshold sweep, to tell a curve from a spike;
+2. every arm re-scored at a **fixed** risk rung, to remove the confound.
+
+Only if it survives both does **pct + guard** become worth running — `pct` is
+the only lever that has ever raised trade frequency (2.63/day against 1.32) and
+it died on exactly the quantity this guard moves.
