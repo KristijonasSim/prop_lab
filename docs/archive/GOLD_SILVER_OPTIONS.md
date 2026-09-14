@@ -72,7 +72,7 @@ Gold and silver stop trading for roughly 90 minutes a day (COMEX daily halt,
 **The mechanism, if it is one.** This is a close-to-open risk premium: someone has
 to carry metal through a window where the position cannot be exited, and whoever
 will is paid for it. Same family as the equity overnight premium in
-`SECOND_HYPOTHESIS.md` Candidate A, but on the instrument whose edge-to-cost
+`docs/archive/SECOND_HYPOTHESIS.md` Candidate A, but on the instrument whose edge-to-cost
 ratio is the best in this repo. Nameable payer: intraday participants who flatten
 before the halt rather than hold through it.
 
@@ -110,7 +110,7 @@ measurement and no strategy code.
 against a +6.52 bps gross edge. Cost is 3x the edge. Trade this on gold or not at
 all.
 
-> **Open discrepancy, flagged not resolved:** `RESEARCH_2026-09-10_WHY.md` quotes
+> **Open discrepancy, flagged not resolved:** `docs/archive/RESEARCH_2026-09-10_WHY.md` quotes
 > gold at 1.06 bps and silver at 4.70 bps round trip; this file's measured
 > spreads give 3.34 and 20.3. Both cannot be right and the gap decides silver
 > entirely. Worth an hour before any number here is quoted onward.

@@ -1,7 +1,7 @@
 # H-034 — the term structure of leverage
 
 **PRE-REGISTERED 2026-09-13, before the first measurement.** Kris: *"please test
-next hypothesis."* Proposed in `NEXT_HYPOTHESIS_2026-09-13.md`.
+next hypothesis."* Proposed in `docs/archive/NEXT_HYPOTHESIS_2026-09-13.md`.
 
 ## Mechanism, before any result
 
@@ -84,7 +84,7 @@ edge.
 > **A reading must fire at least 40 times a year on BTCUSDT.** Below that it
 > cannot resolve a 5–14 day evaluation and **H-034 dies without an edge test.**
 
-This number is carried unchanged from `NEXT_HYPOTHESIS_2026-09-13.md`, written
+This number is carried unchanged from `docs/archive/NEXT_HYPOTHESIS_2026-09-13.md`, written
 before any of this was measured. It is not to be relaxed after seeing the count.
 
 ### Gate B — EDGE, only if Gate A passes

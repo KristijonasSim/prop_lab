@@ -1,6 +1,6 @@
 """One interface over both kernels, so an invariant is written once.
 
-Item 2 of `STEPS_1_2_4.md`. Every test in this directory runs against every
+Item 2 of `docs/archive/STEPS_1_2_4.md`. Every test in this directory runs against every
 kernel through `KERNELS`. Adding a third hypothesis means adding an adapter
 here, and it inherits the whole suite - which is also the shape item 4 turns
 into `core/strategy.py`, so this is a rehearsal for that refactor, not throwaway.

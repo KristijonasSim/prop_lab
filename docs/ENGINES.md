@@ -12,7 +12,7 @@ one is, what exists, and what does not.
 | piece | state |
 |---|---|
 | `core/target_profile.py` — what shape a strategy must have to pass the firm | built |
-| `CANDIDATES.md` — what survived 26 hypotheses, what is untested, what is closed | written |
+| `docs/CANDIDATES.md` — what survived 26 hypotheses, what is untested, what is closed | written |
 | A gate that every idea must pass before code is written | **missing** |
 
 **Not started properly.** Agreed with Kris: after Engine 2.

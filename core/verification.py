@@ -1,7 +1,7 @@
 """The verification gate. A hypothesis cannot hold a real board score until the
 checks pass, in code.
 
-Item 2 of `STEPS_1_2_4.md`. The root cause of every "it worked, then it was a
+Item 2 of `docs/archive/STEPS_1_2_4.md`. The root cause of every "it worked, then it was a
 bug" event in this project is that results are published before they are
 verified:
 

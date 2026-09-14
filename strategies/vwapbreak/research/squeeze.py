@@ -3,7 +3,7 @@
 Kris, 2026-09-10: *"i want to finish with vwap, squeeze it as much as we can, launch
 it on demo and move to other hypothesis"*.
 
-This is the last entry-side run on H-027. Everything in `VWAP_BACKLOG.md` tier 2
+This is the last entry-side run on H-027. Everything in `docs/VWAP_BACKLOG.md` tier 2
 that has not already been killed is an arm here, so that when it is done the axis
 is closed with a measurement rather than with an opinion.
 

@@ -7,7 +7,7 @@
 > newest `SESSION_*.md`.
 
 
-Short version for whoever picks this up next. Full detail is in `HANDOFF.md`.
+Short version for whoever picks this up next. Full detail is in `docs/archive/HANDOFF.md`.
 
 ## Clone and set up
 

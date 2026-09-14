@@ -1,7 +1,7 @@
 # Next session — start here
 
-Written 2026-09-09 at session close. `ENGINES.md` is the machine, `CLAUDE.md` the
-rules, `SESSION_2026-09-09.md` the workings behind everything below. This file is
+Written 2026-09-09 at session close. `docs/ENGINES.md` is the machine, `CLAUDE.md` the
+rules, `docs/archive/SESSION_2026-09-09.md` the workings behind everything below. This file is
 only what to do next.
 
 ---

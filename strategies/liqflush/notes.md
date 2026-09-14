@@ -1,6 +1,6 @@
 # H-031 — liquidation-pressure fade
 
-Kris picked it 2026-09-11 ("ok start") from `NEXT_HYPOTHESIS_2026-09-10.md`.
+Kris picked it 2026-09-11 ("ok start") from `docs/archive/NEXT_HYPOTHESIS_2026-09-10.md`.
 
 ## Mechanism, before any result
 
@@ -98,7 +98,7 @@ at 2% risk. That is the lottery effect `riskladder.pick` warns about: a
 **losing** book at 10 concurrent positions passes 26–43% of accounts on
 variance and blows the other 57–74%. It is not a pace.
 
-**What this closes.** `NEXT_HYPOTHESIS_2026-09-10.md` ranked H-006-R third on
+**What this closes.** `docs/archive/NEXT_HYPOTHESIS_2026-09-10.md` ranked H-006-R third on
 the argument that H-031 would answer the stop question for both. It did: a stop
 does not repair a slow-drift feed signal, it harms it. H-006-R is closed on the
 same evidence.

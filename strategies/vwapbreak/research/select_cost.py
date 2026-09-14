@@ -1,6 +1,6 @@
 """The fold selector ranks on 1x cost. The repo's own rule says 2x. Does it matter?
 
-THE DEFECT. `README.md` 3.3 and `START_HERE.md` both carry the same hard-learned
+THE DEFECT. `README.md` 3.3 and `docs/archive/START_HERE.md` both carry the same hard-learned
 rule:
 
     "Select configurations on 2x-cost profit factor inside the fold, not on 1x

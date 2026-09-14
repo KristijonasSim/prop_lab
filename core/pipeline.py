@@ -100,7 +100,7 @@ class Pipeline:
     `run(df, cfg, fee_bps, slip_bps, feats=...)`. See `core/strategy.py`.
     """
 
-    #: WHICH COST THE FOLD SELECTOR RANKS ON. README.md 3.3 and START_HERE.md
+    #: WHICH COST THE FOLD SELECTOR RANKS ON. README.md 3.3 and docs/archive/START_HERE.md
     #: both state the rule outright - "Select configurations on 2x-cost profit
     #: factor inside the fold, not on 1x with a 2x check afterwards. Selecting on
     #: 1x and checking 2x afterwards let four fragile legs into the book." That

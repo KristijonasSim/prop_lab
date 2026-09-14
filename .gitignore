@@ -31,8 +31,12 @@ data/ticks/
 # rebuild time (~4 min/coin) turns out to matter more than the repo size.
 data/feeds/*_depth_5m.parquet
 
-# paper-trade signal log: a run artefact, not a result
+# paper-trade signal logs: run artefacts, not results. `signals.jsonl` was
+# tracked until 2026-09-14 and held 16 BTCUSDT rows from 2026-08-31, i.e. from
+# before the look-ahead fix killed every crypto leg. Nothing reads either file
+# back; `live/paper_trade.py` and `live/vwapbreak_paper.py` only append.
 live/paper/vwapbreak_signals.jsonl
+live/paper/signals.jsonl
 
 # never commit exchange credentials
 *.env

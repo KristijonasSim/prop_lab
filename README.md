@@ -5,7 +5,10 @@ every AI agent and every human who opens this repository.**
 
 ---
 
-## 0. The four files that matter, and the order to read them
+## 0. Where everything lives, and the order to read it
+
+Six files sit at the root. They are the ones that are kept current; everything
+else is reference or history, and lives under `docs/`.
 
 | file | what it is | when to read |
 |---|---|---|
@@ -13,15 +16,27 @@ every AI agent and every human who opens this repository.**
 | **`HOW_TO_ANSWER.md`** | how to talk to Kris. Overrides your default style. | **before your first reply** |
 | **`CLAUDE.md`** | standing rules + the known-dead list | before proposing anything |
 | **`NEXT.md`** | the current plan, and what is blocked on Kris | before starting work |
+| **`STRATEGY_LOG.md`** | one row per variation ever tested, pass or fail | before proposing anything |
+| **`RESEARCH_LOG.md`** | the reasoning behind each verdict | when a verdict looks wrong |
 
-| **`IDEAS.md`** | project-level levers, not hypotheses. Unagreed until Kris picks. | when the plan feels stuck |
+`docs/` holds reference that is consulted rather than followed:
 
-Then, as needed: `SESSION_<date>.md` for why the last session did what it did,
-`STRATEGY_LOG.md` for every variation ever tested, `RESEARCH_LOG.md` for the
-reasoning behind each verdict.
+| file | what it is |
+|---|---|
+| `docs/ENGINES.md` | the three engines - what exists and what does not |
+| `docs/FIRMS.md` | every firm's rules run against OUR trade series, not their marketing |
+| `docs/LIVE_TEST.md` | the demo-account test and the rule it trades |
+| `docs/VWAP_BACKLOG.md` | everything left to test on H-027, ranked |
+| `docs/CANDIDATES.md` | candidate mechanisms not yet built |
+| `docs/IDEAS.md` | project-level levers, not hypotheses. Unagreed until Kris picks. |
+| `core/KERNEL_CONTRACT.md` | what a kernel must guarantee. Binding on code. |
+| `live/ACCESS.md`, `live/DEPLOY_VM.md` | keys, hosts, and the bot's deployment |
 
-`HANDOFF.md` and `START_HERE.md` are **historical**. They contain real findings
-but their "current state" sections are stale. Do not take a number from them.
+`docs/archive/` is **history: session notes, superseded plans, and dead
+hypotheses' workings.** It is kept because the failures are the denominator -
+`STRATEGY_LOG.md` counts them and the archive says why. **Do not take a current
+number from anything in there.** Two of its files, `HANDOFF.md` and
+`START_HERE.md`, were the entry point once and still read as if they are.
 
 ---
 

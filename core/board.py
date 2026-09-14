@@ -161,7 +161,7 @@ def write_board(*, sid: str, hid: str, name: str, tagline: str, period: str,
             f"write_board({sid!r}) needs manifest=. Create "
             f"strategies/{sid}/manifest.py declaring KERNELS, SCORING, DATA and "
             f"COSTS (copy strategies/vwap/manifest.py) and pass its MANIFEST. "
-            f"See STEPS_1_2_4.md item 1. Without it the board cannot tell when "
+            f"See docs/archive/STEPS_1_2_4.md item 1. Without it the board cannot tell when "
             f"this record stops being true.")
     order = np.argsort(pd.DatetimeIndex(exit_ts).values, kind="stable")
     r = np.asarray(r)[order]

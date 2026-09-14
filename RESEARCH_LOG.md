@@ -1144,7 +1144,7 @@ result as unverified rather than as evidence.
 
 ### H-007 Cross-sectional crypto ranking — rejected (2026-09-01)
 
-Requested by Kris and never started; `HANDOFF.md` predicted failure on the grounds
+Requested by Kris and never started; `docs/archive/HANDOFF.md` predicted failure on the grounds
 that time-series momentum beats cross-sectional in crypto and that coins are too
 correlated. It failed, but not for that reason, and the way it failed is worth
 keeping.
@@ -1177,7 +1177,7 @@ Five high-beta majors with pairwise correlation above 0.7 is not a cross-section
 "top 1 vs bottom 1" of five names is closer to a coin-flip on dispersion than to
 the published mechanic, and the long-only variant is close to a leveraged bet on
 whichever alt is hottest. Testing it properly needs a data download, which
-`START_HERE.md` currently forbids. Recorded here as the decision point rather
+`docs/archive/START_HERE.md` currently forbids. Recorded here as the decision point rather
 than taken unilaterally.
 
 Caveat on the null: the spread across five shuffle seeds was wide — 0, 1, 2, 9
@@ -2189,7 +2189,7 @@ on whichever alt is hottest. This is a fair test of *what is committed to the
 repo*, not a fair test of the published hypothesis.
 
 **The one thing that would change the answer:** a 50–100 coin universe. That
-needs a data download, which `START_HERE.md` says not to do. It is the only open
+needs a data download, which `docs/archive/START_HERE.md` says not to do. It is the only open
 route, and the 0x-cost result is the only reason it might be worth taking —
 a real-but-tiny edge across five names could be a tradeable edge across a hundred,
 because dispersion rises with universe size while the cost per trade does not.
@@ -2611,6 +2611,58 @@ risk ladder re-simulates the SAME trade series at a different position size. No
 configuration is re-chosen, no search happens, nothing is selected. It is
 arithmetic on a fixed series, not a result pulled out of a grid.
 
-It is also `IDEAS.md` item B — "split evaluation risk from funded risk", flagged
+It is also `docs/IDEAS.md` item B — "split evaluation risk from funded risk", flagged
 high value and never started — arrived at from the other direction.
 
+
+---
+
+## 2026-09-14 — the demo bot's backstop was read off the wrong side of the book
+
+Found by reading the VM's log after a stop-out, not by a test. Nothing here
+changes a backtest number; it changes what the live bot can be trusted to do.
+
+### What the log actually said
+
+At 02:02 UTC the bot opened two LONG legs on XAUUSDT, stops at 4349.78 and
+4346.66, and set the exchange backstop at 4346.66 — correct, for that book.
+Price fell, the backstop fired, and the 03:02 pass found the exchange flat and
+dropped the book. Equity went 10,116.50 → 10,062.47, a loss of **$54 against
+the $36 the book called "risk at stops"**.
+
+**That gap is the design, not a bug.** The exchange holds ONE stop, so the
+tighter leg rides 3.12 points past its own level until either the hourly pass
+closes it or the backstop takes everything. `live/bybit_cron.sh` says so in its
+header and prices it at about half a percent of equity. It is the argument for a
+shorter cron interval, not evidence of a defect.
+
+### The two defects that were there
+
+**1. The level came from the wrong side of a mixed book.** `set_backstop` was
+handed `min(stop)` over the legs whose side was `"Buy"`, falling back to
+`max(stop)` over the whole book only when there were none. A book holding longs
+AND shorts therefore priced a net-SHORT position off its long legs' stops, which
+sit BELOW the price instead of above it. Bybit rejects that.
+
+**It is reachable.** The five VWAP legs read one rule and always agree, but the
+Asian-range leg reads a different one and can disagree with them on a bar — that
+is why it is in the book at all, at 0.114 correlation. It has not happened yet.
+
+**2. The exchange's answer was never read**, and this is why defect 1 could not
+have been found from the log it wrote. The return value was discarded and the
+caller printed `backstop stop-loss set at {level}` whether the exchange had
+accepted the stop or refused it. **A rejected stop and a live one produced
+identical logs.** An account with no stop on it looked exactly like a protected
+one.
+
+### The lesson, which is not specific to this bot
+
+The first defect is latent and the second is what made it invisible. A bot that
+reports an action rather than its result cannot be audited from its own log, and
+this log was the only artefact anyone was going to read. **Check the return, and
+print what came back rather than what was sent** — the same discipline the exit
+path already had, which is why the 2026-09-12 hand-close was caught.
+
+`backstop_level` now takes the net side of the book first and the furthest stop
+among the legs facing that way, and returns `None` when the book nets flat,
+where no single level means anything. Six tests in `tests/test_bybit_exits.py`.

@@ -337,7 +337,7 @@ else here can express, and the history grows every day.
 
 ## 3a. RESULTS — all three were built and tested the same day
 
-Full detail in `SESSION_2026-09-06.md` and seven new rows in `STRATEGY_LOG.md`.
+Full detail in `docs/archive/SESSION_2026-09-06.md` and seven new rows in `STRATEGY_LOG.md`.
 
 | # | hypothesis | verdict |
 |---|---|---|

@@ -1,6 +1,6 @@
 # TASKS — written 2026-09-07 after pulling `baaa763`
 
-Source: `NEXT.md` (plan, 2026-09-06) + `SESSION_2026-09-06.md` (why).
+Source: `NEXT.md` (plan, 2026-09-06) + `docs/archive/SESSION_2026-09-06.md` (why).
 This file is the checklist. `NEXT.md` is the reasoning behind it.
 
 **State in one line:** gold (XAUUSD) is the only edge that ever beat a paired null
@@ -160,7 +160,7 @@ If none reach ~45 days, say so plainly. A real edge that is 4x too slow is a leg
 
 ## BACKLOG — logged, ranked, not started
 
-Source: `RESEARCH_2026-09-06_FEEDS_AND_HYPOTHESES.md` §3, and `SESSION_2026-09-06.md` §"What is left".
+Source: `docs/archive/RESEARCH_2026-09-06_FEEDS_AND_HYPOTHESES.md` §3, and `docs/archive/SESSION_2026-09-06.md` §"What is left".
 Of the ten ranked hypotheses, H-024/025/026/027/028 were built and closed the same day. These five remain.
 
 | ID | hypothesis | why it is here | why it is not higher |

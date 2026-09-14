@@ -230,8 +230,17 @@ backtests/    results + logs, one subfolder per run
 data/         cached historical bars (parquet, gitignored)
 live/         execution scripts
 core/         shared engine glue, metrics, prop rules, data loaders
-notebooks/    scratch
+tests/        the suite. `pytest` is the fast run, `pytest -m slow` the engines
+mechanisms/   pine/    notebooks/    scratch and published artifacts
+docs/         reference that is consulted, not followed
+docs/archive/ history: session notes, superseded plans, dead hypotheses
 ```
+
+**Six files live at the root and all six are kept current** — `README.md`,
+`HOW_TO_ANSWER.md`, `CLAUDE.md`, `NEXT.md`, `STRATEGY_LOG.md`, `RESEARCH_LOG.md`.
+Anything else in markdown is under `docs/`. **Nothing in `docs/archive/` holds a
+current number**; it is kept because the failures are the denominator and the
+archive is where the workings behind them live.
 
 `STRATEGY_LOG.md` — one row per variation tested, pass or fail.
 `RESEARCH_LOG.md` — long findings.
@@ -305,7 +314,7 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   PF 1.20 at 2x went **11 → 0 on BTCUSDT** (best cell 2.305 → 0.882) and the wide
   11-coin book clears **1 of 132 legs**. The board's 28.5d / 9.7d numbers came from
   the bug. **Gold and EURUSD are the only survivors.** Any pre-2026-09-06 crypto
-  board number is an artifact — check `SESSION_2026-09-06.md` before quoting one.
+  board number is an artifact — check `docs/archive/SESSION_2026-09-06.md` before quoting one.
 - **Power of Three / AMD** (H-026) — accumulation, manipulation, distribution, four
   session clocks, five feed conditioners. The sweep-reversal **loses gross** on BTC
   (−3.1 to −8.5bps) and ETH (−8.2 to −17.1) and wins on SOL (+7.8 to +14.6) at
@@ -487,7 +496,7 @@ and taking that bonus would be optimism in the other direction.
 
 **RESOLVED 2026-09-09 — and neither was a look-ahead.** Both were diagnosed by
 dumping each engine's state at the disputed bar; the workings are in
-`SESSION_2026-09-09.md`.
+`docs/archive/SESSION_2026-09-09.md`.
 
 * **30m, MODE_PULLBACK / MODE_RECLAIM, anchor 13:30 — the RULE was ill-posed,
   not either engine.** Both modes ask whether the PREVIOUS bar closed above or

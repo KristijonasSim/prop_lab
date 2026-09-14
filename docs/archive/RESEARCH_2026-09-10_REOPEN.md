@@ -1,6 +1,6 @@
 # H-028, the metals daily-reopen premium — proposed, measured, dead in one session
 
-Written 2026-09-10. Kris picked Candidate 1 from `GOLD_SILVER_OPTIONS.md`.
+Written 2026-09-10. Kris picked Candidate 1 from `docs/archive/GOLD_SILVER_OPTIONS.md`.
 It is dead. This file is the denominator.
 
 **The claim.** Gold and silver stop trading for ~90 minutes a day (COMEX halt,
@@ -151,7 +151,7 @@ the all-hours spread there. Nobody had measured it.
 **H-028 is dead.** Logged in `STRATEGY_LOG.md`. Nothing built, no kernel written,
 no board entry. Cost: one session.
 
-Remaining from `GOLD_SILVER_OPTIONS.md`: Candidate 2 (gold/silver ratio relative
+Remaining from `docs/archive/GOLD_SILVER_OPTIONS.md`: Candidate 2 (gold/silver ratio relative
 value — but 23.6 bps a round trip and H-008 says expect a flat z-response) and
 Candidate 3 (macro release — clean mechanism, one trade a week, needs a calendar
 download). Neither is picked.

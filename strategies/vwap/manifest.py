@@ -1,6 +1,6 @@
 """What H-002's board record depends on. Read by the board stage, not by humans.
 
-Item 1 of `STEPS_1_2_4.md`. `core/fingerprint.py` hashes everything named here
+Item 1 of `docs/archive/STEPS_1_2_4.md`. `core/fingerprint.py` hashes everything named here
 and writes the result into `backtests/vwap/board.json`; `core/build_scoreboard.py`
 rehashes it at render time and flags the card if anything moved.
 

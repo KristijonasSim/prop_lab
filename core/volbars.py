@@ -1,7 +1,7 @@
 """Bars sampled on the VOLUME clock instead of the time clock.
 
-Tier 1 item 2 of `VWAP_BACKLOG.md`. The pre-registration, including the kill
-criterion and the caveats, is in `strategies/vwapbreak/research/VOLBARS.md` and
+Tier 1 item 2 of `docs/VWAP_BACKLOG.md`. The pre-registration, including the
+kill criterion and the caveats, is in `strategies/vwapbreak/research/VOLBARS.md` and
 was written before the first run.
 
 WHY THIS EXISTS. A standard-deviation band assumes observations that are close

@@ -1,6 +1,6 @@
 # H-027 on the VOLUME CLOCK — pre-registered 2026-09-13, before the first run
 
-Tier 1 item 2 of `VWAP_BACKLOG.md`. Kris asked for all of tier 1 on 2026-09-10;
+Tier 1 item 2 of `docs/VWAP_BACKLOG.md`. Kris asked for all of tier 1 on 2026-09-10;
 item 1 (sub-hour) was run that day and died, item 4 was adopted, item 5 needed no
 work. **This is the last one left.**
 
@@ -236,7 +236,7 @@ nothing that survives the noise floor.
 
 That is worth more than another dead variant. Every previous H-027 arm changed
 *what the band is*; this changed *what a bar is*, the one input none of them
-touched, and the answer is the same. **Tier 1 of `VWAP_BACKLOG.md` is now fully
+touched, and the answer is the same. **Tier 1 of `docs/VWAP_BACKLOG.md` is now fully
 closed.**
 
 Not claimed: that volume bars carry nothing anywhere. This is one instrument, one

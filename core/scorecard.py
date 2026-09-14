@@ -351,7 +351,8 @@ def compute(m: dict) -> Scorecard:
     if m.get("beats_null") is not True and total > NULL_CAP:
         total, null_capped = NULL_CAP, True
 
-    # Staleness gate (item 1 of STEPS_1_2_4.md). `stale` is set by
+    # Staleness gate (item 1 of docs/archive/STEPS_1_2_4.md). `stale` is set
+    # by
     # core/build_scoreboard.py after rehashing the record's fingerprint against
     # the files on disk. A result produced by a kernel that has since changed has
     # not been shown to hold on the kernel that exists now, which is the same
@@ -362,8 +363,8 @@ def compute(m: dict) -> Scorecard:
     if m.get("stale") is True and total > EVIDENCE_CAP:
         total, stale_capped = EVIDENCE_CAP, True
 
-    # Verification gate (item 2 of STEPS_1_2_4.md). The project's order of work
-    # was backwards: kernel -> sweep -> walk-forward -> BOARD, and verification
+    # Verification gate (item 2 of docs/archive/STEPS_1_2_4.md). The project's
+    # order of work was backwards: kernel -> sweep -> walk-forward -> BOARD, and verification
     # happened afterwards, by hand, when somebody remembered. H-009 reached 8.9
     # without a second engine ever looking at it and nothing stopped it. A
     # hypothesis that has not passed the checks in core/verification.py now takes

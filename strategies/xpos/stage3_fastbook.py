@@ -167,7 +167,7 @@ def _panel(args):
         if len(train) < 5000 or len(test) - pad_te < 500:
             continue
 
-        # Train at DOUBLE cost: HANDOFF.md fixes this and it is the rule that
+        # Train at DOUBLE cost: docs/archive/HANDOFF.md fixes this and it is the rule that
         # kept four fragile legs out of H-002's book. Both criteria are ranked
         # on the same 2x series so the comparison is only about the criterion.
         tr_span = (train.index[-1] - train.index[pad_tr]).total_seconds() / 86400.0

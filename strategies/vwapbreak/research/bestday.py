@@ -1,7 +1,7 @@
 """Does this strategy ever become PAYOUT ELIGIBLE under a 20% best-day rule?
 
 Kris's question, 2026-09-10: "do we beat best day scenario if it is 20% if we go
-with this strategy live". FIRMS.md answered it for the gold leg only, ad hoc and
+with this strategy live". docs/FIRMS.md answered it for the gold leg only, ad hoc and
 without a script. This answers it for every cell in the cross-asset table, so the
 answer sits in the same table as the edge numbers.
 

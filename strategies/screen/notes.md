@@ -5,7 +5,7 @@ run through `core/probe.py` on one pass, with every definition, direction and
 kill criterion fixed **before the first number**.
 
 **One thing is deliberately NOT here.** H-026 with a stop and a target is the
-honest SMC door, and `CANDIDATES.md` records it as *blocked on Kris: his exact
+honest SMC door, and `docs/CANDIDATES.md` records it as *blocked on Kris: his exact
 entry, stop and target rules*. Guessing them would kill it for the wrong reason.
 It stays blocked.
 
@@ -106,7 +106,7 @@ log returns over the trailing 30 days, both in vol points.
 
 ## H-038 — fair value gaps
 
-**The one SMC primitive with a mechanical definition.** `VWAP_BACKLOG.md` ranked
+**The one SMC primitive with a mechanical definition.** `docs/VWAP_BACKLOG.md` ranked
 FVG second of five and gave the reason: a three-candle gap is either there or it
 is not, so it is the least corruptible by researcher choice. Order blocks and
 CHoCH/BOS have far more free parameters and a worse prior; killzones are already

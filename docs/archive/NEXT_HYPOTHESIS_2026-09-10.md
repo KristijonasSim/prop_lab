@@ -1,7 +1,7 @@
 # The next hypothesis — top 3, ranked
 
 Written 2026-09-10, after five candidates died in one session (H-028, H-029, the
-dollar/gold lead-lag and the LBMA fix; see `RESEARCH_2026-09-10_REOPEN.md`).
+dollar/gold lead-lag and the LBMA fix; see `docs/archive/RESEARCH_2026-09-10_REOPEN.md`).
 
 **The thing that should decide this.** Every one of today's five deaths was a
 **price pattern**, and that is now the seventeenth or so. The standing pattern in
@@ -109,7 +109,7 @@ depend on finding a new edge.
 
 ## 3. H-006-R — CROWD POSITIONING, RE-OPENED ON A CHANGED RISK FRAMEWORK
 
-Already written up as Candidate B in `SECOND_HYPOTHESIS.md`; repeated here so
+Already written up as Candidate B in `docs/archive/SECOND_HYPOTHESIS.md`; repeated here so
 the ranking is complete.
 
 The long/short **account** ratio ranks forward returns monotonically (+25.0 /

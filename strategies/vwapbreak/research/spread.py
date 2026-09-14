@@ -1,6 +1,6 @@
 """The crypto spread, estimated from bars, and CALIBRATED where it is known.
 
-The cost investigation (`why.py`, section 2 of RESEARCH_2026-09-10_WHY.md) ended
+The cost investigation (`why.py`, section 2 of docs/archive/RESEARCH_2026-09-10_WHY.md) ended
 on one unmeasured number: crypto's half-spread in `core/markets.py` is ASSUMED at
 2bps, the file says so itself, and it is what makes BTC's sigma/cost the worst in
 the universe. Binance's `bookTicker` archive stopped in 2024-03, so the direct

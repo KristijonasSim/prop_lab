@@ -1,6 +1,6 @@
 """The firm shortlist, re-priced with the SIZING RULE adopted 2026-09-10.
 
-`FIRMS.md` ranked nine firms by running our own trade series through each
+`docs/FIRMS.md` ranked nine firms by running our own trade series through each
 published rule set. Every number there assumes FLAT sizing. The rule adopted
 today - size in proportion to the remaining drawdown budget - cut blown accounts
 from 29.5% to 16.9% on the shipped firm, and a firm's ranking depends on exactly

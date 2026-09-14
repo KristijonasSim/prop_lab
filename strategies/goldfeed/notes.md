@@ -1,7 +1,7 @@
 # H-030 — a feed layer for gold (CFTC positioning as a gate on H-027)
 
 Kris, 2026-09-11: "do it", after H-031 died. Ranked #2 in
-`NEXT_HYPOTHESIS_2026-09-10.md`.
+`docs/archive/NEXT_HYPOTHESIS_2026-09-10.md`.
 
 ## Mechanism, before any result
 

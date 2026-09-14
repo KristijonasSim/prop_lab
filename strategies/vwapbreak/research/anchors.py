@@ -194,7 +194,7 @@ def ARMS(tf: str):
         (f"rolling {int(384 * bph)} bars", AnchorVariant("vb_r384", "rolling", int(384 * bph))),
         ("daily + weekly agree", AnchorVariant("vb_agree", "session", 0,
                                                agree_weekly=True)),
-        # free to run beside the anchors and it answers 1.2 of NEXT_VWAP.md:
+        # free to run beside the anchors and it answers 1.2 of docs/archive/NEXT_VWAP.md:
         # the same band with no volume weighting at all.
         ("utc 00:00, unweighted", AnchorVariant("vb_twap", "session", 0, twap=True)),
     ]

@@ -1,6 +1,6 @@
 """What H-016's board record depends on. Same contract as strategies/vwap/manifest.py.
 
-Item 1 of `STEPS_1_2_4.md`. See `core/fingerprint.py` for the two tiers and why
+Item 1 of `docs/archive/STEPS_1_2_4.md`. See `core/fingerprint.py` for the two tiers and why
 a data file that grew is a note while one that was rewritten is a hard stale.
 
 WHICH STAGE WRITES THE BOARD. `stage11_reprice.py --board` does, not

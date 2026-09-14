@@ -171,7 +171,7 @@ through `probe.py` only if H-034 dies.
 * **Anything price-only.** Seventeen have died. Sub-hour and the volume clock
   died this week.
 * **More VWAP.** The entry axis is closed by measurement and tier 1 of
-  `VWAP_BACKLOG.md` is now fully closed.
+  `docs/VWAP_BACKLOG.md` is now fully closed.
 
 ---
 

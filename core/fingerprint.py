@@ -1,6 +1,6 @@
 """What produced a board record, so the board can notice when it stops being true.
 
-Item 1 of `STEPS_1_2_4.md`. The problem it solves, stated once:
+Item 1 of `docs/archive/STEPS_1_2_4.md`. The problem it solves, stated once:
 
     `SUPERSEDED - SCORED ON A BROKEN KERNEL` is a note a human typed by hand,
     after noticing. H-009 held board score 8.9 on a kernel that had already been

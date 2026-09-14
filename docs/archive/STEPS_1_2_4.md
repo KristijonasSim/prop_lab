@@ -1,7 +1,7 @@
 # STEPS — items 1, 2, 4. Chosen by Kris 2026-09-08.
 
 Plan of record is `NEXT.md`. This file is the step list only.
-Why any of it exists: `SESSION_2026-09-07.md` §7.
+Why any of it exists: `docs/archive/SESSION_2026-09-07.md` §7.
 
 **Kris picked 1, 2 and 4. Item 3 (pytest + CI) was not picked.**
 
@@ -403,4 +403,4 @@ Stated plainly so it is not a surprise later. None of these three items makes a
 strategy faster. The board's two survivors need **143.6** and **175.9** expected
 days against a **5-14 day** target. Items 1, 2 and 4 make the numbers
 *trustworthy*; they do not make them *good*. The pace problem is a hypothesis
-problem and it is still open — see `IDEAS.md` and `NEXT.md` "the hard fact".
+problem and it is still open — see `docs/IDEAS.md` and `NEXT.md` "the hard fact".
