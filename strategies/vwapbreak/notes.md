@@ -33,6 +33,7 @@ they cannot drift apart.
 | per-study workings | `strategies/vwapbreak/research/` |
 | every variation tried, pass or fail | `STRATEGY_LOG.md` |
 | what is closed and must not be re-proposed | `CLAUDE.md`, known-dead list |
+| what to check next, as a do-list | `CHECK_NEXT.md` (repo root) |
 
 ## What is closed, so you do not re-open it
 

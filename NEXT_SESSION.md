@@ -4,6 +4,9 @@
 version, written while H-040 was still running, is at
 `docs/archive/NEXT_SESSION_2026-09-14_morning.md`.
 
+**For the do-list — what to physically go and check, in order, with the command
+for each — read `CHECK_NEXT.md`.** Start there if you only read one file.
+
 **Read `HOW_TO_ANSWER.md` first. Kris asks for shorter answers and means it.**
 
 ---
