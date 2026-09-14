@@ -44,7 +44,11 @@ def bot(tmp_path, monkeypatch):
     # a test that wants them to disagree says so explicitly.
     m._live = []
     monkeypatch.setattr(m, "positions", lambda host: m._live)
-    monkeypatch.setattr(m, "set_backstop", lambda host, level: None)
+    # THE MOCK ANSWERS LIKE THE EXCHANGE DOES. It used to return None, which the
+    # caller could not tell from a rejection - and the caller did not look.
+    m._backstops: list[float] = []
+    monkeypatch.setattr(m, "set_backstop", lambda host, level:
+                        m._backstops.append(level) or {"retCode": 0})
     monkeypatch.setattr(m, "market", lambda host, side, qty, tag, reduce_only=False:
                         orders.append({"side": side, "qty": qty, "tag": tag,
                                        "reduce_only": reduce_only}) or {"retCode": 0, "result": {}})
@@ -162,3 +166,61 @@ def test_a_partial_mismatch_blocks_new_legs_but_still_exits(bot, monkeypatch):
     assert bot.orders == [{"side": "Buy", "qty": 0.5, "tag": bot.orders[0]["tag"],
                            "reduce_only": True}]
     assert bot.load_state()["open"] == {}
+
+
+# --------------------------------------------------------------------------- #
+# The backstop. Two bugs found 2026-09-14 by reading the VM's log after a
+# stop-out: the level was read off the wrong side of a mixed book, and the
+# exchange's answer was never looked at.
+# --------------------------------------------------------------------------- #
+def _leg(side: str, qty: float, stop: float) -> dict:
+    return {"at": "2026-09-14 02:00:00+00:00", "side": side, "qty": qty,
+            "stop": stop, "hold_h": 384, "entry_ref": 100.0}
+
+
+def test_backstop_on_a_short_book_is_the_highest_stop(bot):
+    """Price rising reaches 101.0 first and 102.0 last, so the backstop is 102.0
+    - every leg's own stop is touched before the exchange's is."""
+    legs = {"a": _leg("Sell", 1.0, 101.0), "b": _leg("Sell", 1.0, 102.0)}
+    assert bot.backstop_level(legs) == 102.0
+
+
+def test_backstop_on_a_long_book_is_the_lowest_stop(bot):
+    legs = {"a": _leg("Buy", 1.0, 99.0), "b": _leg("Buy", 1.0, 98.0)}
+    assert bot.backstop_level(legs) == 98.0
+
+
+def test_a_mixed_book_is_priced_off_the_side_it_nets_to(bot):
+    """THE BUG. Five short legs and one long leg net SHORT, so the stop belongs
+    ABOVE the price. The old code took the minimum over the long legs and
+    handed Bybit 99.0 - below a short position, which it rejects."""
+    legs = {"v1": _leg("Sell", 1.0, 101.0), "v2": _leg("Sell", 1.0, 102.0),
+            "asia": _leg("Buy", 0.5, 99.0)}
+    assert bot.backstop_level(legs) == 102.0
+
+    legs = {"v1": _leg("Buy", 1.0, 99.0), "v2": _leg("Buy", 1.0, 98.0),
+            "asia": _leg("Sell", 0.5, 101.0)}
+    assert bot.backstop_level(legs) == 98.0
+
+
+def test_a_book_that_nets_flat_gets_no_backstop(bot):
+    """Nothing is open on the exchange, so no single level means anything."""
+    legs = {"a": _leg("Sell", 1.0, 101.0), "b": _leg("Buy", 1.0, 99.0)}
+    assert bot.backstop_level(legs) is None
+
+
+def test_a_rejected_backstop_is_reported_as_rejected(bot, monkeypatch, capsys):
+    """The log must never claim a stop the exchange refused. Before this, the
+    return was discarded and the line read 'backstop stop-loss set at' either
+    way - so an unprotected book looked identical to a protected one."""
+    last = "2026-09-14 14:00"
+    _short_leg(bot, at=str(pd.Timestamp(last, tz="UTC") - pd.Timedelta(hours=4)))
+    monkeypatch.setattr(bot, "set_backstop", lambda host, level:
+                        {"retCode": 10001, "retMsg": "stop loss price invalid"})
+    monkeypatch.setattr(bot, "bars", lambda: _bars(last, high=100.5))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    bot.once(Namespace(arm=True, weekends=False))
+    out = capsys.readouterr().out
+    assert "BACKSTOP REJECTED" in out
+    assert "backstop stop-loss set at" not in out

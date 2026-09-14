@@ -47,9 +47,11 @@ SAFETY, and it is the reason this file is long
     against anything but the demo host.
   * The demo host is pinned. The key was tested against the live endpoint and is
     rejected there, which is the correct kind of key to hand a bot.
-  * A native stop sits on the net position at the widest live leg's level, so a
-    disconnect cannot leave the account unprotected. The per-leg stops are
-    enforced by this bot - see the netting note below.
+  * A native stop sits on the net position at the furthest stop among the legs
+    facing the way the book NETS, so a disconnect cannot leave the account
+    unprotected. The per-leg stops are enforced by this bot - see the netting
+    note below. If the exchange refuses the stop the log says so; it does not
+    report a level it failed to set.
   * One position per setting, held in `live/paper/bybit_state.json`, so a restart
     does not double up.
 
@@ -328,17 +330,48 @@ def market(host: str, side: str, qty: float, tag: str,
 
 
 def set_backstop(host: str, level: float | None) -> dict | None:
-    """A native stop on the NET position, at the widest live leg's level.
+    """A native stop on the NET position. `backstop_level` picks the level.
 
     It is a disconnect backstop, not the strategy's stop: the legs have
     different stops and the exchange can only hold one, so the exchange holds
     the loosest of them and this bot enforces the rest.
+
+    THE CALLER MUST READ THE ANSWER. Bybit refuses a stop on the wrong side of
+    the position, and for a while this returned that refusal to a caller that
+    discarded it and logged success regardless.
     """
     if level is None:
         return None
     return signed(host, "/v5/position/trading-stop", {
         "category": CATEGORY, "symbol": SYMBOL, "positionIdx": 0,
         "stopLoss": f"{level:.2f}", "slTriggerBy": "LastPrice"}, post=True)
+
+
+def backstop_level(legs: dict) -> float | None:
+    """The level for the native stop, read off the NET side of the book.
+
+    Bybit nets, so there is ONE position and it has ONE side. The backstop has
+    to sit on that side: the FURTHEST stop among the legs facing that way, so
+    that price reaches every leg's own stop before it reaches this one.
+
+    THE FIRST VERSION ASKED THE WRONG QUESTION. It took `min(stop)` over the
+    legs whose side was "Buy" and fell back to `max(stop)` over the whole book
+    only when there were none. A book holding longs AND shorts - reachable,
+    because the asia leg reads a different rule from the five vwap legs and can
+    disagree with them on a bar - therefore priced a net-SHORT position off its
+    long legs' stops, which sit BELOW the price instead of above it. Bybit
+    rejects that, and the caller printed "backstop stop-loss set at" either way.
+
+    Returns None when the book nets to flat, where no single stop is meaningful.
+    """
+    net = sum(l["qty"] * (1 if l["side"] == "Buy" else -1) for l in legs.values())
+    if net == 0:
+        return None
+    side = "Buy" if net > 0 else "Sell"
+    stops = [l["stop"] for l in legs.values() if l["side"] == side]
+    if not stops:
+        return None
+    return min(stops) if net > 0 else max(stops)
 
 
 def due_exits(df: pd.DataFrame, legs: dict) -> list[tuple[str, dict, str]]:
@@ -530,11 +563,18 @@ def once(a) -> None:
             save_state(st)
             return
     if a.arm and st["open"]:
-        longs = [l for l in st["open"].values() if l["side"] == "Buy"]
-        widest = (min(l["stop"] for l in longs) if longs
-                  else max(l["stop"] for l in st["open"].values()))
-        set_backstop(host, widest)
-        print(f"      backstop stop-loss set at {widest:.2f}")
+        widest = backstop_level(st["open"])
+        if widest is None:
+            print("      NO BACKSTOP: the book is mixed and nets to flat. "
+                  "Per-leg stops are enforced by this bot only.")
+        else:
+            r = set_backstop(host, widest)
+            if (r or {}).get("retCode") == 0:
+                print(f"      backstop stop-loss set at {widest:.2f}")
+            else:
+                print(f"      BACKSTOP REJECTED at {widest:.2f}: "
+                      f"{(r or {}).get('retMsg')}. The exchange holds no stop; "
+                      f"this bot is the only thing closing these legs.")
     if a.arm:
         st["started"] = st.get("started") or str(last)
         save_state(st)
