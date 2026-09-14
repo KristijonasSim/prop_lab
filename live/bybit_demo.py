@@ -104,6 +104,14 @@ DEMO_HOST = "https://api-demo.bybit.com"
 LIVE_HOST = "https://api.bybit.com"
 ENV = Path(os.path.expanduser("~/.config/prop_lab/bybit_demo.env"))
 STATE = ROOT / "live" / "paper" / "bybit_state.json"
+#: THE EQUITY PATH, one line per pass. Bybit's `equity` INCLUDES unrealised P&L,
+#: so this file is the mark-to-market series H-039 found the backtest does not
+#: have - the board books a trade's whole R on its exit day and never sees the
+#: fortnight in between. It is written because the question of which accounting
+#: a firm uses (blocker B1) can be settled from a real equity path, and because
+#: until now that path existed only in a text log nothing parses and a rebuilt
+#: box would lose. Recording only; nothing here changes a decision.
+EQUITY_LOG = ROOT / "live" / "paper" / "equity.jsonl"
 #: XAUUSDT is the better contract - 0.02bps spread, $130M a day, 0.01bps impact
 #: at our size - and it CANNOT BE TRADED ON DEMO. Its Trading Terms agreement has
 #: to be accepted first, and Bybit's own agreement endpoint answers demo requests
@@ -308,6 +316,32 @@ def save_state(s: dict) -> None:
     STATE.write_text(json.dumps(s, indent=1, default=str))
 
 
+def day_frame(st: dict, eq: float) -> tuple[float, float]:
+    """The UTC day's opening equity, and the drawdown from it, in percent.
+
+    THE BOT HAD NO CONCEPT OF A DAY. It tracked equity and the peak, so it could
+    say how far below the high-water mark it was and nothing about the DAILY
+    cap - which is the rule that H-039 says kills these accounts once open
+    positions are marked to market (45.8% of simulated accounts against 22.4%).
+    A bot that cannot say whether it would have breached the daily cap cannot
+    answer the question the demo account exists to answer.
+
+    RECORDED, NOT ENFORCED. Enforcing a daily stop would change the rule in the
+    middle of the test it is meant to measure.
+    """
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if st.get("day") != today:
+        st["day"], st["day_open"] = today, eq
+    open_eq = st.get("day_open") or eq
+    return open_eq, (eq - open_eq) / open_eq * 100.0 if open_eq else 0.0
+
+
+def log_equity(row: dict) -> None:
+    EQUITY_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with EQUITY_LOG.open("a") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+
+
 def size_multiplier(eq: float, peak: float) -> float:
     """The adopted budget-linear rule, `core/chosen.py["sizing"]`."""
     if not peak or peak <= 0:
@@ -405,6 +439,7 @@ def once(a) -> None:
     peak = max(st.get("peak") or eq, eq)
     st["peak"] = peak
     mult = size_multiplier(eq, peak)
+    day_open, day_dd = day_frame(st, eq)
 
     print(f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC  {SYMBOL} 1h  "
           f"[{'DRY RUN' if not a.arm else 'ARMED - DEMO'}]")
@@ -412,8 +447,19 @@ def once(a) -> None:
           f"{'   WEEKEND' if weekend else ''}")
     print(f"  equity ${eq:,.2f}  peak ${peak:,.2f}  "
           f"drawdown {(eq - peak) / peak * 100:+.2f}%  size x{mult:.2f}")
+    print(f"  today opened ${day_open:,.2f}  day {day_dd:+.2f}% "
+          f"(3% cap: {'BREACHED' if day_dd <= -3.0 else 'ok'}, recorded not enforced)")
 
     live = positions(host)
+    upnl = sum(float(p.get("unrealisedPnl") or 0) for p in live)
+    if a.arm:
+        log_equity({"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    "bar": str(last), "equity": round(eq, 2), "peak": round(peak, 2),
+                    "day_open": round(day_open, 2), "day_dd_pct": round(day_dd, 3),
+                    "peak_dd_pct": round((eq - peak) / peak * 100, 3),
+                    "unrealised": round(upnl, 2), "legs": len(st["open"]),
+                    "net_qty": round(sum(l["qty"] * (1 if l["side"] == "Buy" else -1)
+                                         for l in st["open"].values()), 3)})
     if live:
         for p in live:
             print(f"  OPEN {p['side']} {p['size']} XAU @ {p['avgPrice']}  "

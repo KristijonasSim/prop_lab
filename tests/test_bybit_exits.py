@@ -35,6 +35,10 @@ def bot(tmp_path, monkeypatch):
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     monkeypatch.setattr(m, "STATE", tmp_path / "state.json")
+    # THE EQUITY LOG IS A REAL FILE AND THE TESTS ARM THE BOT. Without this the
+    # suite appends to live/paper/equity.jsonl on every run - a test writing
+    # into the live bot's own record of the account it is trading.
+    monkeypatch.setattr(m, "EQUITY_LOG", tmp_path / "equity.jsonl")
     orders: list[dict] = []
     monkeypatch.setattr(m, "equity", lambda host: 10_000.0)
     # THE MOCKED EXCHANGE HOLDS WHAT THE BOOK SAYS IT HOLDS. This used to be a
@@ -224,3 +228,51 @@ def test_a_rejected_backstop_is_reported_as_rejected(bot, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "BACKSTOP REJECTED" in out
     assert "backstop stop-loss set at" not in out
+
+
+# --------------------------------------------------------------------------- #
+# The daily frame and the equity path, added 2026-09-14 after H-039 showed the
+# backtest never marks open positions to market and the bot had no idea what a
+# day was.
+# --------------------------------------------------------------------------- #
+def test_the_day_frame_opens_once_and_then_holds(bot):
+    st = {}
+    open_eq, dd = bot.day_frame(st, 10_000.0)
+    assert open_eq == 10_000.0 and dd == 0.0
+    # a later pass the same day keeps the opening equity and measures from it
+    open_eq, dd = bot.day_frame(st, 9_700.0)
+    assert open_eq == 10_000.0
+    assert dd == pytest.approx(-3.0)
+
+
+def test_a_new_utc_day_reopens_the_frame(bot):
+    st = {"day": "1999-01-01", "day_open": 5_000.0}
+    open_eq, dd = bot.day_frame(st, 10_000.0)
+    assert open_eq == 10_000.0 and dd == 0.0
+    assert st["day"] != "1999-01-01"
+
+
+def test_the_equity_path_is_written_once_per_armed_pass(bot, monkeypatch):
+    """H-039's whole point: Bybit's equity INCLUDES unrealised, so this file is
+    the mark-to-market series the backtest does not have."""
+    import json
+    _short_leg(bot, at="2026-09-14 02:00:00+00:00")
+    monkeypatch.setattr(bot, "bars", lambda: _bars("2026-09-14 14:00", high=100.5))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    bot.once(Namespace(arm=True, weekends=False))
+    rows = [json.loads(x) for x in bot.EQUITY_LOG.read_text().splitlines()]
+    assert len(rows) == 1
+    assert rows[0]["equity"] == 10_000.0
+    assert set(rows[0]) >= {"ts", "equity", "peak", "day_open", "day_dd_pct",
+                            "unrealised", "legs", "net_qty"}
+
+
+def test_a_dry_run_writes_no_equity_line(bot, monkeypatch):
+    """Same rule the book already follows: a dry run must remember nothing."""
+    _short_leg(bot, at="2026-09-14 02:00:00+00:00")
+    monkeypatch.setattr(bot, "bars", lambda: _bars("2026-09-14 14:00", high=100.5))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    bot.once(Namespace(arm=False, weekends=False))
+    assert not bot.EQUITY_LOG.exists()
