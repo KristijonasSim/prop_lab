@@ -1,4 +1,4 @@
-"""One interface over every kernel. Item 4 of `docs/archive/STEPS_1_2_4.md`.
+"""One interface over every kernel. Item 4 of `STEPS_1_2_4.md`.
 
 `core/KERNEL_CONTRACT.md` section 1 is the valuable part and it is already true
 of both kernels; this file only gives it a name in code. The class shape is

@@ -217,3 +217,36 @@ its own is not a claim anyone can check.
 shared feed loader (metrics join, point-in-time features, block-shuffle null)
 imported by more than twenty files across a dozen hypotheses. Do not fold it into
 this contract and do not delete it because H-006 died.
+
+---
+
+## 6. A COMMENT IN A KERNEL IS NOT A FREE EDIT
+
+Added 2026-09-14, after nearly doing it.
+
+`core/fingerprint.py` hashes the **bytes** of every file a manifest declares. It
+has to: it cannot tell a changed constant from a changed sentence, and a hash
+that ignored comments would be a hash you could defeat by hiding a number in
+one. So **any** edit to a declared file changes its hash, and the board records
+that depend on it go stale — `KERNELS` hard, `SCORING` as a note.
+
+That includes a typo fix. It includes renaming a document a docstring points at.
+
+**What happened.** Twenty-seven markdown files moved into `docs/` on 2026-09-14
+and every reference to them was rewritten, including seventeen in Python
+docstrings. Five of those files are declared in a manifest — `core/board.py`,
+`core/pipeline.py`, `core/strategy.py`, `strategies/ribbon/sweep.py` and
+`strategies/ribbon/stage6_walkforward.py`, covering H-002, H-016 and H-027 — so
+a one-line comment change in each would have marked every board record on the
+page as produced by a kernel that no longer exists. The five edits were reverted
+and the docstrings still name the old paths.
+
+**The rule.** Before editing a file, check whether a manifest declares it:
+
+```bash
+grep -rn "$(basename FILE)" strategies/*/manifest.py
+```
+
+If it does, a cosmetic edit is not worth it. Batch it with the next real change
+to that kernel, and re-run the stages the manifest gates. If you edit it anyway,
+say so and re-run — do not let the board decide it silently.

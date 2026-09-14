@@ -6,7 +6,7 @@ out-of-sample result: both describe a search over the whole history.
 
 Quarterly folds, 12 months train / 3 months test. The configuration is chosen
 BLIND inside each training window on 2x-cost profit factor - the rule
-docs/archive/HANDOFF.md fixes, because selecting on 1x and checking 2x afterwards let four
+HANDOFF.md fixes, because selecting on 1x and checking 2x afterwards let four
 fragile legs into H-002's book. The test quarter is then scored on that choice
 and never consulted again. Stitching the test quarters gives one out-of-sample
 series per market and timeframe.

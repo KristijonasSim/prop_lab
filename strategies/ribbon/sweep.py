@@ -205,7 +205,7 @@ def metrics(tr: np.ndarray, index: pd.DatetimeIndex, fee, slip,
         sharpe=round(float(daily.mean() / sd * np.sqrt(365)), 3) if sd else 0.0,
         r_per_day=round(r_per_day, 4),
         # The phase gate. days = maxDD_in_R / R_per_day x (target / cap), the
-        # formula docs/archive/HANDOFF.md fixes: risk is set so the book's drawdown exactly
+        # formula HANDOFF.md fixes: risk is set so the book's drawdown exactly
         # fills the 8% cap, then time to +8% follows.
         days_to_target=(round(abs(dd) / r_per_day, 1)
                         if r_per_day > 0 and dd < 0 else np.nan),
