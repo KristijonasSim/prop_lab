@@ -54,9 +54,16 @@ That sets three deliverables, in this order:
 **What this changes about how to work.** A new hypothesis is now OUT OF SCOPE
 unless Kris asks. Work goes into H-027's own axes - and the entry axis is close
 to exhausted (thresholds, sessions, 25 filters, relative volume, fresh-cross all
-tested), while **the exit axis is barely touched**: today it is a fixed sigma
-stop plus a fixed bar horizon, and no trailing stop, partial exit or VWAP-recross
-exit has ever been run on it.
+tested).
+
+**CORRECTED 2026-09-14. The exit axis is NOT open** - the sentence that stood
+here said it was barely touched and that no trailing stop, partial exit or
+VWAP-recross had ever been run. That was true when it was written on 2026-09-09
+and false the next day: `research/exitshape.py` ran all four on 2026-09-10 and
+`research/longcandidates.py` re-ran the survivor over eleven years. Reading the
+stale sentence on 2026-09-14 led straight to proposing a study that already
+existed. **Check `STRATEGY_LOG.md` and `backtests/vwapbreak/` before believing
+any "never been tested" claim in this file, including this one.**
 
 **What has NOT changed:** the noise floor still governs. An "improvement" whose
 band overlaps the baseline's is not an improvement, and a published indicator
@@ -322,6 +329,29 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   24 conditioner cells beat a permutation null. Caveat: tested with a fixed hold to
   the session close and **no stop and no target** — a stop-and-target version is
   untested and Kris trades one.
+- **Exit SHAPE on H-027, as a family** (2026-09-10, re-run over eleven years)
+  - partial exits, trailing stops and the VWAP-recross exit. Measured on gold 1h
+  against the baseline on identical folds, then the survivor re-run on ELEVEN
+  years (3,213 trades, 40 quarters, `research/longcandidates.py`).
+
+  | eleven years | days | band | pass % | blown % | PF@2x | best quarter |
+  |---|---|---|---|---|---|---|
+  | baseline | **20.0** | 18.2-23.2 | 60.0 | 40.0 | **1.372** | **0.483** |
+  | partial 2R | 22.5 | 21.0-26.6 | 66.8 | 33.2 | **1.168** | **0.645** |
+
+  **The three-year picture reversed.** Over three years the partial looked like
+  the safety trade - blow-ups 37.5% to 24.3%, best-day share 0.421 to 0.287. Over
+  eleven it is slower, its PF@2x falls **below the project's own 1.20 gate**, and
+  the payoff concentration it was built to fix gets **worse**, 0.483 to 0.645.
+  A quantity that flips sign between samples is this repo's signature for no
+  effect - the same shape as H-026's fibonacci and H-035's alternating netflow.
+  **On expected days nothing beat the baseline at three years either**: partial
+  1R 13.2, partial 2R 12.6, trail 2R 14.6, partial+trail 14.0 against 11.7, every
+  band overlapping. The one arm that was faster with a disjoint band, VWAP
+  recross at 6.8 days (6.6-9.1), carries **PF@2x 1.09** - breakeven after costs,
+  and it is H-010's dead idea. The rejection is recorded in `core/chosen.py`.
+  `strategies/vwapbreak/research/exitshape.py`, `longcandidates.py`.
+
 - **Entry filters on H-027 gold, as a family** (2026-09-08) — 25 candidates
   screened as a paired lift per configuration on gold 1h and 4h: moving averages
   (position, slope, counter-trend), fibonacci retracement and extension zones,

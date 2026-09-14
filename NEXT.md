@@ -51,6 +51,10 @@ assumed.
 
 ### B. The band-shape axis, which is the only untouched one left
 
+**Not the exit axis.** That was closed on 2026-09-10 and re-closed over eleven
+years — partial, trailing and VWAP-recross all measured and rejected. CLAUDE.md
+claimed otherwise until 2026-09-14; it no longer does.
+
 `docs/VWAP_BACKLOG.md` items **6, 7, 9, 10, 11, 12, 13, 18, 19, 20, 21** have
 never been run. They share a shape: they change what the band IS, rather than
 what is done when price crosses it. Every closed axis changed the latter.
