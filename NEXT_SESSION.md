@@ -144,8 +144,9 @@ everything.
 
 ## 7. Housekeeping
 
-* Everything through `ad39d1f` is pushed to `origin/main`. H-040's code and
-  pre-registration are **not yet committed** — commit them with the result.
+* Everything through `0c0ffcb` is pushed to `origin/main`, H-040's code and
+  pre-registration included. Only its RESULT is outstanding — commit
+  `backtests/vwapbreak/bandshape.json` with the write-up.
 * Gold cache now runs to **2026-09-13**; that is what unlocked the Jun–Aug fold
   (+144 blind trades). Sept 1–13 still has no fold — it needs a complete Sep–Nov
   test quarter.
