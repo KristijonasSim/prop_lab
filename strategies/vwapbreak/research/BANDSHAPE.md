@@ -78,3 +78,75 @@ filters raised profit factor while making the evaluation *slower*.
 > rule is the rule — publish it or drop it, but stop tuning it.
 
 That is the expected outcome. Four axes have closed this way already.
+
+---
+
+# RESULT — 2026-09-14. Every arm dead. The axis is closed.
+
+`backtests/vwapbreak/bandshape.json`. Gold, blind walk-forward, floors 30 /
+top 5, Thunderbolt one-step, data to 2026-09-13.
+
+| 1h | trades | tpd | PF@2x | null | days | band | pass% | blown% |
+|---|---|---|---|---|---|---|---|---|
+| **base** | 957 | 1.32 | **1.987** | 1.097 | **17.8** | 13.9–23.3 | 50.7 | 49.3 |
+| atr | 537 | 0.74 | 1.083 | 0.843 | 49.1 | 36.3–93.5 | 61.0 | 38.6 |
+| pct | 1913 | 2.63 | 1.367 | 0.873 | 19.6 | 14.2–24.2 | 35.8 | 64.2 |
+| sterr | 720 | 0.99 | 1.262 | 0.600 | 28.3 | 20.5–44.8 | 31.8 | 67.8 |
+| asym | 762 | 1.05 | 1.809 | 0.893 | 23.3 | 19.8–32.5 | 51.4 | 48.0 |
+
+| 4h | trades | tpd | PF@2x | null | days | band | pass% | blown% |
+|---|---|---|---|---|---|---|---|---|
+| **base** | 599 | 0.82 | **1.077** | **1.711** | **34.4** | 27.5–54.5 | 29.1 | 70.5 |
+| atr | 388 | 0.54 | 1.345 | 1.082 | 45.3 | 32.6–81.5 | 68.5 | 23.6 |
+| pct | 621 | 0.92 | 1.428 | 0.863 | 23.5 | 18.2–33.8 | 38.3 | 61.3 |
+| sterr | 663 | 0.91 | 1.238 | 1.454 | 27.1 | 21.1–43.7 | 40.6 | 59.4 |
+| asym | 663 | 0.92 | 1.132 | 1.282 | 45.1 | 30.7–68.9 | 39.9 | 59.1 |
+
+## Against the criterion fixed before the run
+
+> Fewer expected days, **non-overlapping band**, no rise in blow-ups, on **both**
+> timeframes.
+
+**No arm clears it, and none comes close.** On 1h every arm is slower than the
+baseline, three of four decisively. On 4h **every band overlaps the baseline's
+27.5–54.5**, so nothing there is resolvable in either direction.
+
+**Two arms flip sign across timeframes**, which the pre-registration named in
+advance as this repo's signature for no effect:
+
+* **atr** — 2.8x slower on 1h (49.1 vs 17.8) and the most defensive thing in the
+  table on 4h (blow-ups 23.6% against 70.5%, pass 68.5% against 29.1%).
+* **pct** — worse on 1h (19.6 vs 17.8), better on 4h (23.5 vs 34.4).
+
+Neither is a timeframe-specific edge. Both are what noise looks like when it is
+measured twice.
+
+## The one thing worth carrying forward
+
+**`pct` is the only lever ever found that raises TRADE FREQUENCY**: 2.63/day
+against the baseline's 1.32 on 1h, from 1,913 trades against 957. Speed on this
+hypothesis comes from frequency, and nothing else has ever moved it — the
+sub-hour study found 0.93 → 1.10 going from 1h to 5m, an 18% gain for a 12x
+finer bar.
+
+It fails on **survivability, not on speed**: blow-ups 64.2% against 49.3%.
+
+That is exactly the quantity H-041's daily-loss guard attacks, so **pct + guard**
+is a real candidate where neither is one alone. It is NOT run here and must not
+be run until the guard is shown to work on the baseline — otherwise it is two
+failures stacked and a search over their product.
+
+## A separate finding, not part of this study
+
+**The 4h baseline lost to its own null seed** — PF@2x 1.077 against 1.711 — and
+needs 34.4 days at 70.5% blown. That is much worse than the 4h cell has scored
+before. Two candidates, untested: the window now extends to 2026-09-13 and the
+Jun–Aug quarter is newly included, or one null seed is simply noisy. **One seed
+is one draw and no conclusion may be hung on it.** Worth a proper multi-seed
+re-run of the 4h cell before any 4h number is quoted again.
+
+## Verdict
+
+**The band-shape axis is closed.** Six axes now: entry filters, timeframe, exit
+shape, selector objective, clock anchor, and the band itself. The shipped rule
+survives all of them.
