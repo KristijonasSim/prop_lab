@@ -52,9 +52,13 @@ That sets three deliverables, in this order:
    claims matter as much as the numbers.
 
 **What this changes about how to work.** A new hypothesis is now OUT OF SCOPE
-unless Kris asks. Work goes into H-027's own axes - and the entry axis is close
-to exhausted (thresholds, sessions, 25 filters, relative volume, fresh-cross all
-tested).
+unless Kris asks. Work goes into H-027's own axes - and **as of 2026-09-14 there
+are none left**. Seven are closed by measurement: entry (25 filters), timeframe
+(sub-hour and volume bars), the selector objective (four), exit shape, band
+shape, the daily-loss guard, and the account overlay as a class. The eighth, the
+risk ladder, is arithmetic and bottoms out at 16.8 expected days against a 5-14
+day target. **Do not open a ninth without new evidence from outside this data -
+the decision is publish-or-drop plus the demo test finishing 2026-09-28.**
 
 **CORRECTED 2026-09-14. The exit axis is NOT open** - the sentence that stood
 here said it was barely touched and that no trailing stop, partial exit or
@@ -517,6 +521,45 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
     of them on expected days at a survivable blow-up rate. Do not re-propose a
     selector change without a mechanism that breaks the frequency-versus-
     survivability trade-off, because all four sit on the same curve.
+
+- **The ACCOUNT-OVERLAY axis** (H-041/042/043/044, 2026-09-14) — a daily-loss
+  guard: once the UTC day has booked a loss past a threshold, take no new
+  entries until tomorrow. It reads the account and never the market, which is
+  the class the risk ladder and budget-linear sizing belong to and the only
+  class that has ever produced a keeper here. It is closed anyway.
+  * **H-041's −1.0% arm was the risk rung.** Its headline, 4h blow-ups 70.5% →
+    48.3%, came from its scorer handing the guarded arm 2.0% risk against the
+    baseline's 3.0%. **Held at one rung it is 70.5% → 70.8%.**
+  * **The guard does not save accounts, it changes which cap kills them.** 4h
+    failMax 18.0 → 41.6 while failDaily 52.5 → 29.2 — a 1:1 substitution. A
+    falling daily-breach column is arithmetic and is never evidence.
+  * **A real effect was found and it is one rule, not a curve.** −0.15/−0.25/
+    −0.35/−0.50% are identical on every number, because at 3% risk they are all
+    0.05–0.17R and the same loser trips all of them: *stop for the day once it
+    has booked any real loss*. It beat a **matched-drop null** (the guard's own
+    per-day drop counts permuted across days) on both timeframes and held in
+    both halves of the sample — the first thing on H-027 to survive a
+    pre-registered confirmation. It also halves the trade count.
+  * **And it never buys speed.** Over the full ladder it is slower at every rung
+    ≥2% on both timeframes. Read across instead of down, it is the better curve
+    **below ~42% blown** (≈30% blow-ups: 24.4 expected days against 39.2) and
+    worse above it. **Kris's 2% floor lands the shipped rule at 43.5% blown, the
+    crossover itself.** If accounts ever stop being cheap, come back to
+    `strategies/vwapbreak/research/LADDER.md`.
+  * **LESSON — pair a removal with a matched-drop null or do not report it.** A
+    guard removes 38% of the trades and less exposure lowers a blow-up rate on
+    its own, so "it lowers blow-ups" is arithmetic. Same shape as the shuffled
+    MA200 gate.
+
+- **THE RISK LADDER IS EXHAUSTED, AND H-027 HAS NEVER MET THE PACE TARGET AT ANY
+  POSITION SIZE** (H-044, 2026-09-14). 48 cells — 2 arms × 12 rungs × 2
+  timeframes. Gold 1h expected days by rung: 19.5 → 18.0 → 17.8 → **16.8 →
+  16.8**. Above 4% risk there is no speed left at all, while blow-ups climb
+  44.5% → 58.3% and the continuous curve draws −82.8% → **−165.5%**. **The
+  fastest of all 48 cells is 16.8 expected days against a 5–14 day target.** The
+  ladder is the one lever this file exempts from the noise floor — it is
+  arithmetic on a fixed series, not a search — and it has now been run end to
+  end. The gap to the pace target is not a tuning problem.
 
 - **Four candidates screened at gate 2** (H-035/036/037/038, 2026-09-13) — all
   dead, and the two METHOD lessons are worth more than the four deaths.

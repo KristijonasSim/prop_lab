@@ -360,3 +360,34 @@ and it is the only genuinely *new information* available to this strategy.
 | Fixed targets 1R–12R | no target still the best profit factor |
 | A wider market basket for speed | 3 legs fastest, 4+ slower |
 | More markets | 16 screened, none beat gold |
+
+---
+
+## CLOSED 2026-09-14 — every remaining tier-1/2 item, and the axis nobody had listed
+
+**Items 9, 10, 11, 12, 13 — the band-shape family.** Run as H-040
+(`strategies/vwapbreak/research/BANDSHAPE.md`), pre-registered, both timeframes.
+**Every arm dead.** ATR, flat percentage, standard-error and asymmetric bands
+against the shipped sigma band. `pct` is the only lever that has ever raised
+trade frequency — 2.63/day against 1.32 — and it blows 64.2% of accounts.
+
+**Items 6, 7 — anchored VWAP and anchor confluence.** Closed 2026-09-10 by
+`research/squeeze.py`; the swing anchor, rated the most promising VWAP idea in
+this file, scored PF@2x **1.009**.
+
+**A ninth axis that was never on this list: THE ACCOUNT OVERLAY.** H-041 → H-044,
+2026-09-14. A daily-loss guard reads the account and never the market, which is
+the class the risk ladder and budget-linear sizing belong to — the only class
+that has produced a keeper here. It is closed too. `GUARDSWEEP.md`,
+`GUARDSWEEP2.md`, `LADDER.md`.
+
+**And the answer to this file's own framing.** The header says *speed comes from
+trade frequency, not from a better signal*, and *blown accounts are the other
+half of the metric*. Both are right, and H-044 measured the exchange rate
+between them over the full risk ladder — 48 cells. **The two are on one curve
+and the curve's floor is 16.8 expected days against a 5–14 day target.** Nothing
+in this backlog can move that, because the ladder is arithmetic on a fixed
+series and it has now been run end to end.
+
+**Items 18–21 remain unrun** and the prior on them was already the weakest in
+the file. They are tier 4 for a reason and none of them changes the ladder.

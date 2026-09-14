@@ -2666,3 +2666,89 @@ path already had, which is why the 2026-09-12 hand-close was caught.
 `backstop_level` now takes the net side of the book first and the furthest stop
 among the legs facing that way, and returns `None` when the book nets flat,
 where no single level means anything. Six tests in `tests/test_bybit_exits.py`.
+
+---
+
+## 2026-09-14 (second session) — the guard, settled; and the ladder says the pace target was never reachable
+
+Three pre-registered studies, each written before its own run, closing the last
+open axis on H-027 and then closing the one lever nobody had pulled.
+
+**H-042 killed H-041's arm.** The −1.0% daily-loss guard's headline result — 4h
+blow-ups 70.5% → 48.3% — was **entirely the risk rung**. H-041's scorer picked
+the fastest rung per arm and handed the guarded arm 2.0% risk against the
+baseline's 3.0%; lower risk cuts blow-ups by itself. Held at one rung the number
+is 70.5% → **70.8%**. Its own result section had named this as confound 3 and
+called the fix not optional, which is the only reason it was caught.
+
+**The control it never had.** The guard removes 38% of the trades, and fewer
+trades is less exposure, so "the guard lowers blow-ups" is arithmetic rather
+than a finding. The **matched-drop null** permutes the guard's own per-day drop
+counts across days and drops the same trades from the wrong days — same count,
+same end-of-day shape, no knowledge of which day was bad. On 4h the −1.0% arm
+**loses to it**.
+
+**And the mechanism, which is the part worth carrying forward.** The two failure
+columns say what the guard actually does: 4h failMax 18.0 → 41.6 while failDaily
+52.5 → 29.2. **It does not save accounts, it changes which cap kills them,
+roughly 1:1.** An account stopped out of a bad day still carries the loss into
+the next one and breaches the 6% max cap instead of the 3% daily cap. H-041's
+falling failDaily column was never evidence and this is why.
+
+**H-043 then found the one real thing here.** −0.15%, −0.25%, −0.35% and −0.50%
+turned out to be **one rule with four names** — identical on every number,
+because at 3% risk they are all 0.05–0.17R and the same loser trips all of them.
+*Stop for the day once it has booked any real loss.* That rule beat its null on
+both timeframes and **held in both halves of the sample on both timeframes**,
+which nothing else on this hypothesis has done. It is also slower, because it
+halves the trade count.
+
+**H-044 asked the only question left and the answer was no.** Every guard study
+had capped the risk ladder at 3% — a local tuple in H-041 that two later studies
+inherited without looking at it — while `RISK_LADDER` runs to 5%. Drawdown
+headroom is the guard's whole product and size is what spends it, so the guard
+had never been given the chance to convert. Run over all twelve rungs it is
+**slower at every rung ≥2% on both timeframes**.
+
+### The finding that outlasts the guard
+
+Read the ladder across instead of down and the guard is the better curve at any
+blow-up rate **below ~42%**: at ≈30% blown it needs 24.4 expected days against
+the baseline's 39.2. Above 42% the baseline wins. **Kris's 2% floor puts the
+shipped rule at 43.5% blown — the crossover itself**, which is exactly why the
+guard has looked useless every time it was measured at the traded rung. If
+accounts ever stop being cheap, the guard is the right side of that curve and
+this is the table to come back to.
+
+### And the thing that should change the conversation
+
+**H-027 has never met the pace target at any position size.** Forty-eight cells,
+two arms, twelve rungs, two timeframes: the fastest is **16.8 expected days**,
+against a target of 5–14 set on 2026-09-07. The risk ladder is the one lever
+CLAUDE.md exempts from the noise floor — it is arithmetic on a fixed series, not
+a search — and it has now been run end to end. Its floor is 16.8 days, bought at
+52–58% of accounts blown and a continuous drawdown of −132% to −165%.
+
+Seven axes are closed by measurement and the eighth is arithmetic. **There is
+nothing left to tune.** The decision is publish-or-drop plus the demo test that
+finishes 2026-09-28.
+
+### Two method debts paid the same day (`NEXT.md` item D)
+
+**D1 — `core/probe.py`'s null did not match hour of day.** It shifted events by
+any offset at all, so an event that always fires at 00:00 UTC was scored against
+a population drawn from every hour. `hour_matched_shifts` now restricts the
+circular shift to whole days and **checks each candidate against the real
+minute-of-day** rather than assuming a regular grid; when the grid cannot
+support it the old behaviour stands and `null_hour_matched` in the output says
+so. `tests/test_probe.py` pins both halves, including the counterfactual: on a
+market whose only structure is an hour-of-day effect, **the free shift promotes
+it at the 95th percentile of its own null and the matched shift does not.**
+
+**D2 — the search was not priced.** `core/search_cost.py`: 96 tests at a 95th
+percentile expect **4.8** false passes; 16 cells at a 90th expect 1.6. The
+honest use is not a corrected bar — a 200-resample null cannot express the
+99.8th percentile a 16-cell family needs, and `resolvable()` says so — it is a
+**kill criterion**: one cell clearing a null is what a screen that size produces
+anyway, so only a monotone family counts. H-042 closed an axis on that
+arithmetic and H-043 reopened it on the same arithmetic.

@@ -19,13 +19,22 @@ overtaken for a week; it is kept at `docs/archive/NEXT_2026-09-07.md`.
 * **It is trading a demo account.** Bybit XAUUSDT, one cron pass per closed 1h
   bar on the Oracle VM, armed 2026-09-10 11:56 UTC. See `docs/LIVE_TEST.md` for
   the test, `live/DEPLOY_VM.md` for the box.
-* **Three axes are now closed by measurement, not by opinion.** Entry (25
+* **SEVEN axes are now closed by measurement, not by opinion.** Entry (25
   filters, 2026-09-08), timeframe (5m/15m/30m and volume bars, 2026-09-10 and
-  09-13), and the selector's objective (four of them, `strategies/beat/`,
-  2026-09-13). All three are in `CLAUDE.md`'s known-dead list.
+  09-13), the selector's objective (four of them, `strategies/beat/`,
+  2026-09-13), exit shape (2026-09-10, re-run over eleven years), band shape
+  (H-040, 2026-09-14), the daily-loss guard (H-041/042/043) and the account
+  overlay as a class (H-044). All seven are in `CLAUDE.md`'s known-dead list.
 * **Nothing has beaten the shipped rule.** Three attempts on 2026-09-13, one of
-  which cleared both pre-registered conditions on speed and died on blow-up rate.
-* **The pace target is 5–14 days.** 21.7 with a band to 31.4 is outside it.
+  which cleared both pre-registered conditions on speed and died on blow-up
+  rate; four more on 2026-09-14, one of which is real and costs speed.
+* **THE EIGHTH LEVER IS ARITHMETIC AND IT HAS NOW BEEN RUN.** H-044 took both
+  arms over the full risk ladder, 0.25% to 5.00%, on both timeframes — 48 cells.
+  **The fastest is 16.8 expected days.** Gold 1h runs 19.5 → 18.0 → 17.8 → 16.8
+  → 16.8 as risk goes 2% → 5%, while blow-ups climb 43.5% → 58.3%.
+* **The pace target is 5–14 days, and H-027 has never met it at any position
+  size.** 21.7 with a band to 31.4 is outside it, and so is every one of the 48
+  cells. This is not a tuning problem and there is no dial left to turn.
 * **The indicator is written but not published.** `strategies/vwapbreak/
   indicator.pine` is 424 lines, signals only, and `core/pine.py` fills the five
   chosen settings into it from `core/chosen.py`. Deliverable 2 is now a decision
@@ -49,21 +58,32 @@ fills look like the assumed costs, whether the bot's bookkeeping survives three
 weeks unattended, and whether the spread on a real venue is what `docs/FIRMS.md`
 assumed.
 
-### B. The band-shape axis, which is the only untouched one left
+### B. ~~The band-shape axis~~ **CLOSED 2026-09-14, and so is everything after it**
 
-**Not the exit axis.** That was closed on 2026-09-10 and re-closed over eleven
-years — partial, trailing and VWAP-recross all measured and rejected. CLAUDE.md
-claimed otherwise until 2026-09-14; it no longer does.
+**H-040 ran it** (`research/bandshape.py`, `BANDSHAPE.md`): atr, pct, sterr,
+asym against the shipped sigma band, both timeframes, pre-registered. **Every
+arm dead.** Backlog items 9–13 are answered.
 
-`docs/VWAP_BACKLOG.md` items **6, 7, 9, 10, 11, 12, 13, 18, 19, 20, 21** have
-never been run. They share a shape: they change what the band IS, rather than
-what is done when price crosses it. Every closed axis changed the latter.
+**H-041 → H-044 then ran the account-overlay axis**, which was the last one
+nobody had touched, and closed it too. The short version, full tables in
+`strategies/vwapbreak/research/GUARDSWEEP.md`, `GUARDSWEEP2.md` and `LADDER.md`:
 
-The honest prior is poor. Entry filters were 25 arms and 0 survivors, and a
-shuffled gate scored better than the real one. **Anything here needs a
-pre-registered arm list and a paired null before the first number is read**, or
-it will produce another 60%-pass artifact — item 16 in the backlog says so and
-was written before the last two studies proved it again.
+* H-041's −1.0% daily-loss guard was **the risk rung**, not the guard — at a
+  fixed rung its 4h result is 70.5% → **70.8%** blown, not 70.5% → 48.3%.
+* The guard **converts daily-cap deaths into max-cap deaths roughly 1:1** and
+  saves nobody at that threshold.
+* A real effect does exist at a tighter threshold — *stop for the day once it
+  has booked any real loss* — and it is **the first thing on H-027 to survive a
+  pre-registered confirmation**: it beat a matched-drop null on both timeframes
+  and held in both halves of the sample. **It is also slower**, and over the
+  full ladder it is slower at every rung ≥2%.
+* It is the better curve **below ~42% blown**, and the 2% risk floor lands the
+  shipped rule at 43.5% — the crossover. **A business input, not a research one.**
+
+**The honest prior in the original entry was right.** It said anything here
+needed a pre-registered arm list and a paired null before the first number or it
+would produce another 60%-pass artifact. Four studies were run that way and the
+one survivor is a trade-off, not an improvement.
 
 ### C. Publish the TradingView indicator
 
@@ -77,20 +97,24 @@ days is 16.8–31.4, which overlaps the luck zone measured on 2026-09-08. Kris's
 own framing was that the honesty of the description matters as much as the
 numbers, so the description is the work. This does not depend on A or B.
 
-### D. The two method fixes that are owed
+### D. ~~The two method fixes that are owed~~ **BOTH DONE 2026-09-14**
 
-Both were found on 2026-09-13 and both are unfixed in code:
-
-1. **`core/probe.py`'s null does not match hour of day.** An event that always
-   fires at 00:00 UTC is compared against a population drawn from every hour,
-   which gifts a short-side daily arm about 5bps. Every screen that used it is
-   affected.
-2. **The search is not priced.** 96 tests at a 95th percentile expect 4.8 false
-   passes. This correction was written down for H-028 and rebuilt without it
-   three days later.
-
-Neither changes a shipped number. Both change what the NEXT screen is allowed
-to claim, so they are cheap now and expensive later.
+1. **`core/probe.py`'s null now matches hour of day.** `hour_matched_shifts`
+   restricts the circular shift to whole days and **checks each candidate
+   against the real minute-of-day** instead of assuming a regular grid; where
+   the grid cannot support it the old behaviour stands and `null_hour_matched`
+   in the output row says so. `tests/test_probe.py` pins it, including the
+   counterfactual — on a market whose only structure is an hour-of-day effect,
+   the free shift promotes it at the 95th percentile of its own null and the
+   matched shift does not. **Screens run before this date are still affected;
+   nothing shipped depends on one.**
+2. **The search is now priced.** `core/search_cost.py` — `expected_false`,
+   `sidak_pctile`, `resolvable`, `verdict`. The usable form is a kill criterion
+   rather than a corrected bar: **a 200-resample null cannot express the 99.8th
+   percentile a 16-cell family needs**, and `resolvable()` says so, so the
+   honest statement is *one cell clearing a null is what a screen this size
+   produces anyway — only a monotone family counts*. H-042 closed an axis on
+   that arithmetic and H-043 reopened it on the same arithmetic.
 
 ---
 

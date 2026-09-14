@@ -158,6 +158,26 @@ it died on exactly the quantity this guard moves.
 
 ---
 
+# SUPERSEDED 2026-09-14 by H-042 (`GUARDSWEEP.md`) and H-043 (`GUARDSWEEP2.md`)
+
+Both follow-ups this section called "not optional before this is believed" were
+run the same day. **The −1.0% arm nominated above is dead:**
+
+* **The 4h result was entirely confound 3, the risk rung.** Held at one rung,
+  70.5% → **70.8%**, not 70.5% → 48.3%.
+* **On 4h it loses to a matched-drop null** — dropping the same number of trades
+  from randomly chosen days does better than the guard does.
+* The mechanism, from the two fail columns: the guard **converts daily-cap
+  deaths into max-cap deaths roughly 1:1** and saves nobody at this threshold.
+
+**What survived is a different rule at a tighter threshold.** −0.15%, −0.25%,
+−0.35% and −0.50% are one rule — *stop for the day once it has booked any real
+loss* — and it beat its null on both timeframes and held in both halves of the
+sample. It is slower than the shipped rule at a 3% rung. See `GUARDSWEEP2.md`,
+then `LADDER.md`.
+
+---
+
 # H-041b — the two runs H-041 said were owed. Pre-registered 2026-09-15, before any number.
 
 Kris, 2026-09-15: *"lets do 2 + 3"*. This is 2. It settles nothing new — it

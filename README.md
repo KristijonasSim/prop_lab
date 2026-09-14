@@ -400,11 +400,21 @@ record and carries the detail; this is the shape of it.
 between 13.3 and 26.5 expected days. The rule beats its null by 2.6x and that is
 the part worth trusting; the pace is not resolved.
 
-**Three axes are closed by measurement, not by opinion.** Entry (25 filters),
-timeframe (5m/15m/30m and volume bars), and the fold selector's objective (four
-of them). Nothing has beaten the shipped rule — three attempts on 2026-09-13,
-one of which cleared both pre-registered speed conditions and died on blow-up
-rate. The band-shape axis is the only untouched one left.
+**Seven axes are closed by measurement, not by opinion.** Entry (25 filters),
+timeframe (5m/15m/30m and volume bars), the fold selector's objective (four of
+them), exit shape, band shape, the daily-loss guard, and the account overlay as
+a class. Nothing has beaten the shipped rule — three attempts on 2026-09-13, one
+of which cleared both pre-registered speed conditions and died on blow-up rate,
+and four on 2026-09-14, one of which is a real effect that costs speed.
+
+**The eighth lever is arithmetic and it has been run.** H-044 took the rule over
+the full risk ladder, 0.25% to 5.00%, on both timeframes — 48 cells. **The
+fastest is 16.8 expected days.** Gold 1h goes 19.5 → 18.0 → 17.8 → 16.8 → 16.8
+as risk climbs 2% → 5%, while blown accounts go 43.5% → 58.3% and the continuous
+curve draws to −165%. **H-027 has never met the 5–14 day pace target at any
+position size**, and the ladder is the one lever the noise floor does not apply
+to. There is nothing left to tune; the decision is publish-or-drop plus the demo
+test finishing 2026-09-28.
 
 **H-002 and H-016 are no longer the board's subject.** They were the two
 survivors until 2026-09-09, both flagged `TOO SLOW` at 143.6 and 260.1 expected

@@ -1,158 +1,82 @@
-# Start here — written 2026-09-14, for whoever picks this up next
+# Start here — written 2026-09-14 evening, for whoever picks this up next
 
-Kris is away. This file is what to do when he is back. `NEXT.md` is the plan of
-record; this is the state on the day.
+`NEXT.md` is the plan of record; this is the state on the day. The morning's
+version, written while H-040 was still running, is at
+`docs/archive/NEXT_SESSION_2026-09-14_morning.md`.
 
-**Read `HOW_TO_ANSWER.md` first. Kris asked three times today for shorter
-answers. Key points, numbers, no essays. He means it.**
-
----
-
-## 1. THE RUN THAT IS PROBABLY STILL GOING — check this first
-
-**H-040, the band-shape study.** Started 2026-09-14 ~14:30 UTC, in the
-background on the desk.
-
-    log     see section 7 - copied to backtests/vwapbreak/bandshape.log on completion
-    code    strategies/vwapbreak/research/bandshape.py
-    result  backtests/vwapbreak/bandshape.json   <- exists only if it finished
-    PRE-REGISTRATION: strategies/vwapbreak/research/BANDSHAPE.md
-
-**If `bandshape.json` exists, read BANDSHAPE.md FIRST, then score the table
-against the criterion written there — not against your own judgement.** The
-criterion, fixed before the run:
-
-> An arm wins only if it has **fewer expected days with a band that does not
-> overlap the baseline's**, AND does not raise the blow-up rate, AND does it on
-> **both 1h and 4h**. A win on one timeframe and a loss on the other is noise —
-> that is what killed the fibonacci result and H-035.
-
-**If it did not finish, just re-run it:** `.venv/bin/python
-strategies/vwapbreak/research/bandshape.py` (~1–2 hours, 10 cells with nulls).
-
-**Expected outcome is that every arm dies.** Four axes have closed this way
-already. If that happens, say so plainly: H-027 has no axis left, and the honest
-next question is publish-or-drop, not more tuning.
+**Read `HOW_TO_ANSWER.md` first. Kris asks for shorter answers and means it.**
 
 ---
 
-## 2. Why this study is the last one
+## 1. Nothing is running. Nothing is outstanding.
 
-Kris asked "how can we improve this strategy". Four axes are closed **by
-measurement** and are in `CLAUDE.md`'s known-dead list. Do not re-propose any of
-them:
+Four studies were pre-registered and run this session and all four are finished,
+scored against criteria fixed before their numbers, and written up:
 
-| axis | verdict |
-|---|---|
-| entry filters | dead — 25 candidates, 24 raise PF and LOWER R/day |
-| timeframe | dead — 5m/15m/30m and volume bars, all bands overlap 1h |
-| exit shape | dead — partial/trailing/recross, reversed over eleven years |
-| selector objective | dead — four objectives, all on one trade-off curve |
-| **band shape** | **H-040, running now. The last one.** |
-
-**I nearly wasted a session today by not checking this.** `CLAUDE.md` still said
-the exit axis was untested; it had been closed four days earlier. Corrected in
-commit `6280c98`. **Before believing any "never tested" claim in any file here,
-grep `STRATEGY_LOG.md` and `ls backtests/vwapbreak/`.**
-
----
-
-## 3. The live demo account — state as of 2026-09-14 11:20 UTC
-
-    Bybit demo, XAUUSDT 1h, cron :02 every hour on the Oracle VM
-    equity $10,347.11  (+3.47%)   target +6%   started 2026-09-10
-    FLAT - Kris closed the book by hand at 11:16
-
-**The bot is fine and needs nothing.** The 12:02 pass will have seen the
-exchange flat against a 6-leg book, printed `RECONCILE`, dropped the book and
-cold-started. That is the 2026-09-13 fix working.
-
-**Three real trades so far. Not one has exited by the rule's own stop or
-horizon** — two Kris closed by hand, one the exchange backstop took. Read any
-"live validation" claim against that.
-
-| # | closed | net | closed by |
+| | study | file | verdict |
 |---|---|---|---|
-| 6 | 09-12 12:41 | +$136.51 | Kris |
-| 7 | 09-14 02:52 | −$53.88 | exchange backstop |
-| 8 | 09-14 11:16 | +$284.52 | Kris |
+| H-042 | daily-loss guard, finer sweep + **fixed rung** + a matched-drop null | `research/GUARDSWEEP.md` | **FAIL, all four conditions** |
+| H-043 | is −0.50% a curve or one lucky cell | `research/GUARDSWEEP2.md` | **real effect, not an improvement** |
+| H-044 | does survival buy speed — **the full risk ladder** | `research/LADDER.md` | **FAIL, axis closed for good** |
+| — | the two method debts in `NEXT.md` item D | `core/probe.py`, `core/search_cost.py` | **both paid** |
 
-**The counterfactual on the two hand-closes** (`live/counterfactual.py`):
-holding would have made **~$192 more**. Trade 6 clearly (+332 vs +137); trade 8
-was a coin flip won by **84 cents** — the highest high since entry was 4344.53
-against stops at 4345.37.
+## 2. The three things to say if Kris asks "what happened"
 
-**Measured cost, from the real fills:** Bybit charges **2.750 bps/side** on
-XAUUSDT, 5.50 round trip, against the 0.915/side `core/markets.py` assumes for a
-gold CFD. **Exactly 3.0x** — the pessimistic column this project already reports.
+**1. H-041's guard was the risk rung.** Its headline — 4h blow-ups 70.5% →
+48.3% — came from its own scorer handing the guarded arm 2.0% risk against the
+baseline's 3.0%. At a fixed rung it is **70.5% → 70.8%**. Its own result section
+had flagged this as confound 3 and called the fix not optional, which is the only
+reason it was caught.
 
----
+**2. Something real was found anyway, and it is one rule with four names.**
+−0.15/−0.25/−0.35/−0.50% are identical on every number — at 3% risk they are all
+0.05–0.17R and the same loser trips all of them. The rule is *stop for the day
+once it has booked any real loss*. It beat a matched-drop null on both
+timeframes and **held in both halves of the sample**, which nothing else on
+H-027 has done. **It halves the trade count and is slower at every rung ≥2%.**
 
-## 4. THE ONE THING WORTH MORE THAN ANY BACKTEST — still not done
+**3. The ladder is exhausted and the pace target was never reachable.** 48 cells
+— 2 arms × 12 rungs × 2 timeframes. **The fastest is 16.8 expected days against
+a 5–14 day target.** Gold 1h runs 19.5 → 18.0 → 17.8 → 16.8 → 16.8 as risk goes
+2% → 5%, while blow-ups climb 43.5% → 58.3% and the continuous curve draws to
+−165%. The ladder is the one lever CLAUDE.md exempts from the noise floor and it
+has now been run end to end.
 
-**Blocker B1: does the firm measure drawdown on EQUITY (open positions
-included) or on CLOSED BALANCE?** Open since 2026-09-08. It is one email.
+## 3. What NOT to propose
 
-H-039 measured what it is worth (`strategies/vwapbreak/research/MARKTOMARKET.md`):
+**Seven axes are closed by measurement** and are in `CLAUDE.md`'s known-dead
+list: entry, timeframe, selector objective, exit shape, band shape, the
+daily-loss guard, the account overlay as a class. The eighth, the risk ladder,
+is arithmetic and bottoms out above the pace target.
 
-| | exit-booked (what the board assumes) | marked to market |
-|---|---|---|
-| fail on the MAX cap | 27.6% | 4.2% |
-| fail on the DAILY cap | 22.4% | **45.8%** |
-| worst single day | −3.10 R | **−83.16 R** |
+**There is no ninth axis and proposing one is the failure mode this file exists
+to prevent.** On 2026-09-14 a stale sentence in CLAUDE.md led straight to
+re-proposing a study that already existed. Check `STRATEGY_LOG.md` and
+`backtests/vwapbreak/` before believing any "never been tested" claim anywhere,
+including here.
 
-Pass rate and total blow-ups are **identical** (50.0 vs 49.9, 50.0 vs 50.0), so
-the board's headline numbers stand. What changes is **which cap kills the
-account**, and that decides whether a daily-loss guard is worth building.
+## 4. What is actually open
 
-**Every board number silently assumes closed-balance accounting and that has
-never been written down anywhere except in that file.**
+**A. The demo test finishes 2026-09-28.** Day 4 of 18 as of 2026-09-14. It is
+the only out-of-sample evidence this project has ever had that is not a
+simulation, and every backtest number is worth less than it. `docs/LIVE_TEST.md`.
 
----
+**B. Publish-or-drop on the TradingView indicator.** The code half is done —
+424 lines, signals only, `core/pine.py` fills the five chosen settings from
+`core/chosen.py`. What is left is a decision and a description, and the
+description has to carry the band: **~17–20 expected days, 40–50% of accounts
+blown, and no setting of any dial moves it into 5–14.**
 
-## 5. What is NOT to be done
+**C. B1 and B2 are still unanswered by the firm** and have been since
+2026-09-08. One email. Static or trailing max drawdown, and whether XAUUSD is
+tradeable at Thunderbolt at all. The second one decides whether the board
+describes a plan or a simulation.
 
-* **Do not change the trading rule.** Not a trailing stop, not a partial exit,
-  not a take-profit. All measured, all lost. `core/chosen.py` carries the
-  rejections with numbers.
-* **Do not edit a file a manifest declares — not even a comment.**
-  `core/fingerprint.py` hashes bytes, so a docstring change marks every board
-  record stale. Nearly done today with five of them; see
-  `core/KERNEL_CONTRACT.md` section 6 for the grep that catches it.
-* **Do not quote `exitshape.py`'s day counts next to `core/chosen.py`'s.**
-  exitshape ran on Upcomers Ash (2% target), chosen.py on Thunderbolt (6%).
-  Different firms, not comparable.
+## 5. If accounts ever stop being cheap
 
----
-
-## 6. Numbers Kris asked for today, so they are not re-derived
-
-**Blind walk-forward, gold 1h, $15,000 from 2026-05-01 at 2% risk, Bybit's real
-3x cost:** → **$18,121 (+20.8%)** by 2026-08-31. 205 trades, maxDD −29.9%.
-Monthly R: May +9.9, Jun +4.5, **Jul −12.5**, Aug +10.9.
-
-**Annual expectation**, 2 years out-of-sample, 957 trades, at 2% risk and 3x
-cost: CAGR **+261%** with maxDD **−65%**; block-bootstrap p10 **+38%**, median
-+250%, p90 +907%. **The spread is the answer, not the median.** He was told to
-plan on the low end. At 1% risk: ~+106% with −41% drawdown.
-
-**Caveat that must travel with those numbers:** two years, one instrument, and
-2026 alone is +204% of it — the January gold run (4695 → 5562 → 4504) dominates
-everything.
-
----
-
-## 7. Housekeeping
-
-* Everything through `0c0ffcb` is pushed to `origin/main`, H-040's code and
-  pre-registration included. Only its RESULT is outstanding — commit
-  `backtests/vwapbreak/bandshape.json` with the write-up.
-* Gold cache now runs to **2026-09-13**; that is what unlocked the Jun–Aug fold
-  (+144 blind trades). Sept 1–13 still has no fold — it needs a complete Sep–Nov
-  test quarter.
-* **`build_tf(sym, "15m")` is a trap.** Current pandas reads `15m` as fifteen
-  MONTHS. The working file is `_15min.parquet`. I damaged `_15m.parquet` twice
-  today and restored it from git both times.
-* `download(..., force=True)` over a short window **rewrites the whole parquet
-  with only that window**. It cost 90,048 rows. The raw `.bi5` files are the
-  backstop.
+`research/LADDER.md` has the frontier. **Below ~42% blow-ups the guard is
+strictly the better curve** — at ≈30% blown it needs 24.4 expected days against
+the baseline's 39.2. Kris's 2% risk floor lands the shipped rule at 43.5% blown,
+which is the crossover itself, and that is why the guard has looked useless
+every time it was measured at the traded rung. **That is a business input, not a
+research question.**

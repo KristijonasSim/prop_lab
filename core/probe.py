@@ -79,6 +79,41 @@ def live_mask(df: pd.DataFrame) -> np.ndarray:
     return v & nxt
 
 
+def hour_matched_shifts(index, idx: np.ndarray) -> np.ndarray:
+    """Circular shifts that land every event on the SAME time of day.
+
+    WHY THIS EXISTS. The null used to shift events by any offset at all. An
+    event that always fires at 00:00 UTC was therefore compared against a
+    population drawn from every hour of the day - and gold's hours are not
+    interchangeable. Forward returns from the 00:00 bar are not the forward
+    returns of the NY open, so the null was drawing from a different population
+    than the real events and was easier to beat than it should have been. It was
+    worth roughly 5bps to a short-side daily arm, found 2026-09-13, and every
+    screen that used this module before 2026-09-14 is affected.
+
+    A shift of a whole number of DAYS preserves the time of day on a regular
+    grid, so the candidates are the multiples of one day's bars - but the wrap
+    at the end of the series can break the phase and a padded cache can carry a
+    gap, so each candidate is CHECKED against the real minute-of-day rather than
+    assumed. Returns the shifts that pass, empty if the grid cannot support it.
+    """
+    d = pd.DatetimeIndex(index)
+    n = len(d)
+    if n < 3 or not len(idx):
+        return np.empty(0, dtype=np.int64)
+    step = pd.Series(d).diff().dropna().mode()
+    if not len(step) or step.iloc[0] <= pd.Timedelta(0):
+        return np.empty(0, dtype=np.int64)
+    step = step.iloc[0]
+    if pd.Timedelta("1D") % step != pd.Timedelta(0):
+        return np.empty(0, dtype=np.int64)          # bars do not divide a day
+    bpd = int(pd.Timedelta("1D") // step)
+    mod = (d.hour * 60 + d.minute).values
+    want = mod[idx]
+    return np.array([s for s in range(bpd, n, bpd)
+                     if np.array_equal(mod[(idx + s) % n], want)], dtype=np.int64)
+
+
 def probe(df: pd.DataFrame, events: np.ndarray, horizons: list[int],
           sym: str, label: str, side: np.ndarray | None = None,
           n_null: int = 400, seed: int = 0) -> pd.DataFrame:
@@ -111,11 +146,20 @@ def probe(df: pd.DataFrame, events: np.ndarray, horizons: list[int],
         # count and the market's own return distribution; destroys only the
         # alignment between the two. A circular roll keeps the clustering
         # structure of the event dates, which an independent resample would not.
+        #
+        # THE SHIFT IS A WHOLE NUMBER OF DAYS (2026-09-14). See
+        # `hour_matched_shifts`: a free shift compares a 00:00 event against
+        # every hour of the day and hands the real events an edge they did not
+        # earn. When the grid cannot support it the old behaviour stands and
+        # `null_hour_matched` in the output says so.
         idx = np.flatnonzero(ev)
+        shifts = hour_matched_shifts(df.index, idx)
         null = np.empty(n_null)
         for i in range(n_null):
             shifted = np.zeros(n, bool)
-            shifted[(idx + rng.integers(1, n)) % n] = True
+            s_ = (int(rng.choice(shifts)) if len(shifts)
+                  else int(rng.integers(1, n)))
+            shifted[(idx + s_) % n] = True
             # the null must live under the same constraint as the real events,
             # or it is drawing from a different population and is easier to beat
             null[i] = _stat(fwd, shifted & live)
@@ -131,6 +175,8 @@ def probe(df: pd.DataFrame, events: np.ndarray, horizons: list[int],
             "null_p95": round(float(np.percentile(null, 95)), 3) if null.size else np.nan,
             "pctile": round(pct, 1) if np.isfinite(pct) else np.nan,
             "hurdle_bps": hurdle, "cost_measured": measured,
+            "null_hour_matched": bool(len(shifts)),
+            "null_shifts": int(len(shifts)),
             "beats_hurdle": bool(np.isfinite(real) and real > hurdle),
         })
     return pd.DataFrame(rows)

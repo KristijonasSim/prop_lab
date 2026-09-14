@@ -35,7 +35,8 @@ they cannot drift apart.
 
 ## What is closed, so you do not re-open it
 
-Three axes are closed **by measurement**, and each is written up in `CLAUDE.md`:
+**Seven axes are closed by measurement as of 2026-09-14**, and each is written
+up in `CLAUDE.md`:
 
 * **Entry.** 25 filter candidates, 2026-09-08. 24 of 25 raise profit factor and
   LOWER R per day, which makes the evaluation slower — the metric is
@@ -47,10 +48,29 @@ Three axes are closed **by measurement**, and each is written up in `CLAUDE.md`:
   2026-09-13). All four sit on the same frequency-versus-survivability curve and
   profit factor is the best of them.
 
-**The band-shape axis is the only untouched one** — backlog items 6, 7, 9–13 and
-18–21. It needs a pre-registered arm list and a paired null before the first
-number is read, for the reason the entry axis demonstrates: a gate carrying no
-information by construction reached 60% pass in 14.5 days on this exact data.
+* **Exit shape.** 2026-09-10, re-run over eleven years. Partial, trailing and
+  VWAP-recross all measured and rejected.
+* **Band shape.** H-040, 2026-09-14 (`research/BANDSHAPE.md`). ATR, percentage,
+  standard-error and asymmetric bands against the shipped sigma band. Every arm
+  dead. Backlog items 9–13 are answered.
+* **The daily-loss guard.** H-041 → H-043 (`research/GUARDSWEEP.md`,
+  `GUARDSWEEP2.md`). H-041's headline was **the risk rung**, not the guard —
+  held at one rung its 4h result is 70.5% → 70.8% blown, not 70.5% → 48.3%.
+* **The account overlay as a class.** H-044 (`research/LADDER.md`). Over the
+  full risk ladder the guard is slower at every rung ≥2% on both timeframes.
+
+**There is no untouched axis left.** The eighth lever, the risk ladder, is
+arithmetic rather than a search and has now been run end to end: 48 cells, and
+**the fastest is 16.8 expected days against a 5–14 day pace target. H-027 has
+never met the pace target at any position size.**
+
+**The one real finding of 2026-09-14, and it is a trade-off, not an
+improvement.** *Stop for the day once it has booked any real loss* — the rule
+that −0.15/−0.25/−0.35/−0.50% all express — beat a matched-drop null on both
+timeframes and held in both halves of the sample, which nothing else here has
+done. It halves the trade count and is slower. It is the better curve **below
+~42% blow-ups**, and Kris's 2% risk floor lands the shipped rule at 43.5% —
+the crossover itself. **A business input, not a research question.**
 
 ## The one thing to hold on to
 
