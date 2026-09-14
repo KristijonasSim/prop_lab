@@ -1,0 +1,124 @@
+{
+ "trade 6 - closed by hand 2026-09-12 12:41, +$136.51": {
+  "legs": [
+   {
+    "tag": "vwap1",
+    "qty": 0.513,
+    "stop": 4423.94,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 46.46
+   },
+   {
+    "tag": "vwap2",
+    "qty": 0.385,
+    "stop": 4436.9,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 34.87
+   },
+   {
+    "tag": "vwap3",
+    "qty": 0.513,
+    "stop": 4423.94,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 46.46
+   },
+   {
+    "tag": "vwap4",
+    "qty": 0.385,
+    "stop": 4436.9,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 34.87
+   },
+   {
+    "tag": "vwap5",
+    "qty": 0.385,
+    "stop": 4436.9,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 34.87
+   },
+   {
+    "tag": "asia",
+    "qty": 1.488,
+    "stop": 4452.11,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 134.75
+   }
+  ],
+  "rule_gross": 332.28,
+  "hand_net": 136.51,
+  "diff": 195.77
+ },
+ "trade 8 - closed by hand 2026-09-14 11:16, +$284.52": {
+  "legs": [
+   {
+    "tag": "vwap1",
+    "qty": 2.065,
+    "stop": 4345.37,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 61.56
+   },
+   {
+    "tag": "vwap2",
+    "qty": 1.549,
+    "stop": 4348.0,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 46.18
+   },
+   {
+    "tag": "vwap3",
+    "qty": 2.065,
+    "stop": 4345.37,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 61.56
+   },
+   {
+    "tag": "vwap5",
+    "qty": 1.549,
+    "stop": 4348.0,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 46.18
+   },
+   {
+    "tag": "asia",
+    "qty": 1.919,
+    "stop": 4369.47,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 57.21
+   },
+   {
+    "tag": "vwap4",
+    "qty": 0.279,
+    "stop": 4367.83,
+    "exit_ts": "2026-09-14 11:00",
+    "exit_px": 4302.54,
+    "why": "STILL OPEN",
+    "pnl": 8.32
+   }
+  ],
+  "rule_gross": 281.01,
+  "hand_net": 284.52,
+  "diff": -3.51
+ }
+}
