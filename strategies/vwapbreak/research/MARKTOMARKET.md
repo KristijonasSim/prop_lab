@@ -103,3 +103,95 @@ does not exist, which is why it is second and not first.
 **Four values of X is a search over four cells.** At a 10-90% band that is not
 severe, but it is not free either, and the curve requirement above is what pays
 for it.
+
+---
+
+# RESULT — 2026-09-14
+
+`backtests/vwapbreak/marktomarket.json`. Gold 1h, floors 30 / top 5, Thunderbolt
+one-step, 813 selected trades over the standard three-year window.
+
+**The re-attribution is exact and was checked three ways before anything was
+read.** 813 of 813 trades matched back to the kernel array that produced them on
+entry timestamp, exit timestamp and R together. The kernel's own booking
+identity was recomputed for every trade with a worst error of **0.00e+00**. The
+two series sum to the identical total, **+175.318 R**, difference 0.00e+00. Only
+the day an R is attributed to changes.
+
+| | exit-booked (the board) | marked to market |
+|---|---|---|
+| days with a step | 243 | **528** |
+| worst single day | **−3.10 R** | **−83.16 R** |
+| expected days | 18.0 (band 14.2–23.5) | 4.0 (band 4.0–6.5) |
+| pass % | 50.0 | 49.9 |
+| fail on the MAX cap | 27.6% | **4.2%** |
+| fail on the DAILY cap | 22.4% | **45.8%** |
+| blown, total | **50.0%** | **50.0%** |
+
+## Against the kill criterion, which was fixed in advance
+
+> *"If the mark-to-market series produces pass and blow-up rates inside the noise
+> band of the exit-booked series, the concern is closed and the board numbers
+> stand."*
+
+**Pass is 50.0 against 49.9. Total blow-ups are 50.0 against 50.0.** Both are
+inside. **By the letter of the criterion the concern is closed and the board's
+pass and blow-up numbers stand.**
+
+**And the criterion was badly specified.** It named the two quantities the claim
+predicted would move, and neither moved. What moved were quantities it did not
+name: expected days is **4.0 against 18.0 with disjoint bands**, and the failure
+mechanism inverts — the max-drawdown cap stops being what kills accounts and the
+daily cap becomes it, 27.6/22.4 flipping to 4.2/45.8.
+
+**That is a finding this study is not entitled to claim.** It was not
+pre-registered, it comes from the same run, and treating it as a result would be
+the exact move this repo keeps having to retract. It is a hypothesis for a
+separate, properly pre-registered test, and it is written here as one.
+
+## What is solid regardless, because it is description and not search
+
+These are statistics of a fixed trade series. No cell was chosen, nothing was
+swept, and no null is needed to read them:
+
+| peak unrealised R reached, per trade | median **0.20** | p95 **19.6** | max **286.6** |
+|---|---|---|---|
+| **give-back** (peak unrealised − realised) | median **1.01** | p95 **13.4** | max **287.7** |
+
+**The worked example.** One trade entered 2026-01-20 at 4695 with a **$3.08**
+stop, ran to gold's 5562 high — **+286.6 R unrealised** — then gave all of it
+back and stopped out at **−1.08 R**. In the board's series that trade is a
+single −0.22 R entry on 2026-02-02 and nothing at all on the thirteen days in
+between. The price move is real: gold ran 4695 → 5562 → 4504 inside two weeks.
+
+The mechanism is the shape of the rule, not a bug. **Stops of $1–$10 on a
+$4,000–$5,000 instrument, held up to 384 bars.** A position can travel hundreds
+of R without ever being closed, because nothing in the rule takes profit.
+
+## The assumption nobody had written down
+
+Which of the two series is correct **is not a modelling choice, it is a question
+about the firm**:
+
+* a firm measuring drawdown on **equity**, open positions included — the common
+  case — gets the marked series;
+* a firm measuring it on **closed balance** gets the exit-booked series. CTI is
+  named in `docs/FIRMS.md` as balance-based.
+
+**Every board number this project has published assumes the second**, and that
+assumption has never appeared in writing anywhere. It is blocker **B1**, open
+since 2026-09-08, and it is worth far more than 17 points of pass rate: it
+decides which of two failure modes the strategy actually has.
+
+## What this says about the live question that started it
+
+Kris was holding **+$406 unrealised** and asked whether to bank it. The give-back
+distribution is the answer in the only form the data supports: the median trade
+hands back **1.01 R** from its peak, the top 5% hand back **13.4 R** or more, and
+the worst on record handed back **287.7 R**. On an equity-measured account that
+is the exposure being carried while the position is open.
+
+It does **not** follow that banking early is better — `exitshape.py` measured
+that and it was slower, and over eleven years the partial exit reversed. What
+follows is narrower and firmer: **the risk of holding is much larger than the
+board shows, and how much larger depends on a firm rule nobody has asked about.**
