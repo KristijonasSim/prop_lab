@@ -63,9 +63,17 @@ simulation, and every backtest number is worth less than it. `docs/LIVE_TEST.md`
 
 **B. Publish-or-drop on the TradingView indicator.** The code half is done —
 424 lines, signals only, `core/pine.py` fills the five chosen settings from
-`core/chosen.py`. What is left is a decision and a description, and the
-description has to carry the band: **~17–20 expected days, 40–50% of accounts
-blown, and no setting of any dial moves it into 5–14.**
+`core/chosen.py`. **The description is now drafted too:
+`strategies/vwapbreak/PUBLISH.md`** — paste-ready text, a register of every
+factual claim in it with its source, and the list of numbers we could have
+quoted and deliberately did not.
+
+**It carries no performance claim at all.** Not the 59.8% pass, not the 21.7
+expected days, not PF@2x 2.872, not the 2.6× null margin. Every favourable
+number this project has is inseparable from a method a reader cannot check on
+their own chart, so the honest description has none in it. **Its recommendation
+is to wait for 2026-09-28** — the code is done, the description does not improve
+by waiting, and publishing first spends the one clean out-of-sample read.
 
 **C. B1 and B2 are still unanswered by the firm** and have been since
 2026-09-08. One email. Static or trailing max drawdown, and whether XAUUSD is

@@ -97,6 +97,18 @@ days is 16.8–31.4, which overlaps the luck zone measured on 2026-09-08. Kris's
 own framing was that the honesty of the description matters as much as the
 numbers, so the description is the work. This does not depend on A or B.
 
+**The description is now drafted: `strategies/vwapbreak/PUBLISH.md`.** It
+carries **no performance claim of any kind** — no pass rate, no expected days,
+no profit factor — because every favourable number this project has is
+inseparable from a method a reader cannot check on their own chart. The file
+holds the paste-ready text, a register of every factual statement in it with its
+source, and the list of numbers we could have quoted and deliberately did not.
+
+**Its recommendation is to wait for 2026-09-28.** The code is done, the
+description does not improve by waiting, and the demo test is the only
+out-of-sample evidence the project has ever had. Publishing first buys nothing
+and spends the one clean read.
+
 ### D. ~~The two method fixes that are owed~~ **BOTH DONE 2026-09-14**
 
 1. **`core/probe.py`'s null now matches hour of day.** `hour_matched_shifts`

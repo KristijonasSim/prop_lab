@@ -29,6 +29,7 @@ they cannot drift apart.
 | the bot that trades it | `live/bybit_demo.py`, `live/DEPLOY_VM.md` |
 | everything left to test, ranked | `docs/VWAP_BACKLOG.md` |
 | the published indicator | `strategies/vwapbreak/indicator.pine` |
+| the publication description and its claims register | `strategies/vwapbreak/PUBLISH.md` |
 | per-study workings | `strategies/vwapbreak/research/` |
 | every variation tried, pass or fail | `STRATEGY_LOG.md` |
 | what is closed and must not be re-proposed | `CLAUDE.md`, known-dead list |
