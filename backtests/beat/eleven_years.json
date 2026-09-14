@@ -1,0 +1,48 @@
+{
+ "baseline select_on=2x": {
+  "rows": [
+   {
+    "risk_pct": 1.0,
+    "days": 33.1,
+    "pass_pct": 63.4,
+    "blown_pct": 13.0,
+    "still_open_pct": 23.5,
+    "days_lo": 29.7,
+    "days_hi": 39.5
+   },
+   {
+    "risk_pct": 1.5,
+    "days": 24.3,
+    "pass_pct": 65.8,
+    "blown_pct": 24.2,
+    "still_open_pct": 10.1,
+    "days_lo": 22.5,
+    "days_hi": 29.5
+   },
+   {
+    "risk_pct": 2.0,
+    "days": 21.7,
+    "pass_pct": 64.5,
+    "blown_pct": 30.6,
+    "still_open_pct": 4.8,
+    "days_lo": 20.1,
+    "days_hi": 26.0
+   },
+   {
+    "risk_pct": 3.0,
+    "days": 17.8,
+    "pass_pct": 56.1,
+    "blown_pct": 43.3,
+    "still_open_pct": 0.5,
+    "days_lo": 15.8,
+    "days_hi": 19.7
+   }
+  ],
+  "pf": 1.41,
+  "pf_2x": 1.372,
+  "win_pct": 17.8,
+  "tpd": 0.88,
+  "trades": 3213,
+  "folds": 40
+ }
+}
