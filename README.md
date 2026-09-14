@@ -344,8 +344,19 @@ strategies/    one folder per hypothesis: engine (numba kernel), sweep driver,
                one stageN_*.py per question asked, notes.md
 backtests/     results, logs, board.json per hypothesis, the scoreboard page
 data/          cached bars and feeds (committed on purpose)
-live/          execution scripts
+live/          execution scripts, and the demo bot that runs on the VM
+tests/         `pytest` is the fast suite, `pytest -m slow` the engine checks
+docs/          reference that is consulted, not followed
+docs/archive/  history: session notes, superseded plans, dead hypotheses
 ```
+
+**Six markdown files live at the root and all six are kept current.** Everything
+else is under `docs/`, and **nothing in `docs/archive/` holds a current number.**
+
+**A file a manifest declares is not a free edit, not even its comments.**
+`core/fingerprint.py` hashes bytes, so changing a docstring in a declared kernel
+marks every board record that depends on it stale. `core/KERNEL_CONTRACT.md`
+section 6 has the grep that tells you before you edit.
 
 **Every strategy folder follows the same shape**: a numba kernel for the trade
 logic, a sweep driver, a stage script per question, and `notes.md` as the
@@ -371,33 +382,45 @@ this. If it disagrees with the board, one of them is wrong.
 
 ---
 
-## 8. Where things stand right now (2026-09-07)
+## 8. Where things stand right now (2026-09-14)
 
-| ID | hypothesis | score | PF | trades/day | expected days | state |
-|---|---|---|---|---|---|---|
-| **H-002** | **VWAP — gold only** | **6.0** | **2.02** | **4.41** | **143.6** (55.9 one-step) | **TOO SLOW** |
-| **H-016** | **MA ribbon — gold only** | **5.0** | **1.81** | **0.53** | **175.9** | **TOO SLOW** |
+**One hypothesis, and it is trading a demo account.** `NEXT.md` is the plan of
+record and carries the detail; this is the shape of it.
 
-**Both survivors fail the pace gate.** They are kept because they beat their
-nulls and are the only worked examples to test the verification work against —
-not because they are tradeable at this pace.
+| | |
+|---|---|
+| the rule | **H-027, VWAP band breakout, XAUUSD 1h**, five settings in parallel |
+| where it lives | `core/chosen.py` — pinned, not derived from the board |
+| measured | **59.8% pass, 21.7 expected days, band 16.8–31.4** |
+| live | Bybit demo, one cron pass per closed 1h bar, armed 2026-09-10 |
+| pace target | 5–14 days. **21.7 with a band to 31.4 is outside it.** |
 
-**Removed from the board 2026-09-07:** H-009 (8.9) and H-017 (7.8). Both were
-scored on the kernel that had three look-aheads; on the corrected kernel their
-crypto legs went from 11 cells clearing the gate to zero. Their rows in
-`STRATEGY_LOG.md` and `RESEARCH_LOG.md` stay — **the failures are the
-denominator.** Recoverable from git at `698724f`.
+**Read the band, not the number.** 16.8–31.4 overlaps the luck zone measured on
+2026-09-08, where six gates carrying no information by construction scored
+between 13.3 and 26.5 expected days. The rule beats its null by 2.6x and that is
+the part worth trusting; the pace is not resolved.
 
-* **One market is left: gold.** Every crypto price hypothesis is dead — twelve of
-  them, plus the entire VWAP crypto book, which died to a look-ahead fix.
-* **The problem is no longer edge. It is speed.** Both survivors beat their nulls
-  and both are 3–4x slower than target.
-* **The biggest lever is the firm, not research.**
+**Three axes are closed by measurement, not by opinion.** Entry (25 filters),
+timeframe (5m/15m/30m and volume bars), and the fold selector's objective (four
+of them). Nothing has beaten the shipped rule — three attempts on 2026-09-13,
+one of which cleared both pre-registered speed conditions and died on blow-up
+rate. The band-shape axis is the only untouched one left.
+
+**H-002 and H-016 are no longer the board's subject.** They were the two
+survivors until 2026-09-09, both flagged `TOO SLOW` at 143.6 and 260.1 expected
+days, and both still beat their nulls. Their rows stay in `STRATEGY_LOG.md` —
+the failures are the denominator.
+
+* **One market is left: gold.** Every crypto price hypothesis is dead.
+* **The problem is no longer edge. It is speed**, and the entry side is spent.
+* **The biggest open lever is still the firm, not research.** Two questions have
+  been blocked on the firm since 2026-09-08: whether its max drawdown trails,
+  worth 17 points of pass rate, and whether XAUUSD is tradeable there at all.
 
 **The standing pattern from both this repo and the previous one: every leg that
 ever worked came from a data feed — funding, open interest, taker delta,
-long/short ratio — not from a price pattern.** Twelve price hypotheses have died
-here. Weigh that before proposing another price geometry.
+long/short ratio — not from a price pattern.** Well over a dozen price
+hypotheses have died here. Weigh that before proposing another price geometry.
 
 **Read `CLAUDE.md`'s known-dead list before proposing anything.** Re-proposing a
 dead idea without new evidence wastes the one resource this project is short of.
