@@ -26,9 +26,10 @@ overtaken for a week; it is kept at `docs/archive/NEXT_2026-09-07.md`.
 * **Nothing has beaten the shipped rule.** Three attempts on 2026-09-13, one of
   which cleared both pre-registered conditions on speed and died on blow-up rate.
 * **The pace target is 5–14 days.** 21.7 with a band to 31.4 is outside it.
-* **The published indicator has not been written.** `strategies/vwapbreak/
-  indicator.pine` is deliverable 2 of the three Kris set, and deliverable 1 is
-  what the demo account is currently testing.
+* **The indicator is written but not published.** `strategies/vwapbreak/
+  indicator.pine` is 424 lines, signals only, and `core/pine.py` fills the five
+  chosen settings into it from `core/chosen.py`. Deliverable 2 is now a decision
+  about publishing, not a build.
 
 ---
 
@@ -60,12 +61,17 @@ pre-registered arm list and a paired null before the first number is read**, or
 it will produce another 60%-pass artifact — item 16 in the backlog says so and
 was written before the last two studies proved it again.
 
-### C. Write the TradingView indicator
+### C. Publish the TradingView indicator
 
-Deliverable 2 of the three. It is signals only — no orders, no equity curve —
-and `core/pine.py` already renders the chosen settings into it. This does not
-depend on A or B; it depends on being willing to publish the rule as it stands,
-with the band quoted honestly.
+Deliverable 2 of the three, and the code half is done: 424 lines, signals only,
+no orders and no equity curve, with `core/pine.py` filling in the five chosen
+settings so the published script and `core/chosen.py` cannot drift apart.
+
+**What is left is not a build, it is a decision.** Publishing means putting
+Kris's name on the claim, and the claim has to carry the band — 21.7 expected
+days is 16.8–31.4, which overlaps the luck zone measured on 2026-09-08. Kris's
+own framing was that the honesty of the description matters as much as the
+numbers, so the description is the work. This does not depend on A or B.
 
 ### D. The two method fixes that are owed
 
