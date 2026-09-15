@@ -2752,3 +2752,75 @@ honest use is not a corrected bar — a 200-resample null cannot express the
 **kill criterion**: one cell clearing a null is what a screen that size produces
 anyway, so only a monotone family counts. H-042 closed an axis on that
 arithmetic and H-043 reopened it on the same arithmetic.
+
+## 2026-09-15 — two hypotheses that are not the VWAP, both pre-registered, both dead
+
+Kris set a contest against an agent on another machine: the best next hypothesis
+besides H-027, two to three hours. The submission is
+`docs/COMPETITION_NEXT_HYPOTHESIS.md`; the workings are `strategies/fixflow/`
+and `strategies/partrev/`. Neither reached gate 2, so neither has an expected-days
+number and none is offered.
+
+### What was chosen and why
+
+Both were picked against the same two constraints: a mechanism with a named
+counterparty, and the six standard markets. The FX and metals side of this repo
+has never had a high-frequency rule run on it and it is the **cheap** side — a
+round trip is 0.19bps on EURUSD and 1.06 on gold against BTC's 9.00 — so an edge
+of one or two basis points is dead on a coin and live on a major. That is where
+both looked.
+
+### H-046, the 16:00 London fix — dead, and it closes the clock
+
+Benchmark orders are price-insensitive, concentrated and pre-announced; dealers
+hedge into the window and the inventory should come back out of it afterwards.
+Gold was the only one of five markets to clear the 2x round trip and it cleared
+by 8%. The pooled test against an hour-matched null gave p = 0.418.
+
+**The criterion that settled it was the placebo clock: the fix ranked 11th of the
+24 London hours.** The BTCUSDT control — no fix exists there — stayed silent,
+which is the one criterion of four that passed, and is the only reason the
+mechanism story was worth testing rather than assuming.
+
+Then the whole clock, with the search priced: 200 cells, best at cell p = 0.001
+and **p = 0.130 against the best-of-200 null**, sign flipping across markets at
+its own anchor. H-028's two numbers again, on new data.
+
+**A method rule came out of it that applies to every cross-market pooling here.**
+Stage 1 pooled `edge / cost`, which weights by the inverse of the spread: one
+4.7bps EURUSD result scored 6.35 against gold's 1.08 purely because EURUSD is 5x
+cheaper, and the pooled number was that one market. **Never pool a ratio whose
+denominator varies by 50x across the things being pooled.** Standardise by each
+cell's own dispersion and apply cost afterwards, separately.
+
+### H-047, participation — the signal is real and the cost bar is 2 to 4x away
+
+A move carrying volume is information; a move carrying none is a liquidity
+provider's inventory and comes back. The claim is an interaction, not a fade, and
+it is the first thing this session produced that beat a priced search: **28 of 72
+cells at p < 0.05 against 3.6 expected, best cell p = 0.000 against the
+best-of-72**, and the five most significant cells are all the thin-participation
+tercile. USDJPY reads +1.00 / +0.47 / −0.41 bps across thin / mid / heavy.
+
+**It cannot pay for itself.** 0 of 6 markets clear the 2x round trip; GBPUSD gets
+64% of the way. And the addendum's tail test — H-008's question, does a bigger
+move revert harder — came back flat and then **negative in the top 1% on four of
+six markets**. The biggest thin-volume moves continue. There is no tail to trade,
+and a stop or a target cannot help because they move R, not bps.
+
+### The finding that outlasts both
+
+Three independent signals here are now measured as real and under the bar by less
+than a factor of four: H-024's depth imbalance (7.9bps against a 14bps taker
+round trip), H-011's previous-day level fade ("real edge, too small for 28bps")
+and H-047 today (0.53 against 0.82). **That is three observations about the cost,
+not three about the market.** The nominated next hypothesis, H-048, is therefore
+the round trip itself: re-price the real-but-unaffordable signals under a measured
+limit fill, using the instrument H-023 already validated on ticks (through-given-
+touch 99.8–100%, 96–98% behind 10 BTC of queue, adverse selection within 0.08bps).
+On Binance futures that is 9.0bps to 4.0 and H-024's cell crosses it.
+
+**With the caveat written before anyone gets excited:** H-023 stage 14 priced a
+whole book from 14bps to zero and it moved 57 expected days to 32. Free execution
+buys 33–44% of the pace gap and the target needs about 85%. H-048 is for making
+dead signals tradeable, not for reaching 5–14 days.

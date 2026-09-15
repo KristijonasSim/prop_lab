@@ -611,6 +611,48 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   still trades naked, and the one free feed that exists does not help it.
   `strategies/goldfeed/`.
 
+- **The hour of the day, as a standalone axis on FX and metals** (H-046,
+  2026-09-15, `strategies/fixflow/`). The 16:00 London WM/R fix, pre-registered
+  with four kill criteria and three controls. **1 of 5 fix markets clears the 2x
+  round trip** (gold, by 8%), pooled p = 0.418 against an **hour-matched** null,
+  and **the fix ranks 11th of its own 24 placebo hours**. BTCUSDT, which has no
+  fix, stayed silent — the one criterion that passed. Then the whole clock: 200
+  cells, 16 at p < 0.05 against 10 expected, best cell **p = 0.001 alone and
+  p = 0.130 against the best-of-200 null**, sign flipping across markets at its
+  own anchor. **Do not re-propose a session, an anchor or an hour as a rule.**
+  What would reopen it is an EVENT LIST, not a clock — a fix is a time, a CPI
+  print is a time with a known flow attached, and this design cannot tell one
+  from the 250 ordinary days sharing its slot.
+  * **METHOD RULE, and it is general: never pool a ratio whose denominator
+    varies 50x across the things pooled.** Stage 1 pooled `edge / cost` across
+    markets; EURUSD's round trip is 0.19bps against gold's 1.06, so one 4.7bps
+    EURUSD spread scored 6.35 and *was* the pooled number. Standardise by each
+    cell's own dispersion and apply the cost bar separately, afterwards.
+
+- **Short-horizon reversal conditioned on participation** (H-047, 2026-09-15,
+  `strategies/partrev/`) — **real, and 2-4x under the cost bar.** A move on
+  volume is information, a move without it is inventory (Campbell-Grossman-Wang).
+  **28 of 72 cells at p < 0.05 against 3.6 expected and the best cell beats the
+  best-of-72 null at p = 0.000**, with the five most significant cells all in the
+  thin tercile and USDJPY reading +1.00/+0.47/-0.41bps across thin/mid/heavy. It
+  still fails: **0 of 6 markets clear the 2x round trip**, GBPUSD gets 64% of the
+  way, gold has the wrong sign, and it does not clear at 1x either. The tail test
+  (H-008's question) is flat and then **negative in the top 1% on 4 of 6
+  markets** — the biggest thin-volume moves continue, so there is nothing for a
+  narrower entry to reach. A stop or a target cannot rescue it: they move R, not
+  bps.
+
+- **THE COST BAR IS NOW THE PATTERN, not any one hypothesis** (2026-09-15).
+  Three independent signals here are measured real and under the bar by less than
+  a factor of four - H-024 depth imbalance 7.9bps against a 14bps taker round
+  trip, H-011's level fade "real edge, too small for 28bps", H-047's 0.53 against
+  0.82. That is three observations about the round trip. The nominated follow-up
+  is `docs/COMPETITION_NEXT_HYPOTHESIS.md` H-048: re-price them under the limit
+  fill H-023 already measured on ticks (through-given-touch 99.8-100%, 96-98%
+  behind 10 BTC of queue, adverse selection within 0.08bps), which takes Binance
+  futures from 9.0bps to 4.0. **Do not read it as a pace fix** - H-023 stage 14
+  priced a whole book to ZERO cost and moved it 57 days to 32.
+
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have

@@ -8,6 +8,27 @@ overtaken for a week; it is kept at `docs/archive/NEXT_2026-09-07.md`.
 
 ---
 
+## ADDED 2026-09-15 — the contest, and the one decision it puts in front of Kris
+
+He asked for the best next hypothesis besides H-027, against an agent on another
+machine. Two ran, both pre-registered, **both dead**, and the write-up is
+`docs/COMPETITION_NEXT_HYPOTHESIS.md`.
+
+* **H-046, the 16:00 London fix** — dead, and it closes the clock as an axis on
+  FX and metals. 200 cells; the best is p = 0.001 alone and **p = 0.130 against
+  the best-of-200 null**.
+* **H-047, participation-conditioned reversal** — the signal is **real**
+  (28 of 72 cells at p < 0.05 against 3.6 expected, best p = 0.000 against the
+  priced search) and **0 of 6 markets clear the 2x round trip**.
+
+**The decision.** Three real signals in this repo are now measured under the cost
+bar by less than a factor of four. The nomination, **H-048**, is to attack the
+round trip rather than look for a fourth signal: re-price them under the limit
+fill H-023 already measured on ticks. **It is not a pace fix** — H-023 stage 14
+priced a whole book to zero cost and moved it 57 days to 32 — so it is worth
+running for what it makes tradeable, and Kris should say whether that is worth a
+session while the demo test runs to 2026-09-28.
+
 ## The state in seven lines
 
 * **One hypothesis: H-027, the VWAP band breakout on gold.** Set by Kris
