@@ -116,3 +116,46 @@ against top1 and stopped there — this is the comparison that was never made.
 **Still owed:** the other markets per the universe rule, a paired null, and the
 operational work — twenty settings is twenty positions at a twentieth risk each,
 and `live/bybit_demo.py`'s netting, backstop and leg book were built for five.
+
+---
+
+# THE UNIVERSE TEST — 2026-09-15. Five markets, five wins, three of them clean.
+
+`backtests/vwapbreak/topn_universe.json`, `.log`. The standing rule set this
+morning says every finding runs on all six standard markets. This one had not.
+
+| market | shipped floor30/top5 | band | **floor100/top20** | band | bands disjoint? |
+|---|---|---|---|---|---|
+| **XAUUSD** | 15.3 | 13–22 | **8.9** | **8–13** | **YES** |
+| XAGUSD | 22.1 | 17–30 | 14.4 | 11–18 | no (17–18) |
+| **EURUSD** | 25.4 | 20–37 | **11.8** | **10–15** | **YES** |
+| **GBPUSD** | 43.9 | 29–71 | **11.4** | **11–16** | **YES** |
+| USDJPY | 26.8 | 20–40 | 15.8 | 13–22 | no (20–22) |
+
+**Five markets, five faster. Three with bands that do not overlap** — which is
+this project's own definition of a real improvement, written into the H-040 and
+`strategies/beat/` pre-registrations long before this study existed.
+
+**Gold reaches 8.9 expected days with a band of 8–13.** The shipped rule is 15.3
+with a band of 13–22. They do not touch. That is the first clean pace improvement
+this project has recorded on gold.
+
+**And it rescues two markets that were dead.** At top5, GBPUSD scored PF@2x 0.684
+with negative R per day and USDJPY 0.874 — both losing money. At top20 they fund
+accounts in 11.4 and 15.8 days. The rule was never broken on those markets; it
+was starved of trades.
+
+## What it costs, stated plainly
+
+**Blow-ups rise and pass rates fall on every market.** Gold 60.7% → 66.1%, EURUSD
+64.5% → 74.3%, GBPUSD 86.3% → 73.6% (the one that improves). The trade is more
+attempts that resolve faster, not more attempts that succeed. On a EUR 27–61
+challenge fee that is a real cost and it belongs in the decision.
+
+## Still owed
+
+* **A paired null.** Every arm here is real-data only.
+* **The operational rebuild.** Twenty settings is twenty positions at a twentieth
+  risk each; `live/bybit_demo.py`'s netting, backstop and leg book were built for
+  five, and the Bybit account holds ONE netted position.
+* **BTCUSDT**, the sixth standard market, not run here.

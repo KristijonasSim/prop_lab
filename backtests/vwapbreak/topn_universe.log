@@ -1,0 +1,18 @@
+TOP-N ACROSS THE STANDARD UNIVERSE (the rule I set this morning)
+
+market   config            trades  risk    days       band  pass%  blown%
+--------------------------------------------------------------------------
+XAUUSD   floor30/top5         813  6.0%    15.3      13-22   39.3    60.7
+XAUUSD   floor100/top20      5759  6.0%     8.9       8-13   33.9    66.1
+XAGUSD   floor30/top5         624  6.0%    22.1      17-30   40.7    59.3
+XAGUSD   floor100/top20      5260  5.0%    14.4      11-18   27.8    72.2
+EURUSD   floor30/top5         605  5.0%    25.4      20-37   31.4    64.5
+EURUSD   floor100/top20      5886  6.0%    11.8      10-15   25.4    74.3
+GBPUSD   floor30/top5         625  6.0%    43.9      29-71   13.7    86.3
+GBPUSD   floor100/top20      5836  5.0%    11.4      11-16   26.4    73.6
+USDJPY   floor30/top5         599  5.0%    26.8      20-40   22.4    75.9
+USDJPY   floor100/top20      6181  6.0%    15.8      13-22   25.3    74.4
+
+wrote backtests/vwapbreak/topn_universe.json
+
+[exited with code 0]
