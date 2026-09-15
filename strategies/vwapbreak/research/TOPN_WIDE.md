@@ -67,3 +67,52 @@ reaches it is a parameter of the strategy already being traded.
    at 1/20th risk each; the live bot runs five and its netting, backstop and leg
    book were built for that. `live/bybit_demo.py` would need work.
 4. **The other markets**, per the standing universe rule.
+
+---
+
+# VALIDATED OUT OF SAMPLE — 2026-09-15
+
+The objection to the table above was that the top-N choice is a 10-cell search
+made by looking at it. So the choice was made on the FIRST half of the window and
+scored on the SECOND, which the selection never saw. Split at **2025-09-01**.
+
+## The whole ladder, both halves
+
+| topN (floor 100) | first half | **blind half** | blind band | pass % |
+|---|---|---|---|---|
+| 1 | 19.8 | 28.3 | 21–52 | 35.3 |
+| 5 | 14.1 | 18.7 | 15–31 | 37.5 |
+| 10 | 14.1 | 12.4 | 10–18 | 40.3 |
+| **15** | 11.7 | **10.3** | **9–16** | 38.9 |
+| 20 | 11.0 | 10.4 | 9–16 | 38.6 |
+
+**The trend replicates on data the choice never saw.** 28.3 → 18.7 → 12.4 → 10.3
+→ 10.4. The only break is the last step, 10.3 against 10.4, which is a tenth of a
+day and below any resolution this study has.
+
+## Against the shipped rule, selection held out
+
+Config AND risk rung fixed on the first half, scored on the second only:
+
+| | blind days | band | pass % | blown % |
+|---|---|---|---|---|
+| **floor30/top5 (shipped)** | **15.8** | 12–24 | 38.1 | 61.9 |
+| **floor100/top20** | **10.4** | 9–16 | 38.6 | 61.4 |
+
+**10.4 against 15.8 out of sample — 34% faster, at the same pass rate and the
+same blow-up rate.** The bands (9–16 and 12–24) overlap only across 12–16, which
+is the narrowest overlap this project has produced on a pace comparison.
+
+## What this is and is not
+
+**It is:** a validated improvement to the configuration currently traded, chosen
+on one half of the data and confirmed on the other, monotone across five levels
+in both halves.
+
+**It is not a new edge.** It is the same VWAP band breakout on the same market;
+only the number of parallel settings changes. `core/chosen.py` compared top5
+against top1 and stopped there — this is the comparison that was never made.
+
+**Still owed:** the other markets per the universe rule, a paired null, and the
+operational work — twenty settings is twenty positions at a twentieth risk each,
+and `live/bybit_demo.py`'s netting, backstop and leg book were built for five.

@@ -1,0 +1,14 @@
+DOES THE TREND REPLICATE?  split at 2025-09-01
+
+  topN   first half   SECOND half (blind)        band   pass%
+--------------------------------------------------------------
+     1         19.8                  28.3       21-52    35.3
+     5         14.1                  18.7       15-31    37.5
+    10         14.1                  12.4       10-18    40.3
+    15         11.7                  10.3        9-16    38.9
+    20         11.0                  10.4        9-16    38.6
+
+  blind half monotone in N? no   (28.3 > 18.7 > 12.4 > 10.3 > 10.4)
+  wrote backtests/vwapbreak/topn_oos.json
+
+[exited with code 0]
