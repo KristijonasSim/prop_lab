@@ -209,3 +209,103 @@ carries it, so it produces a qualifying day one week in two.
 
 Maven's page also shows **"Sorry, this product is not available in your region"**.
 Check that before planning on it at all.
+
+---
+
+# TWENTY-TWO FIRMS, two axes — 2026-09-15
+
+Kris: *"research of at least 20 best prop firms and give me table of results what
+would suit best"*. `strategies/vwapbreak/research/firms3.py`,
+`backtests/vwapbreak/firms3.json`. Same trade series, same engine.
+
+## AXIS B FIRST, because it eliminates half the table before speed matters
+
+Every firm caps the share of a payout that may come from one trading day. This
+strategy's profit arrives in single days, and the numbers are worse than the
+"76–95%" this page quoted in September:
+
+| payout window | windows | median best-day share | windows under a 20% cap | under 50% |
+|---|---|---|---|---|
+| 14d | 284 | **103.2%** | 0.0% | 0.7% |
+| 30d | 337 | **95.5%** | **0.0%** | **0.9%** |
+| 60d | 413 | 89.9% | 0.0% | 5.3% |
+| 90d | 444 | 90.0% | 0.0% | 11.7% |
+
+**One day is 95.5% of a typical month's profit.** Over 103% at two weeks — the
+best day is larger than the whole fortnight, because the rest of it is a net
+loss. A firm capping the best day at **50% can pay us in 0.9% of months. At 20%,
+never.**
+
+**Eleven of the twenty-two firms below are therefore unpayable at any speed**,
+including the two fastest things in the entire table. This is not a reason to
+prefer them and lose later; it is a reason to strike them now.
+
+## The table
+
+`payable%` is the share of 30-day windows whose best day falls under that firm's
+cap. `days` is expected days to a funded account on our own blind walk-forward.
+
+| firm | € | steps | days | pass% | blown% | best-day cap | payable% | platform |
+|---|---|---|---|---|---|---|---|---|
+| **City Traders Imperium 1-step** | **36** | 1 | **24.7** | 56.8 | 37.2 | none found | **100** | MT5, Match-Trader |
+| **Aqua Funded 2-Step Std** | **14** | 2 | 58.9 | 44.2 | 39.7 | none found | **100** | MT5, **cTrader**, Match-Trader |
+| **FundingPips 2-Step Std** | **27** | 2 | 58.9 | 44.2 | 39.7 | none found | **100** | **cTrader**, MT5 |
+| Maven 2-step | 20 | 2 | 67.4 | 32.6 | 60.9 | none found | 100 | MT5, Match-Trader |
+| FXIFY 2-step | 36 | 2 | 67.4 | 32.6 | 60.9 | none found | 100 | MT5, DXtrade |
+| FundingPips 2-Step Flex | 29 | 2 | 75.3 | 54.4 | **21.6** | none found | 100 | **cTrader**, MT5 |
+| Maven 3-step | 16 | 3 | 167.0 | 29.3 | 54.9 | none found | 100 | MT5, Match-Trader |
+| The5ers Bootcamp 3-step | 20 | 3 | 175.8 | 31.9 | 51.9 | none found | 100 | MT5, cTrader |
+| The5ers Hyper Growth 3-step | 36 | 3 | 191.3 | 28.2 | 18.8 | none found | 100 | MT5, cTrader |
+| FundingPips 1-Step Flex | 61 | 1 | **22.0** | 63.7 | **24.3** | none found | 100 | cTrader, MT5 |
+| FTMO 2-step | 143 | 2 | 70.3 | 58.4 | 16.6 | discretionary review | 100 | cTrader, MT5 |
+| Alpine Funded Peak 2-step | 45 | 2 | 67.4 | 32.6 | 60.9 | none found | 100 | cTrader |
+| ~~Upcomers Ash 1-step~~ | — | 1 | *11.3* | 62.0 | 34.9 | 20% | **0.0** | cTrader |
+| ~~Upcomers Thunderbolt~~ | — | 1 | *18.2* | 55.0 | 39.7 | 20% | **0.0** | cTrader |
+| ~~Goat Funded 1-step~~ | 16 | 1 | *23.3* | 51.4 | 43.4 | 4 days × +0.5% | **0.9** | MT5, cTrader |
+| ~~FundedNext 1-step~~ | 61 | 1 | 23.3 | 51.4 | 43.4 | 40% | 0.0 | MT4, MT5, cTrader |
+| ~~Atlas Funded 1-step~~ | 63 | 1 | 23.9 | 58.7 | 35.0 | 40% + 1%/day | 0.0 | MT5, TradeLocker |
+| ~~PipFarm 1-step~~ | 41 | 1 | 26.5 | 64.2 | 27.6 | 20% + 5 winning days | 0.0 | cTrader |
+| ~~Goat Funded 2-step~~ | 20 | 2 | 67.9 | 53.0 | **11.5** | 50% | 0.9 | MT5, cTrader |
+| ~~Aqua Funded 2-Step Pro~~ | 18 | 2 | 68.9 | 56.6 | 21.1 | 50% | 0.9 | MT5, cTrader |
+| ~~Funded Trading Plus~~ | 73 | 2 | 67.4 | 51.9 | 16.7 | 35% / 50% | 0.9 | MT4, MT5, cTrader |
+| ~~FundedNext 2-step~~ | 29 | 2 | 103.3 | 21.3 | 73.5 | 40% | 0.0 | MT4, MT5, cTrader |
+
+## What suits best
+
+**1. City Traders Imperium 1-step — EUR 36, 24.7 days.** The only thing in the
+table that is one step, inside budget, and has no best-day rule. It also has **no
+daily cap at all** and measures drawdown on **closed balance**, which is the
+single most favourable combination for a strategy whose risk shape is large open
+swings that mostly come back. H-039 showed that accounting choice is worth more
+than any strategy lever measured this year. **Its cost is the platform: MT5 or
+Match-Trader, no cTrader, and this box has no MT5 bridge.**
+
+**2. Aqua Funded 2-Step Standard — EUR 14, 58.9 days.** Cheapest credible entry
+in the table, has cTrader, static drawdown, no rule found. Two steps is 2.4x the
+time.
+
+**3. FundingPips 2-Step Standard — EUR 27, 58.9 days.** Identical speed to Aqua
+on our series, twice the price, but the better-known firm and cTrader.
+
+**If the budget moves to EUR 61, FundingPips 1-Step Flex is the best row in the
+whole table**: 22.0 days at 63.7% pass and **24.3% blown**, the lowest blow-up
+rate of any fast arm, with cTrader. It is EUR 25 over the ceiling.
+
+## THE CAVEAT THAT MATTERS MOST
+
+**"None found" is not "none exists."** Consistency rules are usually published in
+the payout FAQ, not the challenge page, and this table's `payable%` treats an
+unfound rule as no rule. The measured profit shape means **any** cap at or below
+50% takes a firm to ~0% payable. So the first question to ask every shortlisted
+firm, in writing, before paying:
+
+> *What is the maximum share of a payout that may come from a single trading day,
+> and is there a minimum number of profitable days?*
+
+If the answer is anything at or under 50%, that firm is off the list no matter
+what the table above says about its speed.
+
+Prices, targets and drawdowns here are third-party as of 2026-09-15 and several
+firms changed rules mid-2026 — Goat's 1-step daily cap went 4% → 3% in August and
+its funded payout gained a 4-day 0.5% requirement in July. CTI is listed at $39
+here against $59 in the September table; confirm which is current.
