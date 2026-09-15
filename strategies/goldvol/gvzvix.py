@@ -349,3 +349,31 @@ if __name__ == "__main__":
 # FINAL POSITION AFTER FOUR ATTEMPTS: H-027 IS NOT BEATEN BY THIS SIGNAL. What
 # the hour produced is a feed gold was thought not to have, a filter that halves
 # blow-ups at the live risk rung, and a configuration question worth asking.
+
+# --------------------------------------------------------------------------- #
+# FIFTH ATTEMPT: let the signal pick the SIDE, not the day. The trade log has no
+# side column, so it is recovered from the kernel's own z at the entry bar - a
+# long fires above the band, a short below.
+#
+#   arm                                trades     PF   risk   days   band   pass%
+#   floor100/top20 unfiltered            6657  1.831   4.0%   10.6  10-15   37.8
+#   side AGREES with GVZ/VIX (thr 0.5)   3541  2.235   6.0%   11.2  10-16   35.6
+#   side agrees (thr 0.35)               2450  2.075   5.0%   17.0  14-24   35.2
+#   side DISAGREES (control)             2223  1.795   6.0%   53.4 35-100   13.1
+#
+# THE AGREE / DISAGREE CONTRAST IS THE STRONGEST EVIDENCE IN THE WHOLE STUDY
+# THAT THE SIGNAL CARRIES REAL INFORMATION: 11.2 expected days against 53.4, and
+# a pass rate of 35.6% against 13.1%, on halves of the SAME trade series split
+# only by whether the trade's direction agreed with GVZ/VIX. That is not a
+# selection effect - both halves come from one book and neither was optimised.
+#
+# AND IT STILL DOES NOT BUY SPEED. 11.2 against 10.6 unfiltered, bands
+# overlapping. What it buys is profit factor, 1.831 -> 2.235, a 22% gain at no
+# cost in pace.
+#
+# FIVE WAYS OF SPENDING THIS SIGNAL, FIVE THAT DO NOT MAKE H-027 FASTER:
+# day filter, risk ladder, sizing overlay, wide configuration, side filter.
+# The signal is real on every test it has been given - a random gate of the same
+# size, and now a same-series direction split - and what it is worth is quality,
+# not pace. That is the honest closing position and H-027 remains unbeaten on
+# expected days.
