@@ -381,6 +381,19 @@ def set_backstop(host: str, level: float | None) -> dict | None:
         "stopLoss": f"{level:.2f}", "slTriggerBy": "LastPrice"}, post=True)
 
 
+def held_backstop(host: str) -> float | None:
+    """The stop the EXCHANGE actually holds on the net position.
+
+    The truth about whether a backstop exists, as opposed to what the last
+    write returned. None when there is no position, or no stop on it.
+    """
+    for p in positions(host):
+        sl = p.get("stopLoss")
+        if sl and float(sl) > 0:
+            return float(sl)
+    return None
+
+
 def backstop_level(legs: dict) -> float | None:
     """The level for the native stop, read off the NET side of the book.
 
@@ -618,9 +631,31 @@ def once(a) -> None:
             if (r or {}).get("retCode") == 0:
                 print(f"      backstop stop-loss set at {widest:.2f}")
             else:
-                print(f"      BACKSTOP REJECTED at {widest:.2f}: "
-                      f"{(r or {}).get('retMsg')}. The exchange holds no stop; "
-                      f"this bot is the only thing closing these legs.")
+                # A WRITE THAT CHANGES NOTHING IS NOT A FAILURE. Bybit answers a
+                # non-zero code with retMsg "not modified" when the stop already
+                # sits at the level being written, which is every pass that opens
+                # no new leg. From 2026-09-14 13:02 that printed the alarm below
+                # on 16 consecutive passes while /v5/position/list showed the
+                # stop at 4368.76 the whole time.
+                #
+                # THE EXCHANGE IS ASKED, NOT THE RETURN CODE. Special-casing a
+                # retCode would trade one piece of trust for another; reading the
+                # position says which of the two happened. The alarm stays loud
+                # for a real refusal - a stop on the wrong side of a mixed book
+                # is what this branch was written for and it must not be muffled.
+                held = held_backstop(host)
+                msg = (r or {}).get("retMsg")
+                if held is not None and abs(held - widest) < 0.01:
+                    print(f"      backstop stop-loss already at {widest:.2f} "
+                          f"({msg}) - unchanged, the exchange holds it")
+                elif held is not None:
+                    print(f"      BACKSTOP NOT MOVED to {widest:.2f}: {msg}. "
+                          f"The exchange holds {held:.2f}, a level this book no "
+                          f"longer asks for - legs past it are on this bot alone.")
+                else:
+                    print(f"      BACKSTOP REJECTED at {widest:.2f}: {msg}. "
+                          f"The exchange holds no stop; this bot is the only "
+                          f"thing closing these legs.")
     if a.arm:
         st["started"] = st.get("started") or str(last)
         save_state(st)

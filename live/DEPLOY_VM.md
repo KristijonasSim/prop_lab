@@ -51,6 +51,27 @@ armed, and the local crontab was deliberately NOT installed.
     ssh -i $KEY ubuntu@89.168.78.138 'tail -30 ~/prop_lab/live/paper/bybit_cron.log'
     ssh -i $KEY ubuntu@89.168.78.138 'cat ~/prop_lab/live/paper/bybit_state.json'
 
+## The three backstop lines, and which one is an alarm
+
+Corrected 2026-09-15. Bybit refuses a stop write that changes nothing, so every
+pass that opens no new leg gets a non-zero code back with retMsg `not modified`.
+The bot used to read that as a refusal and print `The exchange holds no stop` -
+**16 times running from 2026-09-14 13:02**, while the position line two rows
+above it showed the stop at 4368.76 the whole time. The stop was never missing.
+
+It now asks `/v5/position/list` instead of trusting the code:
+
+| line | what it means |
+|---|---|
+| `backstop stop-loss set at X` | written this pass |
+| `backstop stop-loss already at X ... the exchange holds it` | refused because it was already there. **Not an alarm.** |
+| `BACKSTOP NOT MOVED to X ... holds Y` | refused, and the exchange is on a stale level the book no longer asks for |
+| `BACKSTOP REJECTED at X ... holds no stop` | refused and nothing is holding the position. **This is the one to act on.** |
+
+The last two are alarms and the log has never printed either. The `NOT MOVED`
+case did not exist before this change - under a plain return-code check it read
+as `holds no stop`, which is a different failure needing a different fix.
+
 ## Stop it
 
     ssh -i $KEY ubuntu@89.168.78.138 'crontab -r'

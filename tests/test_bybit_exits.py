@@ -219,6 +219,11 @@ def test_a_rejected_backstop_is_reported_as_rejected(bot, monkeypatch, capsys):
     way - so an unprotected book looked identical to a protected one."""
     last = "2026-09-14 14:00"
     _short_leg(bot, at=str(pd.Timestamp(last, tz="UTC") - pd.Timedelta(hours=4)))
+    # THE MOCK HAS TO AGREE WITH ITSELF. A refused write means the exchange is
+    # holding nothing; it used to leave `_short_leg`'s stop on the position, so
+    # this asserted the alarm against a book that was in fact protected. The
+    # 2026-09-14 false positive is that exact state and it now reads differently.
+    bot._live[0]["stopLoss"] = "0"
     monkeypatch.setattr(bot, "set_backstop", lambda host, level:
                         {"retCode": 10001, "retMsg": "stop loss price invalid"})
     monkeypatch.setattr(bot, "bars", lambda: _bars(last, high=100.5))
@@ -276,3 +281,55 @@ def test_a_dry_run_writes_no_equity_line(bot, monkeypatch):
     monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
     bot.once(Namespace(arm=False, weekends=False))
     assert not bot.EQUITY_LOG.exists()
+
+
+# --------------------------------------------------------------------------- #
+# the backstop alarm - the 2026-09-14 false positive
+# --------------------------------------------------------------------------- #
+# Bybit refuses a stop write that changes nothing. Between 2026-09-14 13:02 and
+# 2026-09-15 05:02 the bot wrote the same 4368.76 on 16 consecutive passes, read
+# the non-zero code as a refusal, and printed "The exchange holds no stop" every
+# hour - while the position it had just printed showed that stop in place. An
+# alarm that is wrong 16 times running is how a real one gets read past.
+def _alarm(bot, monkeypatch, ret, held, capsys, level=101.0):
+    """Run one armed pass with no signal, `ret` from the stop write and `held`
+    on the exchange, and hand back what the pass printed."""
+    last = "2026-09-10 14:00"
+    monkeypatch.setattr(bot, "bars", lambda: _bars(last, high=100.5))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "set_backstop", lambda host, lvl: ret)
+    _short_leg(bot, at=str(pd.Timestamp(last, tz="UTC") - pd.Timedelta(hours=4)),
+               stop=level)
+    bot._live[0]["stopLoss"] = "0" if held is None else str(held)
+    bot.once(Namespace(arm=True, weekends=False))
+    return capsys.readouterr().out
+
+
+def test_not_modified_is_not_an_alarm(bot, monkeypatch, capsys):
+    """The live false positive. The write is refused, the stop is already there,
+    and the exchange is what settles it."""
+    out = _alarm(bot, monkeypatch, {"retCode": 34040, "retMsg": "not modified"},
+                 held=101.0, capsys=capsys)
+    assert "already at 101.00" in out
+    assert "REJECTED" not in out and "holds no stop" not in out
+
+
+def test_a_refusal_with_no_stop_behind_it_still_shouts(bot, monkeypatch, capsys):
+    """The case the branch was written for: Bybit rejects a stop on the wrong
+    side of the book and nothing is holding the position."""
+    out = _alarm(bot, monkeypatch,
+                 {"retCode": 10001, "retMsg": "can not set tp/sl/ts for zero position"},
+                 held=None, capsys=capsys)
+    assert "BACKSTOP REJECTED at 101.00" in out
+    assert "holds no stop" in out
+
+
+def test_a_stale_level_is_its_own_alarm(bot, monkeypatch, capsys):
+    """Refused, and the exchange holds a DIFFERENT level - the book moved and
+    the stop did not. Silent under a plain retCode check, and not the same
+    failure as holding nothing."""
+    out = _alarm(bot, monkeypatch, {"retCode": 34040, "retMsg": "not modified"},
+                 held=95.0, capsys=capsys)
+    assert "BACKSTOP NOT MOVED to 101.00" in out and "holds 95.00" in out
+    assert "holds no stop" not in out
