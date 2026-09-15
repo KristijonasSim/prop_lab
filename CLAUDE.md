@@ -269,6 +269,24 @@ universe. `core.run_hypothesis.YEARS`.
 
 ## Assets and timeframes
 
+**STANDING RULE, KRIS 2026-09-15 — EVERY STUDY RUNS ON ALL OF THESE. NO
+EXCEPTIONS WITHOUT A WRITTEN REASON.**
+
+    BTCUSDT    XAUUSD    XAGUSD    EURUSD    GBPUSD    USDJPY
+
+`core/universe.STANDARD`, and `core/universe.check()` says what a study skipped.
+His words: *"i want always to test it on BTC gold / silver and main FX pairs
+ALWAYS"*. All six are already cached — nothing needs downloading.
+
+**Why it is a rule.** The Asian range break beat its own null by 3.5x on gold and
+by nothing anywhere else, and that only became visible when it was run on every
+market. Silver has already fooled this repo once, at 59.9% pass while losing to
+its null. **A number from one market is a hypothesis, not a result.**
+
+The only real exemption is a study that ranks instruments against each other,
+which needs a group and cannot run on a single symbol. Write the reason down.
+
+
 Crypto first: **BTCUSDT**. Other coins only to re-test an edge that already showed on BTC.
 FX/Gold (XAUUSD, EURUSD, GBPUSD) once the MT5 bridge exists.
 Timeframes 15m / 1h / 4h / 1d — download 15m, resample the rest.
