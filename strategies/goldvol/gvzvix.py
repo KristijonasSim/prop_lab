@@ -377,3 +377,25 @@ if __name__ == "__main__":
 # size, and now a same-series direction split - and what it is worth is quality,
 # not pace. That is the honest closing position and H-027 remains unbeaten on
 # expected days.
+
+# --------------------------------------------------------------------------- #
+# SIXTH AND LAST: every combination, across the whole ladder. Nothing beats the
+# unfiltered book at any rung.
+#
+#   arm                             2%    3%    4%    5%    6%    8%   best
+#   top20 plain                   15.2  12.8  10.6  10.7  11.1  12.0  10.6 @4%
+#   top20 + side agrees           19.2  16.7  13.7  12.5  11.2  13.1  11.2 @6%
+#   top20 + side + cheapest 40%   22.5  19.7  16.6  16.2  15.1  15.3  15.1 @6%
+#
+# The quality gain does NOT buy size: the filtered arms need a HIGHER rung to
+# reach their best and still land above the plain book. Stacking both filters is
+# strictly worse at every rung, which is the dilution H-012 recorded - each
+# filter removes trades and expected days needs frequency more than it needs
+# per-trade quality.
+#
+# SEVEN WAYS OF SPENDING THIS SIGNAL. NONE MAKES H-027 FASTER. The signal is
+# real - it beats a random gate of the same size, and splitting one book by
+# whether the trade direction agreed gives 11.2 days against 53.4 - and what it
+# is worth is per-trade quality, which is the one thing expected days does not
+# reward. That is the finding, and it is a clean negative rather than an
+# ambiguous one.
