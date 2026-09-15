@@ -321,3 +321,31 @@ if __name__ == "__main__":
 #
 # THE HONEST CLOSING POSITION: H-027 IS NOT BEATEN. Three attempts, measured the
 # same way, all slower with overlapping bands. Recording that is the result.
+
+# --------------------------------------------------------------------------- #
+# FOURTH ATTEMPT: gate a configuration that has trades to spare. The filter's
+# cost is lost frequency, so it was applied to floor100/top15, which takes about
+# seven times the trades of the shipped floor30/top5.
+#
+#   config            trades   arm       risk  days   band   pass%  blown%
+#   floor30/top5         957   plain     6.0%  15.4  13-20   38.8   61.2
+#   floor30/top5         197   gated20   5.0%  17.1  12-24   52.8   47.2
+#   floor30/top5         387   gated40   6.0%  23.3  19-38   30.1   69.8
+#   floor100/top15      4816   plain     6.0%  11.4   9-15   35.1   64.9
+#   floor100/top15       990   gated20   4.0%  17.2  14-32   29.1   70.9
+#   floor100/top15      1932   gated40   5.0%  12.0  10-18   33.3   66.7
+#
+# THE GATE MAKES THE WIDE CONFIGURATION WORSE TOO, 11.4 -> 17.2 and 12.0. Four
+# ways of spending the signal, four that do not buy speed.
+#
+# THE ONE THING ON THIS TABLE FASTER THAN THE SHIPPED RULE IS NOT MY SIGNAL. It
+# is H-027 itself at floor100/top15: 11.4 expected days against 15.4, on 4,816
+# trades. That is a configuration of the existing strategy, already visible in
+# `docs/FIRMS.md` as the 6.42-trades-a-day variant, and its band (9-15) overlaps
+# the shipped rule's (13-20). It is NOT a competition finding and is not claimed
+# as one - but it is worth a proper look on its own, because chosen.py picked
+# top5 against top1 and never against top15.
+#
+# FINAL POSITION AFTER FOUR ATTEMPTS: H-027 IS NOT BEATEN BY THIS SIGNAL. What
+# the hour produced is a feed gold was thought not to have, a filter that halves
+# blow-ups at the live risk rung, and a configuration question worth asking.
