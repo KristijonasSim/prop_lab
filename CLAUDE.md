@@ -249,7 +249,29 @@ far better for coded bots than MT5's GUI-only access. Flag this at selection tim
 - **MetaTrader5** — FX/Gold. NOTE: the pip package is Windows-only; this box is Linux
   with a wine MT5 at `~/.mt5`, so it needs an `mt5linux`-style bridge. Not set up yet — crypto first.
 
-## Test window — ALWAYS THE LAST 3 YEARS
+## Test window — 3 YEARS IDEAL, 5 YEARS MAXIMUM, NEVER MORE
+
+**Hardened by Kris 2026-09-15:** *"maximum we need is 5 always not more then 5
+ideal 3 years"*. `core.run_hypothesis.YEARS = 3` stays the default; 5 is the
+ceiling for a study that genuinely needs more events, and **anything longer is
+not to be run or quoted** — the eleven-year gold studies (`longhistory.py`,
+`longcandidates.py`) are history, not a template.
+
+**Know what the ceiling costs you.** Rare-event signals get their sample from
+time, so a 3–5 year cap caps the sample too. Measured on H-043 the same day the
+rule was set:
+
+| gold, VIX-inversion | episodes | 1d | 3d | 5d | 10d |
+|---|---|---|---|---|---|
+| 3 years | 17 | +28.4 | +49.9 | +82.6 | +68.3 |
+| 5 years | 26 | +33.6 | +64.4 | +96.8 | +70.1 |
+| *11 years (not allowed)* | *67* | *+10.5* | *+23.4* | *+38.0* | *+22.8* |
+
+**The recent window flatters this signal by two to three times.** Both windows
+clear the 3.66 bps cost bar, so the direction survives, but a number quoted off
+three years is the optimistic end of a range we can now see. Say so when quoting
+one.
+
 
 **Kris's standing rule, 2026-09-08.** Every market in a study is trimmed to the
 last three years of data, aligned to a **common end date** across the whole
