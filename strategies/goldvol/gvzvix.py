@@ -259,3 +259,38 @@ if __name__ == "__main__":
 # exists for it. That is true of ORDER FLOW and false in general: CBOE publishes
 # GVZ free, daily, back to 2009, and it carries information about gold that the
 # gold chart does not. That is the finding. The strategy built on it is not.
+
+# --------------------------------------------------------------------------- #
+# THE RISK LADDER, run because the gate halves blow-ups and cheaper blow-ups
+# should buy size. It does not rescue the speed claim.
+#
+#   risk    H-027 plain              H-027 + GVZ gate
+#           days  band  pass  blown  days  band  pass  blown
+#   2%      21.7  18-31  55.4  44.6  22.6  18-35  75.3  22.2   <- gate's real win
+#   3%      20.4  15-26  49.0  51.0  21.2  16-31  56.7  43.3
+#   4%      17.7  14-23  45.2  54.8  19.8  14-28  55.6  44.5
+#   5%      18.0  13-22  38.8  61.2  17.1  12-24  52.8  47.2   <- gate faster here
+#   6%      15.4  13-20  38.8  61.2  17.3  12-23  51.9  48.1
+#   8%      15.0  12-19  39.9  60.1  15.5  12-22  38.6  61.4
+#  10%      12.6  11-16  39.5  60.5  12.7  10-20  39.4  60.6
+#
+# AT 5% THE GATE IS FASTER AND SAFER AT ONCE - 17.1 days against 18.0 with
+# blow-ups 47.2% against 61.2%. It is the only rung where that happens and the
+# bands overlap (12-24 against 13-22), so by this project's own standard it is
+# not a resolvable difference. One rung out of seven, with overlapping bands, is
+# what picking a winner after seeing the table looks like.
+#
+# ABOVE 6% THE TWO CONVERGE (12.6 against 12.7 at 10%) because at that size a
+# single bad day breaches regardless of which days were traded. Those rungs are
+# also not tradeable: the shipped book runs five settings at 0.4% each for 2%
+# total, and no firm in the 44-product sweep would allow 10% on one position.
+#
+# VERDICT ON THE COMPETITION BRIEF: I DID NOT BEAT H-027.
+#   * speed: no. 19.8 against 17.7 at the shipped rung, bands overlapping, and
+#     the one rung where the gate is faster has overlapping bands too.
+#   * survivability: yes, and by a lot. At the 2% rung the shipped book actually
+#     uses, the gate takes pass 55.4% -> 75.3% and blow-ups 44.6% -> 22.2%.
+#   * a new feed for gold: yes, and that is the finding worth keeping.
+#
+# Claiming a win off the 5% rung would be exactly the move this repo has had to
+# retract before, so it is not claimed.
