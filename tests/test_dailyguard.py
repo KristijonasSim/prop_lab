@@ -89,3 +89,73 @@ def test_risk_scales_the_threshold(guard):
     bites at the higher risk and not at the lower."""
     assert len(guard(DAY, 0.01, 0.020)) == 4
     assert len(guard(DAY, 0.02, 0.020)) == 2
+
+
+# --------------------------------------------------------------------------- #
+# H-041b's day-shuffled control (`research/dailyguard2.py`).
+#
+# The control is the decisive instrument in H-041b: the guard can only REMOVE
+# trades, and removing trades cuts blow-ups on its own, so the whole question is
+# whether the account signal beats a block of days chosen at random. If the
+# control removes a different AMOUNT or a different SHAPE of trading than the
+# guard it is measuring, the comparison is rigged in whichever direction the
+# mismatch runs, and nothing in the output would show it.
+# --------------------------------------------------------------------------- #
+@pytest.fixture(scope="module")
+def dg2():
+    spec = importlib.util.spec_from_file_location(
+        "dailyguard2", ROOT / "strategies" / "vwapbreak" / "research" / "dailyguard2.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+SPREAD = _trades([
+    ("2026-01-05 01:00", "2026-01-05 04:00", -1.5),
+    ("2026-01-05 05:00", "2026-01-05 09:00", +2.0),
+    ("2026-01-06 01:00", "2026-01-06 05:00", -0.5),
+    ("2026-01-07 01:00", "2026-01-07 05:00", +1.0),
+])
+
+
+def test_blocked_days_counts_days_not_trades(dg2, guard):
+    """Two trades dropped on one day is ONE blocked day. Counting trades would
+    let the control remove several scattered days for one clustered one."""
+    kept = guard(SPREAD, 0.01, 0.010)
+    assert dg2.blocked_days(SPREAD, kept) == 1
+
+
+def test_a_guard_that_bites_nothing_blocks_no_days(dg2, guard):
+    assert dg2.blocked_days(SPREAD, guard(SPREAD, 0.01, None)) == 0
+    assert dg2.blocked_days(SPREAD, guard(SPREAD, 0.01, 0.50)) == 0
+
+
+def test_the_control_removes_whole_days(dg2):
+    """Same shape as the guard: a blocked day loses every entry on it, not a
+    sample of them."""
+    rng = __import__("numpy").random.default_rng(0)
+    kept = dg2.shuffle_days(SPREAD, 1, rng)
+    days = pd.DatetimeIndex(kept.entry_ts).normalize().nunique()
+    assert days == 2, "the control did not remove a whole day"
+
+
+def test_the_control_blocks_the_number_of_days_it_is_given(dg2):
+    """The match that makes the comparison fair. Checked across seeds, because
+    one seed agreeing proves nothing about the draw."""
+    np = __import__("numpy")
+    for seed in range(10):
+        kept = dg2.shuffle_days(SPREAD, 2, np.random.default_rng(seed))
+        assert pd.DatetimeIndex(kept.entry_ts).normalize().nunique() == 1
+
+
+def test_the_control_with_no_days_to_block_changes_nothing(dg2):
+    np = __import__("numpy")
+    assert len(dg2.shuffle_days(SPREAD, 0, np.random.default_rng(0))) == len(SPREAD)
+
+
+def test_spearman_is_signed_the_way_the_criterion_reads_it(dg2):
+    """The pre-registered bar is rho >= +0.7 between the THRESHOLD VALUE and the
+    blow-up rate: a looser guard (bigger threshold) should blow up more. A sign
+    error here would invert the kill criterion."""
+    assert dg2.spearman([0.005, 0.010, 0.015, 0.020], [40, 45, 50, 55]) == pytest.approx(1.0)
+    assert dg2.spearman([0.005, 0.010, 0.015, 0.020], [55, 50, 45, 40]) == pytest.approx(-1.0)

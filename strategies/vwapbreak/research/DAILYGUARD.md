@@ -155,3 +155,146 @@ confound, either of which could explain the whole result.
 Only if it survives both does **pct + guard** become worth running — `pct` is
 the only lever that has ever raised trade frequency (2.63/day against 1.32) and
 it died on exactly the quantity this guard moves.
+
+---
+
+# H-041b — the two runs H-041 said were owed. Pre-registered 2026-09-15, before any number.
+
+Kris, 2026-09-15: *"lets do 2 + 3"*. This is 2. It settles nothing new — it
+decides whether the H-041 result above survives the two objections its own
+write-up raised against it.
+
+## What is being fixed, and why each matters
+
+**1. The risk rung was a confound.** `score()` above picks the fastest rung per
+arm independently, and the −1.0% arm landed on **2.0% risk on 4h against the
+baseline's 3.0%**. A lower rung cuts blow-ups by itself, so part or all of
+70.5% → 48.3% may be the rung, not the guard.
+
+**2. The curve was not monotone, and monotonicity was the stated test.** On 4h,
+−2.5/−2.0/−1.5 gave 70.0/72.0/71.6 against a baseline 70.5 — flat — and then
+−1.0% dropped to 48.3. A step at one threshold with flat neighbours is the
+H-038 signature for noise. Only a finer sweep can tell a curve from a spike.
+
+**3. NEW, and not in H-041 at all: the guard has never been run against a
+control.** The guard can only remove trades. Removing trades cuts blow-ups on
+its own, because a smaller book breaches less. **Nothing so far separates "the
+account signal is informative" from "trading less is safer."** That is the same
+omission that made the 62.6%-pass headline and the MA200 gate evaporate, and it
+is the single most likely way this result is wrong.
+
+## The three changes
+
+| | H-041 | H-041b |
+|---|---|---|
+| thresholds | 4 (−1.0 to −2.5) | **8**: none, −0.5, −0.75, −1.0, −1.25, −1.5, −2.0, −2.5 |
+| rung | best per arm — the confound | **full 4×8 matrix reported**; primary readout at a rung fixed in advance |
+| control | none | **day-shuffled guard**, 25 seeds |
+
+**The fixed rung is 3.0%**, chosen because it is the rung the BASELINE selected
+on both timeframes in the table above. It is fixed now, before the matrix is
+seen, so it cannot be picked to suit an arm.
+
+## The control, stated precisely
+
+For an arm that blocks entries on **B** distinct UTC days, the control blocks
+entries on **B days drawn at random** from the days that have entries, with no
+reference to the account. Same number of blocked days, same day-level clustering,
+no information. 25 seeds, reported as a median and a 10–90 spread.
+
+**This is the decisive test.** A guard that reads the account must beat a guard
+that reads nothing.
+
+## What counts as a win — all three required, on BOTH timeframes
+
+1. **At the fixed 3.0% rung**, the arm's blow-up rate is materially below the
+   baseline's — the confound removed.
+2. **The curve is monotone**: Spearman rho between the threshold value and the
+   blow-up rate is **≥ +0.7** (tighter guard → fewer blow-ups, smoothly). A
+   single step with flat neighbours fails this by construction.
+3. **The arm beats its day-shuffled control** by more than the control's own
+   10–90 spread.
+
+Speed is not part of this. H-041 already failed condition 1 of its own
+pre-registration everywhere, and nothing here is expected to change that. This
+asks only whether the SURVIVAL result is real.
+
+## Kill criterion
+
+> If the blow-up reduction does not survive a fixed rung, or is not monotone, or
+> does not beat the day-shuffled control, **H-041 is dead, the account-overlay
+> axis closes with the other six, and `pct + guard` is never run** — it was only
+> ever justified by this guard working.
+
+If it survives all three, run 3 (`pct + guard`) next and nothing else.
+
+---
+
+# RESULT H-041b — 2026-09-15. FAILED the criterion. H-041's headline was the risk rung.
+
+`backtests/vwapbreak/dailyguard2.json`, `dailyguard2.log`. Same data, same folds,
+same costs as H-041.
+
+## The three conditions, scored as written
+
+| condition | 1h | 4h |
+|---|---|---|
+| 1. beats baseline at the FIXED 3.0% rung | **yes** (−0.50%: 42.3 vs 49.3) | **yes** (−0.50%: 50.6 vs 70.5) |
+| 2. Spearman ≥ +0.700 | **+0.883 PASS** | **+0.450 FAIL** |
+| 3. beats the day-shuffled control below its p10 | **yes** (42.3 vs p10 46.6) | **yes** (50.6 vs p10 57.2) |
+
+**Condition 2 fails on 4h, so the criterion fails.** By the kill criterion fixed
+before the run, H-041 is dead, the account-overlay axis closes, and **`pct` +
+guard does not run.**
+
+## What actually happened — the rung was doing the work
+
+H-041 reported 4h blow-ups **70.5% → 48.3%** at a −1.0% guard. The full matrix
+shows where that came from:
+
+| 4h, blown% | 1.00% | 1.50% | 2.00% | **3.00%** |
+|---|---|---|---|---|
+| none | 38.0 | 52.5 | 55.6 | **70.5** |
+| −1.00% | 33.1 | 46.0 | **48.3** | **70.8** |
+
+**The 48.3 is at the 2.0% rung and the 70.5 is at the 3.0% rung.** Compared
+like with like the guard is worth **55.6 → 48.3, seven points**, not twenty-two.
+At the rung the baseline actually selected it is worth **nothing**: 70.8 against
+70.5, slightly the wrong way.
+
+**The winning threshold also moved.** H-041 named −1.0%; at a fixed rung the best
+arm is −0.50% on both timeframes and −1.0% is inert on 4h. A result whose optimum
+relocates when a confound is removed was not measuring what it claimed.
+
+## The one thing that is real, and it is not enough
+
+**The guard beats its day-shuffled control on both timeframes, below the p10 of
+25 seeds.** 1h 42.3 against 54.7 (46.6–64.5); 4h 50.6 against 72.8 (57.2–85.6).
+
+That is the first evidence on this hypothesis that an account overlay carries
+information beyond "trading less is safer" — the control removes the same number
+of days and does materially worse. It is a real signal.
+
+**It does not rescue the arm.** The criterion required all three conditions and
+was written precisely so that one surviving leg could not be promoted into a
+result after the fact. The 4h curve is a step at −0.50% with every other
+threshold flat at ~70 — the H-038 signature named in the pre-registration.
+
+## Verdict
+
+**Dead, and more informative than most deaths here.**
+
+* **H-041's table should not be quoted.** Its 4h headline is a rung comparison
+  wearing a guard's name. The 1h figure (49.3 → 40.8, both already at 3.0%) was
+  clean but is the smaller claim and fails condition 2 on the other timeframe.
+* **`pct` + guard is closed** without being run, per the pre-registration.
+* **Seven axes are now closed on H-027.** Entry filters, timeframe, exit shape,
+  selector objective, clock anchor, band shape, account overlay.
+* **What survives is a method note, not a lever:** the day-shuffled control is
+  the right instrument for any future account-policy test, and it should have
+  existed before H-041 was ever written up.
+
+**The honest state of H-027: it is finished being tuned.** The remaining open
+question is not a strategy question — it is whether the firm measures drawdown
+on equity or on closed balance (blocker B1), which H-039 says changes which cap
+kills the account.
