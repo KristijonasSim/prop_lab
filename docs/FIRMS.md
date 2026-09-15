@@ -485,3 +485,88 @@ same verified absence of the rule that matters.
 say. Both entries above are corrected in `firms4.py`; the uncorrected numbers
 remain in the sections above deliberately, because the failures are the
 denominator.
+
+---
+
+# CAN A TARGET BREAK THE BIND? — 2026-09-15
+
+Kris: *"58 days is to much or we need to find another hypothesis you can see
+problems now either consistency rule or to much days"*.
+`research/payablespeed.py`, `backtests/vwapbreak/payablespeed.json`.
+
+**It is one problem, not two.** 0.93 trades a day, one winner in five, carried
+far with no target. That makes the profit lumpy (consistency rules reject it) and
+rare (evaluations run long). A target is the only lever that attacks the shape.
+
+## A target does repair the shape — measurably
+
+Gold 1h, FundingPips 1-Step Flex rules, 50% gate applied inside the challenge:
+
+| arm | win% | best-day share | months payable | ungated days | gated days | gate costs |
+|---|---|---|---|---|---|---|
+| **no target (shipped)** | 20.3 | **95.5%** | **0.9%** | **22.0** | 355.6 | **+334d** |
+| target 1R | 54.0 | 76.6% | 34.4% | 123.6 | 127.4 | **+4d** |
+| **target 2R** | 48.3 | **58.1%** | **39.8%** | 60.6 | 80.3 | **+20d** |
+| target 3R | 39.6 | 82.8% | 28.5% | 78.1 | 103.5 | +25d |
+| target 4R | 39.3 | 78.9% | 21.5% | 56.1 | 102.2 | +46d |
+| target 6R | 34.0 | 94.8% | 19.8% | 37.2 | 100.3 | +63d |
+| target 8R | 30.2 | **125.6%** | 4.0% | 40.1 | 320.6 | +280d |
+| target 12R | 28.2 | 87.6% | 18.0% | 26.4 | 94.4 | +68d |
+
+A 2R target takes payable months from **0.9% to 39.8%** and cuts the cost of a
+50% gate from **334 days to 20**. Real, mechanistic, and the first lever on this
+hypothesis that moves the shape rather than the speed.
+
+## And it is not worth using
+
+| | days |
+|---|---|
+| **shipped rule at a NO-consistency firm** | **22.0** |
+| target 2R at a 50%-consistency firm | 80.3 |
+
+**The target is the right answer to the wrong question.** A consistency rule is
+not something to engineer around — it is something to avoid by picking the firm.
+
+**No target arm is faster than the shipped rule either.** Best is 12R at 26.4
+days ungated against 22.0, and the ordering is not monotone in the target
+(123.6 / 60.6 / 78.1 / 56.1 / 37.2 / 40.1 / 26.4), which is this repo's
+signature for noise around a trend back toward "no target".
+
+*8R as a warning: best-day share **125.6%** — one day larger than the whole
+month, because the rest of it is a net loss. Mid-table on speed, worst in the
+study on shape.*
+
+## The answer to the question asked
+
+**58.9 days was the wrong row.** That was FundingPips 2-Step *Standard*. The same
+firm's **1-Step Flex is 22.0 days, 63.7% pass, 24.3% blown, no consistency rule,
+no minimum trading days, cTrader — EUR 61.**
+
+| | |
+|---|---|
+| **floor for H-027** | **22.0 days** |
+| pace target | 5–14 days |
+| what has failed to close that gap | seven tuning axes, a tripled drawdown budget, and this target sweep |
+
+**22 days is the floor, not a starting point.** If 5–14 is the requirement, it is
+out of reach for this edge and only a different hypothesis — one whose profit is
+not one day in a month — reaches it.
+
+## What multiple accounts actually buy
+
+| | |
+|---|---|
+| 4 accounts, same strategy, same start day | P(≥1 passes) = **44.2%**, identical to one account |
+| 4 accounts **staggered 30 days apart** | **86–99.6%** |
+
+Four accounts on one strategy from one start date are the same account four
+times. Staggering is the only thing that decorrelates them.
+
+**Cost per funded account** — the right metric for the 10–20 account goal:
+
+| firm | € | pass % | days | **€ per funded account** |
+|---|---|---|---|---|
+| FundingPips 2-Step Flex | 29 | 54.4 | 75.3 | **53** |
+| FundingPips 2-Step Std | 27 | 44.2 | 58.9 | 61 |
+| **FundingPips 1-Step Flex** | 61 | **63.7** | **22.0** | 96 |
+| Blueberry Prime 2-step | 89 | 53.0 | 67.9 | 168 |

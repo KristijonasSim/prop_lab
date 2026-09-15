@@ -1,0 +1,277 @@
+{
+ "gate": 0.5,
+ "rows": [
+  {
+   "arm": "no target (shipped)",
+   "target_r": null,
+   "trades": 591,
+   "win_pct": 20.3,
+   "best_day_median": 95.5,
+   "months_under_gate": 0.9,
+   "no_gate": {
+    "pass_pct": 63.7,
+    "blown_pct": 24.3,
+    "stuck_pct": 12.0,
+    "days": 22.0,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 11.7,
+    "blown_pct": 21.1,
+    "stuck_pct": 67.2,
+    "days": 355.6,
+    "risk_pct": 3.0
+   },
+   "band": {
+    "days_lo": 16.1,
+    "days_hi": 30.0,
+    "days_med": 20.9,
+    "pass_lo": 38.3,
+    "pass_hi": 65.9,
+    "pass_med": 52.4,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  },
+  {
+   "arm": "target 1R",
+   "target_r": 1.0,
+   "trades": 513,
+   "win_pct": 54.0,
+   "best_day_median": 76.6,
+   "months_under_gate": 34.4,
+   "no_gate": {
+    "pass_pct": 38.0,
+    "blown_pct": 12.0,
+    "stuck_pct": 50.0,
+    "days": 123.6,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 35.3,
+    "blown_pct": 12.0,
+    "stuck_pct": 52.7,
+    "days": 127.4,
+    "risk_pct": 4.0
+   },
+   "band": {
+    "days_lo": 64.7,
+    "days_hi": 209.0,
+    "days_med": 102.7,
+    "pass_lo": 25.7,
+    "pass_hi": 77.6,
+    "pass_med": 52.2,
+    "never_pct": 0.5,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": true
+  },
+  {
+   "arm": "target 2R",
+   "target_r": 2.0,
+   "trades": 470,
+   "win_pct": 48.3,
+   "best_day_median": 58.1,
+   "months_under_gate": 39.8,
+   "no_gate": {
+    "pass_pct": 66.0,
+    "blown_pct": 2.4,
+    "stuck_pct": 31.6,
+    "days": 60.6,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 62.3,
+    "blown_pct": 2.4,
+    "stuck_pct": 35.4,
+    "days": 80.3,
+    "risk_pct": 4.0
+   },
+   "band": {
+    "days_lo": 42.5,
+    "days_hi": 107.8,
+    "days_med": 64.0,
+    "pass_lo": 42.6,
+    "pass_hi": 87.3,
+    "pass_med": 66.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": true
+  },
+  {
+   "arm": "target 3R",
+   "target_r": 3.0,
+   "trades": 450,
+   "win_pct": 39.6,
+   "best_day_median": 82.8,
+   "months_under_gate": 28.5,
+   "no_gate": {
+    "pass_pct": 56.3,
+    "blown_pct": 12.8,
+    "stuck_pct": 30.9,
+    "days": 78.1,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 53.2,
+    "blown_pct": 12.8,
+    "stuck_pct": 34.1,
+    "days": 103.5,
+    "risk_pct": 4.0
+   },
+   "band": {
+    "days_lo": 39.8,
+    "days_hi": 90.2,
+    "days_med": 58.2,
+    "pass_lo": 34.1,
+    "pass_hi": 78.8,
+    "pass_med": 56.5,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  },
+  {
+   "arm": "target 4R",
+   "target_r": 4.0,
+   "trades": 369,
+   "win_pct": 39.3,
+   "best_day_median": 78.9,
+   "months_under_gate": 21.5,
+   "no_gate": {
+    "pass_pct": 57.0,
+    "blown_pct": 13.4,
+    "stuck_pct": 29.6,
+    "days": 56.1,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 41.1,
+    "blown_pct": 17.3,
+    "stuck_pct": 41.6,
+    "days": 102.2,
+    "risk_pct": 4.0
+   },
+   "band": {
+    "days_lo": 33.4,
+    "days_hi": 86.2,
+    "days_med": 47.0,
+    "pass_lo": 47.0,
+    "pass_hi": 87.6,
+    "pass_med": 70.0,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  },
+  {
+   "arm": "target 6R",
+   "target_r": 6.0,
+   "trades": 453,
+   "win_pct": 34.0,
+   "best_day_median": 94.8,
+   "months_under_gate": 19.8,
+   "no_gate": {
+    "pass_pct": 61.9,
+    "blown_pct": 25.5,
+    "stuck_pct": 12.6,
+    "days": 37.2,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 56.9,
+    "blown_pct": 12.3,
+    "stuck_pct": 30.9,
+    "days": 100.3,
+    "risk_pct": 3.0
+   },
+   "band": {
+    "days_lo": 26.4,
+    "days_hi": 58.2,
+    "days_med": 36.5,
+    "pass_lo": 38.3,
+    "pass_hi": 76.4,
+    "pass_med": 56.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  },
+  {
+   "arm": "target 8R",
+   "target_r": 8.0,
+   "trades": 470,
+   "win_pct": 30.2,
+   "best_day_median": 125.6,
+   "months_under_gate": 4.0,
+   "no_gate": {
+    "pass_pct": 42.4,
+    "blown_pct": 43.7,
+    "stuck_pct": 13.9,
+    "days": 40.1,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 13.7,
+    "blown_pct": 30.6,
+    "stuck_pct": 55.7,
+    "days": 320.6,
+    "risk_pct": 3.0
+   },
+   "band": {
+    "days_lo": 26.3,
+    "days_hi": 57.1,
+    "days_med": 36.7,
+    "pass_lo": 30.9,
+    "pass_hi": 62.2,
+    "pass_med": 49.1,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  },
+  {
+   "arm": "target 12R",
+   "target_r": 12.0,
+   "trades": 514,
+   "win_pct": 28.2,
+   "best_day_median": 87.6,
+   "months_under_gate": 18.0,
+   "no_gate": {
+    "pass_pct": 68.1,
+    "blown_pct": 22.8,
+    "stuck_pct": 9.1,
+    "days": 26.4,
+    "risk_pct": 4.0
+   },
+   "gated": {
+    "pass_pct": 64.6,
+    "blown_pct": 4.4,
+    "stuck_pct": 31.0,
+    "days": 94.4,
+    "risk_pct": 2.0
+   },
+   "band": {
+    "days_lo": 18.6,
+    "days_hi": 33.5,
+    "days_med": 23.6,
+    "pass_lo": 51.5,
+    "pass_hi": 77.0,
+    "pass_med": 64.5,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "inside_band": false
+  }
+ ]
+}
