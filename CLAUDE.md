@@ -144,7 +144,57 @@ The last field is the phase gate. Check it before getting attached to a Sharpe.
 
 ## Prop-firm risk rules
 
-**THE FIRM IS CHOSEN, 2026-09-08: Thunderbolt, 1 step.** First real spec this
+**THE HOUSE SPEC, SET BY KRIS 2026-09-15 — design against this, not a vendor card.**
+
+| | |
+|---|---|
+| Profit target | **8%** |
+| Daily drawdown | **3%** |
+| Max drawdown | **6%** |
+| Consistency | **tracked, never targeted** |
+
+`core/prop_rules.HOUSE`, and `ONE_STEP` now points at it, so the board reports on
+it. **It is deliberately harsher than anything we would buy**: the current pick,
+FundingPips 1-Step Flex, is 10% / 4% / **12%** — a bigger target but double the
+max-loss room. Holding the caps tight while raising the target makes every board
+number a floor rather than a best case.
+
+**Why a house spec and not a firm.** The 44-product sweep (`docs/FIRMS.md`,
+2026-09-15) found firms differ by more than the strategy does — targets 2–12%,
+daily caps 2–8%, max caps 3–16%. Kris runs several firms, so fitting to one
+card overfits to a vendor.
+
+**What it cost, measured on the shipped rule** (nothing about the strategy
+changed, only the spec):
+
+| spec | risk | expected days | band | pass % | blown % |
+|---|---|---|---|---|---|
+| Thunderbolt 6/3/6 | 3.0% | 17.0 | 14–25 | 47.2 | 48.6 |
+| **HOUSE 8/3/6** | 4.0% | **19.1** | 14–25 | 42.0 | 54.9 |
+| FundingPips Flex 10/4/12 | 4.0% | 20.5 | 16–30 | 53.6 | 40.1 |
+
+All three bands overlap, so **the spec change is not a real move in pace** — it
+is a change in what we promise, not in what the strategy does.
+
+**THE CONSISTENCY RULE IS TRACKED, NOT TARGETED.** Kris: *"we wont aim for it but
+we should keep in mind that its better to have it"*. `core/prop_rules.
+best_day_share` reports it on any daily series and nothing gates on it, because
+gating would rewrite the strategy — a 50% in-challenge gate costs the shipped
+rule **316 expected days** (`strategies/vwapbreak/research/consistency.py`).
+Current reading, 30-day payout windows:
+
+| median best-day share | under 50% cap | 40% | 35% | 20% |
+|---|---|---|---|---|
+| **95.5%** | **0.9%** | 0.0% | 0.0% | 0.0% |
+
+**So any firm with a consistency rule is unusable today**, and that — not price
+or drawdown type — is the first thing to check on a firm's own page. Comparison
+sites got it wrong for Blue Guardian and City Traders Imperium on 2026-09-15,
+and both had been recommended on this basis.
+
+### Superseded: the Thunderbolt card, kept for reading older numbers
+
+**THE FIRM WAS CHOSEN, 2026-09-08: Thunderbolt, 1 step.** First real spec this
 project has had. Everything before this date was modelled on a guessed 8%+5%
 two-step and those numbers are wrong, not merely stale.
 

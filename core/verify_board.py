@@ -114,7 +114,7 @@ STITCHED = ROOT / "backtests" / "vwap" / "stage6_stitched_xauusd_deadfix.csv"
 # against rules the board does not use disagrees with it for the wrong reason -
 # and the disagreement flatters, since 8% forgives a drawdown that ends an
 # account at 6%.
-TARGET = 0.06        # prop profit target
+TARGET = 0.08        # prop profit target (HOUSE spec, Kris 2026-09-15)
 MAX_LOSS = 0.06      # prop max-loss cap
 DAILY_LOSS = 0.03    # prop daily-loss cap
 MIN_TRADING_DAYS = 0  # unlimited time limit, modelled as no minimum

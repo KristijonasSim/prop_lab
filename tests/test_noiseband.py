@@ -59,7 +59,15 @@ def test_vectorised_matches_riskladder_exactly():
         assert round(float((out == 2).mean()), 4) == ref["fail_max"]
         assert round(float((out == 3).mean()), 4) == ref["fail_daily"]
         assert round(float((out == 0).mean()), 4) == ref["still_open"]
-        assert med[0] == ref["median_days"]
+        # THE TWO SPELL "NOTHING PASSED" DIFFERENTLY and that is not drift.
+        # `run_accounts` returns None; `_per_row` is a numpy array, so it
+        # returns nan. Exposed 2026-09-15 when the house target went 6% -> 8%
+        # and the 0.5% rung stopped funding anything at all - before that no
+        # rung in this fixture was ever empty, so the two never disagreed.
+        # Assert they agree about EMPTINESS, then about the value.
+        assert (ref["median_days"] is None) == bool(np.isnan(med[0]))
+        if ref["median_days"] is not None:
+            assert med[0] == ref["median_days"]
 
 
 def test_breach_is_a_breach():

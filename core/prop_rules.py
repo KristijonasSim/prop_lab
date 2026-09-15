@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+import numpy as np
 import pandas as pd
 
 
@@ -98,12 +99,78 @@ TWO_STEP = (PHASE_1, PHASE_2)
 THUNDERBOLT = PropRules(profit_target=0.06, daily_loss=0.03, max_loss=0.06,
                         min_trading_days=0)
 
+# ---------------------------------------------------------------------------
+# THE HOUSE SPEC, set by Kris 2026-09-15. This is what the board reports on now.
+#
+#     profit target  8%        daily drawdown  3%        max drawdown  6%
+#
+# WHY A HOUSE SPEC AND NOT A FIRM. Thunderbolt was one firm's card, and the
+# 44-product sweep on 2026-09-15 (`docs/FIRMS.md`) showed that firms differ by
+# more than the strategy does: targets run 2-12%, daily caps 2-8%, max caps
+# 3-16%. Kris runs SEVERAL firms, so designing against any single card overfits
+# to a vendor. His words: *"DD -3% MAX dd -6% profit goal - 8%"*.
+#
+# IT IS DELIBERATELY HARSHER THAN WHAT WE WOULD BUY. The current pick,
+# FundingPips 1-Step Flex, is 10% / 4% / 12% - a bigger target but DOUBLE the
+# max-loss room. Holding the caps at 3%/6% while raising the target 6% -> 8%
+# means every number the board reports is a floor, not a best case. A rule that
+# funds an account under this spec funds it under most real cards.
+#
+# THE CONSISTENCY RULE IS TRACKED, NOT TARGETED. Kris: *"we wont aim for it but
+# we should keep in mind that its better to have it"*. It is not in PropRules
+# and does not gate anything, because gating on it would quietly rewrite the
+# strategy - a 50% in-challenge gate costs the shipped rule 316 expected days
+# (`research/consistency.py`). Instead `core/prop_rules.best_day_share` reports
+# what share of a payout window's profit comes from its single best day, so
+# every result carries the number that decides whether a firm with such a rule
+# is usable. Lower is better; nothing is optimised for it.
+# ---------------------------------------------------------------------------
+
+HOUSE = PropRules(profit_target=0.08, daily_loss=0.03, max_loss=0.06,
+                  min_trading_days=0)
+
 #: The structure the board reports on. One phase.
-ONE_STEP = (THUNDERBOLT,)
+ONE_STEP = (HOUSE,)
 
 #: Kept so pre-2026-09-08 board numbers stay comparable, and because Kris will
 #: run several firms - the next one may well be two-step.
 LEGACY_ONE_STEP = (PropRules(),)
+
+
+def best_day_share(daily_r, risk: float = 1.0, window: int = 30) -> dict:
+    """How concentrated the profit is, which is what consistency rules measure.
+
+    TRACKED, NEVER TARGETED (Kris, 2026-09-15). A consistency rule caps the share
+    of one payout that may come from a single trading day. This reports that
+    share over rolling `window`-day payout periods so any result can say which
+    firms it would be payable at, without letting the rule change what the
+    strategy does - gating on it costs the shipped rule 316 expected days
+    (`strategies/vwapbreak/research/consistency.py`).
+
+    Unprofitable windows are dropped: there is no payout to request, so no
+    consistency rule applies to them. A share ABOVE 1.0 is real and means the
+    best day exceeded the whole window's profit, the rest being a net loss.
+
+    `risk` only scales the series and cannot change a ratio; it is accepted so
+    callers can pass the rung they are quoting without thinking about it.
+    """
+    v = np.asarray(pd.Series(daily_r).values, dtype=float) * risk
+    shares = []
+    for i in range(0, max(0, len(v) - window)):
+        w = v[i:i + window]
+        tot = w.sum()
+        if tot > 0:
+            shares.append(max(w.max(), 0.0) / tot)
+    if not shares:
+        return {"windows": 0, "median": None, "under_20": None, "under_35": None,
+                "under_40": None, "under_50": None}
+    a = np.asarray(shares)
+    return {"windows": int(len(a)),
+            "median": round(float(np.median(a)), 3),
+            "under_20": round(float((a < 0.20).mean()) * 100, 1),
+            "under_35": round(float((a < 0.35).mean()) * 100, 1),
+            "under_40": round(float((a < 0.40).mean()) * 100, 1),
+            "under_50": round(float((a < 0.50).mean()) * 100, 1)}
 
 
 @dataclass
