@@ -1,0 +1,677 @@
+{
+ "budget_eur": 40.0,
+ "rows": [
+  {
+   "firm": "City Traders Imperium 1-step",
+   "steps": 1,
+   "eur": 36,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, DXtrade",
+   "data": "good",
+   "note": "no daily cap at all; drawdown on CLOSED BALANCE",
+   "eval": {
+    "pass_pct": 56.8,
+    "blown_pct": 37.2,
+    "days": 24.7,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FundingPips 1-Step Flex",
+   "steps": 1,
+   "eur": 61,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "cTrader, MT5",
+   "data": "good",
+   "note": "12% static - the loosest max in the one-step group",
+   "eval": {
+    "pass_pct": 63.7,
+    "blown_pct": 24.3,
+    "days": 22.0,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Goat Funded 1-step",
+   "steps": 1,
+   "eur": 16,
+   "trailing": false,
+   "best_day_cap": 0.5,
+   "payable_pct": 0.9,
+   "platform": "MT5, cTrader",
+   "data": "good",
+   "note": "no rule to PASS; funded payout needs 4 days of +0.5% each",
+   "eval": {
+    "pass_pct": 51.4,
+    "blown_pct": 43.4,
+    "days": 23.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FundedNext Stellar 1-step",
+   "steps": 1,
+   "eur": 61,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, cTrader",
+   "data": "good",
+   "note": "",
+   "eval": {
+    "pass_pct": 51.4,
+    "blown_pct": 43.4,
+    "days": 23.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Atlas Funded 1-step",
+   "steps": 1,
+   "eur": 63,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT5, Match-Trader",
+   "data": "good",
+   "note": "also a 1%-profit-per-day rule",
+   "eval": {
+    "pass_pct": 58.7,
+    "blown_pct": 35.0,
+    "days": 23.9,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "PipFarm 1-step",
+   "steps": 1,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": 0.2,
+   "payable_pct": 0.0,
+   "platform": "cTrader, TradeLocker",
+   "data": "fair",
+   "note": "5 winning days; the daily gate is a consistency score not a loss cap",
+   "eval": {
+    "pass_pct": 64.2,
+    "blown_pct": 27.6,
+    "days": 26.5,
+    "risk_pct": 3.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Hola Prime 1-Step Prime",
+   "steps": 1,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": 0.35,
+   "payable_pct": 0.0,
+   "platform": "MT5, cTrader, Match-Trader",
+   "data": "good",
+   "note": "40% best-day in evaluation, 35% funded",
+   "eval": {
+    "pass_pct": 51.4,
+    "blown_pct": 43.4,
+    "days": 23.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Blue Guardian 1-Step Std",
+   "steps": 1,
+   "eur": 29,
+   "trailing": true,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, Match-Trader, cTrader",
+   "data": "good",
+   "note": "6% TRAILING off the equity high",
+   "eval": {
+    "pass_pct": 56.2,
+    "blown_pct": 37.5,
+    "days": 23.2,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Alpha Capital Alpha One",
+   "steps": 1,
+   "eur": 36,
+   "trailing": true,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT4, MT5, cTrader",
+   "data": "good",
+   "note": "6% TRAILING",
+   "eval": {
+    "pass_pct": 55.7,
+    "blown_pct": 38.0,
+    "days": 23.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "ThinkCapital Lightning",
+   "steps": 1,
+   "eur": 41,
+   "trailing": true,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5",
+   "data": "fair",
+   "note": "6% TRAILING",
+   "eval": {
+    "pass_pct": 51.3,
+    "blown_pct": 43.5,
+    "days": 23.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Fintokei SwiftTrader 1-step",
+   "steps": 1,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, DXtrade",
+   "data": "fair",
+   "note": "40% cap stated for multi-phase; assumed to apply",
+   "eval": {
+    "pass_pct": 67.5,
+    "blown_pct": 21.8,
+    "days": 23.7,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "E8 One (1-step)",
+   "steps": 1,
+   "eur": 81,
+   "trailing": true,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT5, Match-Trader",
+   "data": "fair",
+   "note": "customisable at purchase; modelled at its tightest/cheapest setting",
+   "eval": {
+    "pass_pct": 49.1,
+    "blown_pct": 47.8,
+    "days": 18.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Upcomers Thunderbolt 1-step",
+   "steps": 1,
+   "eur": null,
+   "trailing": true,
+   "best_day_cap": 0.2,
+   "payable_pct": 0.0,
+   "platform": "cTrader",
+   "data": "good",
+   "note": "the shipped reference rule",
+   "eval": {
+    "pass_pct": 55.0,
+    "blown_pct": 39.7,
+    "days": 18.2,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Upcomers Ash 1-step",
+   "steps": 1,
+   "eur": null,
+   "trailing": true,
+   "best_day_cap": 0.2,
+   "payable_pct": 0.0,
+   "platform": "cTrader",
+   "data": "good",
+   "note": "fastest thing ever measured here, and unpayable",
+   "eval": {
+    "pass_pct": 62.0,
+    "blown_pct": 34.9,
+    "days": 11.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "DNA Funded 1-phase",
+   "steps": 1,
+   "eur": 45,
+   "trailing": true,
+   "best_day_cap": 0.3,
+   "payable_pct": 0.0,
+   "platform": "MT5",
+   "data": "fair",
+   "note": "min 3 trading days; trailing",
+   "eval": {
+    "pass_pct": 59.5,
+    "blown_pct": 34.2,
+    "days": 23.5,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Aqua Funded 2-Step Std",
+   "steps": 2,
+   "eur": 14,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, cTrader, Match-Trader",
+   "data": "good",
+   "note": "static",
+   "eval": {
+    "pass_pct": 44.2,
+    "blown_pct": 39.7,
+    "days": 58.9,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Aqua Funded 2-Step Pro",
+   "steps": 2,
+   "eur": 18,
+   "trailing": true,
+   "best_day_cap": 0.5,
+   "payable_pct": 0.9,
+   "platform": "MT5, cTrader",
+   "data": "good",
+   "note": "TRAILING",
+   "eval": {
+    "pass_pct": 56.6,
+    "blown_pct": 21.1,
+    "days": 68.9,
+    "risk_pct": 2.5
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Goat Funded 2-step",
+   "steps": 2,
+   "eur": 20,
+   "trailing": false,
+   "best_day_cap": 0.5,
+   "payable_pct": 0.9,
+   "platform": "MT5, cTrader, Match-Trader",
+   "data": "good",
+   "note": "",
+   "eval": {
+    "pass_pct": 53.0,
+    "blown_pct": 11.5,
+    "days": 67.9,
+    "risk_pct": 2.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Maven 2-step",
+   "steps": 2,
+   "eur": 20,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, cTrader, TradeLocker",
+   "data": "good",
+   "note": "firm page says 'Consistency score: Not required'; shows 'not available in your region'",
+   "eval": {
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FundingPips 2-Step Flex",
+   "steps": 2,
+   "eur": 29,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "cTrader, MT5",
+   "data": "good",
+   "note": "12% static",
+   "eval": {
+    "pass_pct": 54.4,
+    "blown_pct": 21.6,
+    "days": 75.3,
+    "risk_pct": 3.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FundingPips 2-Step Std",
+   "steps": 2,
+   "eur": 27,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "cTrader, MT5",
+   "data": "good",
+   "note": "",
+   "eval": {
+    "pass_pct": 44.2,
+    "blown_pct": 39.7,
+    "days": 58.9,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FXIFY 2-step",
+   "steps": 2,
+   "eur": 36,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT4, MT5, cTrader, DXtrade",
+   "data": "good",
+   "note": "",
+   "eval": {
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "FundedNext Stellar 2-step",
+   "steps": 2,
+   "eur": 29,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, cTrader",
+   "data": "good",
+   "note": "",
+   "eval": {
+    "pass_pct": 21.3,
+    "blown_pct": 73.5,
+    "days": 103.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Alpine Funded Peak 2-step",
+   "steps": 2,
+   "eur": 45,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "cTrader",
+   "data": "fair",
+   "note": "carried from FIRMS.md 2026-09-09",
+   "eval": {
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "FTMO 2-step",
+   "steps": 2,
+   "eur": 143,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "cTrader, MT5",
+   "data": "good",
+   "note": "no numeric cap; a discretionary 'trading style' review instead",
+   "eval": {
+    "pass_pct": 58.4,
+    "blown_pct": 16.6,
+    "days": 70.3,
+    "risk_pct": 2.5
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Funded Trading Plus 2-step",
+   "steps": 2,
+   "eur": 73,
+   "trailing": false,
+   "best_day_cap": 0.35,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, cTrader",
+   "data": "good",
+   "note": "35% challenge / 50% funded",
+   "eval": {
+    "pass_pct": 51.9,
+    "blown_pct": 16.7,
+    "days": 67.4,
+    "risk_pct": 2.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Blueberry Funded Prime 2-step",
+   "steps": 2,
+   "eur": 89,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT4, MT5, TradingView",
+   "data": "good",
+   "note": "explicitly NO consistency rule on any plan - rare and stated by the firm",
+   "eval": {
+    "pass_pct": 53.0,
+    "blown_pct": 11.5,
+    "days": 67.9,
+    "risk_pct": 2.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "E8 Markets 2-phase",
+   "steps": 2,
+   "eur": 81,
+   "trailing": false,
+   "best_day_cap": 0.35,
+   "payable_pct": 0.0,
+   "platform": "MT5, Match-Trader, TradeLocker",
+   "data": "fair",
+   "note": "35% best-day on Signature, funded only",
+   "eval": {
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Blue Guardian 2-Step Std",
+   "steps": 2,
+   "eur": 29,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, Match-Trader, cTrader",
+   "data": "fair",
+   "note": "",
+   "eval": {
+    "pass_pct": 27.9,
+    "blown_pct": 65.8,
+    "days": 75.2,
+    "risk_pct": 4.0
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Fintokei ProTrader 2-step",
+   "steps": 2,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, DXtrade",
+   "data": "fair",
+   "note": "",
+   "eval": {
+    "pass_pct": 44.2,
+    "blown_pct": 39.7,
+    "days": 58.9,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Quant Tekel 2-step",
+   "steps": 2,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, cTrader",
+   "data": "weak",
+   "note": "targets 6-8% quoted; daily/max assumed from peers",
+   "eval": {
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "Finotive Funding 2-step",
+   "steps": 2,
+   "eur": 41,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT4, MT5",
+   "data": "fair",
+   "note": "8% DAILY and 16% MAX - the loosest caps in the industry. The natural test of whether our pace problem is the caps or the edge.",
+   "eval": {
+    "pass_pct": 64.7,
+    "blown_pct": 15.6,
+    "days": 51.0,
+    "risk_pct": 4.0
+   },
+   "in_budget": false
+  },
+  {
+   "firm": "The5ers Bootcamp 3-step",
+   "steps": 3,
+   "eur": 20,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, cTrader",
+   "data": "good",
+   "note": "NO daily cap on any step; +EUR 43 to activate funded; mandatory SL, max 2% risk per position, 5 violations terminates",
+   "eval": {
+    "pass_pct": 31.9,
+    "blown_pct": 51.9,
+    "days": 175.8,
+    "risk_pct": 2.5
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Maven 3-step",
+   "steps": 3,
+   "eur": 16,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5, cTrader",
+   "data": "good",
+   "note": "tightest drawdown in the table",
+   "eval": {
+    "pass_pct": 29.3,
+    "blown_pct": 54.9,
+    "days": 167.0,
+    "risk_pct": 1.5
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "The5ers Hyper Growth 3-step",
+   "steps": 3,
+   "eur": 36,
+   "trailing": false,
+   "best_day_cap": null,
+   "payable_pct": 100.0,
+   "platform": "MT5",
+   "data": "fair",
+   "note": "carries a 3% daily, unlike Bootcamp",
+   "eval": {
+    "pass_pct": 28.2,
+    "blown_pct": 18.8,
+    "days": 191.3,
+    "risk_pct": 1.5
+   },
+   "in_budget": true
+  },
+  {
+   "firm": "Fintokei StartTrader 3-step",
+   "steps": 3,
+   "eur": 36,
+   "trailing": false,
+   "best_day_cap": 0.4,
+   "payable_pct": 0.0,
+   "platform": "MT4, MT5, DXtrade",
+   "data": "good",
+   "note": "2%/3%/6% - the softest per-step targets anywhere",
+   "eval": {
+    "pass_pct": 43.4,
+    "blown_pct": 22.9,
+    "days": 110.7,
+    "risk_pct": 2.5
+   },
+   "in_budget": true
+  }
+ ],
+ "excluded": {
+  "Alpha Capital Alpha Pro": "weekend holding PROHIBITED on qualified accounts; the shipped rule holds up to 384h (16 days), so it cannot run here at all",
+  "Breakout Prop": "crypto only (Kraken); every crypto VWAP hypothesis here is dead",
+  "HyroTrader": "crypto only (Bybit)",
+  "Topstep / Apex / Take Profit / MyFundedFutures / Bulenox / Earn2Trade / Tradeify / TradeDay / Leeloo / BluSky / Elite Trader / Alpha Futures / Funded Futures Network / Legends": "futures only - cannot hold XAUUSD spot",
+  "Seacrest Funded": "ceased prop operations February 2026"
+ },
+ "no_rules": [
+  "SabioTrade",
+  "Audacity Capital",
+  "Lark Funding",
+  "MyFundedFX",
+  "EverFunded",
+  "AscendX Capital",
+  "For Traders",
+  "The Trading Pit",
+  "FTUK",
+  "Instant Funding (Acello)",
+  "Crypto Fund Trader",
+  "Velotrade",
+  "RebelsFunding",
+  "Smart Prop Trader"
+ ],
+ "best_day_30d_median": 0.9549908693178965
+}

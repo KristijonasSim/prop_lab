@@ -309,3 +309,92 @@ Prices, targets and drawdowns here are third-party as of 2026-09-15 and several
 firms changed rules mid-2026 — Goat's 1-step daily cap went 4% → 3% in August and
 its funded payout gained a 4-day 0.5% requirement in July. CTI is listed at $39
 here against $59 in the September table; confirm which is current.
+
+---
+
+# THE WIDE SWEEP — 44 products, 2026-09-15
+
+Kris: *"please do bigger research i know its not best ones"*. Correct — the
+twenty-two above came largely off cheap-challenge listicles and missed most of
+the established names. `strategies/vwapbreak/research/firms4.py`,
+`backtests/vwapbreak/firms4.json`.
+
+**36 products scored, 14 named without an obtainable rule set, 5 groups excluded
+outright.** Futures firms (Topstep, Apex, MyFundedFutures, Bulenox, Earn2Trade,
+Tradeify, TradeDay, Leeloo, BluSky, Elite Trader, Alpha Futures, FFN, Legends)
+cannot hold XAUUSD and are excluded by construction, not by score.
+
+## What the wider sweep changed
+
+**Three firms now beat City Traders Imperium inside the budget, and one of them
+has cTrader.**
+
+| firm | € | steps | DD | days | pass% | blown% | cap | platform |
+|---|---|---|---|---|---|---|---|---|
+| **Blue Guardian 1-Step Std** | **29** | 1 | trailing | **23.2** | 56.2 | 37.5 | none found | MT5, Match-Trader, **cTrader** |
+| **Alpha Capital Alpha One** | 36 | 1 | trailing | 23.3 | 55.7 | 38.0 | none found | MT4, MT5, **cTrader** |
+| City Traders Imperium 1-step | 36 | 1 | static | 24.7 | 56.8 | 37.2 | none found | MT5, DXtrade |
+| Aqua Funded 2-Step Std | 14 | 2 | static | 58.9 | 44.2 | 39.7 | none found | MT5, **cTrader** |
+| FundingPips 2-Step Std | 27 | 2 | static | 58.9 | 44.2 | 39.7 | none found | **cTrader**, MT5 |
+| FundingPips 2-Step Flex | 29 | 2 | static | 75.3 | 54.4 | **21.6** | none found | **cTrader**, MT5 |
+| *FundingPips 1-Step Flex* | *61* | 1 | static | **22.0** | 63.7 | **24.3** | none found | cTrader, MT5 |
+
+**Unpayable regardless of speed** — best-day cap at or under 50%, which this
+strategy clears in under 1% of months: Upcomers Ash (11.3d) and Thunderbolt
+(18.2d), E8 One (18.3d), Goat Funded 1-step (23.3d), Hola Prime (23.3d),
+FundedNext both models, Atlas Funded, DNA Funded, PipFarm, Fintokei all three,
+Funded Trading Plus, E8 2-phase, Aqua Pro, Goat 2-step. **Fifteen of thirty-six.**
+
+## Three rule shapes the narrow sweep never met
+
+**1. Trailing drawdown.** Almost everything in `firms3` was static. Blue
+Guardian, Alpha One, ThinkCapital, E8 One, Aqua Pro and DNA all trail off the
+equity high. On this strategy that is normally punitive — H-039 measured trades
+reaching **+286.6 R unrealised** before giving it all back — yet the trailing
+1-step arms score the same as the static ones (23.2–23.5 vs 24.7). **The reason
+is that the evaluation resolves before the giveback matters**; the trailing cap
+would bite on a *funded* account held for months, which this table does not
+simulate. Treat the trailing rows as flattered.
+
+**2. A hard exclusion, not a slow row.** **Alpha Capital's qualified Pro accounts
+forbid holding over the weekend.** The shipped rule holds up to 384 hours —
+sixteen days. It cannot be traded there at all, at any speed. Alpha **One** is
+fine; Alpha **Pro** is out.
+
+**3. The loosest caps in the industry answer a question we could not otherwise
+ask.** Finotive Funding runs **8% daily / 16% max** — nearly triple Thunderbolt's
+budget. Result: **51.0 days at 15.6% blown**, the lowest blow-up rate of any
+two-step row, and **still not fast**.
+
+> **That settles something.** Tripling the drawdown budget cuts blow-ups 2.5x and
+> barely moves expected days. **The pace problem is the edge, not the caps.** No
+> firm choice fixes 5–14 days; only a faster rule would, and seven axes of
+> tuning have now failed to produce one.
+
+## What suits best
+
+**Blue Guardian 1-Step Standard, EUR 29.** Fastest payable thing under budget
+(23.2 days), one step, **and it has cTrader** — the only one of the three fast
+arms that does, which matters because the bot has no MT5 bridge on this box.
+Its 6% cap trails, which is the thing to verify hardest.
+
+**Second: City Traders Imperium, EUR 36.** Slower by 1.5 days and no cTrader, but
+**static, balance-based, and no daily cap at all** — structurally the safest
+accounting for a rule whose risk is large open swings that mostly come back.
+
+**Do not buy on speed alone.** The two fastest products in the entire sweep
+(Upcomers Ash at 11.3 days, E8 One at 18.3) are both unpayable.
+
+## Still to verify, and now the list is short
+
+1. **The best-day question, in writing, for Blue Guardian and CTI.** "None found"
+   is not "none exists" — it is the single assumption the whole ranking rests on.
+2. **Blue Guardian: is the 6% trailing cap intraday or end-of-day?** Intraday
+   trailing against 286 R of open swing is a different product.
+3. **Gold spread at each firm.** Bybit charges 2.750 bps/side on XAUUSD against
+   the 0.915 `core/markets.py` assumes — exactly 3x. Assume 3x until measured.
+4. **14 gold-capable firms have no rule set here** — SabioTrade, Audacity,
+   Lark, MyFundedFX, EverFunded, AscendX, For Traders, The Trading Pit, FTUK,
+   Instant Funding, Crypto Fund Trader, Velotrade, RebelsFunding, Smart Prop
+   Trader. They are listed rather than guessed, because a guessed rule set
+   produces a real-looking number.
