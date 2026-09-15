@@ -1,0 +1,107 @@
+{
+ "budget_eur": 40.0,
+ "rows": [
+  {
+   "firm": "The5ers Bootcamp 3-step",
+   "eur": 19.0,
+   "consistency": null,
+   "platform": "MT5, cTrader",
+   "note": "NO daily cap on any evaluation step - the 3% daily pause is funded-stage only. Mandatory stop-loss on every position, max 2% risk per position, 5 violations terminates. EUR 43 more to activate the funded account.",
+   "unverified": "static vs trailing on the 5%; any consistency rule at the funded stage",
+   "steps": 3,
+   "sized": {
+    "pass_pct": 31.9,
+    "blown_pct": 51.9,
+    "days": 175.8,
+    "risk_pct": 2.5
+   },
+   "in_budget": true,
+   "eligible": true
+  },
+  {
+   "firm": "FundingPips 2-Step Flex",
+   "eur": 29.44,
+   "consistency": null,
+   "platform": "cTrader, MT5",
+   "note": "12% STATIC max loss - double Thunderbolt's - and a 4% daily rather than 3%. No consistency rule, no minimum days at the 85% split.",
+   "unverified": "the $32 price is for the 5K size; 1-Step Flex is $66 and over budget",
+   "steps": 2,
+   "sized": {
+    "pass_pct": 54.4,
+    "blown_pct": 21.6,
+    "days": 75.3,
+    "risk_pct": 3.0
+   },
+   "in_budget": true,
+   "eligible": true
+  },
+  {
+   "firm": "Maven 3-step",
+   "eur": 15.64,
+   "consistency": null,
+   "platform": "unconfirmed",
+   "note": "cheapest thing in the list and the tightest drawdown in it.",
+   "unverified": "platform; whether the 3% static is balance or equity",
+   "steps": 3,
+   "sized": {
+    "pass_pct": 29.3,
+    "blown_pct": 54.9,
+    "days": 167.0,
+    "risk_pct": 1.5
+   },
+   "in_budget": true,
+   "eligible": true
+  },
+  {
+   "firm": "Maven 2-step",
+   "eur": 20.240000000000002,
+   "consistency": "3 profitable days of 0.5% PER PHASE",
+   "platform": "unconfirmed",
+   "note": "DISQUALIFIED. That is the best-day rule wearing a different hat - the same rule FIRMS.md rejected The5ers ProGrowth for. This strategy takes 0.93 trades a day and one winner in five carries it; three separate 0.5% days per phase is a different strategy.",
+   "unverified": "-",
+   "steps": 2,
+   "sized": {
+    "pass_pct": 17.0,
+    "blown_pct": 78.7,
+    "days": 96.9,
+    "risk_pct": 4.0
+   },
+   "in_budget": true,
+   "eligible": false
+  },
+  {
+   "firm": "Upcomers Thunderbolt (shipped)",
+   "eur": null,
+   "consistency": "20% best day (funded)",
+   "platform": "cTrader",
+   "note": "the rule every board number is quoted against, for reference.",
+   "unverified": "-",
+   "steps": 1,
+   "sized": {
+    "pass_pct": 54.6,
+    "blown_pct": 40.2,
+    "days": 18.3,
+    "risk_pct": 4.0
+   },
+   "in_budget": false,
+   "eligible": false
+  },
+  {
+   "firm": "City Traders Imperium 1-step",
+   "eur": 54.28,
+   "consistency": null,
+   "platform": "MT5, Match-Trader",
+   "note": "over budget; kept because it is the other no-daily-cap firm.",
+   "unverified": "the $59 entry price",
+   "steps": 1,
+   "sized": {
+    "pass_pct": 56.9,
+    "blown_pct": 37.1,
+    "days": 22.8,
+    "risk_pct": 4.0
+   },
+   "in_budget": false,
+   "eligible": true
+  }
+ ]
+}

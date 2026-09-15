@@ -97,3 +97,79 @@ signed contract. Confirm on the firm's own rules page:
 5. **EAs and algorithmic trading allowed**, and whether running the same strategy
    on several accounts counts as copy trading. That one matters for the
    three-account test.
+
+---
+
+# Re-priced under a EUR 40 budget — 2026-09-15
+
+Kris, 2026-09-15: *"i dont want to spend more then 40 euros on challange"*, and
+*"add to research the5ers.com"*. `strategies/vwapbreak/research/firms2.py`,
+`backtests/vwapbreak/firms2.json`. Same trade series, same engine (`run_phases`
+is imported from `firms.py`, not re-written), budget-linear sizing.
+
+## The correction this run makes to the page above
+
+**The5ers Bootcamp was scored with a 3% daily cap it does not have.** The table
+above gives it 219.9 expected days using `daily_loss=0.03`. The firm's own
+Bootcamp page and two independent write-ups agree the **3% daily pause applies
+only at the funded stage, never during the three evaluation steps**. That is the
+most expensive rule in the list for this strategy — its worst single day is
+−3.93% of balance at 2% risk — so the error is not small.
+
+Corrected, Bootcamp goes **219.9 → 175.8 expected days**. It does not change the
+conclusion, and that is the point: the phases were always the problem.
+
+## The table
+
+| firm | EUR | steps | days | pass % | blown % | risk | consistency |
+|---|---|---|---|---|---|---|---|
+| **FundingPips 2-Step Flex** | **29** | 2 | **75.3** | 54.4 | 21.6 | 3.00% | none stated |
+| Maven 3-step | 16 | 3 | 167.0 | 29.3 | 54.9 | 1.50% | none stated |
+| The5ers Bootcamp | 19 | 3 | 175.8 | 31.9 | 51.9 | 2.50% | none stated |
+| Maven 2-step | 20 | 2 | 96.9 | 17.0 | 78.7 | 4.00% | **3 profitable days of 0.5% per phase — DISQUALIFIED** |
+| *City Traders Imperium 1-step* | *54* | 1 | **22.8** | 56.9 | 37.1 | 4.00% | none stated |
+| *Upcomers Thunderbolt (shipped)* | — | 1 | 18.3 | 54.6 | 40.2 | 4.00% | **20% best day — DISQUALIFIED** |
+
+## What the table says, and it is one thing
+
+**The number of steps is the whole answer, and the EUR 40 budget buys steps.**
+
+| steps | expected days |
+|---|---|
+| 1 | 18–23 |
+| 2 | 75 |
+| 3 | 167–176 |
+
+Nothing else in the rule set moves the number as much. Bootcamp has the friendly
+structure — no daily cap on any step, no minimum days, EAs allowed, unlimited
+time, gold on MT5 and cTrader — and still needs 176 days, because a phase is not
+half the work: it is a second and third full chance to breach, and the drawdown
+budget is paid again each time.
+
+**The budget is therefore the binding constraint, not the firm.** The fastest
+eligible thing under EUR 40 is 75.3 days. **EUR 25 more buys City Traders
+Imperium at 22.8 days** — a factor of 3.3 on time, for less than the price of one
+extra Bootcamp step. Whether that trade is worth taking is Kris's call, but it
+should be made knowingly.
+
+**Maven 2-step is disqualified on the same rule The5ers ProGrowth was**: three
+profitable days of 0.5% each, per phase. This strategy takes 0.93 trades a day
+and one winner in five carries it. That is the best-day rule wearing a hat.
+
+## VERIFY BEFORE PAYING — new items, on top of the five above
+
+7. **Every price here is third-party.** FundingPips 2-Step Flex is quoted at $32
+   for the 5K size (≈EUR 29) and 1-Step Flex at $66; Bootcamp is EUR 19 for step
+   1 **plus EUR 43 to activate the funded account**, which the table does not
+   include.
+8. **Bootcamp's stop-loss rule is a hard constraint on the bot.** A mandatory
+   stop-loss on every position, **max 2% risk per position**, and **5 violations
+   terminates the account**. The shipped book runs five settings at 0.4% each,
+   so each position is inside it — but a netting venue that holds one position
+   with one stop, which is what the Bybit bot does today, is not obviously
+   compliant. Check before arming anything there.
+9. **Is Bootcamp's 5% max loss static or trailing?** Modelled static. Trailing
+   would make it worse.
+10. **CTI is MT5 / Match-Trader, no cTrader.** The bot has no MT5 bridge on this
+    Linux box and building one is unscoped work. FundingPips has cTrader, which
+    is a real API.
