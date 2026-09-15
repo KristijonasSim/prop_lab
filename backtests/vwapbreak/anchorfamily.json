@@ -1,0 +1,313 @@
+{
+ "n": 24,
+ "rows": {
+  "XAUUSD|1h|baseline": {
+   "risk_pct": 4.0,
+   "pass_pct": 45.2,
+   "blown_pct": 54.8,
+   "days": 17.7,
+   "band": {
+    "days_lo": 13.8,
+    "days_hi": 23.1,
+    "days_med": 17.5,
+    "pass_lo": 31.8,
+    "pass_hi": 50.7,
+    "pass_med": 40.4,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 957,
+   "win_pct": 14.3,
+   "pf_2x": 1.987,
+   "null_pf": 1.097,
+   "trades_per_day": 1.32
+  },
+  "XAUUSD|1h|ema": {
+   "risk_pct": 4.0,
+   "pass_pct": 30.6,
+   "blown_pct": 69.4,
+   "days": 35.9,
+   "band": {
+    "days_lo": 27.5,
+    "days_hi": 57.4,
+    "days_med": 38.5,
+    "pass_lo": 15.9,
+    "pass_hi": 34.5,
+    "pass_med": 24.9,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 791,
+   "win_pct": 19.3,
+   "pf_2x": 0.877,
+   "null_pf": 1.043,
+   "trades_per_day": 1.09
+  },
+  "XAUUSD|1h|sma": {
+   "risk_pct": 4.0,
+   "pass_pct": 25.0,
+   "blown_pct": 75.0,
+   "days": 56.1,
+   "band": {
+    "days_lo": 38.8,
+    "days_hi": 94.4,
+    "days_med": 55.0,
+    "pass_lo": 10.7,
+    "pass_hi": 28.1,
+    "pass_med": 18.1,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 777,
+   "win_pct": 18.7,
+   "pf_2x": 0.813,
+   "null_pf": 0.765,
+   "trades_per_day": 1.07
+  },
+  "XAUUSD|1h|keltner": {
+   "risk_pct": 4.0,
+   "pass_pct": 33.8,
+   "blown_pct": 66.3,
+   "days": 32.6,
+   "band": {
+    "days_lo": 21.6,
+    "days_hi": 48.1,
+    "days_med": 30.6,
+    "pass_lo": 16.7,
+    "pass_hi": 37.9,
+    "pass_med": 27.1,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 682,
+   "win_pct": 18.3,
+   "pf_2x": 1.028,
+   "null_pf": 1.088,
+   "trades_per_day": 0.94
+  },
+  "XAUUSD|1h|donchian": {
+   "risk_pct": 4.0,
+   "pass_pct": 46.6,
+   "blown_pct": 52.1,
+   "days": 67.7,
+   "band": {
+    "days_lo": 44.2,
+    "days_hi": 106.4,
+    "days_med": 64.6,
+    "pass_lo": 28.3,
+    "pass_hi": 62.4,
+    "pass_med": 44.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 437,
+   "win_pct": 40.7,
+   "pf_2x": 1.437,
+   "null_pf": 0.897,
+   "trades_per_day": 0.6
+  },
+  "XAUUSD|1h|prevclose": {
+   "risk_pct": 4.0,
+   "pass_pct": 16.8,
+   "blown_pct": 80.8,
+   "days": 154.5,
+   "band": {
+    "days_lo": 91.7,
+    "days_hi": 407.7,
+    "days_med": 167.2,
+    "pass_lo": 3.5,
+    "pass_hi": 22.8,
+    "pass_med": 10.3,
+    "never_pct": 0.5,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 439,
+   "win_pct": 24.4,
+   "pf_2x": 0.581,
+   "null_pf": 0.471,
+   "trades_per_day": 0.61
+  },
+  "XAUUSD|1h|rsi": {
+   "risk_pct": 4.0,
+   "pass_pct": 29.3,
+   "blown_pct": 70.7,
+   "days": 51.1,
+   "band": {
+    "days_lo": 29.9,
+    "days_hi": 82.1,
+    "days_med": 49.0,
+    "pass_lo": 14.6,
+    "pass_hi": 37.9,
+    "pass_med": 25.4,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 582,
+   "win_pct": 23.9,
+   "pf_2x": 1.678,
+   "null_pf": 0.983,
+   "trades_per_day": 0.8
+  },
+  "XAUUSD|4h|baseline": {
+   "risk_pct": 4.0,
+   "pass_pct": 27.4,
+   "blown_pct": 72.2,
+   "days": 36.5,
+   "band": {
+    "days_lo": 27.3,
+    "days_hi": 55.0,
+    "days_med": 36.4,
+    "pass_lo": 15.4,
+    "pass_hi": 35.8,
+    "pass_med": 24.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 599,
+   "win_pct": 18.9,
+   "pf_2x": 1.077,
+   "null_pf": 1.711,
+   "trades_per_day": 0.82
+  },
+  "XAUUSD|4h|ema": {
+   "risk_pct": 4.0,
+   "pass_pct": 36.7,
+   "blown_pct": 62.4,
+   "days": 40.9,
+   "band": {
+    "days_lo": 30.1,
+    "days_hi": 71.2,
+    "days_med": 45.5,
+    "pass_lo": 26.1,
+    "pass_hi": 52.4,
+    "pass_med": 38.8,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 425,
+   "win_pct": 37.2,
+   "pf_2x": 3.005,
+   "null_pf": 0.498,
+   "trades_per_day": 0.59
+  },
+  "XAUUSD|4h|sma": {
+   "risk_pct": 4.0,
+   "pass_pct": 33.4,
+   "blown_pct": 65.6,
+   "days": 38.9,
+   "band": {
+    "days_lo": 30.5,
+    "days_hi": 65.2,
+    "days_med": 43.0,
+    "pass_lo": 20.9,
+    "pass_hi": 49.3,
+    "pass_med": 33.7,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 400,
+   "win_pct": 29.2,
+   "pf_2x": 2.258,
+   "null_pf": 1.012,
+   "trades_per_day": 0.56
+  },
+  "XAUUSD|4h|keltner": {
+   "risk_pct": 4.0,
+   "pass_pct": 34.9,
+   "blown_pct": 65.1,
+   "days": 60.2,
+   "band": {
+    "days_lo": 43.7,
+    "days_hi": 127.0,
+    "days_med": 67.7,
+    "pass_lo": 14.2,
+    "pass_hi": 38.6,
+    "pass_med": 26.3,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 497,
+   "win_pct": 27.0,
+   "pf_2x": 0.997,
+   "null_pf": 0.906,
+   "trades_per_day": 0.69
+  },
+  "XAUUSD|4h|donchian": {
+   "risk_pct": 4.0,
+   "pass_pct": 29.9,
+   "blown_pct": 44.2,
+   "days": 103.8,
+   "band": {
+    "days_lo": 69.9,
+    "days_hi": 244.9,
+    "days_med": 104.9,
+    "pass_lo": 22.5,
+    "pass_hi": 73.2,
+    "pass_med": 50.3,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 386,
+   "win_pct": 51.0,
+   "pf_2x": 1.539,
+   "null_pf": 0.734,
+   "trades_per_day": 0.54
+  },
+  "XAUUSD|4h|prevclose": {
+   "risk_pct": 4.0,
+   "pass_pct": 7.3,
+   "blown_pct": 91.9,
+   "days": 123.8,
+   "band": {
+    "days_lo": 80.9,
+    "days_hi": 318.7,
+    "days_med": 137.9,
+    "pass_lo": 3.2,
+    "pass_hi": 25.8,
+    "pass_med": 12.6,
+    "never_pct": 1.5,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 397,
+   "win_pct": 25.4,
+   "pf_2x": 0.628,
+   "null_pf": 0.484,
+   "trades_per_day": 0.54
+  },
+  "XAUUSD|4h|rsi": {
+   "risk_pct": 4.0,
+   "pass_pct": 39.4,
+   "blown_pct": 55.3,
+   "days": 35.5,
+   "band": {
+    "days_lo": 27.3,
+    "days_hi": 62.2,
+    "days_med": 40.4,
+    "pass_lo": 20.9,
+    "pass_hi": 42.7,
+    "pass_med": 31.2,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   },
+   "trades": 514,
+   "win_pct": 24.3,
+   "pf_2x": 1.132,
+   "null_pf": 0.883,
+   "trades_per_day": 0.71
+  }
+ }
+}
