@@ -294,3 +294,30 @@ if __name__ == "__main__":
 #
 # Claiming a win off the 5% rung would be exactly the move this repo has had to
 # retract before, so it is not claimed.
+
+# --------------------------------------------------------------------------- #
+# SIZING BY THE SIGNAL instead of filtering on it, because a filter's weakness
+# is that it throws trades away and expected days needs frequency. Every trade
+# kept, size scaled by where GVZ/VIX sits in its own distribution:
+#
+#   arm                              risk   days    band   pass%  blown%
+#   H-027 flat (baseline)            6.0%   15.4   13-20   38.8   61.2
+#   full if cheap, else 0.00x        5.0%   33.9   26-71   26.6   23.1
+#   full if cheap, else 0.25x        5.0%   20.2   16-29   49.5   49.6
+#   full if cheap, else 0.50x        6.0%   16.3   12-22   43.0   57.0
+#   continuous (1-rank)^1            6.0%   16.3   13-22   42.8   56.2
+#   continuous (1-rank)^2            5.0%   16.0   13-24   37.6   61.4
+#   tiered 1.00/0.50/0.25            6.0%   17.9   14-23   44.6   55.2
+#
+# NOT ONE ARM BEATS FLAT SIZING. The best is the continuous square weight at
+# 16.0 days against 15.4, and every band overlaps the baseline's 13-20.
+#
+# THAT IS THREE INDEPENDENT WAYS OF SPENDING THIS SIGNAL AND NONE BUYS SPEED:
+# as a filter (19.8 against 17.7), through the risk ladder (converges above 6%),
+# and as a sizing overlay (16.0 against 15.4). The signal is real - it beats a
+# random gate of the same size on profit factor, R per day and expected days -
+# and what it is worth is survivability, not pace. At the 2% rung the live book
+# uses, it takes blow-ups from 44.6% to 22.2%.
+#
+# THE HONEST CLOSING POSITION: H-027 IS NOT BEATEN. Three attempts, measured the
+# same way, all slower with overlapping bands. Recording that is the result.
