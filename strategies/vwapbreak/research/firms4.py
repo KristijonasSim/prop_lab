@@ -74,10 +74,16 @@ def P(t, d, m, trail=False, days=0):
 # best_day_cap: None = no rule found. "excl" in place of phases = hard exclusion.
 F = {
  # ---------------------------------------------------------- one step ---- #
- "City Traders Imperium 1-step": ([P(.10, NONE, .05)], 39, None, "MT5, DXtrade",
-   "good", "no daily cap at all; drawdown on CLOSED BALANCE"),
+ # CORRECTED 2026-09-15 (second pass). Was `None`. CTI runs **50% on the
+ # evaluation and 30% on Pro accounts**. The earlier entry came from a
+ # comparison table that only described the SCALING consistency score.
+ "City Traders Imperium 1-step": ([P(.10, NONE, .05)], 39, 0.50, "MT5, DXtrade",
+   "good", "50% consistency in EVALUATION, 30% on Pro; no daily cap; balance-based DD"),
+ # VERIFIED on FundingPips' own material: consistency removed across 1-Step
+ # Flex, 2-Step Standard, 2-Step Pro and 2-Step Flex, and 1-Step Flex alone
+ # also carries NO minimum trading days.
  "FundingPips 1-Step Flex": ([P(.10, .04, .12)], 66, None, "cTrader, MT5",
-   "good", "12% static - the loosest max in the one-step group"),
+   "firm page", "NO consistency rule and NO minimum trading days - verified"),
  "Goat Funded 1-step": ([P(.10, .03, .06)], 17, 0.50, "MT5, cTrader",
    "good", "no rule to PASS; funded payout needs 4 days of +0.5% each"),
  "FundedNext Stellar 1-step": ([P(.10, .03, .06)], 66, 0.40, "MT4, MT5, cTrader",
@@ -88,8 +94,14 @@ F = {
    "fair", "5 winning days; the daily gate is a consistency score not a loss cap"),
  "Hola Prime 1-Step Prime": ([P(.10, .03, .06)], 45, 0.35, "MT5, cTrader, Match-Trader",
    "good", "40% best-day in evaluation, 35% funded"),
- "Blue Guardian 1-Step Std": ([P(.09, .04, .06, trail=True)], 32, None,
-   "MT5, Match-Trader, cTrader", "good", "6% TRAILING off the equity high"),
+ # CORRECTED 2026-09-15 (second pass) from the FIRM'S OWN PRICING PAGE, which
+ # Kris sent. Was `None` on the strength of a comparison table. The page lists
+ # **Consistency 50%** under BOTH "Challenge Rules" and "Funded & Reward Rules",
+ # a 10% target (not 9%), and News Trading = No once funded.
+ "Blue Guardian 1-Step Nano": ([P(.10, .04, .06, trail=True)], 29, 0.50,
+   "MT5, Match-Trader, cTrader", "firm page",
+   "50% consistency in the CHALLENGE as well as funded; 6% TRAILING; "
+   "min trading days none; EAs, weekend and overnight holding all yes"),
  "Alpha Capital Alpha One": ([P(.10, .04, .06, trail=True)], 39, None,
    "MT4, MT5, cTrader", "good", "6% TRAILING"),
  "ThinkCapital Lightning": ([P(.10, .03, .06, trail=True)], 45, None, "MT5",
@@ -129,12 +141,13 @@ F = {
  "Funded Trading Plus 2-step": ([P(.07, .04, .08), P(.07, .04, .08)], 79, 0.35,
    "MT4, MT5, cTrader", "good", "35% challenge / 50% funded"),
  "Blueberry Funded Prime 2-step": ([P(.08, .04, .10), P(.06, .04, .10)], 97, None,
-   "MT4, MT5, TradingView", "good",
-   "explicitly NO consistency rule on any plan - rare and stated by the firm"),
+   "MT4, MT5, TradingView", "firm page",
+   "ZERO consistency on 1-step, 2-step and Instant - stated in the firm's own "
+   "help centre. Exception: Instant Lite bought after 2026-08-17 carries 15%."),
  "E8 Markets 2-phase": ([P(.08, .04, .08), P(.05, .04, .08)], 88, 0.35,
    "MT5, Match-Trader, TradeLocker", "fair", "35% best-day on Signature, funded only"),
- "Blue Guardian 2-Step Std": ([P(.08, .04, .06), P(.05, .04, .06)], 32, None,
-   "MT5, Match-Trader, cTrader", "fair", ""),
+ "Blue Guardian 2-Step Std": ([P(.08, .04, .06), P(.05, .04, .06)], 32, 0.50,
+   "MT5, Match-Trader, cTrader", "fair", "same 50% consistency as the 1-step"),
  "Fintokei ProTrader 2-step": ([P(.08, .05, .10), P(.05, .05, .10)], 45, 0.40,
    "MT4, MT5, DXtrade", "fair", ""),
  "Quant Tekel 2-step": ([P(.08, .04, .08), P(.05, .04, .08)], 45, None,

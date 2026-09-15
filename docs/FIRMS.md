@@ -398,3 +398,90 @@ accounting for a rule whose risk is large open swings that mostly come back.
    Instant Funding, Crypto Fund Trader, Velotrade, RebelsFunding, Smart Prop
    Trader. They are listed rather than guessed, because a guessed rule set
    produces a real-looking number.
+
+---
+
+# THE CONSISTENCY RULE IS THE WHOLE DECISION — 2026-09-15, third pass
+
+Kris sent Blue Guardian's own pricing page and asked whether it has *"any
+success rule where one trade cant be bigger"*. **It does, and the two firms this
+page had just recommended both have one.** `research/consistency.py`,
+`backtests/vwapbreak/consistency.json`.
+
+## The correction
+
+| firm | what this page said | the firm's own page |
+|---|---|---|
+| **Blue Guardian 1-Step** | none found | **Consistency 50%, in CHALLENGE and funded** |
+| **City Traders Imperium** | none found | **50% on evaluation, 30% on Pro** |
+
+Both came from comparison tables. The primary source says otherwise. That is the
+error this repo is most prone to and it had promoted both to the top of the
+shortlist.
+
+## Why a cap in the CHALLENGE is a different object from a cap at payout
+
+Every firm table here had treated consistency as a payout gate — pass, then find
+you cannot withdraw. Blue Guardian lists it under **Challenge Rules**. That gates
+**passing**: reaching +10% is no longer sufficient, the best day must also be
+under half the total profit, and an account that gets there in one big day must
+**keep trading, at risk**, until the ratio falls or the drawdown kills it.
+
+Modelled properly (`run_phase_consistency`), on Blue Guardian's exact rules:
+
+| consistency cap | days | pass % | blown % | never passed |
+|---|---|---|---|---|
+| none | **23.3** | **55.7** | 38.0 | 6.3% |
+| **50% (what they apply)** | **339.4** | **15.6** | 73.3 | 11.0% |
+| 40% | 1229.6 | 5.2 | 0.0 | 94.8% |
+| 30% | — | **0.0** | — | **100%** |
+| 20% | — | **0.0** | — | **100%** |
+
+**A 50% gate costs 316 expected days. Nothing else measured this year comes
+close** — the entire span from the tightest drawdown in the industry to the
+loosest was about 30 days.
+
+**And it is not about the structure.** The same gate on the other shortlisted
+one-step products:
+
+| structure | no cap | 50% cap |
+|---|---|---|
+| City Traders Imperium | 24.7d / 56.8% | **320.0d / 16.4%** |
+| Alpha Capital Alpha One | 23.3d / 55.7% | **339.4d / 15.6%** |
+| FundingPips 1-Step Flex | 22.0d / 63.7% | **355.6d / 11.7%** |
+
+## So the selection criterion is now one line
+
+> **Verify on the firm's own page that there is no consistency rule. Everything
+> else — price, steps, trailing vs static, daily cap — is worth at most tens of
+> days. This is worth hundreds.**
+
+## The two firms that actually clear it, confirmed on their own material
+
+* **FundingPips.** Consistency removed across **1-Step Flex, 2-Step Standard,
+  2-Step Pro and 2-Step Flex**, and 1-Step Flex alone also has **no minimum
+  trading days**. Its 1-Step Flex is the best row in the entire 44-product sweep
+  — **22.0 days, 63.7% pass, 24.3% blown, cTrader** — at **EUR 61**, over
+  budget. In budget: **2-Step Standard, EUR 27, 58.9 days**.
+* **Blueberry Funded.** Zero consistency on 1-step, 2-step and Instant, stated in
+  its own help centre. Exception: Instant Lite bought after 2026-08-17 carries
+  15%. EUR 89, two steps, 67.9 days, **11.5% blown** — the lowest of any
+  two-step arm.
+
+## Revised recommendation
+
+**FundingPips, and the budget decides which product.**
+
+| | € | days | pass% | blown% |
+|---|---|---|---|---|
+| 1-Step Flex (over budget) | 61 | **22.0** | 63.7 | 24.3 |
+| **2-Step Standard (in budget)** | **27** | 58.9 | 44.2 | 39.7 |
+| 2-Step Flex (in budget) | 29 | 75.3 | 54.4 | **21.6** |
+
+**EUR 34 more than the 2-Step Standard buys 37 fewer expected days.** Same firm,
+same verified absence of the rule that matters.
+
+**Do not buy Blue Guardian or CTI**, whatever the earlier tables on this page
+say. Both entries above are corrected in `firms4.py`; the uncorrected numbers
+remain in the sections above deliberately, because the failures are the
+denominator.

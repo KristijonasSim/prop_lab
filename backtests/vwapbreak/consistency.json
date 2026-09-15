@@ -1,0 +1,85 @@
+{
+ "none": {
+  "pass_pct": 55.7,
+  "blown_pct": 38.0,
+  "stuck_pct": 6.3,
+  "days": 23.3,
+  "risk_pct": 4.0
+ },
+ "0.50": {
+  "pass_pct": 15.6,
+  "blown_pct": 73.3,
+  "stuck_pct": 11.0,
+  "days": 339.4,
+  "risk_pct": 3.0
+ },
+ "0.40": {
+  "pass_pct": 5.2,
+  "blown_pct": 0.0,
+  "stuck_pct": 94.8,
+  "days": 1229.6,
+  "risk_pct": 0.5
+ },
+ "0.30": {
+  "days": null,
+  "pass_pct": 0.0,
+  "blown_pct": 0.0,
+  "stuck_pct": 100.0,
+  "risk_pct": null
+ },
+ "0.20": {
+  "days": null,
+  "pass_pct": 0.0,
+  "blown_pct": 0.0,
+  "stuck_pct": 100.0,
+  "risk_pct": null
+ },
+ "City Traders Imperium (static, no daily)": {
+  "no_cap": {
+   "pass_pct": 56.8,
+   "blown_pct": 37.2,
+   "stuck_pct": 6.0,
+   "days": 24.7,
+   "risk_pct": 4.0
+  },
+  "cap50": {
+   "pass_pct": 16.4,
+   "blown_pct": 30.9,
+   "stuck_pct": 52.7,
+   "days": 320.0,
+   "risk_pct": 3.0
+  }
+ },
+ "Alpha Capital Alpha One (trailing)": {
+  "no_cap": {
+   "pass_pct": 55.7,
+   "blown_pct": 38.0,
+   "stuck_pct": 6.3,
+   "days": 23.3,
+   "risk_pct": 4.0
+  },
+  "cap50": {
+   "pass_pct": 15.6,
+   "blown_pct": 73.3,
+   "stuck_pct": 11.0,
+   "days": 339.4,
+   "risk_pct": 3.0
+  }
+ },
+ "FundingPips 1-Step Flex (static 12%)": {
+  "no_cap": {
+   "pass_pct": 63.7,
+   "blown_pct": 24.3,
+   "stuck_pct": 12.0,
+   "days": 22.0,
+   "risk_pct": 4.0
+  },
+  "cap50": {
+   "pass_pct": 11.7,
+   "blown_pct": 17.5,
+   "stuck_pct": 70.8,
+   "days": 355.6,
+   "risk_pct": 2.5
+  }
+ }
+}
