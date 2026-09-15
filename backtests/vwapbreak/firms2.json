@@ -55,19 +55,19 @@
   {
    "firm": "Maven 2-step",
    "eur": 20.240000000000002,
-   "consistency": "3 profitable days of 0.5% PER PHASE",
+   "consistency": null,
    "platform": "unconfirmed",
-   "note": "DISQUALIFIED. That is the best-day rule wearing a different hat - the same rule FIRMS.md rejected The5ers ProGrowth for. This strategy takes 0.93 trades a day and one winner in five carries it; three separate 0.5% days per phase is a different strategy.",
-   "unverified": "-",
+   "note": "Firm's own page: 8%+5% targets, 4% daily, 8% max, 'Consistency score: Not required', 80% split. IT ALSO SHOWS 'not available in your region' - check before planning on it.",
+   "unverified": "whether 3 profitable days of 0.5% per phase applies - two review sites say it does and the firm's page does not mention minimum days at all. Worth +34 median days PER PHASE if true, which disqualifies it.",
    "steps": 2,
    "sized": {
-    "pass_pct": 17.0,
-    "blown_pct": 78.7,
-    "days": 96.9,
+    "pass_pct": 32.6,
+    "blown_pct": 60.9,
+    "days": 67.4,
     "risk_pct": 4.0
    },
    "in_budget": true,
-   "eligible": false
+   "eligible": true
   },
   {
    "firm": "Upcomers Thunderbolt (shipped)",

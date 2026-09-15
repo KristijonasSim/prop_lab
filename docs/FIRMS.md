@@ -173,3 +173,39 @@ and one winner in five carries it. That is the best-day rule wearing a hat.
 10. **CTI is MT5 / Match-Trader, no cTrader.** The bot has no MT5 bridge on this
     Linux box and building one is unscoped work. FundingPips has cTrader, which
     is a real API.
+
+## CORRECTION, same day — Maven 2-step was priced off a review site, not the firm
+
+Kris asked about Maven 2-step directly. Reading **Maven's own challenge page**
+rather than the review that fed the table above changes it:
+
+| | review site (what I used) | Maven's own page |
+|---|---|---|
+| targets | 8% + 5% | 8% + 5% |
+| daily loss | 2% | **4%** |
+| max loss | 5% | **8%** |
+| consistency | 3 profitable days of 0.5% per phase | **"Consistency score: Not required"** |
+
+Corrected, Maven 2-step is **67.4 days, not 96.9, and not disqualified**. It is
+the fastest thing under EUR 40. **It is still not the pick**: it blows **60.9%**
+of accounts against FundingPips' **21.6%**, for eight days saved.
+
+**The profitable-days rule is priced rather than deleted.** Two review sites
+state it; the firm's page is silent on minimum days rather than denying them.
+What it would cost is measurable on our own series, and this is what the rule
+means: a day counts only if the account closes it up **0.5% or more**, and three
+separate such days are needed before a phase can be passed.
+
+| at 2% risk | |
+|---|---|
+| days closing ≥ +0.5% | **45 of 634 — 7.1% of all days** |
+| calendar days to collect three, from a random start | median **34**, p90 **77**, worst **105** |
+
+**Per phase.** If the rule exists, it roughly doubles the evaluation and Maven is
+disqualified. If it does not, 67.4 days stands. **This is the same shape of rule
+as a best-day cap**: it does not care what the account made, only that the profit
+arrived spread out. This strategy takes 0.93 trades a day and one winner in five
+carries it, so it produces a qualifying day one week in two.
+
+Maven's page also shows **"Sorry, this product is not available in your region"**.
+Check that before planning on it at all.

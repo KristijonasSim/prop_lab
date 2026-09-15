@@ -81,20 +81,34 @@ FIRMS = {
         "note": "cheapest thing in the list and the tightest drawdown in it.",
         "unverified": "platform; whether the 3% static is balance or equity",
     },
+    # CORRECTED 2026-09-15, same day, after reading Maven's own challenge page.
+    # The first version of this entry used 2% daily / 5% max from a review site
+    # and disqualified the firm on a "3 profitable days of 0.5% per phase" rule
+    # from the same source. MAVEN'S OWN PAGE SAYS 4% DAILY, 8% MAX, AND
+    # "Consistency score: Not required". A review site is not the firm.
+    #
+    # The profitable-days rule is kept as a PRICED CONDITION rather than deleted,
+    # because two review sites state it and the firm's page is silent on minimum
+    # days rather than explicitly denying them. What it would cost is measured:
+    # this series produces a day of +0.5% or better on 7.1% of days at 2% risk,
+    # so collecting THREE takes a median of 34 calendar days and 77 at the p90 -
+    # PER PHASE. If that rule exists, it roughly doubles the evaluation and the
+    # firm is disqualified. If it does not, the row below stands.
     "Maven 2-step": {
-        "phases": [PropRules(profit_target=0.08, daily_loss=0.02, max_loss=0.05,
+        "phases": [PropRules(profit_target=0.08, daily_loss=0.04, max_loss=0.08,
                              trailing=False, min_trading_days=0),
-                   PropRules(profit_target=0.05, daily_loss=0.02, max_loss=0.05,
+                   PropRules(profit_target=0.05, daily_loss=0.04, max_loss=0.08,
                              trailing=False, min_trading_days=0)],
         "eur": 22.0 * USD_EUR,
-        "consistency": "3 profitable days of 0.5% PER PHASE",
+        "consistency": None,
         "platform": "unconfirmed",
-        "note": ("DISQUALIFIED. That is the best-day rule wearing a different "
-                 "hat - the same rule FIRMS.md rejected The5ers ProGrowth for. "
-                 "This strategy takes 0.93 trades a day and one winner in five "
-                 "carries it; three separate 0.5% days per phase is a different "
-                 "strategy."),
-        "unverified": "-",
+        "note": ("Firm's own page: 8%+5% targets, 4% daily, 8% max, 'Consistency "
+                 "score: Not required', 80% split. IT ALSO SHOWS 'not available "
+                 "in your region' - check before planning on it."),
+        "unverified": ("whether 3 profitable days of 0.5% per phase applies - two "
+                       "review sites say it does and the firm's page does not "
+                       "mention minimum days at all. Worth +34 median days PER "
+                       "PHASE if true, which disqualifies it."),
     },
     "Upcomers Thunderbolt (shipped)": {
         "phases": [PropRules(profit_target=0.06, daily_loss=0.03, max_loss=0.06,
