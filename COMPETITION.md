@@ -1,5 +1,24 @@
 # Competition entry — 2026-09-15
 
+**WITHDRAWN 2026-09-17. ENTRY 1 DOES NOT SURVIVE ITS OWN NULL.** The 8.9-day
+claim below was never tested against a paired null and does not pass one:
+shuffling the sequence out of gold makes the top-5 → top-20 ladder speed up by
+**2.45x** against the real data's 1.72x, on three seeds that all beat the real
+number. The same holds on silver (real 1.53, null 2.69) and on BTCUSDT, where
+every cell loses money (PF@2x 0.44–0.80) and the wide configuration still
+"resolves" in 14.5 days against 28.2. **The speed came from trade frequency, not
+from the edge** — `expected_days = median_days / pass_rate` prices time and not
+the evaluation fee. Pre-registration and result:
+`strategies/vwapbreak/research/TOPN_NULL.md`, `topn.py`,
+`backtests/vwapbreak/topn_rebuilt.json`.
+
+**The study also had no committed code**, which is how it went a day and a half
+without anyone being able to re-run it. That is fixed.
+
+**Entry 2 (GVZ/VIX) stands** — it never claimed speed, and it says so below.
+
+---
+
 Kris set a one-hour contest against an agent running on another machine. This is
 my submission and the scoring sheet for comparing it against theirs.
 

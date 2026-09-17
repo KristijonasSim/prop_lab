@@ -489,6 +489,40 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
 
+- **Widening the top-N book to buy speed** (H-027 top-N, 2026-09-15, withdrawn
+  2026-09-17) — floor 100 / top 20 reached **8.9 expected days on gold against
+  the shipped 15.3**, monotone in N across five levels, replicated on a blind
+  second half, five markets faster, three with disjoint bands. **It does not
+  survive a paired null and is withdrawn.** Criterion fixed in advance: the real
+  speed-up (1.72x) survives only if the null's is below 1.25x.
+
+  | market | real speed-up | null median | seeds |
+  |---|---|---|---|
+  | **XAUUSD** | **1.72** | **2.45** | 2.10, 3.97, 2.45 |
+  | XAGUSD | 1.53 | 2.69 | 1.84, 3.53 |
+  | EURUSD | 2.15 | 9.24 | 15.63, 2.85 |
+  | GBPUSD | 3.85 | 5.04 | 5.59, 4.48 |
+  | USDJPY | 1.70 | 4.11 | 0.99, 7.23 |
+  | BTCUSDT | 1.94 | 1.74 | 1.97, 1.51 |
+
+  **Six of six fail, and on four the null speeds up MORE than the real data.**
+  Gold is the market the claim was about and every one of its three seeds beats
+  the real number. **BTCUSDT shows the mechanism naked**: all ten of its cells
+  lose money (PF@2x 0.44-0.80) and the wide configuration still "resolves" an
+  evaluation in **14.5 days against 28.2**. Speed came from trade frequency.
+
+  **THE METRIC IS THE LESSON.** `expected_days = median_days / pass_rate`
+  (`core/scorecard.py:85`) treats a blown account as free, so any frequency
+  increase converts evaluation fees into apparent speed. Gold: 39.3% pass is
+  **2.5 accounts per funded seat**, 33.9% is **2.9**. **Owed: report
+  accounts-consumed (1/pass_rate) beside every expected-days figure, and never
+  compare expected days across configurations of different trade frequency
+  without a null.** H-027's own edge is untouched (gold 30/5 PF@2x 2.209).
+  **This closes the EIGHTH axis. H-027 is finished being tuned.** Also: the
+  2026-09-15 study shipped with **no committed code**, which is how the fastest
+  number in the project went a day and a half without being reproducible.
+  `strategies/vwapbreak/research/topn.py`, `TOPN_NULL.md`.
+
 - **Three attempts to beat H-027** (2026-09-13, `strategies/beat/`) — all dead.
   Kris: *"find something that beats our vwap."* "Beats" was fixed in advance as
   faster in expected days with a **band that does not overlap**, scored under
