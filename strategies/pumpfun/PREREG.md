@@ -91,3 +91,94 @@ shape that most easily fakes a result in a mean.
   bots. Not a strategy question and not one this stack can win.
 * **Anything involving holding a position in these tokens**, until the screen
   above passes. The rug risk is not modellable from the data collected here.
+
+---
+
+# The $200-a-month question. 2026-09-17.
+
+Kris: *"maybe there is tiny edge were we could try and with small amount of money
+i mean 200 dollars per month just to play in there i think with low amount of
+money you could still make something in there"*.
+
+**The size logic is correct and is worth saying plainly.** This repo measured
+market impact at prop clip sizes — 0.018 bps on BTC, 1.5 bps on DOT for a $50k
+clip — and found it is about a hundredth of what the project assumes. At $200
+there is no impact at all. Small size genuinely removes the constraint that
+kills most of these ideas.
+
+## What 483 collected launches say about the ceiling
+
+**A units correction first, because the first version of this table was wrong.**
+`market_cap` is denominated in **SOL** and `ath_market_cap` in **USD**. Dividing
+one by the other returns the SOL price (~100x) and not a return — which is
+exactly what the first run produced, a suspiciously flat "100x floor". Both put
+in USD:
+
+| | |
+|---|---|
+| entry market cap, median | **$2,798** |
+| peak market cap, median | **$3,776** |
+
+**Peak divided by entry — the best case, with a perfect exit at the exact top:**
+
+| p10 | p25 | **median** | p75 | p90 | max |
+|---|---|---|---|---|---|
+| 1.00x | 1.01x | **1.21x** | 2.78x | 11.12x | 4828x |
+
+| | share |
+|---|---|
+| ever trades above entry | 82.6% |
+| beats a 2% round trip | 73.1% |
+| doubles | 32.4% |
+| ten-bags | 10.0% |
+
+**Read the median honestly: with a crystal ball on the exit, the middle coin
+returns 21%.** Nobody sells at the top, so the realised number is below this —
+by how much is what the collector's repeated snapshots will answer, and it is
+not known yet.
+
+## The real obstacle at $200 a month is not the edge, it is the SAMPLE
+
+This distribution pays in a thin tail: 10% of launches produce the 10x and the
+median produces almost nothing. At $10 a position, $200 a month is **20 trades**.
+
+**Twenty trades a month cannot distinguish an edge from luck in this
+distribution.** One 10x lands roughly every ten trades, so a good month and a
+bad month differ by whether two or zero of them showed up. A year of that is 240
+trades, which is still inside the noise for a payoff this skewed — the same
+arithmetic that made `core/noiseband.py` necessary for a strategy with far
+tamer returns.
+
+**So $200 a month buys participation, not information.** That may be exactly
+what Kris wants and it is his call; it is recorded here so that a good first
+month is not later read as evidence. **The collector answers the edge question
+for free and without the variance**, which is the argument for letting it run
+first rather than instead.
+
+## Twitter — priced, 2026-09-17
+
+Kris: *"maybe twitter read some twitter pump.fun or simillar channels searching
+for coins"*.
+
+* **There is no usable free tier.** The $200/month Basic tier was withdrawn for
+  new developers after 2026-06-01.
+* **Pay-per-use is $0.005 per post read**, capped at 2M reads a month. Reading
+  10,000 posts a month is **$50** — a quarter of the whole trading budget, for
+  live monitoring only.
+* **Backtesting it is the expensive part**, because that needs full-archive
+  search rather than recent reads.
+
+**The free half of the question is already being collected.** Each coin's IPFS
+metadata carries its socials, and `strategies/pumpfun/socials.py` resolves them
+(`ipfs.io` now serves a gateway notice instead of the file; `pump.mypinata.cloud`
+serves the same CID). First 187 resolved:
+
+| socials on the coin | share |
+|---|---|
+| **has a Twitter link** | **27.3%** |
+| none at all | 70.6% |
+| two or more | 14.4% |
+
+**That split is a free, capturable-at-launch feature and it is testable at zero
+cost**, which the Twitter feed itself is not. Whether having an account predicts
+anything is the first question, and it does not need the API to answer.

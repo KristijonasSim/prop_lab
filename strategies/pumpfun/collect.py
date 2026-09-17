@@ -50,10 +50,18 @@ SNAP = OUT / "snapshots.jsonl"     # outcome re-reads, so ATH and graduation lan
 API = "https://frontend-api-v3.pump.fun/coins"
 UA = {"User-Agent": "Mozilla/5.0"}
 #: fields kept. Everything else on the record is presentation (images, banners).
+#: `metadata_uri` is the one that matters for the socials question and it was
+#: MISSING from the first version of this list, so the first 225 launches have
+#: no link to their Twitter. Every pass without it loses data that cannot be
+#: recovered later, because the API only reaches back forty minutes.
+#: `market_cap` is denominated in SOL and `ath_market_cap` in USD - they are not
+#: the same unit and dividing one by the other gives the SOL price, not a return.
 KEEP = ("mint", "creator", "symbol", "name", "created_timestamp",
         "market_cap", "ath_market_cap", "ath_market_cap_timestamp",
         "reply_count", "complete", "last_trade_timestamp", "nsfw",
-        "is_banned", "real_sol_reserves", "total_supply")
+        "is_banned", "real_sol_reserves", "total_supply",
+        "metadata_uri", "image_uri", "bonding_curve", "pool_address",
+        "virtual_sol_reserves", "virtual_token_reserves")
 
 
 def _get(url: str, tries: int = 3):
