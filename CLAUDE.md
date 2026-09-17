@@ -456,10 +456,38 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   and 2.295 / 40.5 against the real gate's 1.840 / 75.5, and a shuffled gate on
   1h reached **60% pass in 14.5 days** — the exact target, from noise.
   `strategies/vwapbreak/research/`.
-- **Order flow on GOLD is not testable and no number may be quoted for it.**
-  Every file in `data/feeds/` is a Binance crypto symbol; `data/dukascopy_raw/
-  XAUUSD` holds one-minute BID CANDLES, not ticks, so there is no bid/ask volume
-  on disk. Gold trades naked. Backlog H-030, and it needs a download.
+- **~~Order flow on GOLD is not testable~~ — CORRECTED 2026-09-17. IT IS.**
+  The sentence below was right about what is ON DISK and wrong about what is
+  AVAILABLE, and it stood as a standing prohibition for six days.
+
+  **Dukascopy publishes hourly XAUUSD TICK files carrying ask, bid, ask volume
+  and bid volume**, and the downloader for them has been in this repo the whole
+  time: `core/fx_spread.py`, `URL = ".../{h:02d}h_ticks.bi5"`, `TICK =
+  struct.Struct(">IIIff")  # ms, ask, bid, askvol, bidvol`. Line 106 unpacks the
+  two volume fields into `_, _` and throws them away, because that file only
+  ever wanted the spread. Verified 2026-09-17 on 2025-05-14: **9,589 ticks in
+  the 09:00 hour (askVol 1.66 / bidVol 1.55) and 25,274 in the 13:00 hour
+  (4.54 / 4.27)** — a real two-sided volume series, which is a footprint.
+
+  **What it is and is not.** It is Dukascopy's own liquidity-provider volume,
+  not a central-exchange tape — spot gold has no central exchange, so there is
+  no CME-style tape to compare it against, and ask/bid volume here is indicative
+  LP size rather than confirmed executions. Treat it as a proxy and say so in
+  any result. It is nevertheless **the same feed the whole project already
+  trades on and prices its costs from**.
+
+  **Why this matters more than any other open item.** The only family that has
+  ever worked in this repo is a data feed, and five feed edges (H-006, H-024,
+  H-031, H-034, H-042) were real, beat their nulls, and died to crypto's 14 bps
+  round trip. **Gold's round trip is 1.83 bps.** This is that family on the one
+  market that can pay for it. Backlog H-030; the download is ~19k files for
+  three years and `core/fx_spread.py` already has the fetcher and the worker
+  pool.
+
+  **The original entry, kept because it is the thing that was wrong:** every
+  file in `data/feeds/` is a Binance crypto symbol; `data/dukascopy_raw/XAUUSD`
+  holds one-minute BID CANDLES, not ticks, so there is no bid/ask volume on
+  disk. Gold trades naked.
 
 - **Book depth imbalance** (H-024) — real, monotone, beats its null, stable across
   years, and **0 of 935 cells across 11 coins clear a 14bps taker round trip**. Best
