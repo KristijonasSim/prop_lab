@@ -114,7 +114,15 @@ Per H-043's ordering, measure it first.
 
 ---
 
-## 3. PUMP.FUN MEMECOINS — Kris's second idea. I would not spend the time
+## 3. PUMP.FUN MEMECOINS — MOVED OUT 2026-09-17, see `~/pumpfun`
+
+**This is no longer a prop_lab candidate.** It was probed on 2026-09-17 (the API
+pages back 39 minutes, the trades endpoint is gone, wallet history needs a paid
+archive node), a forward collector was built, and Kris then split it into its own
+project — correctly, because no prop firm trades Solana memecoins, so nothing
+there can ever fund an account. The assessment below is kept for the record.
+
+### The original assessment
 
 Said plainly, with reasons rather than an opinion:
 
