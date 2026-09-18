@@ -83,7 +83,92 @@ def _mark(key: str) -> None:
     SEEN.write_text(json.dumps(sorted(s), indent=0))
 
 
+def push(subject: str, body: str) -> tuple[bool, str]:
+    """ntfy.sh — sends TO Kris's inbox without holding any key to it.
+
+    Kris, 2026-09-18: *"i dont want you to have access to my email, what i want
+    is send notification to ksimsonas@gmail.com"*. That rules out the SMTP path
+    below, which needs a Google app password and would give this box send rights
+    on his account.
+
+    ntfy relays instead. The VM posts a message to a public topic and ntfy's own
+    server emails it onward — **no credentials, no inbox access, nothing to
+    revoke.** The one line it needs:
+
+        NTFY_EMAIL=ksimsonas@gmail.com
+        NTFY_TOPIC=proplab-<long random string>
+
+    **The topic string IS the only secret**, and it is weak by design: anyone
+    who knows it can read the alerts and post to them. So make it long and
+    random, and keep anything sensitive out of the message. Nothing here is —
+    a feed name, a market, a few basis points. The detail lives on the board.
+
+    Free ntfy caps forwarded emails per day, which is the right shape for this:
+    alerts are rare and one per candidate.
+    """
+    c = config()
+    topic = c.get("NTFY_TOPIC")
+    email = c.get("NTFY_EMAIL")
+    if not topic:
+        return False, "no NTFY_TOPIC"
+    import urllib.request
+    url = c.get("NTFY_URL", "https://ntfy.sh").rstrip("/") + "/" + topic
+    base = {"Title": subject[:200], "Priority": "default", "Tags": "microscope"}
+    token = c.get("NTFY_TOKEN")
+    if token:
+        base["Authorization"] = f"Bearer {token}"
+    data = body.encode()[:3800]
+
+    def _post(h: dict) -> None:
+        urllib.request.urlopen(
+            urllib.request.Request(url, data=data, headers=h), timeout=30).read()
+
+    # Email forwarding needs a (free) ntfy account token: anonymous email
+    # sending was turned off - "code 40053, anonymous email sending is not
+    # allowed", measured 2026-09-18. The push itself still works with no
+    # account at all, so a rejected email must NOT swallow the alert: retry
+    # without the header and say what happened.
+    if email:
+        try:
+            _post({**base, "Email": email})
+            return True, f"pushed + emailed {email}"
+        except Exception as exc:                         # noqa: BLE001
+            reason = f"email relay refused ({type(exc).__name__})"
+    else:
+        reason = ""
+
+    try:
+        _post(base)
+        return True, f"pushed{'; ' + reason if reason else ''}"
+    except Exception as exc:                             # noqa: BLE001
+        return False, f"{type(exc).__name__}: {exc}"
+
+
 def send(subject: str, body: str) -> tuple[bool, str]:
+    """Email if SMTP is set up, phone push if ntfy is, both if both are.
+
+    Succeeds if EITHER lands, because the point is that Kris finds out.
+    """
+    ok_any, why = False, []
+    p_ok, p_why = push(subject, body)
+    if p_ok:
+        ok_any = True
+    elif p_why != "no NTFY_TOPIC":
+        why.append(f"ntfy: {p_why}")
+
+    e_ok, e_why = _send_email(subject, body)
+    if e_ok:
+        ok_any = True
+    elif "no SMTP" not in e_why:
+        why.append(f"smtp: {e_why}")
+
+    if ok_any:
+        return True, "sent"
+    return False, "; ".join(why) or (
+        f"nothing configured — add NTFY_TOPIC or SMTP_* to {CONF}")
+
+
+def _send_email(subject: str, body: str) -> tuple[bool, str]:
     c = config()
     if not configured():
         return False, f"no SMTP credentials ({CONF} missing or incomplete)"

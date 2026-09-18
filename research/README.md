@@ -133,3 +133,36 @@ network outage. `harvest.AGENT` sets the agent per source.
 **FRED revises.** The cache keeps only the latest vintage, so a result from these
 feeds is an upper bound on what was tradeable. H-035 died on exactly this. Any
 survivor must be re-checked against a point-in-time vintage (ALFRED).
+
+## Where it runs, and the one command that keeps it honest
+
+**The loop lives on the VM** (`research/deploy_vm.sh`), under systemd with
+linger, so it survives logout, reboot and the desktop being switched off. That
+was the point: Kris turns his computer off, and a loop that stops with it is not
+a 24/7 loop.
+
+**It created a worse problem than it solved, and `research/sync_vm.py` is the
+fix.** Two machines appending to two ledgers means neither knows what the other
+spent, and `core/searchcost.py` prices every result against the trial count. Two
+half-counts understate the bar on both — the direction that flatters results.
+
+```
+python -m research.sync_vm     # pull, merge, push back, rebuild the board
+```
+
+Rows are unioned on (timestamp, hypothesis, arm, market). Both files are
+append-only, so the merge is idempotent and neither side loses work. The merged
+ledger goes back to the VM so it stops re-proposing what the desktop paid for.
+**Run it when you sit down.**
+
+| | desktop | VM |
+|---|---|---|
+| the cheap screen | yes | **yes, continuously** |
+| walk-forward | **yes** | never — 2 cores |
+| model-driven proposals | yes | no, `claude` CLI is not installed there |
+| the board | rebuilt on sync | rebuilt every cycle |
+
+**The VM runs library mode only.** `--mode llm` needs the `claude` CLI, which is
+not on that box, so the model-driven proposer is a desktop thing until it is.
+The loop falls back to the library proposer rather than stopping, which is why
+this is a limitation and not an outage.
