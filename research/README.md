@@ -95,12 +95,7 @@ studies a day. **This loop runs the screen only.** A `PASS` here means one thing
 the idea earned a real study with a walk-forward and honest fills. It is not a
 result and it is not a strategy.
 
-## Where it runs
-
-Not on the VM. That box is **2 cores and 952 MB** and it is busy routing orders
-hourly — it has been up 56 days doing exactly that and should keep doing it. The
-desktop is **28 cores and 30 GB** and sits idle. Autonomous means unattended, not
-remote.
+## Running it by hand
 
 ```
 python -m research.loop --forever --every 900 --mode llm
