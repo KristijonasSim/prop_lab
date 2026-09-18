@@ -26,6 +26,77 @@ backfilled from `STRATEGY_LOG.md`. **The third method debt on this page is now
 paid**; the other two (hour-matched null, accounts-consumed) have functions
 behind them but are not yet wired into the board.
 
+## THE NEXT STEP — one thing, written 2026-09-18
+
+**Give the loop the gold order-flow feed. Everything else on this page waits.**
+
+It is the only item that is simultaneously (a) the highest-value untested input
+in the repo, (b) already half-built, and (c) the thing the loop needs in order
+to keep being worth running.
+
+**It is not a new idea and there is nothing to design.** It is **H-052**, which
+was recorded INCONCLUSIVE on 2026-09-17 for one reason and one reason only:
+*"the tick pull was stopped at 225 days ... finishing the three-year pull, about
+fourteen unattended hours, is what settles it."* The code is written
+(`core/gold_flow.py`, `strategies/goldflow/daily.py`), the schema is right, and
+the verdict is waiting on bytes.
+
+**Measured 2026-09-18, so nobody re-derives it:**
+
+| | |
+|---|---|
+| days cached in `data/flow/XAUUSD/` | **245** (2023-08-01 → 2026-03-20) |
+| business days in that span | 689 |
+| **coverage** | **35.6%** |
+| **2024** | **entirely missing — zero files** |
+| on disk | 22 MB, so the full pull is ~60 MB |
+| schema | `open high low close ticks askvol bidvol spread_bps vol delta imb`, 1-minute |
+
+**Why this feed and not another macro series.** `research/` harvests eight daily
+feeds; a daily feed gives ~750 rows in three years and `core.screen` is rejecting
+most candidates on *event count* before cost is even considered. This one is
+**minute-level on gold**, so the event problem disappears, on the one market
+whose round trip is **1.83 bps**. The five feed hypotheses that died (H-006,
+H-024, H-031, H-034, H-042) were all real and all died to crypto's 14 bps.
+
+**The work, in order.**
+
+1. **Answer `reconcile()` FIRST — it decides whether the rest is worth doing.**
+   `core/gold_flow.py:120` checks the tick volumes against the cached candle
+   volume to establish whether `askVolume` is size that **traded** at the ask or
+   size **quoted** there. Traded ⇒ this is aggressor flow, the H-006 family.
+   Quoted ⇒ it is a liquidity imbalance, the H-024 family, **which was real,
+   monotone, beat its null, and cleared its cost in 0 of 935 cells.** One day of
+   data answers it and it is already coded. Do not spend fourteen hours before
+   running it.
+2. **Finish the pull.** ~444 missing business days, 2024 first. Fourteen
+   unattended hours — exactly the overnight job the loop was built for.
+3. **Register it** in `research/vocab.py` with a declared `prior_sign` and its
+   mechanism, so it goes through the same screen, pre-registration and ledger as
+   everything else. Candidate shape: `imb = (askvol − bidvol)/(askvol + bidvol)`,
+   lag 1 bar.
+4. **Carry the caveat in the registry, not in a footnote.** Spot gold has no
+   central exchange, so this is Dukascopy's own liquidity-provider volume —
+   indicative size, not confirmed executions, and nothing to validate it
+   against. It is still the same feed this project trades on and prices its
+   costs from.
+
+**The known trap, from H-052's own write-up:** gold trended hard through 2025-26,
+so quintile means run into hundreds of bps and the market's own move swamps the
+buckets. The most coherent cell had rho 0.90 with a **mean spread of +38.3 bps
+and a median of −8.4** — opposite signs, the exact skew trap `core/screen.py`
+exists to catch. More data does not fix that on its own; the screen's median
+check is what will.
+
+**Do not** add more daily macro series to widen the registry instead. That is
+the parameter-tuning move in feed clothing, and the arithmetic in
+`docs/WORKFLOW.md` §6.1 says it buys nothing the screen can certify.
+
+**Still open, unchanged, and still ten minutes:** the B1/B2 email below. It has
+been open since 2026-09-08.
+
+---
+
 ## ADDED 2026-09-18 (second entry) — the loop is built and running
 
 Kris picked **"C target with B machinery"**: hunt data feeds, model-driven, with
