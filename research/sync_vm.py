@@ -135,6 +135,17 @@ def main(argv: list[str] | None = None) -> int:
         print("→ pushing the merged ledger back")
         _rsync(str(LEDGER), f"{host}:{REMOTE}/backtests/ledger.csv", key)
 
+        # And the model-written queue, which is the whole reason the VM can
+        # propose like the model without having one (`research/backlog.py`).
+        q = ROOT / "backtests" / "proposals.jsonl"
+        if q.exists():
+            from research import backlog
+            print(f"→ pushing {backlog.depth()} queued proposals")
+            _rsync(str(q), f"{host}:{REMOTE}/backtests/proposals.jsonl", key)
+        else:
+            print("→ no proposal queue to push "
+                  "(python -m research.backlog --fill 60)")
+
     from research import dashboard
     dashboard.OUT.write_text(dashboard.build())
     print(f"→ rebuilt {dashboard.OUT.relative_to(ROOT)}")

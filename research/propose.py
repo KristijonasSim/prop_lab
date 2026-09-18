@@ -385,7 +385,24 @@ def propose_llm(n: int = 1, markets: tuple[str, ...] = tuple(STANDARD),
 
 def propose(n: int = 1, mode: str = "library",
             markets: tuple[str, ...] = tuple(STANDARD)) -> list[Candidate]:
-    """The entry point. `mode` is 'library' or 'llm'; llm falls back on failure."""
+    """The entry point.
+
+        queue    take model-written candidates off `research/backlog.py`,
+                 topping up from the library when it runs dry. **This is what
+                 the VM runs** - it gets the model's judgement without needing
+                 the model, because the desktop filled the queue earlier.
+        llm      call the model now. Desktop only; needs the `claude` CLI.
+        library  mechanical enumeration of the registry. Always available.
+
+    Every mode degrades to `library` rather than returning nothing, because a
+    loop that stops when the model is unreachable is not unattended.
+    """
+    if mode == "queue":
+        from research import backlog
+        got = backlog.pop(n)
+        if len(got) < n:
+            got += propose_library(n - len(got), markets)
+        return got[:n]
     if mode == "llm":
         try:
             got = propose_llm(n, markets)
@@ -401,7 +418,8 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
     ap = argparse.ArgumentParser(description="what to test next")
     ap.add_argument("-n", type=int, default=5)
-    ap.add_argument("--mode", choices=("library", "llm"), default="library")
+    ap.add_argument("--mode", choices=("library", "llm", "queue"),
+                    default="library")
     a = ap.parse_args(argv)
 
     space = enumerate_space()

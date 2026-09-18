@@ -90,10 +90,22 @@ class Result:
 # Building the signal — the ONLY place a feed is aligned to a market
 # ---------------------------------------------------------------------------
 def daily_frame(market: str) -> pd.DataFrame:
-    """Market daily bars, closed only, indexed UTC midnight."""
+    """Market daily bars, closed only, indexed UTC midnight.
+
+    Carries high and low as well as open and close: the screen only needs the
+    open, but `research/promote.py` checks a stop against the bar's range, and
+    a frame without them silently becomes a different strategy.
+
+    Zero-volume days are dropped. Dukascopy pads the closed FX weekend with
+    synthetic bars at the last traded price (21.5% of the XAUUSD series), and
+    CLAUDE.md carries three separate corrections about deciding or filling on
+    one.
+    """
     df = load(market, BASE_TF)
     d = pd.DataFrame({
         "open": df.open.resample("1D").first(),
+        "high": df.high.resample("1D").max(),
+        "low": df.low.resample("1D").min(),
         "close": df.close.resample("1D").last(),
         "volume": df.volume.resample("1D").sum(),
     }).dropna(subset=["close"])
@@ -241,7 +253,8 @@ def main(argv: list[str] | None = None) -> int:
     from research.propose import propose
     ap = argparse.ArgumentParser(description="screen the next candidates")
     ap.add_argument("-n", type=int, default=5)
-    ap.add_argument("--mode", choices=("library", "llm"), default="library")
+    ap.add_argument("--mode", choices=("library", "llm", "queue"),
+                    default="library")
     ap.add_argument("--dry-run", action="store_true",
                     help="no pre-registration, no ledger row")
     a = ap.parse_args(argv)

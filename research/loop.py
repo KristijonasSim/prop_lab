@@ -166,7 +166,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-n", type=int, default=5,
                     help="candidates per cycle (default 5)")
-    ap.add_argument("--mode", choices=("library", "llm"), default="library")
+    ap.add_argument("--mode", choices=("library", "llm", "queue"),
+                    default="library")
     ap.add_argument("--cycles", type=int, default=1)
     ap.add_argument("--forever", action="store_true")
     ap.add_argument("--every", type=int, default=900,

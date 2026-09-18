@@ -55,8 +55,9 @@ for f in XAUUSD XAGUSD EURUSD GBPUSD USDJPY; do
 done
 rsync -az -e "${SSH[*]}" ./data/BTCUSDT_spot_15m.parquet "$HOST:$REMOTE/data/" 2>/dev/null || true
 
-echo "→ ledger (so the VM does not re-test what the desktop already paid for)"
+echo "→ ledger + proposal queue"
 rsync -az -e "${SSH[*]}" ./backtests/ledger.csv "$HOST:$REMOTE/backtests/"
+rsync -az -e "${SSH[*]}" ./backtests/proposals.jsonl "$HOST:$REMOTE/backtests/" 2>/dev/null || true
 
 echo "→ service"
 "${SSH[@]}" "$HOST" "mkdir -p ~/.config/systemd/user && cat > ~/.config/systemd/user/proplab-loop.service <<'UNIT'
@@ -67,7 +68,7 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=$REMOTE
-ExecStart=$REMOTE/.venv/bin/python -m research.loop --forever --every 1800 -n 8 --mode library
+ExecStart=$REMOTE/.venv/bin/python -m research.loop --forever --every 1800 -n 8 --mode queue
 Restart=always
 RestartSec=60
 Nice=10
