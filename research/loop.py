@@ -18,9 +18,21 @@ the whole pipeline is 5-20 studies a day on 28 cores. This loop runs the SCREEN
 only. Its job is to kill 95% of candidates for free and hand over the survivors;
 it does not produce results and a PASS here is not one.
 
-WHERE IT RUNS. Not on the VM — that box is 2 cores and 952 MB and it is busy
-routing orders. The 28-core desktop is the research machine and sits idle.
-"Autonomous" here means unattended, not remote.
+WHERE IT RUNS — CORRECTED 2026-09-18. It runs ON THE VM, under systemd, and the
+first version of this paragraph was wrong. It said the VM was too small and the
+28-core desktop was the research machine, which missed the obvious: a desktop
+that gets switched off is not a 24/7 loop, and Kris switches his off.
+
+The VM is 2 cores and 952 MB, and that is enough because **the SCREEN is cheap**
+- 8 candidates take about a second and need 18 MB of cached feeds and bars. What
+must never move there is the walk-forward. That stays on the desktop, where the
+28 cores are. The split is by cost, not by preference.
+
+The live bot has priority on that box: the service is niced and idle-scheduled,
+so the hourly cron that places real orders never waits on research.
+
+    research/deploy_vm.sh              # sync and restart it there
+    research/deploy_vm.sh --status     # is it alive, what has it done
 
     python -m research.loop --cycles 1            # one pass, then stop
     python -m research.loop --forever --every 900 # unattended
@@ -44,7 +56,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from research import dashboard, harvest                          # noqa: E402
+from research import dashboard, harvest, notify          # noqa: E402
 from research.propose import propose, untried                    # noqa: E402
 from research.run import run_batch                               # noqa: E402
 
@@ -123,9 +135,19 @@ def cycle(n: int, mode: str, do_harvest: bool, cycle_no: int) -> int:
         results = []
 
     passed = [r for r in results if r.verdict == "PASS"]
-    for r in passed:
-        note(f"  SURVIVED: {r.candidate.name} — earned a study, nothing more. "
-             f"prereg {r.prereg_path}")
+    if passed:
+        # Counts across the WHOLE loop, not this cycle: a pass is only readable
+        # against how much was searched, and the mail says so.
+        from core.ledger import read as _read
+        loop_rows = [t for t in _read()
+                     if t.params and "candidate_key" in t.params]
+        total = len(loop_rows)
+        survivors = sum(1 for t in loop_rows if t.verdict == "PASS")
+        for r in passed:
+            note(f"  SURVIVED: {r.candidate.name} — earned a study, nothing "
+                 f"more. prereg {r.prereg_path}")
+            ok, why = notify.alert_survivor(r, total, survivors)
+            note(f"  alert: {'emailed' if ok else why}")
 
     write_state(status="publishing", survivors=len(passed))
     try:
