@@ -1,0 +1,127 @@
+<!doctype html><meta charset="utf-8">
+<title>Loop Board</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#faf9f7;--card:#fff;--ink:#16150f;--mut:#75726b;--line:#e5e2da;
+ --good:#1a7f4b;--warn:#b07d10;--accent:#2b5fd9;--barfill:#c9d4f2;
+ --mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#141410;--card:#1d1d18;--ink:#f1efe7;--mut:#9b978e;--line:#2f2f28;
+ --good:#4ec27f;--warn:#dca62c;--accent:#7aa2f7;--barfill:#2f3f66}}
+:root[data-theme="dark"]{--bg:#141410;--card:#1d1d18;--ink:#f1efe7;--mut:#9b978e;
+ --line:#2f2f28;--good:#4ec27f;--warn:#dca62c;--accent:#7aa2f7;--barfill:#2f3f66}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;font-size:16px;line-height:1.5;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding-inline:18px;padding-block:30px 70px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;
+ flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:21px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:12.5px;font-family:var(--mono);margin-top:3px}
+button{background:var(--accent);color:#fff;border:0;border-radius:7px;
+ padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;
+ font-family:inherit}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+button[disabled]{opacity:.55;cursor:default}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:26px}
+.n{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:16px 15px}
+.n .v{font-family:var(--mono);font-size:29px;letter-spacing:-.03em;
+ font-variant-numeric:tabular-nums}
+.n .k{font-size:12px;color:var(--mut);margin-top:5px;line-height:1.35}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);
+ margin:30px 0 11px;font-weight:700}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:18px 16px 10px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:120px}
+.bars div{flex:1;background:var(--barfill);border-radius:2px 2px 0 0;min-height:2px;
+ position:relative}
+.bars div.hi{background:var(--accent)}
+.xax{display:flex;gap:3px;margin-top:6px}
+.xax span{flex:1;text-align:center;font-size:9.5px;color:var(--mut);
+ font-family:var(--mono)}
+.item{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:14px 16px;margin-bottom:9px}
+.item.ok{border-left:3px solid var(--good)}
+.item.near{border-left:3px solid var(--warn)}
+.item .t{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.item .d{color:var(--mut);font-size:13px;margin-top:5px}
+.item .m{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:6px;
+ font-variant-numeric:tabular-nums}
+.empty{color:var(--mut);font-size:14px;background:var(--card);
+ border:1px dashed var(--line);border-radius:10px;padding:16px}
+.foot{color:var(--mut);font-size:12.5px;margin-top:34px;padding-top:14px;
+ border-top:1px solid var(--line)}
+@media(max-width:620px){.nums{grid-template-columns:1fr 1fr}.n .v{font-size:24px}}
+</style>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Research loop</h1><div class="sub" id="built">loading…</div></div>
+    <button id="rf">Refresh</button>
+  </div>
+
+  <div class="nums">
+    <div class="n"><div class="v" id="rate">–</div>
+      <div class="k">tested per hour<br>while running</div></div>
+    <div class="n"><div class="v" id="researched">–</div>
+      <div class="k">strategies in the<br>search space</div></div>
+    <div class="n"><div class="v" id="tested">–</div>
+      <div class="k">tested<br>so far</div></div>
+    <div class="n"><div class="v" id="waiting">–</div>
+      <div class="k">waiting<br>to be tested</div></div>
+  </div>
+
+  <h2>Tests per hour — last 24 hours</h2>
+  <div class="chart"><div class="bars" id="bars"></div>
+    <div class="xax" id="xax"></div></div>
+
+  <h2>Passed the bar</h2>
+  <div id="passed"></div>
+
+  <h2>Close to the bar</h2>
+  <div id="near"></div>
+
+  <div class="foot">Passing means one thing: it earned a proper test with real
+  costs. It is not a result and not a strategy. Failures are not listed here —
+  they are on the full board.</div>
+</div>
+<script>
+function bars(s){
+  const max = Math.max(1, ...s.map(x=>x.n));
+  document.getElementById('bars').innerHTML =
+    s.map(x=>`<div class="${x.n===max&&x.n>0?'hi':''}" style="height:${
+      Math.round(x.n/max*100)}%" title="${x.n} at ${x.h}:00"></div>`).join('');
+  document.getElementById('xax').innerHTML =
+    s.map((x,i)=>`<span>${i%4===0?x.h:''}</span>`).join('');
+}
+function list(id, rows, cls, none){
+  const el = document.getElementById(id);
+  if(!rows.length){ el.innerHTML = `<div class="empty">${none}</div>`; return; }
+  el.innerHTML = rows.map(r=>`<div class="item ${cls}">
+    <div class="t">${r.name}</div>
+    <div class="d">${r.why ? r.why : 'cleared every check'}</div>
+    <div class="m">${r.events.toLocaleString()} events ·
+      ${Number(r.effect).toFixed(1)} bps vs ${Number(r.bar).toFixed(2)} bar ·
+      ${(Math.abs(r.effect)/r.bar).toFixed(1)}x cost</div></div>`).join('');
+}
+function paint(d){
+  document.getElementById('researched').textContent = d.researched.toLocaleString();
+  document.getElementById('tested').textContent     = d.tested.toLocaleString();
+  document.getElementById('waiting').textContent    = d.waiting.toLocaleString();
+  document.getElementById('rate').textContent       = d.per_hour;
+  document.getElementById('built').textContent      = d.built + ' · loop ' + d.status;
+  bars(d.series);
+  list('passed', d.passed, 'ok', 'Nothing has cleared the bar yet.');
+  list('near', d.near, 'near', 'Nothing close right now.');
+}
+async function refresh(){
+  const b = document.getElementById('rf');
+  b.disabled = true; b.textContent = 'Checking…';
+  try { paint(await (await fetch('stats.json?t='+Date.now())).json()); }
+  catch(e){ document.getElementById('built').textContent = 'could not reach the loop'; }
+  b.disabled = false; b.textContent = 'Refresh';
+}
+document.getElementById('rf').addEventListener('click', refresh);
+refresh();
+</script>

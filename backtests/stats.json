@@ -1,0 +1,218 @@
+{
+ "researched": 2990,
+ "tested": 228,
+ "waiting": 2771,
+ "per_hour": 32.6,
+ "passed": [
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (3 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h3",
+   "market": "XAUUSD",
+   "events": 179,
+   "effect": 54.974,
+   "bar": 2.13,
+   "rho": 1.0,
+   "p": 0.045,
+   "note": "earned a real study"
+  }
+ ],
+ "near": [
+  {
+   "name": "Yields rising over 5 days \u2192 sell Euro (10 days)",
+   "arm": "DFII10.change5.EURUSD.h10",
+   "market": "EURUSD",
+   "events": 92,
+   "effect": 36.491,
+   "bar": 0.374,
+   "rho": 0.6,
+   "p": null,
+   "note": "response not monotone, rho 0.60",
+   "why": "shape almost held (rho 0.60 of 0.80)"
+  },
+  {
+   "name": "Inflation expectations rising over 5 days \u2192 buy Euro (20 days)",
+   "arm": "T10YIE.change5.EURUSD.h20",
+   "market": "EURUSD",
+   "events": 45,
+   "effect": -33.986,
+   "bar": 0.374,
+   "rho": -0.7,
+   "p": null,
+   "note": "response not monotone, rho -0.70",
+   "why": "shape almost held (rho 0.70 of 0.80)"
+  },
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (20 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h20",
+   "market": "XAUUSD",
+   "events": 46,
+   "effect": 152.687,
+   "bar": 2.13,
+   "rho": 1.0,
+   "p": 0.11,
+   "note": "loses to its own shuffle, p=0.110",
+   "why": "lost to shuffled data, but only just (p 0.110)"
+  },
+  {
+   "name": "Real yields outpacing inflation over 5 days \u2192 sell Euro (10 days)",
+   "arm": "REAL_MINUS_BE.change5.EURUSD.h10",
+   "market": "EURUSD",
+   "events": 92,
+   "effect": 24.518,
+   "bar": 0.374,
+   "rho": 0.7,
+   "p": null,
+   "note": "response not monotone, rho 0.70",
+   "why": "shape almost held (rho 0.70 of 0.80)"
+  },
+  {
+   "name": "Real yields outpacing inflation over 5 days \u2192 sell Euro (20 days)",
+   "arm": "REAL_MINUS_BE.change5.EURUSD.h20",
+   "market": "EURUSD",
+   "events": 45,
+   "effect": 23.222,
+   "bar": 0.374,
+   "rho": 0.7,
+   "p": null,
+   "note": "response not monotone, rho 0.70",
+   "why": "shape almost held (rho 0.70 of 0.80)"
+  },
+  {
+   "name": "Inflation expectations rising over 5 days \u2192 buy Pound (10 days)",
+   "arm": "T10YIE.change5.GBPUSD.h10",
+   "market": "GBPUSD",
+   "events": 88,
+   "effect": -44.207,
+   "bar": 0.82,
+   "rho": -0.9,
+   "p": 0.07,
+   "note": "loses to its own shuffle, p=0.070",
+   "why": "lost to shuffled data, but only just (p 0.070)"
+  },
+  {
+   "name": "Yields rising over 5 days \u2192 sell Pound (10 days)",
+   "arm": "DFII10.change5.GBPUSD.h10",
+   "market": "GBPUSD",
+   "events": 88,
+   "effect": 40.276,
+   "bar": 0.82,
+   "rho": 0.6,
+   "p": null,
+   "note": "response not monotone, rho 0.60",
+   "why": "shape almost held (rho 0.60 of 0.80)"
+  },
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (10 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h10",
+   "market": "XAUUSD",
+   "events": 93,
+   "effect": 90.036,
+   "bar": 2.13,
+   "rho": 0.9,
+   "p": 0.235,
+   "note": "loses to its own shuffle, p=0.235",
+   "why": "lost to shuffled data, but only just (p 0.235)"
+  }
+ ],
+ "series": [
+  {
+   "h": "13",
+   "n": 0
+  },
+  {
+   "h": "14",
+   "n": 0
+  },
+  {
+   "h": "15",
+   "n": 0
+  },
+  {
+   "h": "16",
+   "n": 0
+  },
+  {
+   "h": "17",
+   "n": 0
+  },
+  {
+   "h": "18",
+   "n": 0
+  },
+  {
+   "h": "19",
+   "n": 0
+  },
+  {
+   "h": "20",
+   "n": 0
+  },
+  {
+   "h": "21",
+   "n": 0
+  },
+  {
+   "h": "22",
+   "n": 0
+  },
+  {
+   "h": "23",
+   "n": 0
+  },
+  {
+   "h": "00",
+   "n": 0
+  },
+  {
+   "h": "01",
+   "n": 0
+  },
+  {
+   "h": "02",
+   "n": 0
+  },
+  {
+   "h": "03",
+   "n": 0
+  },
+  {
+   "h": "04",
+   "n": 0
+  },
+  {
+   "h": "05",
+   "n": 0
+  },
+  {
+   "h": "06",
+   "n": 38
+  },
+  {
+   "h": "07",
+   "n": 21
+  },
+  {
+   "h": "08",
+   "n": 48
+  },
+  {
+   "h": "09",
+   "n": 48
+  },
+  {
+   "h": "10",
+   "n": 48
+  },
+  {
+   "h": "11",
+   "n": 24
+  },
+  {
+   "h": "12",
+   "n": 1
+  }
+ ],
+ "ideas": 227,
+ "status": "idle",
+ "built": "12:17:37 UTC"
+}

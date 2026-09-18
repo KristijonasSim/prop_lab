@@ -255,6 +255,28 @@ def run_candidate(c: Candidate, dry: bool = False) -> Result:
     s = SC.screen(c.name, sig, fwd, rt, hold=c.hold, run_null=True)
     verdict = "PASS" if s.verdict == "WORK" else "FAIL"
 
+    # THE SIGN HAS TO MATCH THE BET, and `core/screen.py` cannot enforce that -
+    # it is a generic tool that tests |effect| and |rho|, with no idea which way
+    # the candidate claimed. The direction is already applied to the signal by
+    # `build_signal`, so a NEGATIVE effect here means the response ran opposite
+    # to the mechanism that was pre-registered.
+    #
+    # Accepting that is a free second bite: it is the same "test it both ways"
+    # the registry's `prior_sign` exists to forbid, arriving through the back
+    # door. Caught 2026-09-18 on T10YIE.change5.GBPUSD.h20, which passed with
+    # effect -77.4 and rho -0.90 against a mechanism that said Pound UP.
+    #
+    # A mechanism that predicts the opposite of what happens is a WRONG
+    # mechanism, not a discovery. If the reverse is worth testing, the registry
+    # sign changes in a commit, with a reason, and it is a new trial.
+    if verdict == "PASS" and s.effect < 0:
+        verdict = "FAIL"
+        s.verdict = "DEAD"
+        s.notes.append(
+            f"cleared every check but ran OPPOSITE to its mechanism "
+            f"(effect {s.effect:+.1f} bps, rho {s.rho:+.2f}) - the mechanism "
+            f"is wrong, not the market")
+
     res = Result(candidate=c, screen=s, prereg_path=(
         str(prereg.relative_to(ROOT)) if not dry else ""),
         round_trip_bps=rt, events=s.events or events, verdict=verdict)
