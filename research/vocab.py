@@ -244,6 +244,80 @@ register(FeedSpec(
     loader=_vix_term, source="CBOE (derived)", cached="vix/VIX.csv",
     notes=("Inversion is the stress signal H-043 measured on gold.",)))
 
+# ---------------------------------------------------------------------------
+# Intraday — the gold tick archive. THE REASON THE REGISTRY STOPPED BEING THIN.
+#
+# Every feed above is DAILY, which is ~750 rows in three years, and event count
+# was the single biggest killer in the loop's first 187 tests. These are HOURLY
+# on the market whose round trip is 1.06 bps, from tick files already on disk.
+#
+# WHAT THEY ARE, STATED ONCE AND CARRIED EVERYWHERE. Spot gold has no central
+# exchange, so `askvol`/`bidvol` are Dukascopy's own liquidity-provider volume,
+# not a consolidated tape. Measured 2026-09-18: the contemporaneous correlation
+# between imbalance and the same-bar return is +0.025 hourly and -0.062 daily,
+# which is flat - real aggressor flow would move price in its own bar almost
+# mechanically. **So this is quoted size, not traded size**, which puts it in
+# the H-024 family (book depth: real, monotone, beat its null, cleared its cost
+# in 0 of 935 cells) and not the H-006 family. H-024 died on crypto's 14 bps;
+# gold's bar is 2.13, so the family is not automatically dead here - but the
+# prior is poor and the registry should say so rather than the write-up.
+#
+# COVERAGE IS PARTIAL: 245 of 689 business days, and 2024 is entirely missing.
+# The screen reports the honest event count, so this understates rather than
+# flatters.
+# ---------------------------------------------------------------------------
+def _flow(col: str) -> Callable[[], pd.Series]:
+    def go() -> pd.Series:
+        from core.gold_flow import load_flow
+        d = load_flow("XAUUSD", "1h")
+        if d.empty or col not in d:
+            raise RuntimeError(f"no gold flow column {col!r} cached")
+        return d[col].dropna().rename(f"GOLD_{col.upper()}")
+    return go
+
+
+register(FeedSpec(
+    name="GOLD_IMB", desc="Gold ask/bid volume imbalance", kind="flow",
+    cadence="1h", lag_floor=1, prior_sign=1,
+    sign_reason="More size resting on the ask than the bid means dealers are "
+                "leaning to sell; the marginal taker who lifts it pays up. "
+                "High imbalance predicts gold UP. Weak prior - the same "
+                "reading is equally consistent with supply that caps the move, "
+                "which is exactly why H-024's version cleared no costs.",
+    lag_reason="One completed hour. The bar must close before it is readable.",
+    loader=_flow("imb"), source="Dukascopy ticks", cached="flow/XAUUSD",
+    markets=("XAUUSD",),
+    notes=("Quoted size, not traded size - measured, not assumed. Partial "
+           "coverage: 245 of 689 business days, 2024 absent.",)))
+
+register(FeedSpec(
+    name="GOLD_SPREAD", desc="Gold quoted spread", kind="flow",
+    cadence="1h", lag_floor=1, prior_sign=-1,
+    sign_reason="A wide spread is dealers charging for risk they do not want. "
+                "The forced seller into a wide market is the one who pays, so "
+                "a wide spread should precede weakness. Never tested here in "
+                "any form - core/fx_spread.py measured it to PRICE trades, "
+                "never to predict them.",
+    lag_reason="One completed hour.",
+    loader=_flow("spread_bps"), source="Dukascopy ticks", cached="flow/XAUUSD",
+    markets=("XAUUSD",),
+    notes=("The one genuinely untouched idea in this registry: the cost series "
+           "this project prices everything with, used as a signal.",)))
+
+register(FeedSpec(
+    name="GOLD_TICKS", desc="Gold tick count (activity)", kind="flow",
+    cadence="1h", lag_floor=1, prior_sign=1,
+    sign_reason="Tick count is participation. The 'stocks in play' literature "
+                "(Zarattini et al.) finds the edge lives in the instruments "
+                "being repriced, not the quiet ones, so high activity should "
+                "precede continuation rather than fade.",
+    lag_reason="One completed hour.",
+    loader=_flow("ticks"), source="Dukascopy ticks", cached="flow/XAUUSD",
+    markets=("XAUUSD",),
+    notes=("H-020 tested relative volume on crypto perps; this is the same "
+           "mechanism on the market that can pay for it.",)))
+
+
 register(FeedSpec(
     name="REAL_MINUS_BE", desc="Real yield minus breakeven", kind="macro",
     lag_floor=1, prior_sign=-1,

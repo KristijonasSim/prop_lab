@@ -55,6 +55,14 @@ for f in XAUUSD XAGUSD EURUSD GBPUSD USDJPY; do
 done
 rsync -az -e "${SSH[*]}" ./data/BTCUSDT_spot_15m.parquet "$HOST:$REMOTE/data/" 2>/dev/null || true
 
+# The gold tick archive — 22 MB, and the only INTRADAY feed in the registry.
+# Every other feed is daily, which is ~750 rows in three years and was the
+# single biggest killer in the loop's first 187 tests. Without this the VM can
+# only run the thin half of the search space.
+echo "→ gold flow archive (~22 MB, the intraday feeds)"
+"${SSH[@]}" "$HOST" "mkdir -p $REMOTE/data/flow/XAUUSD"
+rsync -az -e "${SSH[*]}" ./data/flow/XAUUSD/ "$HOST:$REMOTE/data/flow/XAUUSD/"
+
 echo "→ ledger + proposal queue"
 rsync -az -e "${SSH[*]}" ./backtests/ledger.csv "$HOST:$REMOTE/backtests/"
 rsync -az -e "${SSH[*]}" ./backtests/proposals.jsonl "$HOST:$REMOTE/backtests/" 2>/dev/null || true
@@ -80,7 +88,10 @@ WantedBy=default.target
 UNIT
 loginctl enable-linger ubuntu 2>/dev/null || true
 systemctl --user daemon-reload
-systemctl --user enable --now proplab-loop
+systemctl --user enable proplab-loop
+# `enable --now` does NOT restart a service that is already running, so a
+# redeploy silently kept the old code and the old --mode. Restart explicitly.
+systemctl --user restart proplab-loop
 sleep 6
 systemctl --user is-active proplab-loop"
 

@@ -112,6 +112,35 @@ def daily_frame(market: str) -> pd.DataFrame:
     return d[d.volume > 0] if "volume" in d else d
 
 
+def hourly_frame(market: str) -> pd.DataFrame:
+    """Market hourly bars, live ones only.
+
+    Dukascopy pads the closed FX weekend with zero-volume bars at the last
+    traded price - 21.5% of the XAUUSD series - and `CLAUDE.md` carries three
+    corrections about deciding or filling on one. They are dropped here, before
+    anything can align to them.
+    """
+    df = load(market, "1h")
+    return df[df.volume > 0] if "volume" in df else df
+
+
+def frame_for(market: str, cadence: str) -> pd.DataFrame:
+    """The bar frame a feed's own cadence implies.
+
+    ADDED 2026-09-18, and it is the change that unblocked the whole registry.
+    Every feed was daily, which meant ~750 rows in three years, which meant
+    `core.screen.independent_events` rejected most candidates before cost was
+    even considered - the single biggest killer in the loop's first 187 tests.
+    A feed that updates hourly gets an hourly axis and stops being starved of
+    events by the runner rather than by the data.
+    """
+    if cadence in ("1h", "1H"):
+        return hourly_frame(market)
+    if cadence in ("1d", "1D"):
+        return daily_frame(market)
+    raise ValueError(f"no bar frame for cadence {cadence!r}")
+
+
 def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
     """Return (signal, forward return in bps, round-trip bps).
 
@@ -129,10 +158,13 @@ def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
     fn, needs_window = vocab.TRANSFORMS[c.transform]
     sig_raw = fn(raw, c.window if needs_window else 0)
 
-    mkt = daily_frame(c.market)
-    # normalise both to date-only UTC so a settlement stamp and a bar stamp meet
-    sig_raw.index = pd.to_datetime(sig_raw.index, utc=True).normalize()
-    mkt.index = pd.to_datetime(mkt.index, utc=True).normalize()
+    mkt = frame_for(c.market, spec.cadence)
+    sig_raw.index = pd.to_datetime(sig_raw.index, utc=True)
+    mkt.index = pd.to_datetime(mkt.index, utc=True)
+    if spec.cadence in ("1d", "1D"):
+        # A settlement stamp and a bar stamp only meet once both are date-only.
+        sig_raw.index = sig_raw.index.normalize()
+        mkt.index = mkt.index.normalize()
 
     sig = sig_raw[~sig_raw.index.duplicated(keep="last")]
     sig = sig.reindex(mkt.index).ffill(limit=5)

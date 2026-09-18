@@ -169,3 +169,46 @@ def test_the_proposer_spreads_across_feeds():
     and produced nothing."""
     got = P.propose_library(8)
     assert len({c.feed for c in got}) >= 4
+
+
+# ---------------------------------------------------------------------------
+# the event count must not depend on a signal's units
+# ---------------------------------------------------------------------------
+def test_event_count_works_on_strictly_positive_signals():
+    """A percentile, a VIX level, a spread and a tick count never change sign.
+
+    Counting crossings with `np.sign` scored them ONE episode however long they
+    ran, so they were killed at the first gate for a property of their units
+    rather than of their information. 12 of 219 loop trials died this way before
+    2026-09-18, and every `level` and `pctile` candidate was affected.
+    """
+    from core.screen import independent_events
+
+    rng = np.random.default_rng(0)
+    pct = pd.Series(rng.random(1000))          # strictly positive, oscillating
+    centred = pd.Series(rng.normal(size=1000))
+    assert independent_events(pct, 1) > 400
+    assert independent_events(centred, 1) > 400
+
+    # shifting a signal must not change how many episodes it has
+    assert (independent_events(centred + 1000.0, 1)
+            == independent_events(centred, 1))
+    # nor must rescaling it
+    assert (independent_events(centred * 37.0, 1)
+            == independent_events(centred, 1))
+
+
+def test_event_count_still_rejects_genuinely_slow_signals():
+    """The gate exists to kill H-051 (794 rows, three swings). It still must.
+
+    The three-block case counts 1 rather than 3 because the median coincides
+    with one of only two levels - an under-count, which errs toward rejecting.
+    That is the safe direction and the one this file argues for everywhere else.
+    """
+    from core.screen import independent_events
+    slow = pd.Series(np.repeat([1.0, 2.0, 1.0], 300))
+    assert independent_events(slow, 1) <= 3
+    assert independent_events(pd.Series([5.0] * 100), 1) == 1
+    # the overlap cap is unaffected
+    rng = np.random.default_rng(1)
+    assert independent_events(pd.Series(rng.random(1000)), 20) == 50

@@ -74,11 +74,28 @@ def independent_events(sig: pd.Series, hold: int) -> int:
     independent episodes however many rows it has - the defect that killed H-051
     (794 daily rows, three swings) and H-043 (48 days, 17 episodes, two of them
     half the sample). The smaller of the two is the honest count.
+
+    **CROSSINGS ARE COUNTED AROUND THE MEDIAN, NOT AROUND ZERO.** The first
+    version used `np.sign`, which silently assumed every signal is centred. A
+    strictly positive series - a percentile rank, a VIX level, a spread, a tick
+    count - never changes sign, so it scored ONE episode however long it ran and
+    was killed at the first gate for a property of its units rather than of its
+    information. Measured 2026-09-18: 12 of 219 loop trials died this way, and
+    every `level` and `pctile` candidate in the registry was affected.
+
+    The median is the honest centre: it is what the bucket response splits on
+    anyway, and it makes the count invariant to shifting or rescaling a feed.
     """
     if not len(sig):
         return 0
+    v = sig.dropna().values
+    if not len(v):
+        return 0
     non_overlap = int(len(sig) / max(1, hold))
-    s = np.sign(sig.dropna().values)
+    s = np.sign(v - np.median(v))
+    s = s[s != 0]                      # ties sit on the fence, they are not a side
+    if len(s) < 2:
+        return min(non_overlap, 1)
     flips = int(np.sum(s[1:] != s[:-1])) + 1
     return min(non_overlap, flips)
 
