@@ -1,120 +1,325 @@
 <!doctype html><meta charset="utf-8">
 <title>Research loop</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- No auto-refresh, deliberately: Kris removed it from the board on
-     2026-09-08 because it stole focus and scroll position mid-read. The build
-     stamp below is how you tell which render this is. Reload by hand. -->
+<!-- No auto-refresh: removed from the board 2026-09-08 because it stole focus
+     and scroll position mid-read. The stamp says which render this is. -->
 <style>
-:root{--bg:#faf9f7;--surface:#fff;--ink:#16150f;--muted:#6b6862;--line:#e3e0d8;
- --good:#1a7f4b;--warn:#a8730a;--fail:#b3261e;--accent:#2b5fd9;
- --shadow:0 1px 2px rgba(0,0,0,.05);--mono:"JetBrains Mono",ui-monospace,
- SFMono-Regular,Menlo,monospace}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+:root{
+ --bg:#faf9f7;--surface:#fff;--ink:#16150f;--muted:#6b6862;--line:#e3e0d8;
+ --dim:#f3f1ec;--good:#1a7f4b;--warn:#a8730a;--fail:#b3261e;--accent:#2b5fd9;
+ --deadbar:#ded9cf;
+ --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+ --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
  --bg:#14140f;--surface:#1c1c17;--ink:#f0eee6;--muted:#96938b;--line:#2e2e27;
- --good:#4ec27f;--warn:#d99b25;--fail:#f0705f;--accent:#7aa2f7;
- --shadow:0 1px 2px rgba(0,0,0,.4)}}
-:root[data-theme="dark"]{--bg:#14140f;--surface:#1c1c17;--ink:#f0eee6;
- --muted:#96938b;--line:#2e2e27;--good:#4ec27f;--warn:#d99b25;--fail:#f0705f;
- --accent:#7aa2f7;--shadow:0 1px 2px rgba(0,0,0,.4)}
+ --dim:#22221c;--good:#4ec27f;--warn:#d99b25;--fail:#f0705f;--accent:#7aa2f7;
+ --deadbar:#33332b}}
+:root[data-theme="dark"]{
+ --bg:#14140f;--surface:#1c1c17;--ink:#f0eee6;--muted:#96938b;--line:#2e2e27;
+ --dim:#22221c;--good:#4ec27f;--warn:#d99b25;--fail:#f0705f;--accent:#7aa2f7;
+ --deadbar:#33332b}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);margin:0;padding:0 16px 60px;
- font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1500px;margin:0 auto}
-header{padding:28px 0 14px;border-bottom:1px solid var(--line);margin-bottom:8px}
-h1{margin:0;font-size:20px;letter-spacing:-.01em}
-h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;
- color:var(--muted);margin:34px 0 10px;font-weight:600}
-.sub{color:var(--muted);font-size:13px;margin-top:5px}
-.built{color:var(--muted);font-size:11px;margin-top:7px;opacity:.75;
- font-family:var(--mono)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
- gap:10px;margin:18px 0 4px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:7px;
- padding:13px 15px;box-shadow:var(--shadow)}
-.card .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;
- color:var(--muted)}
-.card .v{font-family:var(--mono);font-size:23px;margin-top:5px;
- letter-spacing:-.02em}
-.card .n{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45}
-.card.alarm{border-color:var(--fail)} .card.alarm .v{color:var(--fail)}
-.card.ok .v{color:var(--good)}
-table{border-collapse:collapse;width:100%;font-size:13px;background:var(--surface);
- border:1px solid var(--line);border-radius:7px;overflow:hidden}
-th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
- color:var(--muted);padding:9px 11px;border-bottom:1px solid var(--line);
- font-weight:600;white-space:nowrap}
-td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:none}
-td.m,th.m{font-family:var(--mono);font-size:12px;white-space:nowrap}
-td.r{text-align:right}
-.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;
- font-family:var(--mono);border:1px solid}
-.pass{color:var(--good);border-color:var(--good)}
-.fail{color:var(--fail);border-color:var(--fail)}
-.miss{color:var(--warn);border-color:var(--warn)}
-.why{color:var(--muted);font-size:12px}
-.note{color:var(--muted);font-size:12.5px;line-height:1.6;margin:8px 0 2px;
- max-width:900px}
-.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;
- margin-top:7px}
-.bar i{display:block;height:100%;background:var(--accent)}
-.bar i.over{background:var(--fail)}
-footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
- color:var(--muted);font-size:12px;line-height:1.6}
-code{font-family:var(--mono);font-size:12px;background:var(--line);
- padding:1px 5px;border-radius:3px}
-@media(max-width:700px){.card .v{font-size:19px}td,th{padding:7px 8px}}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);margin:0;
+ font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:18px;padding-block:26px 70px}
+.mn{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+h1{font-size:19px;margin:0;letter-spacing:-.01em}
+.stamp{color:var(--muted);font-size:11px;font-family:var(--mono);margin-top:3px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+ margin:40px 0 12px;font-weight:700}
+.note{color:var(--muted);font-size:13px;margin:6px 0 0}
+
+/* live strip */
+.live{display:flex;align-items:center;gap:12px;background:var(--surface);
+ border:1px solid var(--line);border-left:3px solid var(--muted);
+ border-radius:8px;padding:12px 16px;margin:18px 0 22px}
+.live.on{border-left-color:var(--good)}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);
+ flex:none}
+.live.on .dot{background:var(--good);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.live.on .dot{animation:none}}
+.lv{flex:1;font-size:13.5px;display:flex;gap:7px;flex-wrap:wrap;align-items:baseline}
+.lv .sep{color:var(--line)}
+.lr{color:var(--muted);font-size:12px;white-space:nowrap}
+
+/* counters */
+.cts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ct{background:var(--surface);border:1px solid var(--line);border-radius:9px;
+ padding:15px 16px}
+.ck{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.cv{font-size:30px;line-height:1.1;margin:7px 0 4px;letter-spacing:-.03em}
+.cn{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+/* baskets */
+.kl{font-size:12px;font-weight:700;color:var(--ink);margin:22px 0 9px;
+ letter-spacing:-.01em}
+.kl:first-child{margin-top:0}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));
+ gap:11px}
+.bk{background:var(--surface);border:1px solid var(--line);border-radius:9px;
+ padding:14px 15px}
+.bk.hit{border-color:var(--good)}
+.bk.empty{opacity:.55;border-style:dashed}
+.bh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.bn{font-size:14.5px;font-weight:650;letter-spacing:-.01em}
+.bb{font-size:11.5px;color:var(--muted);margin-top:2px}
+.bc{font-size:19px;letter-spacing:-.02em;color:var(--muted)}
+.bk.hit .bc{color:var(--good)}
+.bar{display:flex;height:5px;border-radius:3px;overflow:hidden;
+ background:var(--dim);margin:11px 0 10px}
+.seg{display:block;height:100%}
+.seg.dead{background:var(--deadbar)}
+.seg.hit{background:var(--good)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:11.5px;background:var(--dim);border-radius:4px;padding:2px 6px;
+ color:var(--muted);display:inline-flex;gap:5px;align-items:baseline}
+.chip i{font-style:normal;opacity:.6;font-size:10.5px}
+.chip.hit{background:transparent;border:1px solid var(--good);color:var(--good)}
+.chip.more,.chip.empty{opacity:.6}
+
+/* funnel */
+.gt{display:grid;grid-template-columns:1fr 150px 92px 62px;gap:14px;
+ align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.gt:last-child{border-bottom:none}
+.gq{font-size:14px}
+.gq small{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
+.gbar{height:8px;background:var(--dim);border-radius:4px;overflow:hidden}
+.gbar i{display:block;height:100%;background:var(--accent);opacity:.75}
+.gbar i.ok{background:var(--good);opacity:1}
+.gk{font-size:14px;text-align:right}
+.gk span{color:var(--muted);font-size:11px}
+.gd{font-size:13px;text-align:right;color:var(--fail)}
+.gt.out .gk{color:var(--good)}
+
+/* tape */
+.tw{overflow-x:auto}
+table.tape{border-collapse:collapse;width:100%;font-size:12.5px;min-width:620px}
+table.tape th{text-align:left;font-size:10.5px;text-transform:uppercase;
+ letter-spacing:.06em;color:var(--muted);padding:7px 10px 7px 0;
+ border-bottom:1px solid var(--line);font-weight:700}
+table.tape td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line)}
+table.tape tr:last-child td{border-bottom:none}
+td.dim{color:var(--muted)}
+td.num,th.num{text-align:right;padding-right:0}
+td.why{color:var(--muted)}
+.fdot{display:inline-block;width:6px;height:6px;border-radius:50%;
+ background:var(--deadbar);margin-right:7px;vertical-align:middle}
+tr.ok .fdot{background:var(--good)}
+tr.ok td{color:var(--good)}
+footer{margin-top:46px;padding-top:15px;border-top:1px solid var(--line);
+ color:var(--muted);font-size:12px}
+@media(max-width:860px){.cts{grid-template-columns:1fr 1fr}
+ .gt{grid-template-columns:1fr 70px 56px;gap:10px}
+ .gt .gbar{display:none}}
 </style>
-<div class=wrap>
-<header>
-  <h1>Research loop — feeds in, verdicts out</h1>
-  <div class=sub>Engine 1 proposes a feed and writes the pre-registration.
-    Engine 2 screens it cheapest-check-first and charges it to the ledger.
-    Nothing here is a result; it is what has been spent and what survived.</div>
-  <div class=built>built 2026-09-18 06:43:43 UTC · ledger ledger.csv ·
-    reload by hand after a cycle</div>
-</header>
+<div class="wrap">
 
-<div class=cards><div class="card alarm"><div class=k>trials charged</div><div class=v>266</div><div class=n>38 pre-registered. 3y of history buys 13, 5y buys 45.</div></div><div class="card "><div class=k>luck bar</div><div class=v>2.86σ</div><div class=n>what the best of 266 tries reaches on noise alone. A pre-registered single arm faces 0.00σ.</div></div><div class="card ok"><div class=k>feeds harvested</div><div class=v>8/8</div><div class=n>the search space is the feed table — a new feed resets it, a new parameter does not.</div></div><div class="card "><div class=k>space left</div><div class=v>2,760</div><div class=n>of 2,795 expressible candidates.</div></div><div class="card "><div class=k>screened here</div><div class=v>38</div><div class=n>0 survived; chance alone gives 1.9.</div></div></div>
-<div class=bar><i class="over"
-  style="width:100.0%"></i></div>
-<p class=note><b>Read the budget first.</b> The bar a result must clear rises
-with the number of things tried — 266 trials over the 45
-that five years of history pays for, so the best thing this search can produce
-reaches 2.86σ on luck alone. The same arm declared in advance faces
-0.00σ. That is why every candidate here writes its pre-registration
-<em>before</em> it runs.</p>
-<p class=note><b>Loop:</b> publishing — cycle 1, last ran 2026-09-18T06:43:08+00:00, mode <code>llm</code>. Next up: <code>T10YIE.zscore60.XAUUSD.h10</code></p>
+<h1>Research loop</h1>
+<div class="stamp">2026-09-18 10:49 UTC · 8/8 feeds live ·
+ 2,795 combinations expressible · reload to refresh</div>
 
-<h2>Harvest — the feed registry</h2>
-<p class=note>The unit of search. Every leg that has ever worked in this project
-or its predecessor came from a data feed, never from a new arrangement of price,
-so a new row here opens space that was never tested while a new parameter on an
-old row does not. <b>lag</b> is the earliest the value was readable, and it is
-the field most likely to flatter a result if it is wrong.</p>
-<table><tr><th>feed</th><th>kind</th><th>cadence</th><th class=r>lag</th>
-<th class=r>rows</th><th>span</th><th>state</th><th>markets</th>
-<th>what it is</th></tr><tr><td class=m>DFII10</td><td>macro</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>2,928</td><td class=m>2015-01-02 → 2026-09-16</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>US 10-year real yield (TIPS)<br>The single most-cited driver of gold in the literature - gold pays no coupon, so the real yield is its carrying cost.</td></tr><tr><td class=m>DTWEXBGS</td><td>macro</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>2,916</td><td class=m>2015-01-02 → 2026-09-11</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>Broad trade-weighted dollar index<br>Preferred over building DXY from the FX cache: this is the series the literature uses.</td></tr><tr><td class=m>REAL_MINUS_BE</td><td>macro</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>2,928</td><td class=m>2015-01-02 → 2026-09-16</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>Real yield minus breakeven</td></tr><tr><td class=m>T10YIE</td><td>macro</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>2,929</td><td class=m>2015-01-02 → 2026-09-17</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>10-year inflation breakeven<br>Gold&#x27;s other standard driver in the literature.</td></tr><tr><td class=m>GVZ</td><td>vol</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>4,273</td><td class=m>2009-09-18 → 2026-09-17</td><td><span class="pill pass">cached</span></td><td class=m>XAUUSD</td><td class=why>CBOE gold volatility index<br>H-045: the best filter result this project has produced - the only one that raised profit factor AND R per day together, against 24 of 25 entry filters that raised PF while lowering R/day.</td></tr><tr><td class=m>VIX</td><td>vol</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>9,275</td><td class=m>1990-01-02 → 2026-09-17</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>CBOE equity volatility index</td></tr><tr><td class=m>VIX3M</td><td>vol</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>4,275</td><td class=m>2009-09-18 → 2026-09-17</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>CBOE 3-month volatility index<br>With VIX, gives the term-structure slope H-043 used.</td></tr><tr><td class=m>VIX_TERM</td><td>vol</td><td class=m>1d</td><td class='m r'>1</td><td class='m r'>4,275</td><td class=m>2009-09-18 → 2026-09-17</td><td><span class="pill pass">cached</span></td><td class=m>all</td><td class=why>VIX3M minus VIX (term structure slope)<br>Inversion is the stress signal H-043 measured on gold.</td></tr></table>
-<p class=note>Every harvested feed has a declared direction and a written mechanism, so none is being tested both ways.</p>
 
-<h2>Bench — what has been tested</h2>
-<p class=note>Effect and bar are basis points between the top and bottom bucket
-of the signal; a candidate must clear <b>2×</b> the round trip to survive. The
-checks run cheapest-first, so the <b>why</b> column names the first one that
-killed it — most never reach the shuffle.</p>
-<table><tr><th>when</th><th>candidate</th><th>market</th><th class=r>events</th><th class=r>effect</th><th class=r>median</th><th class=r>bar</th><th class=r>rho</th><th class=r>p</th><th>verdict</th><th>why</th></tr><tr><td class=m>2026-09-18 06:43</td><td class=m>VIX_TERM.change5.USDJPY.h3</td><td class=m>USDJPY</td><td class='m r'>176</td><td class='m r'>-3.0</td><td class='m r'>7.4</td><td class='m r'>1.1</td><td class='m r'>-0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-VIX_TERM-USDJPY-20260918-064343.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:43</td><td class=m>T10YIE.zscore60.XAUUSD.h10</td><td class=m>XAUUSD</td><td class='m r'>58</td><td class='m r'>-71.9</td><td class='m r'>-73.1</td><td class='m r'>2.1</td><td class='m r'>-0.80</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.80 <a href="../docs/prereg/FEED-T10YIE-XAUUSD-20260918-064343.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX.change5.BTCUSDT.h20</td><td class=m>BTCUSDT</td><td class='m r'>164</td><td class='m r'>96.9</td><td class='m r'>-105.6</td><td class='m r'>18.0</td><td class='m r'>0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-VIX-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>T10YIE.change5.BTCUSDT.h20</td><td class=m>BTCUSDT</td><td class='m r'>164</td><td class='m r'>70.1</td><td class='m r'>76.5</td><td class='m r'>18.0</td><td class='m r'>0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.10 <a href="../docs/prereg/FEED-T10YIE-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>REAL_MINUS_BE.change5.BTCUSDT.h10</td><td class=m>BTCUSDT</td><td class='m r'>330</td><td class='m r'>59.7</td><td class='m r'>129.8</td><td class='m r'>18.0</td><td class='m r'>0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.30 <a href="../docs/prereg/FEED-REAL_MINUS_BE-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>GVZ.change5.XAUUSD.h20</td><td class=m>XAUUSD</td><td class='m r'>46</td><td class='m r'>57.7</td><td class='m r'>127.2</td><td class='m r'>2.1</td><td class='m r'>0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.10 <a href="../docs/prereg/FEED-GVZ-XAUUSD-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DTWEXBGS.change5.BTCUSDT.h10</td><td class=m>BTCUSDT</td><td class='m r'>330</td><td class='m r'>-52.3</td><td class='m r'>-32.9</td><td class='m r'>18.0</td><td class='m r'>-0.80</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.80 <a href="../docs/prereg/FEED-DTWEXBGS-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DFII10.change5.BTCUSDT.h10</td><td class=m>BTCUSDT</td><td class='m r'>330</td><td class='m r'>-11.2</td><td class='m r'>111.8</td><td class='m r'>18.0</td><td class='m r'>0.00</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 11.2 under the 18.0 bar <a href="../docs/prereg/FEED-DFII10-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX_TERM.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>516</td><td class='m r'>-24.7</td><td class='m r'>-0.3</td><td class='m r'>18.0</td><td class='m r'>-0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.50 <a href="../docs/prereg/FEED-VIX_TERM-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX3M.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>503</td><td class='m r'>-94.4</td><td class='m r'>-34.3</td><td class='m r'>18.0</td><td class='m r'>-0.70</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.70 <a href="../docs/prereg/FEED-VIX3M-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX.change5.BTCUSDT.h10</td><td class=m>BTCUSDT</td><td class='m r'>330</td><td class='m r'>-21.1</td><td class='m r'>-75.4</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.30 <a href="../docs/prereg/FEED-VIX-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>T10YIE.change5.BTCUSDT.h10</td><td class=m>BTCUSDT</td><td class='m r'>330</td><td class='m r'>47.0</td><td class='m r'>50.4</td><td class='m r'>18.0</td><td class='m r'>0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.30 <a href="../docs/prereg/FEED-T10YIE-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>REAL_MINUS_BE.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>534</td><td class='m r'>74.1</td><td class='m r'>73.2</td><td class='m r'>18.0</td><td class='m r'>0.20</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.20 <a href="../docs/prereg/FEED-REAL_MINUS_BE-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>GVZ.change5.XAUUSD.h10</td><td class=m>XAUUSD</td><td class='m r'>93</td><td class='m r'>91.1</td><td class='m r'>64.6</td><td class='m r'>2.1</td><td class='m r'>0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.10 <a href="../docs/prereg/FEED-GVZ-XAUUSD-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DTWEXBGS.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>421</td><td class='m r'>-50.1</td><td class='m r'>-24.5</td><td class='m r'>18.0</td><td class='m r'>-0.60</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.60 <a href="../docs/prereg/FEED-DTWEXBGS-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DFII10.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>563</td><td class='m r'>21.0</td><td class='m r'>38.4</td><td class='m r'>18.0</td><td class='m r'>0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.30 <a href="../docs/prereg/FEED-DFII10-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX_TERM.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>517</td><td class='m r'>-27.5</td><td class='m r'>3.3</td><td class='m r'>18.0</td><td class='m r'>-0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-VIX_TERM-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX3M.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>503</td><td class='m r'>-51.9</td><td class='m r'>12.4</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-VIX3M-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>529</td><td class='m r'>-59.7</td><td class='m r'>-12.6</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho -0.30 <a href="../docs/prereg/FEED-VIX-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>T10YIE.change5.BTCUSDT.h5</td><td class=m>BTCUSDT</td><td class='m r'>591</td><td class='m r'>20.4</td><td class='m r'>20.3</td><td class='m r'>18.0</td><td class='m r'>0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.10 <a href="../docs/prereg/FEED-T10YIE-BTCUSDT-20260918-064011.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>REAL_MINUS_BE.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>536</td><td class='m r'>83.9</td><td class='m r'>27.1</td><td class='m r'>18.0</td><td class='m r'>0.90</td><td class='m r'>0.110</td><td><span class='pill fail'>FAIL</span></td><td class=why>loses to its own shuffle, p=0.110 <a href="../docs/prereg/FEED-REAL_MINUS_BE-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>GVZ.change5.XAUUSD.h5</td><td class=m>XAUUSD</td><td class='m r'>175</td><td class='m r'>50.9</td><td class='m r'>28.9</td><td class='m r'>2.1</td><td class='m r'>0.10</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.10 <a href="../docs/prereg/FEED-GVZ-XAUUSD-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DTWEXBGS.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>421</td><td class='m r'>-16.4</td><td class='m r'>17.4</td><td class='m r'>18.0</td><td class='m r'>-0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 16.4 under the 18.0 bar <a href="../docs/prereg/FEED-DTWEXBGS-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DFII10.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>564</td><td class='m r'>55.5</td><td class='m r'>24.5</td><td class='m r'>18.0</td><td class='m r'>0.60</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.60 <a href="../docs/prereg/FEED-DFII10-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX_TERM.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>517</td><td class='m r'>-12.0</td><td class='m r'>14.5</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 12.0 under the 18.0 bar <a href="../docs/prereg/FEED-VIX_TERM-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX3M.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>503</td><td class='m r'>-12.8</td><td class='m r'>21.4</td><td class='m r'>18.0</td><td class='m r'>-0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 12.8 under the 18.0 bar <a href="../docs/prereg/FEED-VIX3M-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>VIX.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>530</td><td class='m r'>-20.1</td><td class='m r'>18.6</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-VIX-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>T10YIE.change5.BTCUSDT.h3</td><td class=m>BTCUSDT</td><td class='m r'>591</td><td class='m r'>22.4</td><td class='m r'>-5.2</td><td class='m r'>18.0</td><td class='m r'>0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>mean and median disagree in sign - skew trap <a href="../docs/prereg/FEED-T10YIE-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>REAL_MINUS_BE.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>536</td><td class='m r'>20.9</td><td class='m r'>12.4</td><td class='m r'>18.0</td><td class='m r'>0.70</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.70 <a href="../docs/prereg/FEED-REAL_MINUS_BE-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>GVZ.change5.XAUUSD.h3</td><td class=m>XAUUSD</td><td class='m r'>175</td><td class='m r'>47.7</td><td class='m r'>58.1</td><td class='m r'>2.1</td><td class='m r'>0.70</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.70 <a href="../docs/prereg/FEED-GVZ-XAUUSD-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DTWEXBGS.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>422</td><td class='m r'>-8.8</td><td class='m r'>1.7</td><td class='m r'>18.0</td><td class='m r'>-0.60</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 8.8 under the 18.0 bar <a href="../docs/prereg/FEED-DTWEXBGS-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:40</td><td class=m>DFII10.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>564</td><td class='m r'>29.9</td><td class='m r'>10.2</td><td class='m r'>18.0</td><td class='m r'>0.60</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.60 <a href="../docs/prereg/FEED-DFII10-BTCUSDT-20260918-064010.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>VIX.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>530</td><td class='m r'>-11.0</td><td class='m r'>17.9</td><td class='m r'>18.0</td><td class='m r'>-0.70</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 11.0 under the 18.0 bar <a href="../docs/prereg/FEED-VIX-BTCUSDT-20260918-063602.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>T10YIE.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>591</td><td class='m r'>-0.8</td><td class='m r'>-6.0</td><td class='m r'>18.0</td><td class='m r'>-0.30</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 0.8 under the 18.0 bar <a href="../docs/prereg/FEED-T10YIE-BTCUSDT-20260918-063602.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>REAL_MINUS_BE.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>536</td><td class='m r'>-16.4</td><td class='m r'>-12.0</td><td class='m r'>18.0</td><td class='m r'>-0.70</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 16.4 under the 18.0 bar <a href="../docs/prereg/FEED-REAL_MINUS_BE-BTCUSDT-20260918-063602.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>GVZ.change5.XAUUSD.h1</td><td class=m>XAUUSD</td><td class='m r'>175</td><td class='m r'>14.8</td><td class='m r'>10.0</td><td class='m r'>2.1</td><td class='m r'>0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>response not monotone, rho 0.50 <a href="../docs/prereg/FEED-GVZ-XAUUSD-20260918-063602.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>DTWEXBGS.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>422</td><td class='m r'>9.8</td><td class='m r'>-1.5</td><td class='m r'>18.0</td><td class='m r'>0.50</td><td class='m r'><span class=why>—</span></td><td><span class='pill fail'>FAIL</span></td><td class=why>effect 9.8 under the 18.0 bar <a href="../docs/prereg/FEED-DTWEXBGS-BTCUSDT-20260918-063602.md">prereg</a></td></tr><tr><td class=m>2026-09-18 06:36</td><td class=m>DFII10.change5.BTCUSDT.h1</td><td class=m>BTCUSDT</td><td class='m r'>564</td><td class='m r'>-25.6</td><td class='m r'>-10.4</td><td class='m r'>18.0</td><td class='m r'>-0.90</td><td class='m r'>0.215</td><td><span class='pill fail'>FAIL</span></td><td class=why>loses to its own shuffle, p=0.215 <a href="../docs/prereg/FEED-DFII10-BTCUSDT-20260918-063601.md">prereg</a></td></tr></table>
+<div class="live on">
+  <span class="dot"></span>
+  <div class="lv">
+    <b>Waiting for next cycle</b>
+    <span class="sep">/</span>
+    <span class="muted">cycle</span> <span class="mn">19</span>
+    <span class="sep">/</span>
+    <span class="muted">next</span> <span class="mn">DFII10.change5.GBPUSD.h10</span>
+  </div>
+  <div class="lr mn">2,608 left</div>
+</div>
 
-<h2>Funnel</h2>
-<p class=note>38 screened, <b>0</b> survived. At a 5%
-threshold chance alone gives <b>1.9</b>.
-<b>Indistinguishable from chance.</b>
-</p>
+<div class="cts"><div class="ct"><div class="ck">Strategies researched</div><div class="cv mn">55</div><div class="cn">distinct ideas, all time</div></div><div class="ct"><div class="ck">Tests run</div><div class="cv mn">423</div><div class="cn">195 declared in advance</div></div><div class="ct"><div class="ck">Queued to test</div><div class="cv mn">2,608</div><div class="cn">combinations not yet tried</div></div><div class="ct"><div class="ck">Past the screen</div><div class="cv mn">1</div><div class="cn">of 195 the loop ran — earned a real test, not a result</div></div></div>
+
+<h2>What kind of strategy — every idea ever tried here</h2>
+<div class="kl">Shapes in price</div><div class="bgrid">
+  <div class="bk hit">
+    <div class="bh">
+      <div><div class="bn">Bands &amp; envelopes</div>
+           <div class="bb">VWAP, sigma bands, anchors</div></div>
+      <div class="bc mn">100</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:95.0%"></span><span class="seg hit" style="width:5.0%"></span></div>
+    <div class="chips"><span class="chip hit">VWAP band breakout<i class="mn">38</i></span><span class="chip hit">VWAP on crypto<i class="mn">30</i></span><span class="chip hit">VWAP mean reversion<i class="mn">22</i></span><span class="chip">VWAP breakout book<i class="mn">5</i></span><span class="chip">VWAP band rejection scalper<i class="mn">3</i></span><span class="chip">Band shape<i class="mn">1</i></span><span class="chip">Anchor family<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Breakouts</div>
+           <div class="bb">opening range, session break</div></div>
+      <div class="bc mn">19</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Opening range breakout<i class="mn">19</i></span></div>
+  </div>
+  <div class="bk hit">
+    <div class="bh">
+      <div><div class="bn">Trend &amp; moving averages</div>
+           <div class="bb">EMA, ribbons, crosses</div></div>
+      <div class="bc mn">30</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:96.7%"></span><span class="seg hit" style="width:3.3%"></span></div>
+    <div class="chips"><span class="chip hit">Moving-average ribbon<i class="mn">21</i></span><span class="chip">EMA x VWAP cross<i class="mn">9</i></span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Fades &amp; mean reversion</div>
+           <div class="bb">sweeps, prior highs, ratios</div></div>
+      <div class="bc mn">10</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Prior day/week high-low reversal<i class="mn">4</i></span><span class="chip">Beta-residual reversion<i class="mn">3</i></span><span class="chip">Liquidity sweep / stop-run fade<i class="mn">1</i></span><span class="chip">Gold/silver relative value<i class="mn">1</i></span><span class="chip">Gold/silver ratio convergence<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Market structure / SMC</div>
+           <div class="bb">fair value gaps, AMD</div></div>
+      <div class="bc mn">2</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Power of Three / AMD<i class="mn">1</i></span><span class="chip">Fair value gaps<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk hit">
+    <div class="bh">
+      <div><div class="bn">Cross-sectional</div>
+           <div class="bb">rank one market against others</div></div>
+      <div class="bc mn">9</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:66.7%"></span><span class="seg hit" style="width:33.3%"></span></div>
+    <div class="chips"><span class="chip hit">Systemic crowd positioning<i class="mn">5</i></span><span class="chip">Cross-sectional ranking<i class="mn">3</i></span><span class="chip">Relative volume / stocks in play<i class="mn">1</i></span></div>
+  </div></div><div class="kl">Outside information</div><div class="bgrid">
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Order flow</div>
+           <div class="bb">taker delta, depth, footprint</div></div>
+      <div class="bc mn">28</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Crowd long/short ratio<i class="mn">10</i></span><span class="chip">Gold net buying pressure<i class="mn">6</i></span><span class="chip">Book depth imbalance<i class="mn">3</i></span><span class="chip">Common flow factor<i class="mn">2</i></span><span class="chip">Absorption<i class="mn">2</i></span><span class="chip">Liquidation-pressure fade<i class="mn">2</i></span><span class="chip">Quarter-hour clock effect<i class="mn">1</i></span><span class="chip more">+2</span></div>
+  </div>
+  <div class="bk hit">
+    <div class="bh">
+      <div><div class="bn">Positioning &amp; carry</div>
+           <div class="bb">funding, open interest, COT</div></div>
+      <div class="bc mn">13</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:61.5%"></span><span class="seg hit" style="width:38.5%"></span></div>
+    <div class="chips"><span class="chip hit">Perpetual premium<i class="mn">7</i></span><span class="chip hit">Funding rate level<i class="mn">3</i></span><span class="chip">CFTC COT positioning<i class="mn">1</i></span><span class="chip">Term structure of leverage<i class="mn">1</i></span><span class="chip">Funding settlement as an event<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk hit">
+    <div class="bh">
+      <div><div class="bn">Implied volatility</div>
+           <div class="bb">VIX, GVZ, DVOL, term structure</div></div>
+      <div class="bc mn">99</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:98.0%"></span><span class="seg hit" style="width:2.0%"></span></div>
+    <div class="chips"><span class="chip">Gold volatility index<i class="mn">24</i></span><span class="chip">Equity volatility index<i class="mn">24</i></span><span class="chip hit">Volatility term structure<i class="mn">23</i></span><span class="chip">3-month volatility index<i class="mn">22</i></span><span class="chip">DVOL implied volatility<i class="mn">2</i></span><span class="chip hit">VIX term structure<i class="mn">2</i></span><span class="chip">Variance risk premium<i class="mn">1</i></span><span class="chip more">+1</span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Macro rates &amp; dollar</div>
+           <div class="bb">real yields, DXY, breakevens</div></div>
+      <div class="bc mn">98</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">10y inflation breakeven<i class="mn">25</i></span><span class="chip">US 10y real yield<i class="mn">24</i></span><span class="chip">Broad dollar index<i class="mn">24</i></span><span class="chip">Real yield minus breakeven<i class="mn">24</i></span><span class="chip">Three macro feeds<i class="mn">1</i></span></div>
+  </div></div><div class="kl">How we measure, not what we trade</div><div class="bgrid">
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Portfolio &amp; sizing</div>
+           <div class="bb">weights, legs, vol targeting</div></div>
+      <div class="bc mn">4</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Volatility-managed sizing<i class="mn">2</i></span><span class="chip">Widening the book with more legs<i class="mn">1</i></span><span class="chip">Shipped rule on five markets<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Execution &amp; risk</div>
+           <div class="bb">fills, drawdown, guards</div></div>
+      <div class="bc mn">7</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Maker execution / queue priority<i class="mn">5</i></span><span class="chip">Equity vs closed-balance drawdown<i class="mn">1</i></span><span class="chip">Daily-loss guard overlay<i class="mn">1</i></span></div>
+  </div>
+  <div class="bk dead">
+    <div class="bh">
+      <div><div class="bn">Events</div>
+           <div class="bb">listings, session reopens</div></div>
+      <div class="bc mn">4</div>
+    </div>
+    <div class="bar"><span class="seg dead" style="width:100.0%"></span><span class="seg hit" style="width:0.0%"></span></div>
+    <div class="chips"><span class="chip">Metals daily-reopen premium<i class="mn">3</i></span><span class="chip">Buy the Binance listing<i class="mn">1</i></span></div>
+  </div></div>
+
+<h2>What the loop kills, and where</h2>
+
+  <div class="gt">
+    <div class="gq">Happened enough times?<small>under 40 separate occasions</small></div>
+    <div class="gbar"><i style="width:100.0%"></i></div>
+    <div class="gk mn">195<span> in</span></div>
+    <div class="gd mn">−9</div>
+  </div>
+  <div class="gt">
+    <div class="gq">Bigger than the cost?<small>must beat 2x the spread</small></div>
+    <div class="gbar"><i style="width:95.4%"></i></div>
+    <div class="gk mn">186<span> in</span></div>
+    <div class="gd mn">−17</div>
+  </div>
+  <div class="gt">
+    <div class="gq">Typical trade, not one lucky one?<small>mean and median must agree</small></div>
+    <div class="gbar"><i style="width:86.7%"></i></div>
+    <div class="gk mn">169<span> in</span></div>
+    <div class="gd mn">−30</div>
+  </div>
+  <div class="gt">
+    <div class="gq">More signal, more move?<small>response must be monotone</small></div>
+    <div class="gbar"><i style="width:71.3%"></i></div>
+    <div class="gk mn">139<span> in</span></div>
+    <div class="gd mn">−123</div>
+  </div>
+  <div class="gt">
+    <div class="gq">Beats shuffled nonsense?<small>200 scrambled reruns</small></div>
+    <div class="gbar"><i style="width:8.2%"></i></div>
+    <div class="gk mn">16<span> in</span></div>
+    <div class="gd mn">−15</div>
+  </div>
+  <div class="gt out">
+    <div class="gq">Survived<small>earned a real test, nothing more</small></div>
+    <div class="gbar"><i class="ok" style="width:0.6%"></i></div>
+    <div class="gk mn">1<span> left</span></div>
+    <div class="gd mn"></div>
+  </div>
+<p class="note">195 screened · 1 survived ·
+ chance alone gives 9.8 · a survivor has earned a walk-forward,
+ not a place in the book.</p>
+
+<h2>Live tape</h2>
+<div class="tw"><table class="tape"><tr><th>time</th><th>basket</th><th>test</th><th class="num">vs cost</th><th>outcome</th></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX_TERM.change5.GBPUSD.h3</td><td class="mn num">9.8x</td><td class="why">response not monotone, rho -0.30</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX3M.change5.GBPUSD.h3</td><td class="mn num">4.6x</td><td class="why">response not monotone, rho -0.80</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX.change5.GBPUSD.h10</td><td class="mn num">9.5x</td><td class="why">response not monotone, rho 0.10</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">T10YIE.change5.GBPUSD.h10</td><td class="mn num">53.9x</td><td class="why">loses to its own shuffle, p=0.070</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">REAL_MINUS_BE.change5.GBPUSD.h5</td><td class="mn num">11.5x</td><td class="why">response not monotone, rho 0.60</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">GVZ.level-.XAUUSD.h10</td><td class="mn num">0.0x</td><td class="why">1 independent events, under 40</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">DTWEXBGS.change5.GBPUSD.h5</td><td class="mn num">7.8x</td><td class="why">response not monotone, rho -0.40</td></tr><tr class=""><td class="mn dim">10:49</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">DFII10.change5.GBPUSD.h5</td><td class="mn num">15.3x</td><td class="why">response not monotone, rho 0.50</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX_TERM.change5.GBPUSD.h1</td><td class="mn num">5.2x</td><td class="why">response not monotone, rho -0.10</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX3M.change5.GBPUSD.h1</td><td class="mn num">5.6x</td><td class="why">response not monotone, rho -0.40</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">VIX.change5.GBPUSD.h5</td><td class="mn num">14.0x</td><td class="why">response not monotone, rho -0.50</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">T10YIE.change5.GBPUSD.h5</td><td class="mn num">16.9x</td><td class="why">response not monotone, rho -0.20</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Macro rates &amp; dollar</td><td class="mn">REAL_MINUS_BE.change5.GBPUSD.h3</td><td class="mn num">2.2x</td><td class="why">response not monotone, rho 0.10</td></tr><tr class=""><td class="mn dim">10:39</td><td><span class="fdot"></span>Implied volatility</td><td class="mn">GVZ.level-.XAUUSD.h5</td><td class="mn num">0.0x</td><td class="why">1 independent events, under 40</td></tr></table></div>
+
+<h2>Cost of the search</h2>
+<div class="cts">
+  <div class="ct"><div class="ck">Bar to beat</div>
+    <div class="cv mn">3.00σ</div>
+    <div class="cn">what the best of 423 tries reaches on luck alone</div></div>
+  <div class="ct"><div class="ck">Declared first</div>
+    <div class="cv mn">195</div>
+    <div class="cn">those face a bar of 0.00σ</div></div>
+  <div class="ct"><div class="ck">Budget</div>
+    <div class="cv mn">45</div>
+    <div class="cn">tests 5 years of history pays for</div></div>
+  <div class="ct"><div class="ck">Feeds without a mechanism</div>
+    <div class="cv mn">0</div>
+    <div class="cn">all have one — none tested both ways</div></div>
+</div>
 
 <footer>
-Built by <code>research/dashboard.py</code>. Feeds: <code>research/vocab.py</code>.
-Proposer: <code>research/propose.py</code>. Screen: <code>core/screen.py</code>.
-Budget: <code>core/searchcost.py</code>. Ledger: <code>backtests/ledger.csv</code>.<br>
-A verdict of PASS here means one thing only: the idea earned a real study with a
-walk-forward and honest fills. It is not a result and it is not a strategy.
+Ledger <span class="mn">ledger.csv</span> ·
+baskets <span class="mn">research/families.py</span> ·
+screen <span class="mn">core/screen.py</span>.
+Nothing on this page is a trading result.
 </footer>
 </div>

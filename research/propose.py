@@ -88,7 +88,9 @@ class Candidate:
 
     @property
     def name(self) -> str:
-        w = f"{self.window}" if self.window else "-"
+        # `level` takes no window, so it gets no suffix - an earlier version
+        # printed "level-" and it read like a typo on the page.
+        w = f"{self.window}" if self.window else ""
         return f"{self.feed}.{self.transform}{w}.{self.market}.h{self.hold}"
 
 
