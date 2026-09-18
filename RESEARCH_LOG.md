@@ -2666,3 +2666,98 @@ path already had, which is why the 2026-09-12 hand-close was caught.
 `backstop_level` now takes the net side of the book first and the furthest stop
 among the legs facing that way, and returns `None` when the book nets flat,
 where no single level means anything. Six tests in `tests/test_bybit_exits.py`.
+
+## 2026-09-18 — the search was never counted, and the bar it implies
+
+Kris asked where the project should turn, and said the work feels random. Full
+write-up: `docs/WORKFLOW.md`. Three things came out of it that belong here.
+
+**1. The search has never been priced, and the bill is 228 trials.**
+`core/ledger.py` and `core/backfill_ledger.py` recovered every row of
+`STRATEGY_LOG.md` into `backtests/ledger.csv`:
+
+```
+trials        228 charged, 0 pre-registered
+budget        3y buys 13 (OVER BUDGET), 5y buys 45 (OVER BUDGET)
+this search   needs 7.9y of history; luck alone reaches 2.81 sigma
+```
+
+The budget is Bailey-Borwein-Lopez de Prado-Zhu minimum backtest length, pinned
+against their worked example in `tests/test_searchcost.py`
+(`min_backtest_years(45) = 4.998` vs the published 5.0). The project's own
+test-window rule caps history at 3 years ideal, 5 maximum, so the search has run
+at **five to seventeen times its budget**. That does not retract a result — the
+paired nulls did the killing and they were right — it sets the bar for the next
+headline, and it explains why three have already been withdrawn.
+
+**The lesson had been written down twice with no code behind it**: H-035 on
+2026-09-13 ("price the SEARCH, not just the test") and `NEXT.md` on 2026-09-17
+("the search is not priced"), the second re-derived three days after the first.
+
+**2. Pre-registration is worth ~2.8 sigma, as arithmetic.** At a trial count of 1
+the deflation threshold is exactly zero and the deflated Sharpe collapses to the
+plain probabilistic Sharpe. **Zero of 228 trials were pre-registered.** Template
+at `docs/prereg/TEMPLATE.md`.
+
+**3. The independent literature describes this project's exact history.**
+arXiv 2608.27734 runs an LLM agent over a 100-candidate search with a trial
+ledger, deflated Sharpe and PBO. Zero strategies certify; best in-sample Sharpe
+1.69 collapses to 0.18; **five independent runs all converge on the
+volatility-breakout family and 0 of 5 survive.** H-027 is a volatility-band
+breakout and is this repo's only survivor of 48 hypotheses. Their PBO on classic
+factors is 0.83.
+
+**PBO has never been computed here, and it asks the one question the paired null
+cannot**: not "is this candidate real" but "is the way we PICK candidates any
+good". `core/searchcost.pbo_cscv` now exists. Running it on H-027's fold
+selector either validates `core/pipeline.py` or invalidates a great deal at
+once, and it is half a day.
+
+**One correction to the record.** `live/bybit_demo.py` says "no cTrader
+connector exists" and that has stood since 2026-09-10. cTrader Open API has a
+first-party Python SDK (`pip install ctrader-open-api`, Twisted, protobuf, no
+desktop client, Linux fine), 40+ prop firms are on cTrader, and **FundingPips
+1-Step Flex — the row `docs/FIRMS.md` already picked — is one of them.** The
+Bybit route also costs something measured: 5.50 bps round trip on XAUUSDT
+against the 1.83 bps `core/markets.py` assumes for a gold CFD.
+
+## 2026-09-18 (second entry) — the two-engine loop, and what it is allowed to do
+
+Kris picked the shape: *"C target with B machinery"* — hunt DATA FEEDS, with a
+model driving the search — plus a page to watch it. Built as `research/`; the
+package's own README is the operating manual. What belongs in this log is the
+three design decisions that are really findings.
+
+**1. Testing a signal both ways is a free second attempt, and the first draft
+did it.** `enumerate_space` emitted direction +1 and −1 for every
+feed/transform/market, which doubles the trial count and guarantees one of the
+pair matches the data whatever the data says. Every feed now declares ONE
+`prior_sign` with its mechanism (`research/vocab.py`), a proposal that flips it
+is refused with the mechanism as the reason, and a feed with no declared sign is
+not a candidate at all — no sign means no written mechanism. **The space halved,
+5,590 → 2,795.**
+
+**2. `lag: 0` was silently upgraded to the feed's floor.** `int(d.get("lag") or
+floor)` treats 0 as absent, so an explicit request for same-day data — a
+look-ahead — would have been quietly corrected and never reported. It is now
+refused loudly. Found by a test written before the bug was suspected
+(`tests/test_research_loop.py`), which is the argument for writing them.
+
+**3. FRED hangs on browser-like user agents.** Measured, same URL, 20s timeout:
+default urllib **OK in 0.5s**, `curl/8.5.0` **OK in 0.4s**, `"prop_lab"`
+**TimeoutError**, `Mozilla/5.0 (X11; Linux x86_64)` **TimeoutError**. It fails
+closed rather than with a 403, so three feeds reported as "network down" were
+actually being filtered. `research/harvest.AGENT` now sets the agent per source.
+
+**What the loop has produced so far: 36 candidates screened, 0 survivors, at a
+chance expectation of 1.8.** Every one died to a stated check — 14 under the cost
+bar, 16 non-monotone, 4 skew traps, 2 to their own shuffle. That is the designed
+outcome of a cheap screen and it cost about two seconds of compute.
+
+**The number that governs the whole loop.** The luck bar grows with log(N), so
+volume is affordable — 264 trials to a million costs about two sigma. What is not
+affordable is what it implies about effect size: at ten thousand trials on three
+years of data, **nothing below an annual Sharpe of 2.23 can be certified**, and
+H-027 — the project's only survivor — sits at **1.16**. Mass search and marginal
+edges are incompatible, so the screen hunts large effects and kills the rest for
+free.

@@ -45,3 +45,10 @@ live/*_keys.json
 live/paper/bybit_state.json
 live/paper/bybit_cron.log
 live/paper/.bybit_cron.lock
+
+# research loop run artefacts, not results — same reasoning as live/paper/ above.
+# The trial record IS committed (backtests/ledger.csv) and so is the page it
+# builds; the cycle log and the "what is it doing right now" state file are
+# rewritten every cycle and nothing reads them back.
+backtests/loop.log
+backtests/loop_state.json

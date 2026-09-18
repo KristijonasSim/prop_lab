@@ -8,6 +8,62 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## ADDED 2026-09-18 — the workflow question, and the one number that reframes this page
+
+Kris: *"everything happens random ... we need some kind of workflow."* Full
+research and the proposed operating system: **`docs/WORKFLOW.md`**.
+
+The finding that changes how to read everything below:
+
+```
+trials        228 charged, 0 pre-registered
+budget        3y buys 13 (OVER BUDGET), 5y buys 45 (OVER BUDGET)
+this search   needs 7.9y of history; luck alone reaches 2.81 sigma
+```
+
+`core/ledger.py`, `core/searchcost.py`, `backtests/ledger.csv` — built today,
+backfilled from `STRATEGY_LOG.md`. **The third method debt on this page is now
+paid**; the other two (hour-matched null, accounts-consumed) have functions
+behind them but are not yet wired into the board.
+
+## ADDED 2026-09-18 (second entry) — the loop is built and running
+
+Kris picked **"C target with B machinery"**: hunt data feeds, model-driven, with
+a UI. It exists — `research/`, and `research/README.md` is the manual.
+
+```
+python -m research.loop --cycles 1        # harvest, propose, screen, publish
+python -m research.loop --forever --mode llm --every 900
+open backtests/research.html              # the page
+```
+
+**First run: 36 candidates screened, 0 survivors, chance expectation 1.8.** Two
+seconds of compute. Three design findings are in `RESEARCH_LOG.md`; the one that
+governs everything is that **at 10,000 trials on three years of data nothing
+below an annual Sharpe of 2.23 is certifiable, and H-027 sits at 1.16.**
+
+**The loop screens only.** A PASS means the idea earned a real study — it is not
+a result. The walk-forward is still `core/pipeline.py` and still hours.
+
+**It runs on the desktop, not the VM** (2 cores / 952 MB there, 28 cores / 30 GB
+here). When the registry runs out, the fix is a new feed, not a new parameter —
+and the next one is Dukascopy's XAUUSD **ask/bid volume**, which
+`core/fx_spread.py` has been downloading and discarding on line 106.
+
+---
+
+Four items independent of any route, in cost order:
+
+1. **Send the B1/B2 email.** Ten minutes, open ten days.
+2. **cTrader Open API spike.** `live/bybit_demo.py`'s "no cTrader connector
+   exists" is wrong — Spotware ships a Python SDK and FundingPips is on cTrader.
+3. **PBO on the H-027 fold selector** (`core.searchcost.pbo_cscv`). The one gate
+   never run here. Validates or invalidates `core/pipeline.py` in half a day.
+4. **Gate 0** — `core/screen.py` refuses to run without a pre-registration
+   (`docs/prereg/TEMPLATE.md`). Worth ~2.8 sigma of bar for thirty minutes.
+
+---
+
 ## The state in six lines
 
 * **H-027 is finished being tuned. Eight axes are now closed BY MEASUREMENT** —
