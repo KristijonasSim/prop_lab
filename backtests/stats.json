@@ -1,35 +1,12 @@
 {
+ "book_tpd": 0,
+ "min_tpd": 0.2,
+ "solo": 0,
  "researched": 2990,
- "tested": 228,
+ "tested": 229,
  "waiting": 2771,
- "per_hour": 32.6,
- "passed": [
-  {
-   "name": "Calm building over 5 days \u2192 sell Gold (3 days)",
-   "arm": "VIX_TERM.change5.XAUUSD.h3",
-   "market": "XAUUSD",
-   "events": 179,
-   "effect": 54.974,
-   "bar": 2.13,
-   "rho": 1.0,
-   "p": 0.045,
-   "note": "earned a real study",
-   "trades": 84,
-   "trades_per_day": 0.0767,
-   "trades_per_week": 0.537,
-   "avg_hold_bars": 3.0,
-   "win_pct": 58.3333,
-   "avg_bps": 56.4636,
-   "pf_1x": 2.2278,
-   "pf_2x": 2.1938,
-   "pf_3x": 2.1604,
-   "max_dd_bps": 488.4535,
-   "sharpe": 1.5641,
-   "span_days": 1095.0,
-   "total_bps": 4742.9421,
-   "cadence": "1d"
-  }
- ],
+ "per_hour": 32.7,
+ "passed": [],
  "near": [
   {
    "name": "Yields rising over 5 days \u2192 sell Euro (10 days)",
@@ -335,10 +312,10 @@
   },
   {
    "h": "12",
-   "n": 1
+   "n": 2
   }
  ],
  "ideas": 227,
  "status": "idle",
- "built": "12:31:56 UTC"
+ "built": "12:38:08 UTC"
 }

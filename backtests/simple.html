@@ -56,6 +56,11 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)
 .stats b{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;
  font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-bottom:2px}
 @media(max-width:620px){.stats{grid-template-columns:repeat(3,1fr)}}
+.book{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:13px 16px;margin-bottom:11px;font-size:14px}
+.book b{font-family:var(--mono);font-size:19px;letter-spacing:-.02em}
+.book .ok{color:var(--good)} .book .no{color:var(--warn)}
+.book .s{display:block;color:var(--mut);font-size:12px;margin-top:4px}
 .empty{color:var(--mut);font-size:14px;background:var(--card);
  border:1px dashed var(--line);border-radius:10px;padding:16px}
 .foot{color:var(--mut);font-size:12.5px;margin-top:34px;padding-top:14px;
@@ -84,6 +89,7 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)
     <div class="xax" id="xax"></div></div>
 
   <h2>Passed the bar</h2>
+  <div class="book" id="book"></div>
   <div id="passed"></div>
 
   <h2>Close to the bar</h2>
@@ -130,6 +136,12 @@ function paint(d){
   document.getElementById('rate').textContent       = d.per_hour;
   document.getElementById('built').textContent      = d.built + ' · loop ' + d.status;
   bars(d.series);
+  const bk = document.getElementById('book');
+  const ok = d.book_tpd >= d.min_tpd;
+  bk.innerHTML = `<b class="${ok?'ok':'no'}">${d.book_tpd.toFixed(2)}</b>
+    trades/day traded together · bar is ${d.min_tpd}
+    <span class="s">${d.solo} of ${d.passed.length} could stand alone;
+    the rest only count as part of a book.</span>`;
   list('passed', d.passed, 'ok', 'Nothing has cleared the bar yet.');
   list('near', d.near, 'near', 'Nothing close right now.');
 }

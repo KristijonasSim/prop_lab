@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core.ledger import read                                    # noqa: E402
-from research import naming, vocab                              # noqa: E402
+from research import naming, tradestats, vocab                  # noqa: E402
 from research.propose import enumerate_space, untried           # noqa: E402
 
 OUT = ROOT / "backtests" / "simple.html"
@@ -197,7 +197,14 @@ def collect() -> dict:
                  [(t, {"name": naming.from_key(p.get("candidate_key", ""))})
                   for t, p in loop]})
 
+    book_tpd = sum(r.get("trades_per_day", 0) or 0 for r in passed)
+    solo = [r for r in passed
+            if (r.get("trades_per_day", 0) or 0) >= tradestats.MIN_TPD]
+
     return {
+        "book_tpd": round(book_tpd, 3),
+        "min_tpd": tradestats.MIN_TPD,
+        "solo": len(solo),
         "researched": len(enumerate_space()),
         "tested": len(loop),
         "waiting": len(untried()),
@@ -266,6 +273,11 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)
 .stats b{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;
  font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-bottom:2px}
 @media(max-width:620px){.stats{grid-template-columns:repeat(3,1fr)}}
+.book{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:13px 16px;margin-bottom:11px;font-size:14px}
+.book b{font-family:var(--mono);font-size:19px;letter-spacing:-.02em}
+.book .ok{color:var(--good)} .book .no{color:var(--warn)}
+.book .s{display:block;color:var(--mut);font-size:12px;margin-top:4px}
 .empty{color:var(--mut);font-size:14px;background:var(--card);
  border:1px dashed var(--line);border-radius:10px;padding:16px}
 .foot{color:var(--mut);font-size:12.5px;margin-top:34px;padding-top:14px;
@@ -308,6 +320,12 @@ function paint(d){
   document.getElementById('rate').textContent       = d.per_hour;
   document.getElementById('built').textContent      = d.built + ' · loop ' + d.status;
   bars(d.series);
+  const bk = document.getElementById('book');
+  const ok = d.book_tpd >= d.min_tpd;
+  bk.innerHTML = `<b class="${ok?'ok':'no'}">${d.book_tpd.toFixed(2)}</b>
+    trades/day traded together · bar is ${d.min_tpd}
+    <span class="s">${d.solo} of ${d.passed.length} could stand alone;
+    the rest only count as part of a book.</span>`;
   list('passed', d.passed, 'ok', 'Nothing has cleared the bar yet.');
   list('near', d.near, 'near', 'Nothing close right now.');
 }
@@ -350,6 +368,7 @@ def page() -> str:
     <div class="xax" id="xax"></div></div>
 
   <h2>Passed the bar</h2>
+  <div class="book" id="book"></div>
   <div id="passed"></div>
 
   <h2>Close to the bar</h2>

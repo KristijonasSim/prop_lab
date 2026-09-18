@@ -40,6 +40,29 @@ import pandas as pd
 TOP_Q = 0.8
 WINDOW = 250
 
+#: THE PACE BAR, set by Kris 2026-09-18: *"i dont want tpd that low its a
+#: disgrace, i need at least 0.2 tpd ... i mean for one asset. If we trade gold
+#: with 0.2 and silver with 0.1, together that's ok because all in all it's
+#: 0.3."*
+#:
+#: So there are two floors, not one. A rule that has to stand alone must clear
+#: `MIN_TPD`. A rule that will only ever be one leg of a book can be slower -
+#: but not arbitrarily slower, because four legs at 0.02 still only reach 0.08
+#: and each one costs a full trial against the search budget.
+MIN_TPD = 0.20
+MIN_TPD_LEG = 0.05
+
+#: WHAT THIS BAR RULES OUT, MEASURED BEFORE IT WAS SET. A daily feed has ~750
+#: bars in three years and fires on its top 20%, so it CANNOT produce more than
+#: ~150 non-overlapping trades however short the hold - a ceiling of 0.14/day.
+#:
+#:     daily feed, hold 1 .. 20    0.14 -> 0.03 tpd    never clears 0.20
+#:     gold hourly, hold 1 .. 5    0.75 tpd            clears it easily
+#:
+#: The bar is therefore not a filter on daily feeds, it is a verdict on them:
+#: the eight daily feeds in the registry can only ever be book legs, and the
+#: search for a standalone rule has to happen on intraday data.
+
 
 @dataclass
 class TradeStats:
