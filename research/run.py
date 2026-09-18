@@ -42,6 +42,7 @@ from core import screen as SC                                   # noqa: E402
 from core.ledger import log                                     # noqa: E402
 from core.markets import COSTS, EXEC_MODE, load                 # noqa: E402
 from research import vocab                                      # noqa: E402
+from core.run_hypothesis import YEARS                           # noqa: E402
 from research.propose import Candidate                          # noqa: E402
 
 PREREG = ROOT / "docs" / "prereg"
@@ -172,6 +173,15 @@ def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
 
     fwd = (mkt.open.shift(-c.hold) / mkt.open - 1.0) * 1e4
     both = pd.concat([sig.rename("s"), fwd.rename("f")], axis=1).dropna()
+
+    # THE TEST WINDOW IS ENFORCED, NOT INHERITED. CLAUDE.md caps every study at
+    # 3 years (5 absolute maximum, set 2026-09-15). Until now this file simply
+    # used whatever the caches held, which happened to be 3.0 years for the
+    # daily feeds - so the rule was being obeyed by accident. Extending a bar
+    # cache by a year would have silently broken it with nothing to notice.
+    if len(both):
+        cutoff = both.index[-1] - pd.DateOffset(years=YEARS)
+        both = both[both.index >= cutoff]
 
     rt = COSTS[c.market].round_trip(EXEC_MODE)
     return both.s, both.f, rt

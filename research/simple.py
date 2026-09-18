@@ -66,6 +66,40 @@ def _cadence(feed: str) -> str:
     return spec.cadence if spec else "1d"
 
 
+_STATS_CACHE: dict[str, dict] = {}
+
+
+def _trade_stats(arm: str) -> dict:
+    """tpd / PF / DD / win / Sharpe for one arm, cached for the session.
+
+    Returns empty rather than raising: a board that 500s because one feed's
+    cache moved is worse than a board with one row missing its numbers.
+    """
+    if arm in _STATS_CACHE:
+        return _STATS_CACHE[arm]
+    out: dict = {}
+    try:
+        from research.propose import Candidate
+        from research.run import build_signal
+        from research.tradestats import compute
+        feed, rest = arm.split(".", 1)
+        tr_w, mkt, hold = rest.split(".")
+        transform = "".join(ch for ch in tr_w if not ch.isdigit())
+        window = int("".join(ch for ch in tr_w if ch.isdigit()) or 0)
+        spec = vocab.FEEDS[feed]
+        c = Candidate(feed=feed, transform=transform, window=window, lag=spec.lag_floor,
+                      market=mkt, hold=int(hold.lstrip("h")),
+                      direction=spec.prior_sign or 1, mechanism="x" * 50)
+        sig, fwd, rt = build_signal(c)
+        st = compute(sig, fwd, rt, c.hold, spec.cadence)
+        out = st.as_dict()
+        out["cadence"] = spec.cadence
+    except Exception:                                    # noqa: BLE001
+        out = {}
+    _STATS_CACHE[arm] = out
+    return out
+
+
 def collect() -> dict:
     trials = read()
     loop = [(t, _params(t)) for t in trials if _params(t).get("candidate_key")]
@@ -144,6 +178,13 @@ def collect() -> dict:
 
     passed.sort(key=lambda r: -(abs(r["effect"] or 0) / (r["bar"] or 1)))
     near.sort(key=lambda r: -(abs(r["effect"] or 0) / (r["bar"] or 1)))
+    near = near[:8]
+
+    # The mandatory reporting fields (CLAUDE.md), computed only for the handful
+    # shown. Rebuilding a signal costs a second, so doing it for all 400 dead
+    # ones would make the refresh button useless for no gain.
+    for r in passed + near:
+        r.update(_trade_stats(r["arm"]))
 
     state = {}
     if STATE.exists():
@@ -216,8 +257,15 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)
 .item.near{border-left:3px solid var(--warn)}
 .item .t{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
 .item .d{color:var(--mut);font-size:13px;margin-top:5px}
-.item .m{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:6px;
+.item .m{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:9px;
  font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:11px;
+ padding-top:11px;border-top:1px solid var(--line)}
+.stats span{display:flex;flex-direction:column;font-size:10.5px;color:var(--mut);
+ line-height:1.3}
+.stats b{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;
+ font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-bottom:2px}
+@media(max-width:620px){.stats{grid-template-columns:repeat(3,1fr)}}
 .empty{color:var(--mut);font-size:14px;background:var(--card);
  border:1px dashed var(--line);border-radius:10px;padding:16px}
 .foot{color:var(--mut);font-size:12.5px;margin-top:34px;padding-top:14px;
@@ -237,12 +285,21 @@ function bars(s){
 function list(id, rows, cls, none){
   const el = document.getElementById(id);
   if(!rows.length){ el.innerHTML = `<div class="empty">${none}</div>`; return; }
+  const pf = v => (v===null||v===undefined) ? '–' : (v>99 ? '99+' : Number(v).toFixed(2));
   el.innerHTML = rows.map(r=>`<div class="item ${cls}">
     <div class="t">${r.name}</div>
     <div class="d">${r.why ? r.why : 'cleared every check'}</div>
-    <div class="m">${r.events.toLocaleString()} events ·
-      ${Number(r.effect).toFixed(1)} bps vs ${Number(r.bar).toFixed(2)} bar ·
-      ${(Math.abs(r.effect)/r.bar).toFixed(1)}x cost</div></div>`).join('');
+    <div class="stats">
+      <span><b>${pf(r.pf_2x)}</b>profit factor</span>
+      <span><b>${r.trades_per_day===undefined?'–':Number(r.trades_per_day).toFixed(2)}</b>trades/day</span>
+      <span><b>${r.win_pct===undefined?'–':Math.round(r.win_pct)+'%'}</b>win rate</span>
+      <span><b>${r.max_dd_bps===undefined?'–':Math.round(r.max_dd_bps)}</b>worst drop, bps</span>
+      <span><b>${r.sharpe===undefined?'–':Number(r.sharpe).toFixed(2)}</b>sharpe</span>
+      <span><b>${r.trades===undefined?'–':r.trades}</b>trades in 3y</span>
+    </div>
+    <div class="m">${Number(r.effect).toFixed(1)} bps vs ${Number(r.bar).toFixed(2)} cost bar ·
+      ${(Math.abs(r.effect)/r.bar).toFixed(1)}x · ${r.events.toLocaleString()} events</div>
+    </div>`).join('');
 }
 function paint(d){
   document.getElementById('researched').textContent = d.researched.toLocaleString();
@@ -298,9 +355,11 @@ def page() -> str:
   <h2>Close to the bar</h2>
   <div id="near"></div>
 
-  <div class="foot">Passing means one thing: it earned a proper test with real
-  costs. It is not a result and not a strategy. Failures are not listed here —
-  they are on the full board.</div>
+  <div class="foot">All numbers are the last <b>3 years</b>, costs charged at
+  <b>2x</b>. Passing means one thing: it earned a proper test. It is not a
+  result and not a strategy. No stop is applied, so there is deliberately no R
+  and no "days to pass" — those need a stop, and picking one is a decision, not
+  a calculation. Failures are not listed here; they are on the full board.</div>
 </div>
 <script>{JS}</script>"""
 
