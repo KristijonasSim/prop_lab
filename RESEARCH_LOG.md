@@ -2761,3 +2761,58 @@ years of data, **nothing below an annual Sharpe of 2.23 can be certified**, and
 H-027 — the project's only survivor — sits at **1.16**. Mass search and marginal
 edges are incompatible, so the screen hunts large effects and kills the rest for
 free.
+
+## 2026-09-18 (third entry) — what Dukascopy's askVolume actually is, and what it costs H-052
+
+Run before starting H-052's fourteen-hour download, which is the whole point of
+a cheapest-first order. It changes the bet.
+
+**1. The repo's `volume` IS the bid side, exactly.** `core/gold_flow.reconcile`
+on 2025-05-14 and 2025-09-10: **corr(candle volume, bidvol) = 1.0000** on both,
+against 0.76 for askvol and 0.91 for their sum. H-052's claim is confirmed to
+floating-point exactness.
+
+**2. askVolume is QUOTED liquidity, not aggressor flow — and that is the bad
+answer.** The discriminator is the CONTEMPORANEOUS relationship, which is a
+diagnostic of what the field means and not a signal. If askvol were size that
+traded at the ask, net buying and the same-bar return would move together
+near-mechanically. Measured:
+
+| | |
+|---|---|
+| corr(imbalance, SAME-day return), 240 days | **−0.062** |
+| corr(imbalance, SAME-hour return), 4,172 bars | **+0.025** |
+| spearman, hourly | +0.069 |
+| same-hour return by imbalance quintile (bps) | −0.84, 1.75, 1.31, 0.09, 1.31 |
+
+Flat and non-monotone. **So this is the H-024 family (book depth imbalance), not
+the H-006 family (aggressor flow)** — and H-024 was real, monotone, beat its
+null, and cleared its cost in **0 of 935 cells**.
+
+Supporting: daily imbalance has a small persistent buy bias (mean +0.0147,
+median +0.0139, 61.7% of days positive, t=3.1) with wide day-to-day variation
+(std 0.074, range −0.38 to +0.27).
+
+**3. The screen on everything cached — 4,172 hourly bars, 240 of 689 business
+days, 2024 absent. Gold's round trip is 1.06 bps, so the bar is 2.13.**
+
+| hold | events | effect | median | rho | p | why it died |
+|---|---|---|---|---|---|---|
+| 1h | 1,810 | 0.3 | 0.2 | 0.10 | — | under the 2.13 bar |
+| **3h** | **1,389** | **17.8** | **0.7** | **0.90** | **0.100** | **monotone, loses to its own shuffle** |
+| 6h | 694 | 22.8 | −0.4 | 0.70 | — | mean and median disagree — skew trap |
+| 12h | 346 | 26.2 | −7.0 | 0.10 | — | skew trap |
+| 24h | 172 | 76.2 | −10.5 | 0.70 | — | skew trap |
+
+**The h3 arm is the only live thing here** and it is not alive yet: rho 0.90 is a
+real shape, but a mean of 17.8 against a median of 0.7 is the same trend-swamped
+skew H-052 already flagged, and p=0.100 is the right side of nothing rather than
+evidence.
+
+**What this does to the download decision.** It is no longer "the only family
+that ever worked on the one market that can pay for it". It is the family that
+died in 0 of 935 cells, on a market where the cost bar is 6.6x lower — H-024's
+best honest cell was 7.9 bps against gold's 2.13 bar, so the family is not
+automatically dead here, but the prior is much worse than it looked this morning.
+The download roughly triples the sample (245 → 689 days) and can only settle the
+h3 arm. Five trials charged.
