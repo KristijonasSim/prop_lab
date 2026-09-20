@@ -1,3 +1,10 @@
+> **SUPERSEDED 2026-09-17 — the claim in this file is withdrawn.** It was
+> never run against a null. When it was, the paired null's speed-up beat the
+> real one on every market tested (gold real 1.72x vs null 2.45x; silver
+> 1.53x vs 2.69x). The monotone trend this file cites as proof of a real
+> effect is reproduced by a series with its sequence shuffled out. Kept for
+> the workings. See `TOPN_NULL.md` and `topn.py`.
+
 # The shipped configuration is not the fastest one. 2026-09-15.
 
 `backtests/vwapbreak/topn_wide.json`, `topn_wide.log`. Gold 1h, blind quarterly

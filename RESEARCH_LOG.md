@@ -2824,3 +2824,152 @@ On Binance futures that is 9.0bps to 4.0 and H-024's cell crosses it.
 whole book from 14bps to zero and it moved 57 expected days to 32. Free execution
 buys 33–44% of the pace gap and the target needs about 85%. H-048 is for making
 dead signals tradeable, not for reaching 5–14 days.
+## 2026-09-18 — the search was never counted, and the bar it implies
+
+Kris asked where the project should turn, and said the work feels random. Full
+write-up: `docs/WORKFLOW.md`. Three things came out of it that belong here.
+
+**1. The search has never been priced, and the bill is 228 trials.**
+`core/ledger.py` and `core/backfill_ledger.py` recovered every row of
+`STRATEGY_LOG.md` into `backtests/ledger.csv`:
+
+```
+trials        228 charged, 0 pre-registered
+budget        3y buys 13 (OVER BUDGET), 5y buys 45 (OVER BUDGET)
+this search   needs 7.9y of history; luck alone reaches 2.81 sigma
+```
+
+The budget is Bailey-Borwein-Lopez de Prado-Zhu minimum backtest length, pinned
+against their worked example in `tests/test_searchcost.py`
+(`min_backtest_years(45) = 4.998` vs the published 5.0). The project's own
+test-window rule caps history at 3 years ideal, 5 maximum, so the search has run
+at **five to seventeen times its budget**. That does not retract a result — the
+paired nulls did the killing and they were right — it sets the bar for the next
+headline, and it explains why three have already been withdrawn.
+
+**The lesson had been written down twice with no code behind it**: H-035 on
+2026-09-13 ("price the SEARCH, not just the test") and `NEXT.md` on 2026-09-17
+("the search is not priced"), the second re-derived three days after the first.
+
+**2. Pre-registration is worth ~2.8 sigma, as arithmetic.** At a trial count of 1
+the deflation threshold is exactly zero and the deflated Sharpe collapses to the
+plain probabilistic Sharpe. **Zero of 228 trials were pre-registered.** Template
+at `docs/prereg/TEMPLATE.md`.
+
+**3. The independent literature describes this project's exact history.**
+arXiv 2608.27734 runs an LLM agent over a 100-candidate search with a trial
+ledger, deflated Sharpe and PBO. Zero strategies certify; best in-sample Sharpe
+1.69 collapses to 0.18; **five independent runs all converge on the
+volatility-breakout family and 0 of 5 survive.** H-027 is a volatility-band
+breakout and is this repo's only survivor of 48 hypotheses. Their PBO on classic
+factors is 0.83.
+
+**PBO has never been computed here, and it asks the one question the paired null
+cannot**: not "is this candidate real" but "is the way we PICK candidates any
+good". `core/searchcost.pbo_cscv` now exists. Running it on H-027's fold
+selector either validates `core/pipeline.py` or invalidates a great deal at
+once, and it is half a day.
+
+**One correction to the record.** `live/bybit_demo.py` says "no cTrader
+connector exists" and that has stood since 2026-09-10. cTrader Open API has a
+first-party Python SDK (`pip install ctrader-open-api`, Twisted, protobuf, no
+desktop client, Linux fine), 40+ prop firms are on cTrader, and **FundingPips
+1-Step Flex — the row `docs/FIRMS.md` already picked — is one of them.** The
+Bybit route also costs something measured: 5.50 bps round trip on XAUUSDT
+against the 1.83 bps `core/markets.py` assumes for a gold CFD.
+
+## 2026-09-18 (second entry) — the two-engine loop, and what it is allowed to do
+
+Kris picked the shape: *"C target with B machinery"* — hunt DATA FEEDS, with a
+model driving the search — plus a page to watch it. Built as `research/`; the
+package's own README is the operating manual. What belongs in this log is the
+three design decisions that are really findings.
+
+**1. Testing a signal both ways is a free second attempt, and the first draft
+did it.** `enumerate_space` emitted direction +1 and −1 for every
+feed/transform/market, which doubles the trial count and guarantees one of the
+pair matches the data whatever the data says. Every feed now declares ONE
+`prior_sign` with its mechanism (`research/vocab.py`), a proposal that flips it
+is refused with the mechanism as the reason, and a feed with no declared sign is
+not a candidate at all — no sign means no written mechanism. **The space halved,
+5,590 → 2,795.**
+
+**2. `lag: 0` was silently upgraded to the feed's floor.** `int(d.get("lag") or
+floor)` treats 0 as absent, so an explicit request for same-day data — a
+look-ahead — would have been quietly corrected and never reported. It is now
+refused loudly. Found by a test written before the bug was suspected
+(`tests/test_research_loop.py`), which is the argument for writing them.
+
+**3. FRED hangs on browser-like user agents.** Measured, same URL, 20s timeout:
+default urllib **OK in 0.5s**, `curl/8.5.0` **OK in 0.4s**, `"prop_lab"`
+**TimeoutError**, `Mozilla/5.0 (X11; Linux x86_64)` **TimeoutError**. It fails
+closed rather than with a 403, so three feeds reported as "network down" were
+actually being filtered. `research/harvest.AGENT` now sets the agent per source.
+
+**What the loop has produced so far: 36 candidates screened, 0 survivors, at a
+chance expectation of 1.8.** Every one died to a stated check — 14 under the cost
+bar, 16 non-monotone, 4 skew traps, 2 to their own shuffle. That is the designed
+outcome of a cheap screen and it cost about two seconds of compute.
+
+**The number that governs the whole loop.** The luck bar grows with log(N), so
+volume is affordable — 264 trials to a million costs about two sigma. What is not
+affordable is what it implies about effect size: at ten thousand trials on three
+years of data, **nothing below an annual Sharpe of 2.23 can be certified**, and
+H-027 — the project's only survivor — sits at **1.16**. Mass search and marginal
+edges are incompatible, so the screen hunts large effects and kills the rest for
+free.
+
+## 2026-09-18 (third entry) — what Dukascopy's askVolume actually is, and what it costs H-052
+
+Run before starting H-052's fourteen-hour download, which is the whole point of
+a cheapest-first order. It changes the bet.
+
+**1. The repo's `volume` IS the bid side, exactly.** `core/gold_flow.reconcile`
+on 2025-05-14 and 2025-09-10: **corr(candle volume, bidvol) = 1.0000** on both,
+against 0.76 for askvol and 0.91 for their sum. H-052's claim is confirmed to
+floating-point exactness.
+
+**2. askVolume is QUOTED liquidity, not aggressor flow — and that is the bad
+answer.** The discriminator is the CONTEMPORANEOUS relationship, which is a
+diagnostic of what the field means and not a signal. If askvol were size that
+traded at the ask, net buying and the same-bar return would move together
+near-mechanically. Measured:
+
+| | |
+|---|---|
+| corr(imbalance, SAME-day return), 240 days | **−0.062** |
+| corr(imbalance, SAME-hour return), 4,172 bars | **+0.025** |
+| spearman, hourly | +0.069 |
+| same-hour return by imbalance quintile (bps) | −0.84, 1.75, 1.31, 0.09, 1.31 |
+
+Flat and non-monotone. **So this is the H-024 family (book depth imbalance), not
+the H-006 family (aggressor flow)** — and H-024 was real, monotone, beat its
+null, and cleared its cost in **0 of 935 cells**.
+
+Supporting: daily imbalance has a small persistent buy bias (mean +0.0147,
+median +0.0139, 61.7% of days positive, t=3.1) with wide day-to-day variation
+(std 0.074, range −0.38 to +0.27).
+
+**3. The screen on everything cached — 4,172 hourly bars, 240 of 689 business
+days, 2024 absent. Gold's round trip is 1.06 bps, so the bar is 2.13.**
+
+| hold | events | effect | median | rho | p | why it died |
+|---|---|---|---|---|---|---|
+| 1h | 1,810 | 0.3 | 0.2 | 0.10 | — | under the 2.13 bar |
+| **3h** | **1,389** | **17.8** | **0.7** | **0.90** | **0.100** | **monotone, loses to its own shuffle** |
+| 6h | 694 | 22.8 | −0.4 | 0.70 | — | mean and median disagree — skew trap |
+| 12h | 346 | 26.2 | −7.0 | 0.10 | — | skew trap |
+| 24h | 172 | 76.2 | −10.5 | 0.70 | — | skew trap |
+
+**The h3 arm is the only live thing here** and it is not alive yet: rho 0.90 is a
+real shape, but a mean of 17.8 against a median of 0.7 is the same trend-swamped
+skew H-052 already flagged, and p=0.100 is the right side of nothing rather than
+evidence.
+
+**What this does to the download decision.** It is no longer "the only family
+that ever worked on the one market that can pay for it". It is the family that
+died in 0 of 935 cells, on a market where the cost bar is 6.6x lower — H-024's
+best honest cell was 7.9 bps against gold's 2.13 bar, so the family is not
+automatically dead here, but the prior is much worse than it looked this morning.
+The download roughly triples the sample (245 → 689 days) and can only settle the
+h3 arm. Five trials charged.

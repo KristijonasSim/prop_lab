@@ -460,10 +460,38 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   and 2.295 / 40.5 against the real gate's 1.840 / 75.5, and a shuffled gate on
   1h reached **60% pass in 14.5 days** — the exact target, from noise.
   `strategies/vwapbreak/research/`.
-- **Order flow on GOLD is not testable and no number may be quoted for it.**
-  Every file in `data/feeds/` is a Binance crypto symbol; `data/dukascopy_raw/
-  XAUUSD` holds one-minute BID CANDLES, not ticks, so there is no bid/ask volume
-  on disk. Gold trades naked. Backlog H-030, and it needs a download.
+- **~~Order flow on GOLD is not testable~~ — CORRECTED 2026-09-17. IT IS.**
+  The sentence below was right about what is ON DISK and wrong about what is
+  AVAILABLE, and it stood as a standing prohibition for six days.
+
+  **Dukascopy publishes hourly XAUUSD TICK files carrying ask, bid, ask volume
+  and bid volume**, and the downloader for them has been in this repo the whole
+  time: `core/fx_spread.py`, `URL = ".../{h:02d}h_ticks.bi5"`, `TICK =
+  struct.Struct(">IIIff")  # ms, ask, bid, askvol, bidvol`. Line 106 unpacks the
+  two volume fields into `_, _` and throws them away, because that file only
+  ever wanted the spread. Verified 2026-09-17 on 2025-05-14: **9,589 ticks in
+  the 09:00 hour (askVol 1.66 / bidVol 1.55) and 25,274 in the 13:00 hour
+  (4.54 / 4.27)** — a real two-sided volume series, which is a footprint.
+
+  **What it is and is not.** It is Dukascopy's own liquidity-provider volume,
+  not a central-exchange tape — spot gold has no central exchange, so there is
+  no CME-style tape to compare it against, and ask/bid volume here is indicative
+  LP size rather than confirmed executions. Treat it as a proxy and say so in
+  any result. It is nevertheless **the same feed the whole project already
+  trades on and prices its costs from**.
+
+  **Why this matters more than any other open item.** The only family that has
+  ever worked in this repo is a data feed, and five feed edges (H-006, H-024,
+  H-031, H-034, H-042) were real, beat their nulls, and died to crypto's 14 bps
+  round trip. **Gold's round trip is 1.83 bps.** This is that family on the one
+  market that can pay for it. Backlog H-030; the download is ~19k files for
+  three years and `core/fx_spread.py` already has the fetcher and the worker
+  pool.
+
+  **The original entry, kept because it is the thing that was wrong:** every
+  file in `data/feeds/` is a Binance crypto symbol; `data/dukascopy_raw/XAUUSD`
+  holds one-minute BID CANDLES, not ticks, so there is no bid/ask volume on
+  disk. Gold trades naked.
 
 - **Book depth imbalance** (H-024) — real, monotone, beats its null, stable across
   years, and **0 of 935 cells across 11 coins clear a 14bps taker round trip**. Best
@@ -492,6 +520,40 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   in a cascade. Killed on a criterion written before the run. It also closes
   **H-006-R**: a stop does not repair a slow-drift feed signal, it harms it.
   `strategies/liqflush/`.
+
+- **Widening the top-N book to buy speed** (H-027 top-N, 2026-09-15, withdrawn
+  2026-09-17) — floor 100 / top 20 reached **8.9 expected days on gold against
+  the shipped 15.3**, monotone in N across five levels, replicated on a blind
+  second half, five markets faster, three with disjoint bands. **It does not
+  survive a paired null and is withdrawn.** Criterion fixed in advance: the real
+  speed-up (1.72x) survives only if the null's is below 1.25x.
+
+  | market | real speed-up | null median | seeds |
+  |---|---|---|---|
+  | **XAUUSD** | **1.72** | **2.45** | 2.10, 3.97, 2.45 |
+  | XAGUSD | 1.53 | 2.69 | 1.84, 3.53 |
+  | EURUSD | 2.15 | 9.24 | 15.63, 2.85 |
+  | GBPUSD | 3.85 | 5.04 | 5.59, 4.48 |
+  | USDJPY | 1.70 | 4.11 | 0.99, 7.23 |
+  | BTCUSDT | 1.94 | 1.74 | 1.97, 1.51 |
+
+  **Six of six fail, and on four the null speeds up MORE than the real data.**
+  Gold is the market the claim was about and every one of its three seeds beats
+  the real number. **BTCUSDT shows the mechanism naked**: all ten of its cells
+  lose money (PF@2x 0.44-0.80) and the wide configuration still "resolves" an
+  evaluation in **14.5 days against 28.2**. Speed came from trade frequency.
+
+  **THE METRIC IS THE LESSON.** `expected_days = median_days / pass_rate`
+  (`core/scorecard.py:85`) treats a blown account as free, so any frequency
+  increase converts evaluation fees into apparent speed. Gold: 39.3% pass is
+  **2.5 accounts per funded seat**, 33.9% is **2.9**. **Owed: report
+  accounts-consumed (1/pass_rate) beside every expected-days figure, and never
+  compare expected days across configurations of different trade frequency
+  without a null.** H-027's own edge is untouched (gold 30/5 PF@2x 2.209).
+  **This closes the EIGHTH axis. H-027 is finished being tuned.** Also: the
+  2026-09-15 study shipped with **no committed code**, which is how the fastest
+  number in the project went a day and a half without being reproducible.
+  `strategies/vwapbreak/research/topn.py`, `TOPN_NULL.md`.
 
 - **Three attempts to beat H-027** (2026-09-13, `strategies/beat/`) — all dead.
   Kris: *"find something that beats our vwap."* "Beats" was fixed in advance as
