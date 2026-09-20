@@ -1,0 +1,25 @@
+20 distinct FEED PASS candidates in the ledger
+
+arm                                   old   new   conc   fundd  why
+VIX_TERM.change5.XAUUSD.h3           PASS  FAIL   1.17    1048  5 best decisions carry 117% of the profit
+T10YIE.change5.GBPUSD.h20            PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+DTWEXBGS.change5.USDJPY.h5           PASS  FAIL   0.87     725  5 best decisions carry 87% of the profit
+GVZ.pctile250.XAUUSD.h20             PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+GOLD_SPREAD.pctile5.XAUUSD.h20       PASS  FAIL      -       -  response not monotone, rho 0.80
+DFII10.change60.BTCUSDT.h20          PASS  FAIL   0.77    1258  5 best decisions carry 77% of the profit
+GVZ.zscore250.XAUUSD.h20             PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+REAL_MINUS_BE.change60.BTCUSDT.h20   PASS  FAIL   0.82    1423  5 best decisions carry 82% of the profit
+DFII10.level.EURUSD.h20              PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+VIX.change60.EURUSD.h5               PASS  FAIL   0.69     399  5 best decisions carry 69% of the profit
+DFII10.level.GBPUSD.h10              PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+DFII10.level.GBPUSD.h20              PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+VIX.change60.EURUSD.h20              PASS  FAIL   1.26     893  5 best decisions carry 126% of the profit
+DFII10.level.USDJPY.h10              PASS  FAIL   0.52     226  5 best decisions carry 52% of the profit
+DFII10.level.USDJPY.h20              PASS  FAIL   0.90     140  5 best decisions carry 90% of the profit
+DFII10.pctile5.BTCUSDT.h1            PASS  FAIL   0.28    1494  seat funded in 1494d, over the 90d bar
+VIX.change60.GBPUSD.h5               PASS  FAIL   0.85     498  5 best decisions carry 85% of the profit
+DFII10.pctile5.BTCUSDT.h3            PASS  FAIL   0.31    1148  seat funded in 1148d, over the 90d bar
+T10YIE.level.BTCUSDT.h10             PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+T10YIE.level.BTCUSDT.h20             PASS  FAIL   1.00   never  5 best decisions carry 100% of the profit
+
+0 of 20 survive the two new gates

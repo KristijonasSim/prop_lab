@@ -2973,3 +2973,67 @@ best honest cell was 7.9 bps against gold's 2.13 bar, so the family is not
 automatically dead here, but the prior is much worse than it looked this morning.
 The download roughly triples the sample (245 → 689 days) and can only settle the
 h3 arm. Five trials charged.
+
+---
+
+## 2026-09-20 — the edge is ten days, and the screen could not see it
+
+Kris asked for an investigation into why prop-firm targets are not being reached
+and whether everything has to change. `docs/DIAGNOSIS_2026-09-20.md` is the
+answer; this is the part that changes the machinery.
+
+**The measurement.** H-027 gold 1h, the blind walk-forward series the whole
+board rests on: 634 days, 221 traded, **53 profitable**. Two days are 65% of all
+profit; the largest is 42.1% on its own. Drop the ten best — 1.6% of the
+calendar — and +188.4 R becomes **−24.7 R**.
+
+The evaluation barely notices. Pass rate goes 58.5% → 53.9% when the three days
+carrying 74% of the profit are removed, and a series with no edge at all passes
+a 6% static cap about 24% of the time. **The pass rate was never measuring the
+edge.**
+
+**Two things nobody had measured.**
+
+* *A funded seat dies.* 44 firm products were scored on time-to-funded and
+  nothing on what happens after. Max drawdown is 19.4 R; a 6% cap buys 3 R at
+  the traded 2% risk. At 2% the seat lives a median of **29 days and 99.7% die**;
+  at 4% — the only rung that meets the 5–14 day pace target — **100% die in a
+  median of 7**. The crossover is 6% ÷ 19.4 R = **0.309% risk**, where the seat
+  survives the full year and funding takes 78 days.
+* *The pace target and the income goal are incompatible on this edge*, and the
+  table in the diagnosis is the proof. One of them has to be rewritten.
+
+**The cause is the objective, not the strategy.** `core/chosen.py` has said
+since 2026-09-09 that the selector ranks on profit factor and *"that is the
+opposite of what a prop evaluation rewards."* Eight axes were closed under it
+anyway. Profit factor is maximised by a tight stop that wins rarely and pays
+hugely, which is exactly the shape measured above.
+
+**What changed in the code.** `core/screen.py` gains two gates, both O(n), both
+before the null:
+
+| gate | kill criterion |
+|---|---|
+| concentration | the 5 best decisions carry > 50% of the profit |
+| seat survival | `maxDD / return_per_day × (target/cap)` > 90 days |
+
+The second is `README.md`'s own expected-days formula run forward instead of
+backward. H-027 scores **0.89** and **109 days** and is rejected by both.
+`tests/test_screen_shape.py` pins it against the real stored series, so
+loosening a bar fails on the project's own counter-example.
+
+**The verdict that matters: 0 of 20.** Every FEED candidate the loop had marked
+PASS was re-screened (`research/rescore_shape.py`, output in
+`backtests/rescore_shape.txt`). **None survives.** Fourteen have five decisions
+carrying 69–126% of the profit; two more need 1,148 and 1,494 days to fund a
+seat. Re-reading an old trial under a new gate is not a new trial, so nothing
+was charged to the ledger.
+
+*One row moved for an unrelated reason:* `GOLD_SPREAD.pctile5.XAUUSD.h20` now
+fails monotonicity at rho 0.80 rather than either new gate. Its feed cache has
+been topped up since it was first screened; that is the harvest, not the gates.
+
+**What this does NOT retract.** H-027 still beats its paired null. The edge is
+real and the wrong *shape* for this product. The evidence machinery — paired
+nulls, walk-forward with train-only selection, noise bands, the ledger — is good
+and was not touched.

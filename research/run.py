@@ -80,6 +80,14 @@ class Result:
             rho=round(self.screen.rho, 3),
             cost_bar_bps=round(self.round_trip_bps * SC.COST_MULT, 3),
             p_null=self.screen.p_null,
+            # The two shape gates, added 2026-09-20. Recorded per trial so the
+            # ledger can answer "how much of the search space is lottery
+            # shaped" without re-running anything - docs/DIAGNOSIS_2026-09-20.md
+            conc=(None if self.screen.conc is None
+                  else round(self.screen.conc, 4)),
+            fund_days=(None if self.screen.fund_days is None
+                       or not np.isfinite(self.screen.fund_days)
+                       else round(self.screen.fund_days, 1)),
             direction=c.direction,
             lag=c.lag,
             hold=c.hold,
@@ -227,8 +235,16 @@ must clear **{bar:.2f} bps** ({SC.COST_MULT}x) between the top and bottom bucket
 
 Any one of: fewer than {SC.MIN_EVENTS} independent events; effect under
 {bar:.2f} bps; mean and median disagreeing in sign; |rho| under {SC.MIN_RHO};
-p >= 0.05 against the shuffle. **First failure ends it — no second look, no
-tuning of the window, no other market rescuing it.**
+the {SC.CONC_K} best decisions carrying more than {SC.MAX_CONC:.0%} of the
+profit; a seat not fundable inside {SC.MAX_FUND_DAYS:.0f} days at the risk that
+survives the worst stretch; p >= 0.05 against the shuffle. **First failure ends
+it — no second look, no tuning of the window, no other market rescuing it.**
+
+The last two are the shape gates added 2026-09-20. They exist because H-027 —
+this project's only survivor of 48 hypotheses — clears all five of the others
+while earning 65% of its profit on two days out of 634, which is unpayable at
+any firm carrying a consistency rule and kills a funded seat in a median of 29
+days at the traded risk. `docs/DIAGNOSIS_2026-09-20.md` has the measurement.
 
 ## Expected events
 

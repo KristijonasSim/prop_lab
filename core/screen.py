@@ -21,8 +21,28 @@ that can be compared against the null distribution, instead of twenty separate
 studies each re-deriving its own machinery and each quietly running its own
 search.
 
-WHAT IT DOES NOT DO. It does not prove anything. Passing all five means the idea
-has earned a real study with a walk-forward and honest fills - nothing more.
+TWO MORE CHECKS, ADDED 2026-09-20, and they are the ones H-027 fails.
+`docs/DIAGNOSIS_2026-09-20.md` measured that the project's only survivor earns
+188.4 R over 634 days of which **two days are 65%** — drop the largest ten and
+the total goes to **-24.7 R**. The five checks above all pass that series. They
+see the size of an effect and the shape of its response; neither of them can see
+that the effect lives on a handful of days.
+
+That shape is what makes a strategy unpayable (one day is 95.5% of a typical
+month, so any consistency rule rejects it) and what kills a funded seat (19.4 R
+of drawdown against a 6% cap, which buys 3 R at the traded risk). So:
+
+    CONCENTRATION  drop the best few decisions. If more than half the profit
+                   goes with them, the edge is a handful of episodes.
+    SURVIVAL       the README's own formula, run forward:
+                   days = maxDD / return_per_day x (target / cap).
+                   A seat that cannot be funded inside a quarter at the risk
+                   that survives its own worst stretch is not a product.
+
+Both are O(n) and both run BEFORE the null, which is 200 shuffles.
+
+WHAT IT DOES NOT DO. It does not prove anything. Passing all seven means the
+idea has earned a real study with a walk-forward and honest fills - nothing more.
 """
 from __future__ import annotations
 
@@ -39,6 +59,17 @@ MIN_EVENTS = 40
 MIN_RHO = 0.8
 NULL_SEEDS = 200
 BLOCK = 20
+#: Drop this many of the best decisions when testing concentration.
+CONC_K = 5
+#: If those few carry more than this share of the profit, the edge is episodes.
+MAX_CONC = 0.50
+#: Days to a funded seat, at the risk that survives the worst stretch. The pace
+#: target in README.md is 5-14; this bar is a whole quarter and deliberately
+#: generous, because the screen is a filter and not the study.
+MAX_FUND_DAYS = 90.0
+#: FundingPips 1-Step Flex - the row docs/FIRMS.md picked. Target over cap is
+#: what the formula needs, and 10/6 is the same for every firm on the shortlist.
+PROFIT_TARGET, MAX_LOSS = 0.10, 0.06
 
 
 @dataclass
@@ -51,18 +82,31 @@ class Screen:
     median_effect: float = 0.0
     rho: float = 0.0
     cost_bar: float = 0.0
+    #: None until the gate actually runs. A check that was never reached must
+    #: not print as 0.00, which is the best possible score.
+    conc: float | None = None
+    fund_days: float | None = None
     p_null: float | None = None
     notes: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
         p = f"{self.p_null:.3f}" if self.p_null is not None else "  -  "
+        cc = "      -" if self.conc is None else f"{self.conc:>7.2f}"
+        if self.fund_days is None:
+            fd = "      -"
+        elif not np.isfinite(self.fund_days):
+            fd = "  never"
+        else:
+            fd = f"{self.fund_days:>7.0f}"
         return (f"{self.name:22}{self.verdict:6}{self.events:>7}{self.rows:>7}"
                 f"{self.effect:>9.1f}{self.median_effect:>9.1f}{self.rho:>7.2f}"
-                f"{self.cost_bar:>7.2f}{p:>8}  {'; '.join(self.notes)}")
+                f"{self.cost_bar:>7.2f}{cc}{fd}{p:>8}"
+                f"  {'; '.join(self.notes)}")
 
 
 HEADER = (f"{'signal':22}{'verd':6}{'events':>7}{'rows':>7}{'effect':>9}"
-          f"{'median':>9}{'rho':>7}{'bar':>7}{'p':>8}  why")
+          f"{'median':>9}{'rho':>7}{'bar':>7}{'conc':>7}{'fundd':>7}"
+          f"{'p':>8}  why")
 
 
 def independent_events(sig: pd.Series, hold: int) -> int:
@@ -119,6 +163,78 @@ def bucket_response(sig: pd.Series, fwd: pd.Series, n_buckets: int = 5) -> dict 
             "median": float(med.iloc[-1] - med.iloc[0]), "rho": rho}
 
 
+
+def implied_pnl(sig: pd.Series, fwd: pd.Series, hold: int = 1,
+                n_buckets: int = 5) -> np.ndarray:
+    """The per-decision PnL the bucket response is really describing.
+
+    Long the top bucket, short the bottom, flat in between. That is the trade
+    the monotonicity check implies, and until now nothing ever built it - the
+    screen scored the *response* and never the *series*, which is why a result
+    carried by three days looked identical to one carried by three hundred.
+
+    **Sampled every `hold` rows.** A signal held five days produces five
+    overlapping copies of the same decision; counting them all understates
+    drawdown and flatters concentration, for the same reason
+    `independent_events` divides by the hold.
+    """
+    x = pd.DataFrame({"s": sig, "f": fwd}).replace(
+        [np.inf, -np.inf], np.nan).dropna()
+    if len(x) < 100 or x.s.nunique() < n_buckets:
+        return np.empty(0)
+    try:
+        b = pd.qcut(x.s, n_buckets, labels=False, duplicates="drop")
+    except ValueError:
+        return np.empty(0)
+    top = int(b.max())
+    pos = np.where(b == top, 1.0, np.where(b == 0, -1.0, 0.0))
+    pnl = pos * x.f.values
+    return pnl[::max(1, hold)]
+
+
+def concentration(pnl: np.ndarray, k: int = CONC_K) -> float:
+    """Share of the total that goes with the `k` best decisions.
+
+    1.0 means the edge is entirely those few. A series that never made money
+    scores 1.0 too, which is correct: there is nothing to concentrate.
+    """
+    if len(pnl) <= k:
+        return 1.0
+    total = float(pnl.sum())
+    if total <= 0.0:
+        return 1.0
+    return float(np.sort(pnl)[-k:].sum() / total)
+
+
+def fund_days(pnl: np.ndarray, hold: int = 1,
+              profit_target: float = PROFIT_TARGET,
+              max_loss: float = MAX_LOSS) -> float:
+    """README.md's own formula: days = maxDD / return_per_day x (target/cap).
+
+    The risk per trade cancels. A seat has to survive its worst stretch, which
+    caps the risk at `max_loss / maxDD`; at that risk the target is
+    `profit_target / max_loss` multiples of the drawdown away. What is left is
+    a number of days and it does not depend on the size traded.
+
+    `inf` when the series never makes money - the seat is never funded. **Zero
+    when it never draws down**, which is the opposite case and was returned as
+    `inf` in the first draft: no drawdown means the risk is not capped by the
+    worst stretch at all, so the seat funds immediately. That sign error would
+    have rejected every cleanly trending candidate the loop could find, and
+    `test_a_clean_signal_still_passes_all_seven` is what caught it.
+    """
+    if not len(pnl):
+        return float("inf")
+    per_day = float(pnl.sum()) / (len(pnl) * max(1, hold))
+    if per_day <= 0.0:
+        return float("inf")
+    eq = np.cumsum(pnl)
+    dd = float((eq - np.maximum.accumulate(eq)).min())
+    if dd == 0.0:
+        return 0.0
+    return abs(dd) / per_day * (profit_target / max_loss)
+
+
 def screen(name: str, sig: pd.Series, fwd: pd.Series, round_trip_bps: float,
            hold: int = 1, run_null: bool = True) -> Screen:
     """Five checks, cheapest first. Stops at the first failure."""
@@ -153,6 +269,24 @@ def screen(name: str, sig: pd.Series, fwd: pd.Series, round_trip_bps: float,
     if abs(r["rho"]) < MIN_RHO:
         out.verdict = "DEAD"
         out.notes.append(f"response not monotone, rho {r['rho']:.2f}")
+        return out
+
+    pnl = implied_pnl(sig, fwd, hold)
+    out.conc = concentration(pnl)
+    out.fund_days = fund_days(pnl, hold)
+
+    if out.conc > MAX_CONC:
+        out.verdict = "DEAD"
+        out.notes.append(f"{CONC_K} best decisions carry "
+                         f"{out.conc:.0%} of the profit")
+        return out
+
+    if out.fund_days > MAX_FUND_DAYS:
+        d = ("never" if not np.isfinite(out.fund_days)
+             else f"{out.fund_days:.0f}d")
+        out.notes.append(f"seat funded in {d}, over the "
+                         f"{MAX_FUND_DAYS:.0f}d bar")
+        out.verdict = "DEAD"
         return out
 
     if not run_null:
