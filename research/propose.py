@@ -294,8 +294,16 @@ direction is +1 if HIGH values of the transformed feed predict the market UP,
 
 
 def _prompt(n: int, pool: list[Candidate]) -> str:
+    # The declared sign and the allowed markets are PRINTED, not left to be
+    # guessed. Measured 2026-09-20 over two model cycles: 8 of 10 proposals
+    # were refused, 5 of them for asking the opposite of a feed's declared
+    # direction and 2 for a market the feed does not cover. Both facts were in
+    # the registry and neither was in the prompt, so the model was being
+    # refused for not knowing something it was never told.
     feeds = "\n".join(
-        f"  {f.name:16}{f.kind:12}{f.desc}"
+        f"  {f.name:16}{f.kind:12}dir {f.prior_sign:+d}  "
+        f"{'/'.join(sorted(f.markets)) if getattr(f, 'markets', None) else 'all'}"
+        f"\n{'':18}{f.desc}"
         f"{'  [' + f.notes[0] + ']' if f.notes else ''}"
         for f in sorted(vocab.FEEDS.values(), key=lambda x: x.name))
     dead = "\n".join(f"  {k}: {v}" for k, v in KNOWN_DEAD.items())
@@ -304,6 +312,11 @@ def _prompt(n: int, pool: list[Candidate]) -> str:
 
 FEEDS AVAILABLE
 {feeds}
+
+`dir` IS NOT YOURS TO CHOOSE. Each feed declares ONE direction, from its
+mechanism, and a proposal asking for the other one is refused - testing a feed
+both ways is a free second attempt and one of the pair always matches. Copy the
+sign shown. The markets column is the complete list that feed covers.
 
 TRANSFORMS: {sorted(vocab.TRANSFORMS)}
 WINDOWS:    {list(vocab.WINDOWS)}   (ignored by 'level')
