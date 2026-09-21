@@ -26,6 +26,65 @@ backfilled from `STRATEGY_LOG.md`. **The third method debt on this page is now
 paid**; the other two (hour-matched null, accounts-consumed) have functions
 behind them but are not yet wired into the board.
 
+## ADDED 2026-09-21 (evening) — where we stopped, and what is next
+
+The workflow is now agreed step by step and drawn: **`docs/WORKFLOW.drawio`**.
+Green boxes are settled, dashed orange are Kris's to decide. Read it first —
+it replaces most of what is below this section.
+
+**SETTLED WITH KRIS TODAY**
+
+| | |
+|---|---|
+| Step 1 | CLOSED. Ideas arrive by themselves — TradingView, then the bot inventing its own, then Kris injecting one if he wants. 24/7, no human input. |
+| Step 2 | BUILD IT SAFELY. Translate an idea into runnable code with a translator that physically cannot read future bars. |
+| Step 3 | The unit is a TRADE, not a bar. Floor: **at least 0.4 trades/day** (Kris: "this is day trading"). |
+| Step 4 | Test on ALL six markets x four timeframes. If one of the 24 works, keep it. |
+| Step 6 | The 5-year re-check is what makes step 4 safe. Junk reaching the desk: 31 per 1,000 on 3 years alone, **0.5 with it**. |
+| Step 7 | Score on **pass % and days**. Not profit factor, not trades per day. |
+| The bar | **Never moves** because other ideas failed. Kris was right and the simulation says so: a tougher bar killed 9 of every 10 REAL edges and caught no extra fakes. |
+
+**BUILT TODAY** — `factory/`, steps 1 and 2 only, 18 tests.
+
+```
+python -m factory.fill      top the queue up
+python -m factory.build     run what is waiting, on gold
+python -m factory.queue     what is left
+```
+
+`guard.Window` is the piece that matters: only negative indexing exists, so
+reading a future bar is not a mistake that can be made. No statistic
+downstream catches a leak.
+
+**FIXED TODAY** — both red boxes in the diagram are now green.
+`core/screen.py` measures an event signal on its events (`fires=`), and
+`research/vocab.py` gained four event transforms. Planted-edge recovery went
+**7 of 20 to 18 of 20**. Search space 2,795 -> 6,670.
+
+---
+
+### WHAT IS LEFT, in the order we stopped
+
+1. **Steps 3 to 7 are not written.** Step 3's shape is agreed (trades, four
+   questions, 0.4 tpd floor); the two numbers still to pick are the cost
+   multiple and whether it runs on all 24 cells or one.
+2. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
+   "mean and median disagree in sign" — the two exact ways the dilution defect
+   kills a real signal. Neither verdict was earned.
+3. **TradingView needs Kris's decision.** `factory/sources/tradingview.py`
+   translates Pine and skips what it cannot read, but it does NOT download.
+   Bulk collection is a terms-of-service question, and this session's
+   tradingview MCP server failed to connect. Drop `.pine` files in
+   `data/pine/` and it reads them today.
+4. **Where on the curve do we sit?** Pass % and days pull against each other
+   through risk per trade, so a candidate has a curve, not a score. Parked
+   until a real candidate produces one.
+5. **What a funded account earns per month.** Parked at Kris's request —
+   "focus on passing first" — but it is the number that decides whether to buy
+   several evaluations at once.
+
+---
+
 ## ADDED 2026-09-21 — the survey Kris asked for, and what it does to this page
 
 Kris: *"we are walking blindly."* **`docs/AI_RESEARCH_2026.md`** — sourced
