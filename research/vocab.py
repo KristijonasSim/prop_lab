@@ -70,13 +70,73 @@ def _pctile(s: pd.Series, n: int) -> pd.Series:
     return s.rolling(n, min_periods=max(5, n // 2)).rank(pct=True)
 
 
-#: name -> (function, needs a window?). THE COMPLETE SET.
+#: name -> (function, needs a window?). THE CONTINUOUS ONES.
+#: Every bar carries a reading. Right for a feed LEVEL, wrong for an event.
 TRANSFORMS: dict[str, tuple[Callable[[pd.Series, int], pd.Series], bool]] = {
     "level": (_level, False),
     "change": (_change, True),
     "zscore": (_zscore, True),
     "pctile": (_pctile, True),
 }
+
+
+# ---------------------------------------------------------------------------
+# EVENT transforms — added 2026-09-21, and the reason is measured.
+#
+# All four transforms above are CONTINUOUS. `research/poscontrol.py` planted
+# twenty edges that were real and tradeable and found that the loop could see
+# seven of them; the thirteen it missed were all INTERMITTENT - a signal that
+# carries information on a small fraction of bars and is noise the rest of the
+# time. That is what most trading rules actually are, and it is the shape of
+# H-027 itself, a rare breakout past a band. The registry could not express one.
+#
+# An event transform returns (values, FIRES). `fires` marks the bars the signal
+# speaks on, and `core.screen` now measures the response on those bars only.
+# ---------------------------------------------------------------------------
+def _cross(s: pd.Series, n: int, up: bool) -> tuple[pd.Series, pd.Series]:
+    """The feed crossing its own rolling mean. Fires on one bar, silent after."""
+    m = s.rolling(n, min_periods=max(5, n // 2)).mean()
+    above = (s > m) & m.notna()
+    prev = above.shift(1, fill_value=False).astype(bool)
+    fires = (above & ~prev) if up else (~above & prev & m.notna())
+    return (s - m), fires.astype(bool)
+
+
+def _cross_up(s, n):   return _cross(s, n, True)
+def _cross_down(s, n): return _cross(s, n, False)
+
+
+def _extreme(s: pd.Series, n: int, high: bool,
+             q: float = 0.9) -> tuple[pd.Series, pd.Series]:
+    """The feed entering its own top or bottom decile of the last n readings.
+
+    Fires on ENTRY, not while it stays there. A signal that fires on every bar
+    of a long excursion counts one episode as fifty events and flatters every
+    count downstream - the defect `independent_events` exists to catch.
+    """
+    r = s.rolling(n, min_periods=max(5, n // 2)).rank(pct=True)
+    inside = ((r >= q) if high else (r <= (1.0 - q))) & r.notna()
+    fires = inside & ~inside.shift(1, fill_value=False).astype(bool)
+    return (r - 0.5), fires.astype(bool)
+
+
+def _extreme_high(s, n): return _extreme(s, n, True)
+def _extreme_low(s, n):  return _extreme(s, n, False)
+
+
+#: name -> (function, needs a window?). Each returns (values, fires).
+EVENT_TRANSFORMS: dict[str, tuple[Callable[[pd.Series, int],
+                                           tuple[pd.Series, pd.Series]], bool]] = {
+    "cross_up": (_cross_up, True),
+    "cross_down": (_cross_down, True),
+    "extreme_high": (_extreme_high, True),
+    "extreme_low": (_extreme_low, True),
+}
+
+
+def all_transforms() -> dict[str, bool]:
+    """Every transform name -> whether it is event-shaped."""
+    return ({k: False for k in TRANSFORMS} | {k: True for k in EVENT_TRANSFORMS})
 
 #: Windows a candidate may choose, in the feed's own periods.
 WINDOWS = (5, 20, 60, 250)
@@ -340,14 +400,16 @@ def space(markets: tuple[str, ...]) -> int:
     total = 0
     for f in FEEDS.values():
         mk = f.markets or markets
-        for tname, needs_window in TRANSFORMS.items():
+        for tname, is_event in all_transforms().items():
+            needs_window = (EVENT_TRANSFORMS[tname][1] if is_event
+                            else TRANSFORMS[tname][1])
             wins = WINDOWS if needs_window[1] else (0,)
             total += len(mk) * len(wins) * len(HOLDS)
     return total
 
 
 def summary() -> str:
-    lines = [f"{len(FEEDS)} feeds, {len(TRANSFORMS)} transforms, "
+    lines = [f"{len(FEEDS)} feeds, {len(all_transforms())} transforms, "
              f"{len(WINDOWS)} windows, {len(HOLDS)} holds"]
     for f in sorted(FEEDS.values(), key=lambda x: (x.kind, x.name)):
         ok = "cached" if f.available() else "MISSING"

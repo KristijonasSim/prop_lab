@@ -90,7 +90,7 @@ def _trade_stats(arm: str) -> dict:
         c = Candidate(feed=feed, transform=transform, window=window, lag=spec.lag_floor,
                       market=mkt, hold=int(hold.lstrip("h")),
                       direction=spec.prior_sign or 1, mechanism="x" * 50)
-        sig, fwd, rt = build_signal(c)
+        sig, fwd, rt, _fires = build_signal(c)
         st = compute(sig, fwd, rt, c.hold, spec.cadence)
         out = st.as_dict()
         out["cadence"] = spec.cadence

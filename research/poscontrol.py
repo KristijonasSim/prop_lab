@@ -97,7 +97,7 @@ def run(seeds: int = 5) -> None:
     print(f"gates: events>={MIN_EVENTS}  effect>={COST_MULT}x round trip  "
           f"rho>={MIN_RHO}  sign(mean)==sign(median)  null\n")
     print(f"{'fires':>7}{'k bps':>7}{'IC':>7}   "
-          f"{'SCREENED AS TODAY (all bars)':<40}{'SCREENED ON ITS EVENTS':<26}")
+          f"{'OLD: every bar':<34}{'FIXED: fires= its events':<26}")
     print("-" * 88)
     for fires in (1.0, 0.20, 0.05, 0.01):
         for k in (2, 5, 10, 20, 40):
@@ -108,7 +108,9 @@ def run(seeds: int = 5) -> None:
                 s, fwd, live = plant(g, r, k, fires)
                 ic = float(s.corr(fwd))
                 a = screen("all", s, fwd, GOLD_RT_BPS, hold=1)
-                b = screen("evt", s[live], fwd[live], GOLD_RT_BPS, hold=1)
+                # The fix, 2026-09-21: tell the screen which bars the signal
+                # actually speaks on. `fires=None` is the old behaviour.
+                b = screen("evt", s, fwd, GOLD_RT_BPS, hold=1, fires=live)
                 a_ok += a.verdict == "WORK"
                 b_ok += b.verdict == "WORK"
             why = ("; ".join(a.notes) or "earned a real study")[:26]

@@ -100,9 +100,28 @@ def independent_events(sig: pd.Series, hold: int) -> int:
     return min(non_overlap, flips)
 
 
-def bucket_response(sig: pd.Series, fwd: pd.Series, n_buckets: int = 5) -> dict | None:
+def bucket_response(sig: pd.Series, fwd: pd.Series, n_buckets: int = 5,
+                    fires: pd.Series | None = None) -> dict | None:
+    """The signal's response, measured ON THE BARS IT SPEAKS.
+
+    **`fires` is the fix for the defect measured on 2026-09-21.** Without it
+    this buckets EVERY row, so a signal that carries information on 5% of bars
+    has its effect diluted about twenty times before the cost gate ever sees
+    it. `research/poscontrol.py` planted 20 edges that were real and tradeable:
+    screened over all bars, 7 were found; screened on the bars where the signal
+    actually fires, 18 were.
+
+    The question the all-bars version asks is "does this predict the AVERAGE
+    BAR". Nobody trades the average bar.
+
+    `fires` is a boolean mask, and passing None keeps the old behaviour, which
+    is right for a continuous feed where every bar genuinely carries a reading.
+    """
     x = pd.DataFrame({"s": sig, "f": fwd}).replace(
         [np.inf, -np.inf], np.nan).dropna()
+    if fires is not None:
+        m = fires.reindex(x.index).fillna(False).astype(bool)
+        x = x[m]
     if len(x) < 100 or x.s.nunique() < n_buckets:
         return None
     try:
@@ -120,18 +139,26 @@ def bucket_response(sig: pd.Series, fwd: pd.Series, n_buckets: int = 5) -> dict 
 
 
 def screen(name: str, sig: pd.Series, fwd: pd.Series, round_trip_bps: float,
-           hold: int = 1, run_null: bool = True) -> Screen:
-    """Five checks, cheapest first. Stops at the first failure."""
+           hold: int = 1, run_null: bool = True,
+           fires: pd.Series | None = None) -> Screen:
+    """Five checks, cheapest first. Stops at the first failure.
+
+    `fires` marks the bars on which the signal says anything at all. Give it
+    for an EVENT signal - a threshold, a crossing, a breakout - and leave it
+    None for a continuous feed reading. See `bucket_response` for what it
+    fixes and what it cost to find.
+    """
     out = Screen(name=name, cost_bar=round_trip_bps * COST_MULT)
 
-    ev = independent_events(sig, hold)
+    ev = (int(fires.sum()) // max(1, hold) if fires is not None
+          else independent_events(sig, hold))
     out.events = ev
     if ev < MIN_EVENTS:
         out.verdict = "DEAD"
         out.notes.append(f"{ev} independent events, under {MIN_EVENTS}")
         return out
 
-    r = bucket_response(sig, fwd)
+    r = bucket_response(sig, fwd, fires=fires)
     if not r:
         out.verdict = "DEAD"
         out.notes.append("no usable response")
@@ -160,15 +187,26 @@ def screen(name: str, sig: pd.Series, fwd: pd.Series, round_trip_bps: float,
         out.notes.append("clears without a null")
         return out
 
+    # THE NULL IS SHUFFLED THE SAME WAY THE SIGNAL IS READ. For an event
+    # signal the mask is shuffled in blocks alongside the values, so the null
+    # keeps the real thing's event COUNT and clustering and differs only in
+    # where the events land. Shuffling the values while leaving the mask in
+    # place would compare a rare signal against a dense one and flatter it.
     vals = sig.values
     n = len(vals)
+    fvals = fires.reindex(sig.index).fillna(False).values if fires is not None else None
     hits = 0
     for seed in range(NULL_SEEDS):
         rng = np.random.default_rng(seed)
-        blocks = [vals[i:i + BLOCK] for i in range(0, n, BLOCK)]
-        rng.shuffle(blocks)
-        sh = pd.Series(np.concatenate(blocks)[:n], index=sig.index)
-        rr = bucket_response(sh, fwd)
+        idx = list(range(0, n, BLOCK))
+        order = rng.permutation(len(idx))
+        sh = pd.Series(np.concatenate([vals[idx[i]:idx[i] + BLOCK]
+                                       for i in order])[:n], index=sig.index)
+        shf = None
+        if fvals is not None:
+            shf = pd.Series(np.concatenate([fvals[idx[i]:idx[i] + BLOCK]
+                                            for i in order])[:n], index=sig.index)
+        rr = bucket_response(sh, fwd, fires=shf)
         if rr and abs(rr["effect"]) >= abs(r["effect"]):
             hits += 1
     out.p_null = hits / NULL_SEEDS

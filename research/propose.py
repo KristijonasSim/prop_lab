@@ -116,11 +116,13 @@ def validate(d: dict) -> Candidate:
             raise ProposalError(f"feed '{feed}' is known-dead. {why}")
 
     tr = str(need("transform"))
-    if tr not in vocab.TRANSFORMS:
+    if tr not in vocab.all_transforms():
         raise ProposalError(
-            f"unknown transform '{tr}'. Choose one of: {sorted(vocab.TRANSFORMS)}")
+            f"unknown transform '{tr}'. Choose one of: "
+            f"{sorted(vocab.all_transforms())}")
 
-    needs_window = vocab.TRANSFORMS[tr][1]
+    needs_window = (vocab.EVENT_TRANSFORMS[tr][1] if tr in vocab.EVENT_TRANSFORMS
+                    else vocab.TRANSFORMS[tr][1])
     window = int(d.get("window") or 0)
     if needs_window and window not in vocab.WINDOWS:
         raise ProposalError(
@@ -211,8 +213,14 @@ def enumerate_space(markets: tuple[str, ...] = tuple(STANDARD)) -> list[Candidat
         if not spec.prior_sign:
             continue
         mk = spec.markets or markets
-        for tr in sorted(vocab.TRANSFORMS):
-            wins = vocab.WINDOWS if vocab.TRANSFORMS[tr][1] else (0,)
+        # EVENT transforms are enumerated alongside the continuous ones from
+        # 2026-09-21. Until then the registry was continuous-only, which
+        # `research/poscontrol.py` measured as the reason the loop could not
+        # express an intermittent signal at all.
+        for tr in sorted(vocab.all_transforms()):
+            needs_w = (vocab.EVENT_TRANSFORMS[tr][1] if tr in vocab.EVENT_TRANSFORMS
+                       else vocab.TRANSFORMS[tr][1])
+            wins = vocab.WINDOWS if needs_w else (0,)
             for w in wins:
                 for m in mk:
                     for h in vocab.HOLDS:
@@ -305,7 +313,7 @@ def _prompt(n: int, pool: list[Candidate]) -> str:
 FEEDS AVAILABLE
 {feeds}
 
-TRANSFORMS: {sorted(vocab.TRANSFORMS)}
+TRANSFORMS: {sorted(vocab.all_transforms())}
 WINDOWS:    {list(vocab.WINDOWS)}   (ignored by 'level')
 HOLDS:      {list(vocab.HOLDS)}     (trading days)
 MARKETS:    {STANDARD}
