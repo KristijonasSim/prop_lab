@@ -52,3 +52,5 @@ live/paper/.bybit_cron.lock
 # rewritten every cycle and nothing reads them back.
 backtests/loop.log
 backtests/loop_state.json
+backtests/factory/queue.jsonl
+backtests/factory/tried.jsonl
