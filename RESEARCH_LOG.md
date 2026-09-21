@@ -2816,3 +2816,120 @@ best honest cell was 7.9 bps against gold's 2.13 bar, so the family is not
 automatically dead here, but the prior is much worse than it looked this morning.
 The download roughly triples the sample (245 → 689 days) and can only settle the
 h3 arm. Five trials charged.
+
+## AI-assisted strategy research — the state of the field (2026-09-21)
+
+Kris: *"we are walking blindly."* Full survey, sourced:
+**`docs/AI_RESEARCH_2026.md`**. Three findings change what to work on.
+
+**1. The signal axis is ahead of the literature, not behind it.** Backing
+Grinold's `IR = IC × √breadth` out of this repo's own numbers — annual Sharpe
+1.16 (`research/README.md`), ~0.9 trades/day (`core/chosen.py`) — gives H-027 an
+implied per-bet **IC of 0.077 on 225 bets a year**. The best published LLM alpha
+miner (AlphaAgent, KDD 2025, S&P 500) reports **IC 0.0056**, and reaches its IR
+by making on the order of **43,000** bets a year. **H-027's skill per decision is
+~14x the published frontier; its breadth is ~1/190th.** The deficit was never
+signal quality. *(Order of magnitude only — the two ICs are not the same
+measurement; see the caveat in §2.1.)*
+
+**That re-prices H-012.** The wide book failed on *dilution from equal
+weighting*, not on breadth being wrong. Breadth is the actual deficit and the
+weighting is the unsolved part — which makes meta-labeling (a conviction score
+per signal) the missing half of it rather than a separate idea.
+
+**2. This repo has no positive control, and that is the cheapest gap on the
+page.** arXiv 2605.04004 ran this exact search on MNQ futures — 14 signal
+families, 947 days, expanding walk-forward, five pre-set criteria — and **none
+passed**, with 11 of 14 dying to costs before statistics mattered. What makes
+those 14 failures *mean* something is that the study planted **two positive
+controls** which scored T=3.11 and T=4.30. `prop_lab` has an extensive
+negative-control apparatus (paired nulls, block shuffles, noise bands) and has
+**never run a positive control**. After 457 charged trials, "the market has no
+edge at this size" and "the pipeline cannot detect one" are observationally
+identical here. Injecting a synthetic edge of swept size through the unmodified
+pipeline yields a **detection floor in bps** and settles it. ~1 day.
+
+**3. Venue beats method.** Spot XAUUSD is a CFD: no central book, so its
+"order flow" is one LP's indicative size. COMEX gold futures have a real tape,
+and cost less — computed at gold $4,490 from `data/flow/XAUUSD/20260320.parquet`:
+**MGC 0.61–0.84 bps round trip, GC 0.31–0.53**, against this repo's measured
+**1.64 bps** CFD spread. And **Topstep permits full API automation on evaluation
+*and* funded accounts**; Apex allows 20 funded accounts but **bans bots on
+funded**. Unverified and decisive: Topstep's max-loss limit **trails the highest
+end-of-day balance** and never resets down, which is harsher than
+`core/prop_rules.HOUSE`'s static 6% and would require re-simulating the board.
+
+**Also settled, so nobody re-derives it:** direct price prediction is closed.
+Zero-shot time-series foundation models (TimesFM, Chronos-2, Moirai) beat a
+random walk by skill scores of order **1e-3**, significant in **2 of 10** tasks
+(arXiv 2606.27100). End-to-end RL's own reference library (FinRL) mitigates its
+sim-to-real gap with quarterly refit-and-pick-best-validation-Sharpe, which is
+the selector `strategies/beat/` already measured as a dead end. And LLMs carry
+their own look-ahead: matched-period testing shows alpha decaying **+20.7% ->
+-1.0%** across a training cutoff, with *larger* models decaying *worse*.
+
+## POSITIVE CONTROL — the screen is blind to intermittent signals (2026-09-21)
+
+**Kris's instinct was right.** He said *"i think our parameters are not good and
+thats why we miss so many times."* Ran the positive control the AI survey
+recommended (`docs/AI_RESEARCH_2026.md` §5.1) and it found a defect in
+`core/screen.py` on the first attempt. Code and full table:
+**`research/poscontrol.py`**.
+
+**Method.** Plant an edge of known size in real gold 1h next-bar returns
+(22,799 bars, 3 years, sd 23.4 bps) and hand it to `core.screen` unmodified.
+`k` is bps of return per sigma of signal; `fires` is the fraction of bars on
+which the signal carries information at all, the rest being pure noise — which
+is what an event feed looks like. 5 seeds per cell.
+
+| 20 planted edges, all real and tradeable | found |
+|---|---|
+| screened the way the loop screens today | **7 of 20** |
+| screened on their own event rows | **18 of 20** |
+
+| fires | today | on events |
+|---|---|---|
+| 100% (continuous) | 5 of 5 | 5 of 5 |
+| 20% | 2 of 5 | 5 of 5 |
+| **5%** | **0 of 5** | 4 of 5 |
+| **1%** | **0 of 5** | 4 of 5 |
+
+**The mechanism is dilution and it is arithmetic.** `bucket_response` buckets
+every row of the series. A signal live 5% of the time has its bucket means
+diluted ~20x before the cost gate sees it. At 1% firing a **40 bps** edge — 228
+events in three years, each paying twelve times the round trip — is rejected
+for *"effect 0.4 under the 3.3 bar"*.
+
+**The screen is asking the wrong question.** It asks whether the signal predicts
+the AVERAGE BAR. Nobody trades the average bar. The question is whether it
+predicts the bars it fires on.
+
+**It dies in exactly the two ways the recorded deaths died.** `effect under the
+bar` and `mean and median disagree in sign` are the logged causes of death for
+**H-046 (footprint, COST)** and **H-046c (long holds, SKEW)** in `core/screen.py`'s
+own docstring. Both were plausibly event-shaped. **Neither should stay dead
+until it has been re-screened on its events.**
+
+**SECOND DEFECT, same root.** `research/vocab.py` has four transforms and all
+four are continuous — `level`, `change`, `zscore`, `pctile`. There is no
+threshold or event transform. **So the loop cannot express an intermittent
+signal at all**, including the shape of H-027 itself, which is a rare breakout
+past a band. The registry that has produced 0 survivors in 457 trials cannot
+generate the one shape that has ever worked here.
+
+**What this does and does not mean.**
+* It does **not** resurrect any specific dead hypothesis. It says the verdicts
+  on event-shaped candidates were never earned.
+* It does **not** mean the thresholds are miscalibrated. On a continuous signal
+  the screen's floor is ~2 bps, an implied IC of ~0.08, which is about H-027's
+  own 0.077. **The numbers are right; the aggregation is wrong.**
+* It **does** mean the 457 charged trials overstate what was actually searched.
+  Dead space that was never reachable was still charged.
+
+**Nothing is fixed. Two proposals, Kris picks:**
+1. `core/screen.py` — screen an event signal on its events. A candidate declares
+   whether it is continuous or event-shaped; event candidates bucket only live
+   rows. Hours.
+2. `research/vocab.py` — add a threshold transform so the loop can express "when
+   X is beyond Y". Hours. Expands the search space, so it must be charged.
+

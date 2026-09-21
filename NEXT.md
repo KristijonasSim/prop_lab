@@ -26,6 +26,34 @@ backfilled from `STRATEGY_LOG.md`. **The third method debt on this page is now
 paid**; the other two (hour-matched null, accounts-consumed) have functions
 behind them but are not yet wired into the board.
 
+## ADDED 2026-09-21 — the survey Kris asked for, and what it does to this page
+
+Kris: *"we are walking blindly."* **`docs/AI_RESEARCH_2026.md`** — sourced
+survey of how strategies are built with AI in 2026: models, method, test
+environments, indicators, prompts, venue.
+
+**It contradicts the section below, and the contradiction is the point.**
+
+* **The signal axis is already ahead of the published frontier.** H-027's
+  implied per-bet IC is **0.077**; the best published LLM alpha miner's is
+  **0.0056**, and it buys its IR with ~43,000 bets a year against H-027's 225.
+  **The deficit is breadth, not signal.** So "give the loop the gold order-flow
+  feed" — the next step written below — is work on the axis that is already
+  winning. It is still worth the ten minutes for `reconcile()`; it is no longer
+  obviously worth fourteen hours before the two items above it.
+* **There has never been a positive control here.** 457 charged trials, and
+  nothing establishes that this pipeline could see an edge if one existed. One
+  day of work turns every past failure into "nothing above X bps".
+* **The venue may matter more than any of it.** COMEX gold futures: real tape,
+  **0.61-0.84 bps** round trip against the CFD's measured 1.64, and **Topstep
+  allows full API automation on funded accounts**. Apex allows 20 funded
+  accounts and bans bots on them.
+
+**Nothing here is chosen. Kris picks.** The ranked list is `docs/
+AI_RESEARCH_2026.md` Part 10.
+
+---
+
 ## THE NEXT STEP — one thing, written 2026-09-18
 
 **Give the loop the gold order-flow feed. Everything else on this page waits.**
