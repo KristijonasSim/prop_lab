@@ -158,3 +158,74 @@ works, not to widen the search.
    is one more trial in the ledger's sense. Gate 4 runs inside every attempt —
    so a repair that passes has already beaten a random-entry version of
    *itself* — but six attempts still deserve steps 5 and 6.
+
+---
+
+## 7. MEASURED 2026-09-22 — 40 ideas, all 24 cells, the real pipeline
+
+```
+ideas                    40        cell-tests              960
+passed step 3            1         cells passed            1
+near-misses              14        repair attempts         94
+ideas repaired           1         repairs that passed     1
+```
+
+### Is repairing better than drawing another idea?
+
+| | per test | survivors |
+|---|---|---|
+| fresh cell-test | 1 of 960 = **0.10%** | 1 |
+| repair attempt | 1 of 94 = **1.06%** | 1 |
+
+**A repair attempt is about ten times likelier to produce a survivor than a
+fresh cell-test**, which is what you would hope: it is applied to something
+already known to be close. Step 4 doubled the session's survivor count for 94
+extra tests; 94 fresh cell-tests would have been about four more ideas and, at
+the observed rate, about 0.1 more survivors.
+
+**That is one success. It is not a result, it is a reason to keep the stage and
+keep counting.** The honest read is that step 4 is not obviously wasteful; the
+number that will decide it is whether repaired survivors die at step 6 more
+often than first-try ones, which needs step 6 and a lot more than one of each.
+
+### Which repairs did anything
+
+| family | attempts | passes |
+|---|---|---|
+| trades (shorter hold, nearer target, tighter stop) | 36 | **0** |
+| filters (sessions, EMA200, VWAP, busy market) | 30 | **0** |
+| either (wider stop, wider target) | 28 | **1** |
+
+**The four trades repairs did nothing, exactly as §6.1 warned.** The hold is not
+what limits the trade rate — trades exit on their stop or target long before 48
+bars — so shortening it changes almost nothing. Nine of the fourteen near-misses
+were on trade count and none was repaired.
+
+**None of the six filters worked either**, which is the third time this repo has
+measured that family and got nothing. They stay in the list for now because
+thirty attempts is not enough to retire a family, and because `against trend` is
+there as a control rather than as a candidate.
+
+The one repair that worked was **`stop 2 → 3 ATR`** on `long when roc10
+cross_above 50`, XAUUSD 15m.
+
+### THE BIGGEST FINDING IS NOT ABOUT STEP 4
+
+**833 of 960 cell-tests — 87% — failed on trade count.**
+
+| gate | cell-tests failed |
+|---|---|
+| **not enough trades** | **833** |
+| loses to costs | 99 |
+| loses to random entry | 4 |
+| concentration | 0 |
+
+The factory's bottleneck is not that its ideas have no edge. It is that **its
+ideas barely trade**. `sources/invent.py` enumerates crossings on lookbacks up
+to 200 bars, and those fire a handful of times a year.
+
+Neither step 3 nor step 4 can fix that, and step 4 is measured not to: it is a
+property of what step 1 generates. **The cheapest improvement available to this
+pipeline is a generator that produces denser rules** — shorter lookbacks, more
+of the grammar's `above`/`below` states and fewer rare crossings — not another
+gate and not a longer repair list.

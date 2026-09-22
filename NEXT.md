@@ -101,9 +101,56 @@ Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
 
 ---
 
+## ADDED 2026-09-22 — step 4 is built, and it found the factory's real bottleneck
+
+`factory/repair.py`, 14 tests, `docs/STEP4.md`. Step 4 is a **repair stage, not
+a walk-forward**: step 3 already tests all 24 cells on 3 years, and every idea
+the factory makes has a fixed stop, target and hold, so there is nothing to fit
+in a training window. An idea that missed ONE gate narrowly gets six fixed
+tweaks, once each, on one cell, then moves on.
+
+```
+python -m factory.repair                 # steps 3 and 4 end to end
+```
+
+**Measured on 40 ideas through the real pipeline, all 24 cells:**
+
+| | |
+|---|---|
+| passed step 3 | 1 of 40 |
+| near-misses | 14 |
+| repair attempts | 94 |
+| **repaired** | **1** |
+
+A repair attempt produced a survivor **1.06% of the time against 0.10% for a
+fresh cell-test** — ten times better, which is what you would hope from
+something aimed at a known near-miss. Step 4 doubled the session's survivors.
+**It is one success, so it is a reason to keep counting, not a result.**
+
+**Which repairs did anything:** trades repairs 0 of 36, filters 0 of 30, wider
+stop/target 1 of 28. The trades repairs failed for the reason `docs/STEP3.md`
+already flagged — the hold is not what limits the trade rate. **This is the
+third time the filter family has been measured here and produced nothing.**
+
+### THE BOTTLENECK IS NOT EDGE, IT IS TRADE COUNT
+
+**833 of 960 cell-tests — 87% — failed on trade count**, against 99 on cost and
+4 on the drift control. The factory's ideas barely trade: `sources/invent.py`
+enumerates crossings on lookbacks up to 200 bars and those fire a few times a
+year.
+
+**Neither step 3 nor step 4 can fix that, and step 4 is now measured not to.**
+The cheapest improvement available to this pipeline is a generator that makes
+DENSER rules — shorter lookbacks, more `above`/`below` states, fewer rare
+crossings. That is a step 1-2 job. It is now the top item below.
+
+---
+
 ### WHAT IS LEFT, in the order we stopped
 
-1. **Steps 4 to 7 are not written.** Step 3 is done (2026-09-22, above).
+0. **Make the generator produce denser rules.** 87% of everything dies on trade
+   count. Nothing downstream can repair it. `factory/sources/invent.py`.
+1. **Steps 5 to 7 are not written.** Steps 3 and 4 are done (2026-09-22, above).
 2. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
    "mean and median disagree in sign" — the two exact ways the dilution defect
    kills a real signal. Neither verdict was earned.
