@@ -63,11 +63,47 @@ downstream catches a leak.
 
 ---
 
+## ADDED 2026-09-22 — step 3 is built
+
+`factory/check.py`, `factory/cells.py`, 13 tests. `docs/STEP3.md` is the design
+and every number behind it. The diagram's step-3 boxes are green.
+
+```
+python -m factory.check                  # 5 ideas off the queue, all 24 cells
+python -m factory.check -n 20 -v         # print every cell
+```
+
+**The two open numbers are now picked, both on measurement.**
+
+* **Cost multiple: 1x, reported at 1x/2x/3x.** Kris pushed back on 2x and he was
+  right — on 45 generated ideas 2x removed only two, and once the drift control
+  was applied both multiples left exactly five. It bought nothing and cost what
+  he said it costs.
+* **All 24 cells**, ~18 seconds an idea. Gold's round trip is 1.83 bps and
+  EURUSD's is 0.27; killing on gold alone kills at six times the bar.
+
+**The gate that does the work is the drift control, not the cost check:**
+
+| filter | of 45 |
+|---|---|
+| makes money at normal fees | 19 |
+| ...survives deleting its best 5 trades | 19 |
+| ...**beats its own random-entry control** | **5** |
+
+Gold rose 123% in the window. Fourteen of the nineteen scored *worse* than
+entering at random. The control does not ban trading with a trend — all five
+survivors are long gold — it bans trading one worse than random.
+
+**One claim of mine was wrong and a test caught it.** The first version said
+`max_hold` capped the trade rate and that twelve of the 24 cells were therefore
+impossible. It does not: nearly every trade exits early on its stop or target.
+Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
+
+---
+
 ### WHAT IS LEFT, in the order we stopped
 
-1. **Steps 3 to 7 are not written.** Step 3's shape is agreed (trades, four
-   questions, 0.4 tpd floor); the two numbers still to pick are the cost
-   multiple and whether it runs on all 24 cells or one.
+1. **Steps 4 to 7 are not written.** Step 3 is done (2026-09-22, above).
 2. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
    "mean and median disagree in sign" — the two exact ways the dilution defect
    kills a real signal. Neither verdict was earned.

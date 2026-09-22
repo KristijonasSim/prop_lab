@@ -43,13 +43,22 @@ class Trade:
     side: str
     r: float            # result in R, net of the round trip
     reason: str         # stop | target | time | end
+    risk: float         # the 1R denominator, in price. Kept so a trade can be
+                        # RE-PRICED at another cost multiple without re-running:
+                        # cost enters R linearly, so r(m) = r - (m-1)*cost/risk.
 
 
-def _series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """Entry flags and ATR at every bar, each computed through the guard.
 
     One Window per bar. A condition that needs history it does not have returns
     nan, and nan never satisfies a comparison, so the warm-up handles itself.
+
+    PUBLIC, and separate from `run`, for two reasons. It is the expensive half -
+    a Python loop over every bar - so step 3 computes it once and re-prices the
+    same signals at 1x/2x/3x cost. And the random-entry control needs the REAL
+    `atr` with a DIFFERENT `fire`, which is only expressible if the two can be
+    handed to `run` from outside.
     """
     n = len(frame)
     fire = np.zeros(n, dtype=bool)
@@ -87,15 +96,22 @@ def _atr_at(w) -> float:
     return float(np.mean(np.maximum(h - l, np.maximum(abs(h - c), abs(l - c)))))
 
 
-def run(strategy: Strategy, frame: pd.DataFrame, cost_bps: float) -> list[Trade]:
-    """Every trade the strategy would have taken. One position at a time."""
+def run(strategy: Strategy, frame: pd.DataFrame, cost_bps: float,
+        signals: tuple[np.ndarray, np.ndarray] | None = None) -> list[Trade]:
+    """Every trade the strategy would have taken. One position at a time.
+
+    `signals` overrides the computed `(fire, atr)`. Nothing in the trading rules
+    changes - the same fill rules, the same stop, the same hold - so a control
+    built this way differs from the real run in the ENTRY BARS and in nothing
+    else, which is what makes the comparison a paired one.
+    """
     need = {"open", "high", "low", "close"}
     if not need <= set(frame.columns):
         raise ValueError(f"frame needs {sorted(need)}")
     frame = frame.reset_index(drop=True)
     live = (frame["volume"].values > 0) if "volume" in frame else np.ones(len(frame), bool)
 
-    fire, atr = _series(strategy, frame)
+    fire, atr = series(strategy, frame) if signals is None else signals
     o, h, l, c = (frame[k].values for k in ("open", "high", "low", "close"))
     long_ = strategy.side == "long"
     sgn = 1.0 if long_ else -1.0
@@ -160,7 +176,7 @@ def run(strategy: Strategy, frame: pd.DataFrame, cost_bps: float) -> list[Trade]
         gross = sgn * (exit_px - px)
         cost = px * cost_bps / 1e4
         trades.append(Trade(e, exit_bar, float(px), float(exit_px), strategy.side,
-                            float((gross - cost) / risk), why))
+                            float((gross - cost) / risk), why, float(risk)))
         t = exit_bar + 1          # one position at a time, no pyramiding
     return trades
 
