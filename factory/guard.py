@@ -85,14 +85,21 @@ class Window:
     which matters when a 22,000-bar backtest builds 22,000 of them.
     """
 
-    __slots__ = ("open", "high", "low", "close", "volume", "t", "_n")
+    #: `hour` is UTC hour of day, added 2026-09-22 for step 4's session
+    #: repairs. It is a property OF BAR t and of no other bar, so it cannot
+    #: leak: knowing that the current bar is 14:00 says nothing about the next
+    #: one's price. It is carried as a column by `factory/cells.py` because
+    #: `build.run` drops the DatetimeIndex before the strategy ever runs.
+    COLUMNS = ("open", "high", "low", "close", "volume", "hour")
+
+    __slots__ = COLUMNS + ("t", "_n")
 
     def __init__(self, frame, t: int):
         if t < 0:
             raise ValueError("t must be >= 0")
         n = t + 1
         self.t, self._n = t, n
-        for col in ("open", "high", "low", "close", "volume"):
+        for col in self.COLUMNS:
             arr = frame[col].values[:n] if col in frame else np.zeros(n)
             object.__setattr__(self, col, Series(arr, col))
 

@@ -77,6 +77,44 @@ def _atr(w, n):
     c = np.asarray(w.close[-(n+1):-1], dtype=float)
     return float(np.mean(np.maximum(h-l, np.maximum(abs(h-c), abs(l-c)))))
 
+def _hour(w, _n=0):
+    """UTC hour of THIS bar, 0-23. The session filter, expressed in the grammar.
+
+    A window is `hour above 6.5 and hour below 16.5`, which is 07:00-16:00
+    inclusive - two ordinary conditions, so no new comparison is needed. The
+    half-integers are deliberate: `above`/`below` are strict, and a hour of 7
+    must satisfy "after 6.5" rather than sit on a boundary.
+
+    ZERO WHEN THE COLUMN IS ABSENT, which makes every hour condition false on a
+    frame that has no clock. That is the safe direction - a session filter that
+    silently matched everything would look like a working filter.
+    """
+    return float(w.hour[-1])
+
+
+def _vwap(w, n):
+    """Volume-weighted average of typical price over the last n bars.
+
+    IT IS A ROLLING VWAP, NOT A SESSION VWAP, and the difference is worth
+    stating. H-027 anchors its VWAP to a session and that anchor is the
+    strategy; this is a FILTER, and a filter wants a stable reference rather
+    than one that resets to the price every morning. A rolling window is also
+    bounded, which keeps it inside `guard.Window` where it can be checked,
+    instead of needing a precomputed cumulative column the guard cannot see.
+
+    Falls back to the unweighted mean where volume is absent or all zero - a
+    padded weekend stretch has no volume and a division by it would be nan.
+    """
+    if not _need(w, n):
+        return np.nan
+    tp = (np.asarray(w.high[-n:], dtype=float)
+          + np.asarray(w.low[-n:], dtype=float)
+          + np.asarray(w.close[-n:], dtype=float)) / 3.0
+    v = np.asarray(w.volume[-n:], dtype=float)
+    tot = v.sum()
+    return float((tp * v).sum() / tot) if tot > 0 else float(tp.mean())
+
+
 #: name -> (function, does it need a window length?)
 INDICATORS = {
     "price":   (_price,   False),
@@ -88,6 +126,12 @@ INDICATORS = {
     "lowest":  (_lowest,  True),
     "stdev":   (_stdev,   True),
     "roc":     (_roc,     True),
+    # ADDED 2026-09-22 for step 4's repair list. Neither is offered to the
+    # idea GENERATOR - `sources/invent.py` does not enumerate them - because
+    # they exist to be bolted onto an idea that already nearly works, not to
+    # widen the search. See `factory/repair.py`.
+    "hour":    (_hour,    False),
+    "vwap":    (_vwap,    True),
 }
 
 #: The comparisons. The two CROSS ones fire on a single bar and are silent

@@ -35,6 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DIR = ROOT / "backtests" / "factory"
 QUEUE = DIR / "queue.jsonl"
 TRIED = DIR / "tried.jsonl"
+SURVIVORS = DIR / "survivors.jsonl"
 
 #: The order sources are drained in. Kris set this.
 SOURCE_ORDER = ("tradingview", "invent", "kris")
@@ -111,6 +112,21 @@ def mark_tried(s: Strategy, verdict: str, note: str = "") -> None:
     d = asdict(s)
     d["verdict"], d["note_result"] = verdict, note
     with TRIED.open("a") as fh:
+        fh.write(json.dumps(d, separators=(",", ":"), sort_keys=True) + "\n")
+
+
+def keep(s: Strategy, note: str = "") -> None:
+    """A survivor. It has passed step 3 (possibly after a step 4 repair) and is
+    waiting for step 5.
+
+    IT DOES NOT GO BACK ON THE QUEUE. Re-queueing a repaired idea would send it
+    through step 3's 24-cell search a second time, which is the search
+    multiplication step 4 exists not to do. Its cell is already decided.
+    """
+    DIR.mkdir(parents=True, exist_ok=True)
+    d = asdict(s)
+    d["note_result"] = note
+    with SURVIVORS.open("a") as fh:
         fh.write(json.dumps(d, separators=(",", ":"), sort_keys=True) + "\n")
 
 

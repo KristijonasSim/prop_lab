@@ -88,7 +88,13 @@ def load(sym: str, tf: str) -> pd.DataFrame:
     if not len(df):
         return df
     lo, hi = common_window()
-    return df.loc[(df.index >= lo) & (df.index <= hi)]
+    df = df.loc[(df.index >= lo) & (df.index <= hi)].copy()
+    # THE CLOCK, carried as a column because `build.run` resets the index
+    # before a strategy ever sees the frame. It is a property of bar t alone,
+    # so it cannot leak - see `guard.Window.COLUMNS`. Step 4's session repairs
+    # are the only thing that reads it.
+    df["hour"] = df.index.hour.astype(float)
+    return df
 
 
 @lru_cache(maxsize=64)

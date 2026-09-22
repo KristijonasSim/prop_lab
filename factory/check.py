@@ -78,6 +78,11 @@ class Check:
     trades_per_day: float = 0.0
     mean_r: dict[float, float] = field(default_factory=dict)   # cost mult -> mean R
     mean_r_drop_best: float = float("nan")
+    #: Standard error of each mean above. Step 4 needs a SCALE to decide what
+    #: "not far off" means on a gate whose threshold is zero, and a percentage
+    #: of zero is not one. See `repair.NEAR_SIGMA`.
+    mean_r_se: float = float("nan")
+    mean_r_drop_best_se: float = float("nan")
     mean_hold_days: float = float("nan")
     control_p90: float = float("nan")
     control_median: float = float("nan")
@@ -157,6 +162,11 @@ def mean_hold_days(trades, frame: pd.DataFrame, days: float) -> float:
     return held / bars_per_day
 
 
+def _stderr(x: np.ndarray) -> float:
+    """Standard error of the mean. nan on a single observation, by definition."""
+    return float(np.std(x, ddof=1) / np.sqrt(len(x))) if len(x) > 1 else float("nan")
+
+
 def _r(trades) -> np.ndarray:
     return np.array([t.r for t in trades], dtype=float)
 
@@ -231,6 +241,7 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
 
     r = _r(trades)
     c.mean_r[1.0] = float(r.mean())
+    c.mean_r_se = _stderr(r)
     # Re-pricing is exact arithmetic, not a re-run. Cost enters R linearly, so
     # the same trade at multiple m simply loses (m-1) x entry x bps / risk more.
     # Re-running at a higher cost would also re-open `build`'s min-risk guard
@@ -247,7 +258,9 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
         return c
 
     # --- 3. one lucky run? ---------------------------------------------------
-    c.mean_r_drop_best = float(np.sort(r)[:-DROP_BEST].mean())
+    trimmed = np.sort(r)[:-DROP_BEST]
+    c.mean_r_drop_best = float(trimmed.mean())
+    c.mean_r_drop_best_se = _stderr(trimmed)
     if c.mean_r_drop_best <= 0:
         c.reasons.append(f"{c.mean_r_drop_best:+.3f} R without its best "
                          f"{DROP_BEST} trades")
