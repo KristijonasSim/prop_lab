@@ -334,3 +334,42 @@ def test_a_pass_in_flight_still_shows_its_running_tally(tmp_path, monkeypatch):
     live.beat(3, "quick check", counts={"gates": {"trades": 9}},
               path=tmp_path / "live.json")
     assert dashboard._gates()["trades"] == 9
+
+
+def test_every_source_carries_its_own_numbers():
+    """Kris, 2026-09-23: *"when i go to quantpedia tab i see same stats... we
+    didint test nothing in quantpedia."* Only the header was filtered - the
+    funnel, the stop breakdown, the luck check and the run list were global,
+    so an empty source displayed another source's work."""
+    rows = {r["key"]: r for r in dashboard.per_source()}
+    for key, r in rows.items():
+        assert {"funnel", "runs", "step5", "survivors", "candidates",
+                "stopped"} <= set(r)
+        assert r["funnel"]["ideas"] == r["tested"]
+        if r["tested"] == 0:
+            assert r["funnel"]["step3_pass"] == 0
+            assert r["runs"] == []
+            assert r["step5"] is None
+            assert r["survivors"] == [] and r["candidates"] == []
+            assert r["stopped"] == {}
+
+
+def test_a_source_only_sees_runs_its_ideas_were_in():
+    for r in dashboard.per_source():
+        for run in r["runs"]:
+            assert r["key"] in (run.get("by_source") or {})
+
+
+def test_a_mixed_batch_says_so_on_the_luck_check():
+    """The null scores a BATCH, not a source. When a batch mixed sources the
+    page has to say that rather than present p as this source's number."""
+    for r in dashboard.per_source():
+        if r["step5"]:
+            assert "only_source" in r["step5"] and "batch" in r["step5"]
+
+
+def test_every_idea_is_counted_once_at_the_point_it_stopped():
+    """One row per idea, not per cell-test - counting cells is what made a
+    single script look like 46 tests."""
+    for r in dashboard.per_source():
+        assert sum(r["stopped"].values()) == r["tested"]

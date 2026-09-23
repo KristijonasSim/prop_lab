@@ -36,6 +36,17 @@ UI = Path(__file__).resolve().parent / "ui" / "index.html"
 HOST, PORT = "127.0.0.1", 8765
 
 
+def _runs() -> list[dict]:
+    """Every recorded pass, oldest first, with its batch composition."""
+    return [{"started": r.get("started"), "ideas": r.get("ideas", 0),
+             "step3": r.get("step3_pass", 0), "step4": r.get("step4_repaired", 0),
+             "step6": r.get("step6_pass", 0), "step7": len(r.get("step7") or []),
+             "seconds": r.get("seconds", 0), "step5": r.get("step5"),
+             "p_value": (r.get("step5") or {}).get("p_value"),
+             "by_source": r.get("by_source") or {}}
+            for r in nightly.history(1000)]
+
+
 def _survivors(limit: int = 12) -> list[dict]:
     out = []
     for r in reversed(nightly.history(200)):
@@ -50,7 +61,11 @@ def _candidates(limit: int = 8) -> list[dict]:
     out = []
     for r in reversed(nightly.history(200)):
         for c in (r.get("step7") or []):
-            out.append({**c, "when": r.get("started", "")})
+            # The source is not on a step-7 row, so it is recovered from the
+            # survivor of the same pass that carries the same cell.
+            src = next((x.get("source") for x in (r.get("survivors") or [])
+                        if x.get("cell") == c.get("cell")), "?")
+            out.append({**c, "source": src, "when": r.get("started", "")})
             if len(out) >= limit:
                 return out
     return out
@@ -178,14 +193,57 @@ def per_source() -> list[dict]:
                 e["died_at"] = int(r["died_at"])
                 e["gate"] = r.get("gate") or "other"
 
-        gates = {}
+        # WHERE EACH IDEA STOPPED, per source, covering EVERY stopping point.
+        # The old panel counted step-3 gate failures at the CELL level, which
+        # was global, double-countable and could not explain an idea that died
+        # at step 6 - Kris's translated script showed an empty panel because it
+        # passed step 3 and died on the holdout. One row per idea, one reason.
+        stopped = {}
+
+        def _bump(k):
+            stopped[k] = stopped.get(k, 0) + 1
+
         for e in seen.values():
             if e["died_at"] == 3:
-                g = e["gate"] or "other"
-                gates[g] = gates.get(g, 0) + 1
+                _bump(e["gate"] or "other")
+            elif e["died_at"] == 6:
+                _bump("holdout")
+            elif e["reached"] >= 7:
+                _bump("scored")
+            elif e["reached"] >= 3:
+                _bump("alive")
+            else:
+                _bump("other")
+        gates = {k: v for k, v in stopped.items()
+                 if k in ("trades", "cost", "concentration", "drift", "other")}
 
+        # EVERYTHING THE PAGE DRAWS, SCOPED TO THIS SOURCE. Kris, 2026-09-23:
+        # *"when i go to quantpedia tab i see same stats... we didint test
+        # nothing in quantpedia."* Only the header was filtered; the funnel,
+        # the gate breakdown, the luck check and the run list were all global,
+        # so an empty source showed another source's work. Each source now
+        # carries its own copy and the page reads nothing global.
         tested = len(seen)
+        funnel = {
+            "ideas": tested,
+            "step3_pass": sum(1 for e in seen.values() if e["reached"] >= 3),
+            "step4_repaired": sum(1 for e in seen.values() if e["reached"] == 4),
+            "step6_pass": sum(1 for e in seen.values() if e["reached"] >= 7),
+            "step7": sum(1 for e in seen.values() if e["reached"] >= 7),
+        }
+        runs = [r for r in _runs() if key in (r.get("by_source") or {})]
+        last_null = next((r["step5"] for r in reversed(runs) if r.get("step5")), None)
+        if last_null:
+            batch = runs[-1].get("by_source") or {}
+            last_null = {**last_null, "batch": batch,
+                         "only_source": set(batch) == {key}}
+
         out.append({
+            "funnel": funnel,
+            "runs": runs[-20:],
+            "step5": last_null,
+            "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
+            "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len(w) + tested + len(ref),
             "refused": len(ref),
             "gaps": sum(1 for r in ref if r.get("gap")),
@@ -202,6 +260,7 @@ def per_source() -> list[dict]:
             "failed_at_3": sum(1 for e in seen.values() if e["died_at"] == 3),
             "failed_at_6": sum(1 for e in seen.values() if e["died_at"] == 6),
             "gates": gates,
+            "stopped": stopped,
         })
     return out
 

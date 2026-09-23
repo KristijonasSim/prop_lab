@@ -199,7 +199,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7" id="gatesCard">
-    <h2>What kills them</h2>
+    <h2>Where every idea stopped</h2>
     <p class="lede" id="gatesLede"></p>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
@@ -244,7 +244,18 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 <script>
 const $ = id => document.getElementById(id);
 const GATE_COLS = {trades:'#8ab4f8', cost:'#f5b955', concentration:'#c084fc',
-                   drift:'#ef6b6b', other:'#4b5563'};
+                   drift:'#ef6b6b', holdout:'#e879a0', other:'#4b5563',
+                   alive:'#5b6472', scored:'#4ade80'};
+const STOP_WHY = {
+  trades:        ['step 3', 'fired too rarely — under 0.4/day or 100 trades'],
+  cost:          ['step 3', 'lost money once the round trip was charged'],
+  concentration: ['step 3', 'profit sat in its best five trades'],
+  drift:         ['step 3', 'scored worse than entering at random'],
+  holdout:       ['step 6', 'fell apart on the years it was not selected on'],
+  scored:        ['step 7', 'got all the way through'],
+  alive:         ['—',      'passed step 3, not yet re-checked'],
+  other:         ['—',      'no usable cell'],
+};
 let S = null, tick = 0;
 // Which source the page is looking at. Kris, 2026-09-23: the source is the
 // thing you pick first, so it is remembered between reloads.
@@ -302,18 +313,19 @@ function sourceBar(){
 
 function stations(){
   const b = S.beat, cur = S.live ? b.step : 0;
-  const counts = b.counts || {};
+  const r = row();
+  // EVERY STATION IS ABOUT THE SELECTED SOURCE. They used to read the live
+  // beat and the global funnel, so switching to a source with nothing tested
+  // still showed another source's counts on the line.
+  const f = r ? r.funnel : {ideas:0, step3_pass:0, step4_repaired:0, step6_pass:0, step7:0};
   const val = n => ({
-    1: ((row() ? row().waiting : S.queue.waiting)) + ' queued',
-    2: (counts.ideas ?? 0) + ' built',
-    3: (counts.step3_pass ?? 0) + ' pass',
-    4: (counts.step4_repaired ?? 0) + ' fixed',
-    5: S.step5 ? 'p ' + S.step5.p_value : '—',
-    // 6 and 7 read the pass in flight when there is one, so every station on
-    // the line is talking about the same batch. Between passes they fall back
-    // to the all-time total, which is what the funnel shows.
-    6: (S.live ? (counts.step6_pass ?? 0) : S.funnel.step6_pass) + ' held',
-    7: (S.live ? (counts.step7 ?? 0) : S.funnel.step7) + ' scored',
+    1: (r ? r.waiting : 0) + ' queued',
+    2: f.ideas + ' built',
+    3: f.step3_pass + ' pass',
+    4: f.step4_repaired + ' fixed',
+    5: (r && r.step5) ? 'p ' + r.step5.p_value : '—',
+    6: f.step6_pass + ' held',
+    7: f.step7 + ' scored',
   })[n];
   $('line').innerHTML = S.steps.map(s => {
     const on = cur === s.n, done = cur > s.n;
@@ -353,7 +365,8 @@ function now(){
 }
 
 function funnel(){
-  const f = S.funnel, max = Math.max(f.ideas, 1);
+  const r = row();
+  const f = r ? r.funnel : S.funnel, max = Math.max(f.ideas, 1);
   const rows = [['ideas tested', f.ideas], ['passed step 3', f.step3_pass],
                 ['repaired at 4', f.step4_repaired],
                 ['held at step 6', f.step6_pass], ['scored at 7', f.step7]];
@@ -364,51 +377,53 @@ function funnel(){
 }
 
 function gates(){
-  const g = S.gates, tot = Object.values(g).reduce((a,b)=>a+b,0);
+  const r = row();
+  const g = r ? r.stopped : {}, tot = Object.values(g).reduce((a,b)=>a+b,0);
   $('gatesCard').style.display = tot ? '' : 'none';
-  if (!tot) return;
+  // Cleared even when hidden: a stale lede from the previous source is one
+  // browser-inspector away from being read as this source's number.
+  if (!tot){ $('gatesLede').textContent = ''; $('gatesTable').innerHTML = '';
+             $('gatesNote').textContent = ''; return; }
   // ONE IDEA IS NOT ONE TEST. Every idea is run on 24 cells - six markets by
   // four timeframes - so a single script produces up to 24 rows here. Kris saw
   // 46 from one script (a double-count, since fixed) and had no way to tell
   // whether 24 was even the right order of magnitude.
-  const ideas = S.funnel.ideas || 0;
-  $('gatesLede').textContent = ideas
-    ? `${tot} cell-tests from ${ideas} idea${ideas===1?'':'s'}. `
-      + `Each idea is run on 24 cells — six markets × four timeframes — so one `
-      + `idea makes up to 24 rows here.`
-    : `${tot} cell-tests.`;
+  // ONE ROW PER IDEA, not per cell-test. An idea is run on 24 cells and only
+  // its FURTHEST outcome is a fact about the idea; counting cells here is what
+  // made a single script look like 46 tests.
+  $('gatesLede').textContent =
+    `${tot} idea${tot===1?'':'s'} from ${esc(r ? r.label : '')}, `
+    + `each counted once at the point it stopped. `
+    + `Every idea is run on 24 cells — six markets × four timeframes — and `
+    + `survives if any one of them passes.`;
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${GATE_COLS[k]}"></i>`).join('');
   $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<span><i class="sw" style="background:${GATE_COLS[k]}"></i>
        ${k} ${Math.round(100*v/tot)}%</span>`).join('');
-  const WHY = {
-    trades: 'fired too rarely — under 0.4/day or 100 trades',
-    cost: 'lost money once the round trip was charged',
-    concentration: 'profit sat in its best five trades',
-    drift: 'scored worse than entering at random',
-    other: 'no cell, or the control produced no trades',
-  };
   $('gatesTable').innerHTML =
-    `<tr><th>gate</th><th>why it died</th><th style="text-align:right">cells</th>
+    `<tr><th>stopped at</th><th>reason</th><th style="text-align:right">ideas</th>
       <th style="text-align:right">share</th></tr>` +
-    Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
-      `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
-          <i class="sw" style="background:${GATE_COLS[k]}"></i>${k}</span></td>
-        <td class="wide dim">${WHY[k]}</td>
-        <td class="mono" style="text-align:right">${v}</td>
-        <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`
-    ).join('');
-  const pct = Math.round(100*g.trades/tot);
-  $('gatesNote').textContent = pct >= 60
-    ? `${pct}% die on trade count. Nothing downstream repairs that — it is the generator's job.`
-    : `Trade count takes ${pct}%.`;
+    Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
+      const [step, why] = STOP_WHY[k] || ['—', k];
+      return `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
+          <i class="sw" style="background:${GATE_COLS[k]||'#4b5563'}"></i>${esc(step)}</span></td>
+        <td class="wide dim">${esc(why)}</td>
+        <td class="mono ${k==='scored'?'good':'bad'}" style="text-align:right">${v}</td>
+        <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
+    }).join('');
+  const t = g.trades || 0;
+  $('gatesNote').textContent = t && t / tot >= 0.6
+    ? `${Math.round(100*t/tot)}% never traded enough to test. Nothing downstream `
+      + `repairs that — it is the generator's job.`
+    : (g.scored ? `${g.scored} made it all the way through.` : '');
 }
 
 function nullPanel(){
-  const n = S.step5;
+  const r = row();
+  const n = r ? r.step5 : null;
   $('nullCard').style.display = n ? '' : 'none';
-  if (!n) return;
+  if (!n){ $('null').innerHTML = ''; return; }
   const beat = n.real > n.null_max;
   $('null').innerHTML =
     `<table>
@@ -420,14 +435,11 @@ function nullPanel(){
      </table>
      <div class="verdict">${beat
        ? 'The real market beat every scrambled copy on this batch.'
-       : 'A market with no information in it produced as many survivors. Nothing here is above luck yet.'}</div>`;
+       : 'A market with no information in it produced as many survivors. Nothing here is above luck yet.'}
+       ${n.only_source ? '' : '<br><span class="dim">This batch mixed sources: '
+         + esc(Object.entries(n.batch||{}).map(([k,v])=>k+' '+v).join(', '))
+         + '. The luck check scores a batch, not one source.</span>'}</div>`;
 }
-
-const GATE_WHY = {
-  trades: 'fired too rarely', cost: 'lost money after fees',
-  concentration: 'one lucky run', drift: 'worse than random',
-  other: 'no usable cell',
-};
 
 function srcTable(){
   const rows = S.sources || [];
@@ -436,7 +448,12 @@ function srcTable(){
        <th>refused</th><th>tested</th><th>passed 3</th><th>held 6</th>
        <th>scored 7</th><th>failed</th><th>died on</th><th>waiting</th></tr>` +
     rows.map(r => {
-      const top = Object.entries(r.gates).sort((a,b)=>b[1]-a[1])[0];
+      // `stopped`, not `gates`: gates is step-3 only, so an idea that passed
+      // step 3 and died on the holdout showed a dash in this column.
+      const fails = Object.entries(r.stopped || {})
+        .filter(([k]) => k !== 'scored' && k !== 'alive')
+        .sort((a,b)=>b[1]-a[1]);
+      const top = fails[0];
       return `<tr style="${r.key===SRC?'background:#1b1e23':''}">
         <td><span class="t" style="display:inline-flex;align-items:center;gap:7px">
             <i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span></td>
@@ -449,7 +466,10 @@ function srcTable(){
         <td class="mono ${r.held6?'good':''}">${r.held6}</td>
         <td class="mono ${r.scored7?'good':''}">${r.scored7}</td>
         <td class="mono ${r.failed?'bad':''}">${r.failed}</td>
-        <td class="dim">${top ? esc(GATE_WHY[top[0]] || top[0]) + ' ' + top[1] : '—'}</td>
+        <td class="dim">${top
+          ? esc((STOP_WHY[top[0]] ? STOP_WHY[top[0]][0] + ' · ' : '') + top[0])
+            + ' ' + top[1]
+          : '—'}</td>
         <td class="mono">${r.waiting}</td></tr>`;
     }).join('');
 
@@ -499,7 +519,8 @@ function sourceTable(){
 }
 
 function candTable(){
-  const c = S.candidates;
+  const r = row();
+  const c = r ? r.candidates : [];
   $('cands').innerHTML =
     `<tr><th>rule</th><th>cell</th><th>trades</th><th>/day</th><th>risk</th>
       <th>pass %</th><th>days</th><th>band</th><th>accounts</th></tr>` +
@@ -515,7 +536,8 @@ function candTable(){
 }
 
 function runsTable(){
-  const r = S.runs;
+  const sel = row();
+  const r = sel ? [...sel.runs].reverse() : [];
   $('runs').innerHTML =
     `<tr><th>started</th><th>ideas</th><th>step 3</th><th>step 4</th>
       <th>step 6</th><th>step 7</th><th>luck p</th><th>took</th></tr>` +
