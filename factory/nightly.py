@@ -114,12 +114,11 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             g = repair.failed_gate(c)
             if g in gates:
                 gates[g] += 1
-        best_any = max(checks, key=lambda c: (c.verdict == "PASS",
-                                              c.mean_r.get(1.0, -9e9)),
-                       default=None)
+        best_any = _headline_cell(s, checks)
         story = {"idea": s.label(), "source": s.source, "note": s.note,
                  "score": (scorecard(s, best_any.market, best_any.tf)
                            if best_any else {}),
+                 "ladder": (ladder_rows(s, best_any.market) if best_any else []),
                  "when": rec["started"], "stop_atr": s.stop_atr,
                  "target_atr": s.target_atr, "max_hold": s.max_hold,
                  "cells": [_cell_row(c) for c in checks], "repairs": [],
@@ -328,6 +327,55 @@ def scorecard(strategy, market: str, tf: str) -> dict:
                        accounts=round(1 / best["pass_rate"], 2))
     except Exception:                       # a pace number is never worth a crash
         pass
+    return out
+
+
+def _headline_cell(strategy, checks):
+    """Which of the 24 cells the scoreboard should show for this idea.
+
+    NOT the highest profit per trade, which is what a first version used and
+    which is wrong for this project. Kris, 2026-09-23, on seeing 0.156
+    trades/day: *"we were talking about 0.33 tpd, now you added 1.56? i dont
+    get it."* The cell had silently moved from gold 1h to gold 4h because 4h
+    earns more per trade - and on this rule the whole timeframe ladder is
+    monotone in exactly that way:
+
+        15m  1.59/day  PF 0.99  7.5 eval days   3.76 accounts
+        1h   0.47/day  PF 1.29  18.1            3.62
+        4h   0.16/day  PF 1.80  37.7            2.35
+        1d   0.04/day  PF 3.23  71.2            1.78
+
+    Sorting on profit per trade always lands on the slowest chart, and the
+    pace target is 5-14 days. So the headline is the FASTEST cell that still
+    makes money, and the drill-down shows the whole ladder - the trade-off is
+    the finding, not a number to hide.
+    """
+    usable = [c for c in checks if c.mean_r.get(1.0, -9e9) > 0]
+    if not usable:
+        return max(checks, key=lambda c: c.mean_r.get(1.0, -9e9), default=None)
+
+    paced = []
+    for c in usable:
+        k = scorecard(strategy, c.market, c.tf)
+        if k.get("eval_days"):
+            paced.append((k["eval_days"], c))
+    if paced:
+        return min(paced, key=lambda x: x[0])[1]
+    return max(usable, key=lambda c: c.mean_r.get(1.0, -9e9))
+
+
+def ladder_rows(strategy, market: str) -> list[dict]:
+    """The same rule on all four timeframes of one market.
+
+    The trade-off Kris found by asking about one number: slower charts earn
+    more per trade and take far longer to resolve an evaluation. Showing it
+    beside the headline is the difference between a number and a choice.
+    """
+    out = []
+    for tf in cells.TIMEFRAMES:
+        k = scorecard(strategy, market, tf)
+        if k:
+            out.append(k)
     return out
 
 

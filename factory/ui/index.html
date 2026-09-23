@@ -233,8 +233,10 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 
   <div class="card c12" id="ideasCard">
     <h2>Every strategy tested — best market and timeframe, 2023 to 2026</h2>
-    <p class="lede">One row per strategy, scored on its best of the 24 cells over
-      the last three years. Click a row for all 24 and every repair tried.</p>
+    <p class="lede">One row per strategy, on the FASTEST cell that still makes
+      money — the pace target is 5&ndash;14 evaluation days, and sorting on profit
+      per trade always lands on the slowest chart. Click a row for the timeframe
+      trade-off, all 24 cells and every repair tried.</p>
     <div class="scroll"><table id="ideas"></table></div>
   </div>
 
@@ -579,7 +581,12 @@ function ideaDetail(x){
   // some years but on others lost?"* That is exactly the finding, and it was
   // buried in two tables forty rows apart. Put next to each other it needs no
   // explanation at all.
-  const best = (x.cells || []).find(c => c.cell === x.cell);
+  // `x.cell` is where the step-3 verdict landed; the SCORED cell is
+  // `x.score.cell` and they are not always the same, so both the marker
+  // and the two-window block have to follow the scorecard.
+  const shown = (x.score || {}).cell;
+  const best = (x.cells || []).find(c => c.cell === shown)
+            || (x.cells || []).find(c => c.cell === x.cell);
   const cmp = (best && x.holdout) ? `
     <h3>The answer in one line</h3>
     <div class="scroll"><table>
@@ -604,8 +611,33 @@ function ideaDetail(x){
         + 'market — which is the whole reason the older years are held back.'
       : 'Both windows agree.'}</p>` : '';
 
+  // THE TIMEFRAME TRADE-OFF. Slower charts earn more per trade and take far
+  // longer to resolve an evaluation. One headline number hides that; the
+  // ladder is the choice Kris actually has to make.
+  const lad = (x.ladder || []);
+  const ladder = lad.length > 1 ? `
+    <h3>Same rule, four timeframes — faster or richer, pick one</h3>
+    <div class="scroll"><table>
+      <tr><th>timeframe</th><th>trades</th><th>trades / day</th><th>PF</th>
+        <th>R / trade</th><th>max DD</th><th>pass %</th><th>eval days</th>
+        <th>accounts</th></tr>
+      ${lad.map(k => `<tr${k.cell === shown ? ' style="background:#1b1e23"' : ''}>
+        <td class="mono">${esc(k.tf)}${k.cell === shown ? '  ◂ shown above' : ''}</td>
+        <td class="mono">${k.trades}</td>
+        <td class="mono">${Number(k.per_day).toFixed(2)}</td>
+        <td class="mono ${(k.pf||0) >= 1.2 ? 'good' : 'bad'}">${k.pf == null ? '—' : k.pf.toFixed(2)}</td>
+        <td class="mono ${(k.mean_r||0) > 0 ? 'good' : 'bad'}">${Number(k.mean_r).toFixed(3)}</td>
+        <td class="mono">${k.max_dd_r}R</td>
+        <td class="mono">${k.pass_pct ?? '—'}</td>
+        <td class="mono">${k.eval_days ?? '—'}</td>
+        <td class="mono dim">${k.accounts ?? '—'}</td></tr>`).join('')}
+    </table></div>
+    <p class="why">Slower charts earn more per trade and burn fewer accounts,
+      and take far longer to fund one. 5&ndash;14 days is the target.</p>` : '';
+
   return `<div class="det">
     ${x.note ? `<p class="why">${esc(x.note)}</p>` : ''}
+    ${ladder}
     <p class="why">stop ${x.stop_atr} ATR · target ${x.target_atr} ATR ·
        max hold ${x.max_hold} bars</p>
     ${cmp}
@@ -628,8 +660,8 @@ function ideasTable(){
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   $('ideas').innerHTML =
-    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades</th><th>/day</th>
-       <th>PF</th><th>win %</th><th>per trade</th><th>max DD</th>
+    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades</th><th>trades / day</th>
+       <th>PF</th><th>win %</th><th>R / trade</th><th>max DD</th>
        <th>risk</th><th>pass %</th><th>eval days</th><th>accounts</th>
        <th>outcome</th><th>repairs</th></tr>` +
     list.map((x, i) => {
@@ -642,7 +674,7 @@ function ideasTable(){
           <td class="mono">${esc(k.market || '—')}</td>
           <td class="mono">${esc(k.tf || '—')}</td>
           <td class="mono">${k.trades ?? '—'}</td>
-          <td class="mono">${k.per_day ?? '—'}</td>
+          <td class="mono">${k.per_day == null ? '—' : k.per_day.toFixed(2)}</td>
           <td class="mono ${pf == null ? '' : (pf >= 1.2 ? 'good' : 'bad')}">
             ${pf == null ? '—' : pf.toFixed(2)}</td>
           <td class="mono">${k.win_pct ?? '—'}</td>
