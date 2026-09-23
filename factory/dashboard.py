@@ -99,6 +99,27 @@ def _last_null() -> dict | None:
     return None
 
 
+def _fingerprint(row: dict) -> str:
+    """WHAT the idea does, from a raw record, so one idea counts once.
+
+    `spec.Strategy.fingerprint` is the real definition; this reproduces it from
+    the stored dict rather than rebuilding a Strategy, because a row may be a
+    survivor record, a death record, or a carried stub with fields missing.
+    """
+    try:
+        terms = sorted(
+            f"{c['left'].get('kind')}{c['left'].get('length') or ''}"
+            f" {c['op']} "
+            f"{c['right'].get('kind')}{c['right'].get('length') or ''}"
+            f"{'' if c['right'].get('kind') != 'const' else c['right'].get('value')}"
+            f"{'' if int(c.get('hold', 1) or 1) <= 1 else ' x' + str(c['hold'])}"
+            for c in row.get("entry", []))
+    except (AttributeError, KeyError, TypeError):
+        return str(row.get("name", id(row)))
+    return (f"{row.get('side')}|{'&'.join(terms)}|{row.get('stop_atr')}"
+            f"|{row.get('target_atr')}|{row.get('max_hold')}")
+
+
 def per_source() -> list[dict]:
     """One row per source: found, tested, where they died, what survived.
 
@@ -135,17 +156,30 @@ def per_source() -> list[dict]:
         t = [r for r in tried if r.get("source") == key]
         k = [r for r in kept if r.get("source") == key]
         w = [r for r in waiting if r.get("source") == key]
-        gates = {}
-        for r in t:
-            if int(r.get("died_at") or 0) == 3:
-                g = r.get("gate") or "other"
-                gates[g] = gates.get(g, 0) + 1
-        reached = {}
-        for r in k:
-            n = int(r.get("reached") or 3)
-            reached[n] = reached.get(n, 0) + 1
         ref = [r for r in refused if r.get("source") == key]
-        tested = len(t) + len(k)
+
+        # COUNT IDEAS, NOT ROWS. One idea writes to BOTH files when it passes
+        # step 3 and then fails step 6 - `keep` records the survivor and
+        # `mark_tried` records the death - so summing the files reported Kris's
+        # single translated script as two tested ideas. Keyed by fingerprint,
+        # each idea appears once and carries the furthest stage it reached.
+        seen: dict[str, dict] = {}
+        for r in k + t:                       # survivors first, deaths second
+            fp = _fingerprint(r)
+            e = seen.setdefault(fp, {"reached": 0, "died_at": 0, "gate": ""})
+            if "reached" in r:
+                e["reached"] = max(e["reached"], int(r.get("reached") or 3))
+            if r.get("died_at"):
+                e["died_at"] = int(r["died_at"])
+                e["gate"] = r.get("gate") or "other"
+
+        gates = {}
+        for e in seen.values():
+            if e["died_at"] == 3:
+                g = e["gate"] or "other"
+                gates[g] = gates.get(g, 0) + 1
+
+        tested = len(seen)
         out.append({
             "read": len(w) + tested + len(ref),
             "refused": len(ref),
@@ -155,14 +189,13 @@ def per_source() -> list[dict]:
             "waiting": len(w),
             "found": len(w) + tested,
             "tested": tested,
-            "passed3": sum(v for n, v in reached.items() if n >= 3),
-            "repaired4": reached.get(4, 0),
-            "held6": sum(v for n, v in reached.items() if n >= 7),
-            "scored7": reached.get(7, 0),
-            "failed": len(t),
-            "failed_at_3": sum(1 for r in t if int(r.get("died_at") or 0) == 3),
-            "failed_at_6": sum(1 for r in t if int(r.get("died_at") or 0) == 6),
-            "failed_unknown": sum(1 for r in t if not r.get("died_at")),
+            "passed3": sum(1 for e in seen.values() if e["reached"] >= 3),
+            "repaired4": sum(1 for e in seen.values() if e["reached"] == 4),
+            "held6": sum(1 for e in seen.values() if e["reached"] >= 7),
+            "scored7": sum(1 for e in seen.values() if e["reached"] >= 7),
+            "failed": sum(1 for e in seen.values() if e["died_at"]),
+            "failed_at_3": sum(1 for e in seen.values() if e["died_at"] == 3),
+            "failed_at_6": sum(1 for e in seen.values() if e["died_at"] == 6),
             "gates": gates,
         })
     return out

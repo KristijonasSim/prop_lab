@@ -278,3 +278,33 @@ def test_the_same_script_is_not_recorded_twice(tmp_path):
     f = tmp_path / "skipped.jsonl"
     tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f)
     assert tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f) == 0
+
+
+def test_one_idea_counts_once_even_when_it_is_in_two_files():
+    """An idea that passes step 3 and then fails step 6 is written by BOTH
+    `keep` and `mark_tried`. Summing the files reported Kris's single
+    translated script as two tested ideas."""
+    rows = {r["key"]: r for r in dashboard.per_source()}
+    for r in rows.values():
+        assert r["tested"] >= r["passed3"]
+        assert r["tested"] >= r["failed"]
+        assert r["read"] == r["waiting"] + r["tested"] + r["refused"]
+
+
+def test_the_fingerprint_matches_the_strategy_it_came_from():
+    """`_fingerprint` reads a stored dict rather than rebuilding a Strategy,
+    so two records of the SAME idea must collapse whatever file they came
+    from - one carries `reached`, the other `died_at`."""
+    from dataclasses import asdict
+
+    s = Strategy(name="x", side="long",
+                 entry=(Condition(Term("wpr", 21), "above",
+                                  Term("const", value=-20.0), hold=2),))
+    a = {**asdict(s), "reached": 3}
+    b = {**asdict(s), "died_at": 6, "gate": "holdout"}
+    assert dashboard._fingerprint(a) == dashboard._fingerprint(b)
+
+    other = Strategy(name="y", side="long",
+                     entry=(Condition(Term("wpr", 21), "above",
+                                      Term("const", value=-20.0), hold=5),))
+    assert dashboard._fingerprint(asdict(other)) != dashboard._fingerprint(a)
