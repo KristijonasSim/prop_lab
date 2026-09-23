@@ -308,3 +308,29 @@ def test_the_fingerprint_matches_the_strategy_it_came_from():
                      entry=(Condition(Term("wpr", 21), "above",
                                       Term("const", value=-20.0), hold=5),))
     assert dashboard._fingerprint(asdict(other)) != dashboard._fingerprint(a)
+
+
+def test_a_finished_pass_is_not_counted_twice(tmp_path, monkeypatch):
+    """The FINAL beat of a pass is `resting`, which is still "live", and its
+    counts are the same ones already written to the run record. Adding both
+    reported Kris's single script as 46 cell-tests out of a possible 24."""
+    from factory import nightly
+
+    monkeypatch.setattr(nightly, "RUNS", tmp_path / "runs.jsonl")
+    monkeypatch.setattr(live, "STATE", tmp_path / "live.json")
+    nightly.record({"gates": {"trades": 17, "cost": 6}})
+    live.beat(0, "resting", counts={"gates": {"trades": 17, "cost": 6}},
+              path=tmp_path / "live.json")
+    assert dashboard._gates()["trades"] == 17
+
+
+def test_a_pass_in_flight_still_shows_its_running_tally(tmp_path, monkeypatch):
+    """The other half: without the in-flight beat the panel that explains the
+    bottleneck sits empty for the whole of the first pass."""
+    from factory import nightly
+
+    monkeypatch.setattr(nightly, "RUNS", tmp_path / "runs.jsonl")
+    monkeypatch.setattr(live, "STATE", tmp_path / "live.json")
+    live.beat(3, "quick check", counts={"gates": {"trades": 9}},
+              path=tmp_path / "live.json")
+    assert dashboard._gates()["trades"] == 9

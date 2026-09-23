@@ -68,12 +68,17 @@ def _gates() -> dict:
         for k, v in (r.get("gates") or {}).items():
             if k in total:
                 total[k] += v
-    # THE PASS IN FLIGHT COUNTS TOO. A run record is written when a pass
-    # FINISHES, so on the first run of a fresh install this panel sat empty for
-    # nineteen minutes while the thing it measures was happening on screen.
-    # The heartbeat carries the running tally, so it is added here.
-    if live.is_live():
-        for k, v in (live.read().counts.get("gates") or {}).items():
+    # THE PASS IN FLIGHT COUNTS TOO - BUT ONLY WHILE IT IS IN FLIGHT. A run
+    # record is written when a pass FINISHES, so without this the panel sits
+    # empty for the whole of the first pass while the thing it measures is
+    # happening on screen. The trap: the FINAL beat of a pass is `resting`,
+    # which is still "live", and its counts are the same ones already in the
+    # record - so a finished pass was counted twice and Kris's single script
+    # reported 46 cell-tests out of a possible 24. `step > 0` means a pass is
+    # actually mid-flight; `resting` and `idle` both carry step 0.
+    b = live.read()
+    if b.step > 0 and live.is_live(b):
+        for k, v in (b.counts.get("gates") or {}).items():
             if k in total:
                 total[k] += v
     return total

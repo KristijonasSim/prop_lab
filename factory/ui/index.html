@@ -68,6 +68,12 @@ header{display:flex;flex-wrap:wrap;gap:var(--gap);align-items:center;
 .stat{display:flex;flex-direction:column;gap:1px}
 .stat b{font-size:20px;font-weight:600;letter-spacing:.01em}
 .stat span{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+/* Green is a thing that got THROUGH, red is a thing that stopped. Zero is
+   never coloured - a green 0 reads as a success and it is the absence of one. */
+.stat.good b{color:var(--live)} .stat.bad b{color:var(--dead)}
+.stat.warn b{color:var(--warn)} .stat.zero b{color:var(--ink-3)}
+td.good{color:var(--live)} td.bad{color:var(--dead)} td.warn{color:var(--warn)}
+.station .v.good{color:var(--live)} .station .v.zero{color:var(--ink-3)}
 .warnbox{width:100%;font-size:12.5px;color:var(--warn);border-left:2px solid var(--warn);
   padding-left:11px;line-height:1.5}
 @media (max-width:560px){
@@ -137,6 +143,7 @@ td.wide{white-space:normal;word-break:break-word;min-width:170px}
 .scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
 .verdict{margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--ink-2);
   border-left:2px solid var(--line);padding-left:11px}
+.lede{margin:-4px 0 12px;font-size:12.5px;line-height:1.5;color:var(--ink-3)}
 .empty{color:var(--ink-3);font-size:12.5px;padding:8px 0}
 footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 
@@ -187,12 +194,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7">
-    <h2>The funnel — every idea tested</h2>
+    <h2>The funnel — ideas, not cell-tests</h2>
     <div class="fun" id="funnel"></div>
   </div>
 
   <div class="card c7" id="gatesCard">
-    <h2>What kills them — every cell-test on record</h2>
+    <h2>What kills them</h2>
+    <p class="lede" id="gatesLede"></p>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
     <div class="scroll"><table id="gatesTable"></table></div>
@@ -272,7 +280,11 @@ function sourceBar(){
 
   const r = row();
   if (!r){ $('srcHead').innerHTML = ''; return; }
-  const stat = (v,l) => `<div class="stat"><b class="mono">${v}</b><span>${l}</span></div>`;
+  // Zero is never green and never red: it is the absence of an outcome, not
+  // an outcome. Kris reads this bar at a glance and a coloured nothing lies.
+  const stat = (v,l,tone) =>
+    `<div class="stat ${v ? (tone||'') : 'zero'}"><b class="mono">${v}</b>
+       <span>${l}</span></div>`;
   // A source with nothing against it must say WHY, or "0 found" reads as
   // "this source found nothing" when it means "this source has not been run".
   const warn = (r.found === 0 && r.status !== 'ready')
@@ -280,11 +292,11 @@ function sourceBar(){
   $('srcHead').innerHTML =
     `<div class="who"><b>${esc(r.label)}</b><span>${esc(r.how)}</span></div>
      <div class="stats">
-       ${stat(r.read,'read')}${stat(r.found,'usable')}
-       ${r.refused ? stat(r.refused,'refused') : ''}
-       ${stat(r.tested,'tested')}${stat(r.passed3,'passed step 3')}
-       ${stat(r.failed,'failed')}${stat(r.held6,'held at 6')}
-       ${stat(r.scored7,'scored at 7')}${stat(r.waiting,'waiting')}
+       ${stat(r.read,'read')}${stat(r.found,'usable','good')}
+       ${r.refused ? stat(r.refused,'refused','warn') : ''}
+       ${stat(r.tested,'tested')}${stat(r.passed3,'passed step 3','good')}
+       ${stat(r.failed,'failed','bad')}${stat(r.held6,'held at 6','good')}
+       ${stat(r.scored7,'scored at 7','good')}${stat(r.waiting,'waiting','warn')}
      </div>${warn}`;
 }
 
@@ -306,11 +318,13 @@ function stations(){
   $('line').innerHTML = S.steps.map(s => {
     const on = cur === s.n, done = cur > s.n;
     const pct = on && b.total ? Math.round(100*b.done/b.total) : (done?100:0);
+    const v = String(val(s.n));
+    const zero = /^(0|—|p —)\b/.test(v);
     return `<div class="station ${on?'active':done?'done':''}">
       <div class="n mono">STEP ${s.n}</div>
       <div class="nm">${esc(s.name)}</div>
       <div class="d">${esc(s.detail)}</div>
-      <div class="v mono">${esc(val(s.n))}</div>
+      <div class="v mono ${zero?'zero':(s.n>=3?'good':'')}">${esc(v)}</div>
       <i class="bar" style="width:${pct}%"></i></div>`;
   }).join('');
 }
@@ -353,6 +367,16 @@ function gates(){
   const g = S.gates, tot = Object.values(g).reduce((a,b)=>a+b,0);
   $('gatesCard').style.display = tot ? '' : 'none';
   if (!tot) return;
+  // ONE IDEA IS NOT ONE TEST. Every idea is run on 24 cells - six markets by
+  // four timeframes - so a single script produces up to 24 rows here. Kris saw
+  // 46 from one script (a double-count, since fixed) and had no way to tell
+  // whether 24 was even the right order of magnitude.
+  const ideas = S.funnel.ideas || 0;
+  $('gatesLede').textContent = ideas
+    ? `${tot} cell-tests from ${ideas} idea${ideas===1?'':'s'}. `
+      + `Each idea is run on 24 cells — six markets × four timeframes — so one `
+      + `idea makes up to 24 rows here.`
+    : `${tot} cell-tests.`;
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${GATE_COLS[k]}"></i>`).join('');
   $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
@@ -417,11 +441,14 @@ function srcTable(){
         <td><span class="t" style="display:inline-flex;align-items:center;gap:7px">
             <i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span></td>
         <td class="wide dim">${esc(r.how)}</td>
-        <td class="mono">${r.read}</td><td class="mono">${r.found}</td>
-        <td class="mono ${r.refused?'mid':''}">${r.refused}</td>
+        <td class="mono">${r.read}</td>
+        <td class="mono ${r.found?'good':''}">${r.found}</td>
+        <td class="mono ${r.refused?'warn':''}">${r.refused}</td>
         <td class="mono">${r.tested}</td>
-        <td class="mono">${r.passed3}</td><td class="mono">${r.held6}</td>
-        <td class="mono">${r.scored7}</td><td class="mono">${r.failed}</td>
+        <td class="mono ${r.passed3?'good':''}">${r.passed3}</td>
+        <td class="mono ${r.held6?'good':''}">${r.held6}</td>
+        <td class="mono ${r.scored7?'good':''}">${r.scored7}</td>
+        <td class="mono ${r.failed?'bad':''}">${r.failed}</td>
         <td class="dim">${top ? esc(GATE_WHY[top[0]] || top[0]) + ' ' + top[1] : '—'}</td>
         <td class="mono">${r.waiting}</td></tr>`;
     }).join('');
@@ -495,9 +522,11 @@ function runsTable(){
     (r.length ? r.map(x => {
       const p = x.p_value;
       return `<tr><td class="mono dim">${esc((x.started||'').replace('T',' ').replace('+00:00',''))}</td>
-        <td class="mono">${x.ideas}</td><td class="mono">${x.step3}</td>
-        <td class="mono">${x.step4}</td><td class="mono">${x.step6}</td>
-        <td class="mono">${x.step7}</td>
+        <td class="mono">${x.ideas}</td>
+        <td class="mono ${x.step3?'good':''}">${x.step3}</td>
+        <td class="mono ${x.step4?'good':''}">${x.step4}</td>
+        <td class="mono ${x.step6?'good':''}">${x.step6}</td>
+        <td class="mono ${x.step7?'good':''}">${x.step7}</td>
         <td class="mono ${p==null?'dim':p<=0.1?'ok':'bad'}">${p ?? '—'}</td>
         <td class="mono dim">${Math.round(x.seconds/60)}m</td></tr>`;
     }).join('') : `<tr><td colspan="8" class="empty">no passes yet</td></tr>`);
