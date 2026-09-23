@@ -292,3 +292,41 @@ def test_the_runner_records_every_idea_it_takes(tmp_path, monkeypatch):
     for s, m, tf, repaired in survivors:
         assert (m, tf) == ("XAUUSD", "4h")
         assert isinstance(repaired, bool)
+
+
+# ============================================== step 6 gets a repair stage too
+def test_a_near_miss_at_step_6_is_offered_the_same_six_tries():
+    """Kris, 2026-09-23: *"if we miss one of our goals by tiny margin we enter
+    step 4 which is repair... so first of all this didint even happened."*
+
+    Step 4 only ever ran on a step-3 failure, so an idea that cleared step 3
+    and then missed the holdout was deleted with nothing offered.
+    """
+    from factory import repair
+
+    assert hasattr(repair, "repair_holdout")
+    c = check.Check(idea="x", market="XAUUSD", tf="1h", verdict="FAIL")
+    c.mean_r[1.0] = -0.001
+    c.mean_r_se = 0.05
+    c.reasons.append("mean -0.001 R at 1x cost")
+    assert repair.near_miss(c), "this is the shape step 6 must now repair"
+
+
+def test_a_step_6_repair_is_flagged_as_no_longer_holdout_clean():
+    """THE COST OF THE STAGE, and it must be visible in the code. Step 6 is
+    worth what it is worth because the idea was never selected on those years.
+    Twelve repairs against them spends exactly that."""
+    from factory import repair
+
+    src = (repair.__file__ and open(repair.__file__).read())
+    assert "SPENDS THE HOLDOUT" in src
+    assert "repaired_at_6" in src
+
+
+def test_a_step_6_repair_must_still_pass_the_window_it_already_passed():
+    """A change that fixes the old years by breaking the recent ones is not a
+    repair, and without this it would count as one."""
+    from factory import repair
+
+    src = open(repair.__file__).read()
+    assert "must pass the holdout AND still pass" in src

@@ -307,6 +307,55 @@ def repair(strategy: Strategy, checks: list[Check], *,
     return attempts, fixed
 
 
+def repair_holdout(strategy: Strategy, holdout: Check, market: str, tf: str, *,
+                   control_seeds: int = check.CONTROL_SEEDS
+                   ) -> tuple[list[Attempt], Strategy | None]:
+    """Step 4's fixed list, applied to a near-miss at STEP 6.
+
+    Kris, 2026-09-23: *"if we miss one of our goals by tiny margin we enter
+    step 4 which is repair and try to upgrade it - so first of all this didint
+    even happened."* He is right: step 4 only ever ran on a step-3 failure, so
+    an idea that cleared step 3 and then missed the holdout by a hair was
+    deleted with nothing offered. His first translated script missed the pace
+    flag there by 17%.
+
+    **THE COST, AND IT IS REAL: THIS SPENDS THE HOLDOUT.** Step 6 is worth
+    what it is worth because the idea was never selected on those years. Try
+    twelve repairs against them and it has been, so the repaired rule no
+    longer has an independent test anywhere - which is why the survivor is
+    flagged `repaired_at_6` and why the bar is BOTH windows, not just the one
+    it failed. Twelve fixed draws is what step 5's null is there to price.
+
+    A repaired rule must pass the holdout AND still pass the window it already
+    passed. A change that fixes the old years by breaking the recent ones is
+    not a repair.
+    """
+    if not near_miss(holdout):
+        return [], None
+
+    hold_frame = cells.holdout(market, tf)
+    recent = cells.load(market, tf)
+    if not len(hold_frame) or not len(recent):
+        return [], None
+    hold_days = check.trading_days(cells.holdout(market, "1h")) or None
+    recent_days = cells.trading_days(market)
+
+    attempts: list[Attempt] = []
+    fixed: Strategy | None = None
+    for rp in repairs_for(failed_gate(holdout)):
+        cand = rp.apply(strategy)
+        after = check.check(cand, hold_frame, market=market, tf=tf,
+                            days=hold_days, control_seeds=control_seeds)
+        attempts.append(Attempt(repair=rp.name, before=holdout, after=after))
+        if after.verdict != "PASS" or fixed is not None:
+            continue
+        still = check.check(cand, recent, market=market, tf=tf,
+                            days=recent_days, control_seeds=control_seeds)
+        if still.verdict == "PASS":
+            fixed = cand
+    return attempts, fixed
+
+
 def _main(argv=None) -> int:
     """Steps 3 and 4 end to end: check an idea, repair it if it came close."""
     import argparse

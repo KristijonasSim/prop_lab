@@ -54,9 +54,22 @@ import pandas as pd
 from factory import build, cells
 from factory.spec import Strategy
 
-#: Kris, 2026-09-21: "this is day trading".
+#: THE TWO NUMBERS DO DIFFERENT JOBS, AND ONLY ONE OF THEM IS A KILL.
+#: Split 2026-09-23 after Kris: *"if this strategy is 0.33 a day but its PF is
+#: 3 and very low dd, you would just say its unusable... why?"*
+#:
+#: `MIN_TRADES` is a STATISTICAL floor. Under a hundred trades the mean is a
+#: story about a few episodes and no amount of patience fixes it. It kills.
+#:
+#: `MIN_TRADES_PER_DAY` is a PACE preference - Kris, 2026-09-21, "this is day
+#: trading". A rule with 500 trades at 0.3/day is perfectly measurable; it is
+#: only slower to resolve an evaluation, and `core/riskladder` already prices
+#: exactly that as expected days. So it is now a FLAG carried to step 7, not a
+#: delete. Killing on it threw away the answer along with the idea: Kris's
+#: first translated script was reported as "too few trades" on the holdout
+#: when what was true is that it LOSES MONEY there and scores worse than
+#: random - the gate fired first and hid the finding.
 MIN_TRADES_PER_DAY = 0.4
-#: Below this the mean is a story about a few episodes, whatever the rate.
 MIN_TRADES = 100
 #: Gate 3 deletes this many of the best trades and asks for a profit anyway.
 DROP_BEST = 5
@@ -88,6 +101,9 @@ class Check:
     control_median: float = float("nan")
     round_trip_bps: float = float("nan")
     reasons: list[str] = field(default_factory=list)
+    #: Things worth knowing that are NOT reasons to reject. `slow` means it
+    #: trades under the pace preference; step 7 prices that as expected days.
+    flags: list[str] = field(default_factory=list)
 
     @property
     def cell(self) -> str:
@@ -99,7 +115,7 @@ class Check:
                 f"{self.n_trades:>7}{self.trades_per_day:>7.2f}"
                 f"{self.mean_hold_days:>7.1f}{m1:>+9.3f}"
                 f"{self.mean_r_drop_best:>+9.3f}{self.control_p90:>+9.3f}"
-                f"  {'; '.join(self.reasons)}")
+                f"  {'; '.join(self.reasons + self.flags)}")
 
 
 #: A day holding at least this share of a full session's bars is not "a day".
@@ -224,7 +240,14 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     c.n_trades = len(trades)
     c.trades_per_day = c.n_trades / days if days else 0.0
 
-    # --- 1. enough trades? ---------------------------------------------------
+    # --- 1. enough trades to measure? ----------------------------------------
+    #
+    # NOTHING SHORT-CIRCUITS FROM HERE ON. Every check is computed and every
+    # failure recorded, because a gate that returns early tells you which gate
+    # fired FIRST and not what is true. Kris's first translated script was
+    # reported as "too few trades" when it also lost money and scored worse
+    # than random on the same window - the useful facts, hidden behind the
+    # cheap one. Measuring all four costs milliseconds.
     #
     # The HOLD is reported beside the rate, because on 4h and 1d a rate under
     # the floor is usually a long hold rather than a fussy entry rule, and the
@@ -233,10 +256,11 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     if c.n_trades < MIN_TRADES:
         c.reasons.append(f"{c.n_trades} trades, under {MIN_TRADES}")
     if c.trades_per_day < MIN_TRADES_PER_DAY:
-        c.reasons.append(f"{c.trades_per_day:.2f} trades/day, under "
-                         f"{MIN_TRADES_PER_DAY} (mean hold "
-                         f"{c.mean_hold_days:.1f} days)")
-    if c.reasons:
+        c.flags.append(f"slow: {c.trades_per_day:.2f} trades/day, under "
+                       f"{MIN_TRADES_PER_DAY} (mean hold "
+                       f"{c.mean_hold_days:.1f} days)")
+    if not trades:
+        c.reasons.append("no trades")
         return c
 
     r = _r(trades)
@@ -255,30 +279,28 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     # --- 2. beats costs? -----------------------------------------------------
     if c.mean_r[1.0] <= 0:
         c.reasons.append(f"mean {c.mean_r[1.0]:+.3f} R at 1x cost ({rt:.2f} bps)")
-        return c
 
     # --- 3. one lucky run? ---------------------------------------------------
-    trimmed = np.sort(r)[:-DROP_BEST]
-    c.mean_r_drop_best = float(trimmed.mean())
-    c.mean_r_drop_best_se = _stderr(trimmed)
-    if c.mean_r_drop_best <= 0:
-        c.reasons.append(f"{c.mean_r_drop_best:+.3f} R without its best "
-                         f"{DROP_BEST} trades")
-        return c
+    if len(r) > DROP_BEST:
+        trimmed = np.sort(r)[:-DROP_BEST]
+        c.mean_r_drop_best = float(trimmed.mean())
+        c.mean_r_drop_best_se = _stderr(trimmed)
+        if c.mean_r_drop_best <= 0:
+            c.reasons.append(f"{c.mean_r_drop_best:+.3f} R without its best "
+                             f"{DROP_BEST} trades")
 
     # --- 4. the idea, or the drift? -----------------------------------------
     ctrl = control_means(strategy, frame, rt, *sig, seeds=control_seeds)
     ctrl = ctrl[~np.isnan(ctrl)]
     if not len(ctrl):
         c.reasons.append("control produced no trades")
-        return c
-    c.control_median = float(np.median(ctrl))
-    c.control_p90 = float(np.percentile(ctrl, CONTROL_PCTILE))
-    if c.mean_r[1.0] <= c.control_p90:
-        c.reasons.append(f"random entry scores {c.control_p90:+.3f} at p90")
-        return c
+    else:
+        c.control_median = float(np.median(ctrl))
+        c.control_p90 = float(np.percentile(ctrl, CONTROL_PCTILE))
+        if c.mean_r[1.0] <= c.control_p90:
+            c.reasons.append(f"random entry scores {c.control_p90:+.3f} at p90")
 
-    c.verdict = "PASS"
+    c.verdict = "FAIL" if c.reasons else "PASS"
     return c
 
 

@@ -156,6 +156,21 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                       done=i, total=len(survivors),
                       counts={"step6_pass": len(cleared)})
         else:
+            # A NEAR-MISS AT STEP 6 GETS THE SAME SIX TRIES STEP 4 GIVES A
+            # NEAR-MISS AT STEP 3. Nothing was offered here before, so an idea
+            # that cleared step 3 and missed the holdout by a hair was deleted
+            # in silence. It spends the holdout - see `repair.repair_holdout`.
+            attempts, fixed6 = ([], None)
+            if r.holdout is not None:
+                attempts, fixed6 = repair.repair_holdout(
+                    s, r.holdout, m, tf, control_seeds=control_seeds)
+            rec["repair6_attempts"] = rec.get("repair6_attempts", 0) + len(attempts)
+            if fixed6 is not None:
+                cleared.append((fixed6, m, tf))
+                queue.keep(fixed6, f"step 6 repair on {m} {tf} "
+                                   f"(NOT holdout-clean)", reached=6)
+                rec["repaired_at_6"] = rec.get("repaired_at_6", 0) + 1
+                continue
             # THE GATE, NOT THE STEP. This recorded a hardcoded "holdout" and
             # the board therefore told Kris his script "fell apart on the years
             # it was not selected on" - when it had in fact failed the TRADE

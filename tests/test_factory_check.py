@@ -202,8 +202,18 @@ def test_the_control_changes_the_entries_and_nothing_else(drifting_up):
 
 
 # ------------------------------------------------------------------- plumbing
-def test_gates_run_cheapest_first_and_short_circuit(drifting_up):
-    """A cell killed on gate 1 must not have paid for the control."""
+def test_nothing_short_circuits_so_every_failure_is_recorded(drifting_up):
+    """CHANGED 2026-09-23, and the reason is a real misreading it caused.
+
+    The gates used to return on the first failure, so a Check said which gate
+    fired FIRST rather than what was true. Kris's first translated script was
+    reported as "too few trades" on its holdout when it ALSO lost money there
+    and scored worse than random - the two facts that decide whether the idea
+    is worth repairing, hidden behind the cheapest one.
+
+    Everything is measured now. It costs milliseconds and a rule with one
+    failing gate reads differently from a rule with three.
+    """
     s = Strategy(name="rare", side="long",
                  entry=(Condition(Term("rsi", length=14), "cross_above",
                                   Term("const", value=99.0)),),
@@ -211,9 +221,27 @@ def test_gates_run_cheapest_first_and_short_circuit(drifting_up):
     c = check.check(s, drifting_up, market="XAUUSD", tf="1h",
                     round_trip_bps=1.0, control_seeds=2)
     assert c.verdict == "FAIL"
-    assert np.isnan(c.control_p90)
-    assert np.isnan(c.mean_r_drop_best)
-    assert not c.mean_r
+    assert c.mean_r, "cost was never priced"
+    assert not np.isnan(c.control_p90), "the control was never run"
+
+
+def test_a_slow_rule_is_flagged_not_killed(drifting_up):
+    """Kris, 2026-09-23: *"if this strategy is 0.33 a day but its PF is 3 and
+    very low dd, you would just say its unusable... why?"*
+
+    Trades/day is a PACE preference and `core/riskladder` already prices pace
+    as expected days. The hundred-trade floor is different - it is whether the
+    mean can be measured at all - and that one still kills.
+    """
+    s = Strategy(name="rare", side="long",
+                 entry=(Condition(Term("rsi", length=14), "cross_above",
+                                  Term("const", value=99.0)),),
+                 max_hold=24)
+    c = check.check(s, drifting_up, market="XAUUSD", tf="1h",
+                    round_trip_bps=1.0, control_seeds=2)
+    assert any("slow" in f for f in c.flags)
+    assert not any("trades/day" in r for r in c.reasons)
+    assert any("under 100" in r for r in c.reasons)
 
 
 def test_an_idea_survives_if_any_one_cell_passes():
