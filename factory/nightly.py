@@ -39,8 +39,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from factory import (cells, check, evaluate, live, null, queue,      # noqa: E402
-                     recheck, repair)
+import numpy as np                                                   # noqa: E402
+import pandas as pd                                                  # noqa: E402
+
+from core import riskladder                                          # noqa: E402
+from factory import (build, cells, check, evaluate, live, null,      # noqa: E402
+                     queue, recheck, repair)
 from factory.sources import agent, invent                              # noqa: E402
 
 RUNS = queue.DIR / "runs.jsonl"
@@ -110,7 +114,12 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             g = repair.failed_gate(c)
             if g in gates:
                 gates[g] += 1
+        best_any = max(checks, key=lambda c: (c.verdict == "PASS",
+                                              c.mean_r.get(1.0, -9e9)),
+                       default=None)
         story = {"idea": s.label(), "source": s.source, "note": s.note,
+                 "score": (scorecard(s, best_any.market, best_any.tf)
+                           if best_any else {}),
                  "when": rec["started"], "stop_atr": s.stop_atr,
                  "target_atr": s.target_atr, "max_hold": s.max_hold,
                  "cells": [_cell_row(c) for c in checks], "repairs": [],
@@ -264,6 +273,62 @@ def _cell_row(c) -> dict:
             "control_p90": (None if c.control_p90 != c.control_p90
                             else round(c.control_p90, 4)),
             "reasons": list(c.reasons), "flags": list(c.flags)}
+
+
+def scorecard(strategy, market: str, tf: str) -> dict:
+    """The numbers Kris reads a strategy by, on the 2023-2026 window.
+
+    *"i want to see in table this strategy together with upcoming strategies
+    like its PF, DD, evaluation time etc, from 2023 to 2026 always."*
+
+    Computed for EVERY idea that produced a usable cell, not only for the ones
+    that reach step 7. An idea that stopped at step 6 still has a profit
+    factor and a drawdown on the recent window, and refusing to show them is
+    what made the board feel like a bin rather than a workbench.
+    """
+    frame = cells.load(market, tf)
+    if not len(frame):
+        return {}
+    rt = cells.cost_bps(market)
+    trades = build.run(strategy, frame.reset_index(drop=True), cost_bps=rt)
+    if len(trades) < 2:
+        return {}
+    r = np.array([t.r for t in trades], dtype=float)
+    wins, losses = r[r > 0], r[r <= 0]
+    gross_w, gross_l = float(wins.sum()), float(-losses.sum())
+    eq = np.concatenate(([0.0], np.cumsum(r)))
+    dd_r = float((eq - np.maximum.accumulate(eq)).min())
+    days = check.trading_days(frame)
+
+    out = {
+        "cell": f"{market} {tf}", "market": market, "tf": tf,
+        "trades": len(r),
+        "per_day": round(len(r) / days, 3) if days else None,
+        "pf": round(gross_w / gross_l, 3) if gross_l else None,
+        "win_pct": round(100 * len(wins) / len(r), 1),
+        "mean_r": round(float(r.mean()), 4),
+        "total_r": round(float(r.sum()), 1),
+        "max_dd_r": round(dd_r, 1),
+        "hold_days": round(check.mean_hold_days(trades, frame, days), 2),
+    }
+    # Evaluation pace: the risk ladder is arithmetic on a fixed trade series,
+    # so it selects nothing and is always allowed. The rung reported is the
+    # fastest one the project's own constraints permit.
+    try:
+        exit_ts = frame.index[[t.exit_bar for t in trades]]
+        daily = pd.Series(r, index=pd.DatetimeIndex(exit_ts)).resample("1D").sum()
+        rows = riskladder.ladder(daily, r)
+        best = min((x for x in rows if x.get("expected_days")),
+                   key=lambda x: x["expected_days"], default=None)
+        if best:
+            out.update(risk_pct=round(best["risk"] * 100, 2),
+                       pass_pct=round(best["pass_rate"] * 100, 1),
+                       eval_days=round(best["expected_days"], 1),
+                       median_days=best["median_days"],
+                       accounts=round(1 / best["pass_rate"], 2))
+    except Exception:                       # a pace number is never worth a crash
+        pass
+    return out
 
 
 def record_idea(rec: dict) -> None:

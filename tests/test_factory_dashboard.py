@@ -407,3 +407,32 @@ def test_the_ideas_list_is_scoped_to_its_source():
     for r in dashboard.per_source():
         for x in r["ideas"]:
             assert x.get("source") == r["key"]
+
+
+def test_every_idea_carries_a_scorecard_not_only_the_survivors():
+    """Kris, 2026-09-23: *"i want to see in table this strategy together with
+    upcoming strategies like its PF, DD, evaluation time etc, from 2023 to
+    2026 always."*
+
+    An idea that stopped at step 6 still has a profit factor and a drawdown on
+    the recent window. Showing them only for step-7 survivors made the board a
+    bin rather than a workbench.
+    """
+    from factory import nightly
+
+    for x in nightly.ideas():
+        assert "score" in x
+        k = x["score"]
+        if k:
+            assert {"market", "tf", "trades", "pf", "max_dd_r"} <= set(k)
+            assert k["trades"] > 0
+
+
+def test_the_scorecard_is_measured_on_the_recent_window_only():
+    """2023-2026, always. The holdout is a separate question and mixing the
+    two windows into one profit factor answers neither."""
+    from factory import nightly
+
+    src = open(nightly.__file__).read()
+    assert "cells.load(market, tf)" in src
+    assert "2023-2026" in src

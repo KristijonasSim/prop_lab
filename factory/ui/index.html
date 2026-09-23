@@ -232,8 +232,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c12" id="ideasCard">
-    <h2>Every idea, and what happened to it</h2>
-    <p class="lede">Click a row for all 24 cells and every repair that was tried.</p>
+    <h2>Every strategy tested — best market and timeframe, 2023 to 2026</h2>
+    <p class="lede">One row per strategy, scored on its best of the 24 cells over
+      the last three years. Click a row for all 24 and every repair tried.</p>
     <div class="scroll"><table id="ideas"></table></div>
   </div>
 
@@ -249,16 +250,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
     <h2>Every source — found, tested, passed, failed</h2>
     <div class="scroll"><table id="srcTable"></table></div>
     <div class="verdict" id="sourceNote"></div>
-  </div>
-
-  <div class="card c12">
-    <h2>Reached step 7</h2>
-    <div class="scroll"><table id="cands"></table></div>
-  </div>
-
-  <div class="card c12">
-    <h2>Recent passes</h2>
-    <div class="scroll"><table id="runs"></table></div>
   </div>
 
 </div>
@@ -637,17 +628,34 @@ function ideasTable(){
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   $('ideas').innerHTML =
-    `<tr><th>idea</th><th>best cell</th><th>outcome</th><th>repairs</th><th>when</th></tr>` +
+    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades</th><th>/day</th>
+       <th>PF</th><th>win %</th><th>per trade</th><th>max DD</th>
+       <th>risk</th><th>pass %</th><th>eval days</th><th>accounts</th>
+       <th>outcome</th><th>repairs</th></tr>` +
     list.map((x, i) => {
       const good = /passed|held|scored|repaired/.test(x.outcome || '');
       const open = OPEN.has(i);
+      const k = x.score || {};
+      const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
           <td class="wide">${esc(x.idea)}</td>
-          <td class="mono">${esc(x.cell || '—')}</td>
+          <td class="mono">${esc(k.market || '—')}</td>
+          <td class="mono">${esc(k.tf || '—')}</td>
+          <td class="mono">${k.trades ?? '—'}</td>
+          <td class="mono">${k.per_day ?? '—'}</td>
+          <td class="mono ${pf == null ? '' : (pf >= 1.2 ? 'good' : 'bad')}">
+            ${pf == null ? '—' : pf.toFixed(2)}</td>
+          <td class="mono">${k.win_pct ?? '—'}</td>
+          <td class="mono ${(k.mean_r ?? 0) > 0 ? 'good' : 'bad'}">
+            ${k.mean_r == null ? '—' : k.mean_r.toFixed(3)}</td>
+          <td class="mono">${k.max_dd_r == null ? '—' : k.max_dd_r + 'R'}</td>
+          <td class="mono dim">${k.risk_pct == null ? '—' : k.risk_pct + '%'}</td>
+          <td class="mono">${k.pass_pct ?? '—'}</td>
+          <td class="mono">${k.eval_days ?? '—'}</td>
+          <td class="mono dim">${k.accounts ?? '—'}</td>
           <td class="${good?'good':'bad'}">${esc(x.outcome || '—')}</td>
           <td class="mono">${(x.repairs||[]).length}</td>
-          <td class="mono dim">${esc((x.when||'').replace('T',' ').replace('+00:00',''))}</td>
-        </tr>` + (open ? `<tr class="detail"><td colspan="5">${ideaDetail(x)}</td></tr>` : '');
+        </tr>` + (open ? `<tr class="detail"><td colspan="15">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
   $('ideas').querySelectorAll('tr.idea').forEach(tr => tr.onclick = () => {
     const i = Number(tr.dataset.i);
@@ -695,48 +703,14 @@ function sourceTable(){
     : 'Not enough passes to compare — this is the number that decides whether paying for a model is worth it.';
 }
 
-function candTable(){
-  const r = row();
-  const c = r ? r.candidates : [];
-  $('cands').innerHTML =
-    `<tr><th>rule</th><th>cell</th><th>trades</th><th>/day</th><th>risk</th>
-      <th>pass %</th><th>days</th><th>band</th><th>accounts</th></tr>` +
-    (c.length ? c.map(x =>
-      `<tr><td class="wide">${esc(x.idea)}</td><td class="mono">${esc(x.cell)}</td>
-        <td class="mono">${x.trades}</td><td class="mono">${x.trades_per_day}</td>
-        <td class="mono">${x.risk==null?'—':(x.risk*100).toFixed(2)+'%'}</td>
-        <td class="mono">${x.pass_pct ?? '—'}</td>
-        <td class="mono">${x.expected_days ?? '—'}</td>
-        <td class="mono dim">${x.band ? x.band[0]+'–'+x.band[1] : '—'}</td>
-        <td class="mono">${x.accounts ?? '—'}</td></tr>`).join('')
-     : `<tr><td colspan="9" class="empty">nothing has reached step 7 yet</td></tr>`);
-}
 
-function runsTable(){
-  const sel = row();
-  const r = sel ? [...sel.runs].reverse() : [];
-  $('runs').innerHTML =
-    `<tr><th>started</th><th>ideas</th><th>step 3</th><th>step 4</th>
-      <th>step 6</th><th>step 7</th><th>luck p</th><th>took</th></tr>` +
-    (r.length ? r.map(x => {
-      const p = x.p_value;
-      return `<tr><td class="mono dim">${esc((x.started||'').replace('T',' ').replace('+00:00',''))}</td>
-        <td class="mono">${x.ideas}</td>
-        <td class="mono ${x.step3?'good':''}">${x.step3}</td>
-        <td class="mono ${x.step4?'good':''}">${x.step4}</td>
-        <td class="mono ${x.step6?'good':''}">${x.step6}</td>
-        <td class="mono ${x.step7?'good':''}">${x.step7}</td>
-        <td class="mono ${p==null?'dim':p<=0.1?'ok':'bad'}">${p ?? '—'}</td>
-        <td class="mono dim">${Math.round(x.seconds/60)}m</td></tr>`;
-    }).join('') : `<tr><td colspan="8" class="empty">no passes yet</td></tr>`);
-}
 
 function paint(){
   $('dot').className = 'dot' + (S.live ? ' on' : '');
   $('status').textContent = S.live ? 'running' : 'idle';
   $('passes').textContent = S.passes + (S.passes === 1 ? ' pass' : ' passes');
   sourceBar(); stations(); now(); funnel(); gates(); nullPanel();
-  ideasTable(); gapsTable(); srcTable(); candTable(); runsTable();
+  ideasTable(); gapsTable(); srcTable();
 }
 
 async function pull(){
