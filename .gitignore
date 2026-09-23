@@ -54,3 +54,5 @@ backtests/loop.log
 backtests/loop_state.json
 backtests/factory/queue.jsonl
 backtests/factory/tried.jsonl
+backtests/factory/live.json
+backtests/factory/*.tmp

@@ -39,7 +39,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from factory import cells, check, evaluate, null, queue, recheck, repair  # noqa: E402
+from factory import (cells, check, evaluate, live, null, queue,      # noqa: E402
+                     recheck, repair)
 from factory.sources import agent, invent                              # noqa: E402
 
 RUNS = queue.DIR / "runs.jsonl"
@@ -67,6 +68,8 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
     """One full pass. Returns the record that is appended to `runs.jsonl`."""
     t0 = time.time()
     rec: dict = {"started": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    live.clear_counts()
+    live.beat(1, "ideas", detail="the model proposes, the enumerator backfills")
     rec["top_up"] = top_up(batch, use_agent=use_agent)
 
     ideas = [s for s in (queue.take() for _ in range(batch)) if s is not None]
@@ -82,9 +85,24 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         return rec
 
     cl = cell_list or cells.all_cells()
+    live.beat(2, "build", detail=f"{len(ideas)} ideas into runnable code",
+              total=len(ideas), counts={"ideas": len(ideas)})
     survivors, s3, s4 = [], 0, 0
-    for s in ideas:
+    # WHY THE GATE COUNTS ARE TALLIED HERE. 87% of everything dies on trade
+    # count and the dashboard is the first place that has ever been visible
+    # while it happens. A funnel that only shows "20 in, 1 out" hides which
+    # gate is doing the killing, which is the whole diagnosis.
+    gates = {"trades": 0, "cost": 0, "concentration": 0, "drift": 0, "other": 0}
+    for i, s in enumerate(ideas, 1):
+        live.beat(3, "quick check", idea=s.label(), done=i, total=len(ideas),
+                  detail=f"{len(cl)} cells", counts={"step3_pass": s3,
+                                                     "step4_repaired": s4,
+                                                     "gates": gates})
         checks = check.check_all(s, cl, control_seeds=control_seeds)
+        for c in checks:
+            g = repair.failed_gate(c)
+            if g in gates:
+                gates[g] += 1
         won = [c for c in checks if c.verdict == "PASS"]
         if won:
             best = max(won, key=lambda c: c.mean_r.get(1.0, 0.0))
@@ -92,6 +110,8 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             queue.keep(s, f"step 3 on {best.market} {best.tf}")
             s3 += 1
             continue
+        live.beat(4, "repair", idea=s.label(), done=i, total=len(ideas),
+                  detail="six fixed tweaks on the best near-miss")
         _, fixed = repair.repair(s, checks, control_seeds=control_seeds)
         if fixed is not None:
             tgt = repair.best_near_miss(checks)
@@ -101,6 +121,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         else:
             queue.mark_tried(s, "FAIL",
                              "; ".join(sorted({repair.failed_gate(c) for c in checks})))
+    rec["gates"] = dict(gates)
     rec["step3_pass"] = s3
     rec["step4_repaired"] = s4
     rec["survivors"] = [{"idea": s.label(), "cell": f"{m} {tf}",
@@ -108,6 +129,9 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                         for s, m, tf, rep in survivors]
 
     if seeds:
+        live.beat(5, "luck check", total=seeds,
+                  detail=f"the same {len(ideas)} ideas on {seeds} scrambled markets",
+                  counts={"step3_pass": s3, "step4_repaired": s4, "gates": gates})
         res = null.compare(ideas, seeds=seeds, cell_list=cl,
                            control_seeds=control_seeds)
         rec["step5"] = {"real": res["real_survivors"],
@@ -116,14 +140,24 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                         "seeds": seeds, "p_value": round(res["p_value"], 3)}
 
     cleared = []
-    for s, m, tf, _rep in survivors:
+    for i, (s, m, tf, _rep) in enumerate(survivors, 1):
+        live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
+                  done=i, total=len(survivors),
+                  detail="years the idea was not selected on")
         r = recheck.recheck(s, m, tf, control_seeds=control_seeds)
         if r.verdict == "PASS":
             cleared.append((s, m, tf))
+            live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
+                      done=i, total=len(survivors),
+                      counts={"step6_pass": len(cleared)})
     rec["step6_pass"] = len(cleared)
 
     rec["step7"] = []
-    for s, m, tf in cleared:
+    for i, (s, m, tf) in enumerate(cleared, 1):
+        live.beat(7, "evaluation", idea=s.label(), cell=f"{m} {tf}",
+                  done=i, total=len(cleared),
+                  detail="pass %, days, accounts consumed",
+                  counts={"step7": i})
         ev = evaluate.evaluate(s, m, tf, frame=evaluate.five_year_frame(m, tf),
                                resamples=resamples)
         f = ev.fastest()
@@ -139,6 +173,11 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             "note": ev.note,
         })
     rec["seconds"] = round(time.time() - t0, 1)
+    # The last beat keeps the uptime clock alive between passes - the sleep
+    # between them is longer than a step, and without this the dashboard would
+    # call the factory dead every time it rested.
+    live.beat(0, "resting", detail=f"pass finished in {rec['seconds']:.0f}s",
+              counts={"step3_pass": s3, "step4_repaired": s4, "gates": gates})
     return rec
 
 

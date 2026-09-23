@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory Floor</title>
+<style>
+:root{
+  --bg:#0e0f11; --panel:#16181c; --panel-2:#1c1f24; --line:#282c33;
+  --ink:#e6e8ea; --ink-2:#a2a8b0; --ink-3:#6c737d;
+  --live:#4ade80; --warn:#f5b955; --dead:#ef6b6b; --idle:#3a3f47;
+  --accent:#8ab4f8;
+  --r:12px; --gap:14px;
+  font-synthesis-weight:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:20px 16px 56px;
+}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:600}
+.muted{color:var(--ink-2)} .dim{color:var(--ink-3)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header{display:flex;flex-wrap:wrap;gap:var(--gap);align-items:center;
+  justify-content:space-between;margin-bottom:18px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--panel);
+  font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--idle);flex:none}
+.dot.on{background:var(--live);box-shadow:0 0 0 0 rgba(74,222,128,.6);
+  animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(74,222,128,0)}
+                100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.clock{text-align:right}
+.clock .t{font-size:26px;font-weight:600;letter-spacing:.02em}
+.clock .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- the line ---------- */
+.line{display:grid;gap:10px;margin-bottom:var(--gap);
+  grid-template-columns:repeat(7,1fr)}
+.station{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;min-height:118px;display:flex;flex-direction:column;gap:6px;
+  position:relative;overflow:hidden;transition:border-color .25s,background .25s}
+.station .n{font-size:11px;letter-spacing:.1em;color:var(--ink-3)}
+.station .nm{font-weight:600;font-size:13px;text-transform:capitalize}
+.station .d{font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.station .v{margin-top:auto;font-size:19px;font-weight:600;letter-spacing:.01em}
+.station.active{border-color:var(--live);background:var(--panel-2)}
+.station.active .n,.station.active .nm{color:var(--live)}
+.station.done{border-color:#2f4738}
+.bar{position:absolute;left:0;bottom:0;height:2px;background:var(--live);
+  width:0;transition:width .4s ease}
+
+/* ---------- panels ---------- */
+.grid{display:grid;gap:var(--gap);grid-template-columns:repeat(12,1fr);
+  align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px;min-width:0}
+.card h2{margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600}
+.c4{grid-column:span 4} .c5{grid-column:span 5} .c6{grid-column:span 6}
+.c7{grid-column:span 7} .c8{grid-column:span 8} .c12{grid-column:span 12}
+
+.now{display:flex;flex-direction:column;gap:4px}
+.now .big{font-size:17px;font-weight:600}
+.now .sub{font-size:12.5px;color:var(--ink-2);word-break:break-word}
+
+/* funnel */
+.fun{display:flex;flex-direction:column;gap:9px}
+.frow{display:grid;grid-template-columns:104px 1fr 48px;gap:10px;align-items:center}
+.frow .k{font-size:12px;color:var(--ink-2)}
+.frow .t{height:9px;border-radius:5px;background:var(--panel-2);overflow:hidden}
+.frow .t i{display:block;height:100%;background:linear-gradient(90deg,#4b5563,#8ab4f8);
+  border-radius:5px;transition:width .5s ease}
+.frow .v{text-align:right;font-weight:600;font-size:13px}
+
+/* gates */
+.gates{display:flex;height:26px;border-radius:7px;overflow:hidden;background:var(--panel-2)}
+.gates i{display:block;height:100%;transition:width .5s ease}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 14px;font-size:11.5px}
+.legend span{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
+.sw{width:9px;height:9px;border-radius:2px;flex:none}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-weight:500;color:var(--ink-3);padding:5px 8px 7px;
+  border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #1e2126;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.wide{white-space:normal;word-break:break-word;min-width:170px}
+.tag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10.5px;
+  border:1px solid var(--line);color:var(--ink-2);letter-spacing:.04em}
+.tag.agent{border-color:#3d5573;color:var(--accent)}
+.tag.invent{border-color:#4a4133;color:var(--warn)}
+.tag.tradingview{border-color:#2f4738;color:var(--live)}
+.ok{color:var(--live)} .bad{color:var(--dead)} .mid{color:var(--warn)}
+.scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.verdict{margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--ink-2);
+  border-left:2px solid var(--line);padding-left:11px}
+.empty{color:var(--ink-3);font-size:12.5px;padding:8px 0}
+footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
+
+@media (max-width:980px){
+  .line{grid-template-columns:repeat(4,1fr)}
+  .c4,.c5,.c6,.c7,.c8{grid-column:span 12}
+}
+@media (max-width:560px){
+  body{padding:14px 12px 40px}
+  .line{grid-template-columns:repeat(2,1fr)}
+  .station{min-height:98px}
+  .clock{text-align:left}
+  .frow{grid-template-columns:88px 1fr 40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <h1>Factory Floor</h1>
+    <span class="badge"><i class="dot" id="dot"></i><span id="status">checking</span></span>
+    <span class="badge dim" id="passes">—</span>
+  </div>
+  <div class="clock">
+    <div class="t mono" id="uptime">—</div>
+    <div class="l dim">running without interruption</div>
+  </div>
+</header>
+
+<div class="line" id="line"></div>
+
+<div class="grid">
+
+  <div class="card c5">
+    <h2>Happening now</h2>
+    <div class="now">
+      <div class="big" id="nowStep">—</div>
+      <div class="sub" id="nowDetail"></div>
+      <div class="sub mono dim" id="nowIdea"></div>
+      <div class="sub mono dim" id="nowAge"></div>
+    </div>
+  </div>
+
+  <div class="card c7">
+    <h2>The funnel — everything on record</h2>
+    <div class="fun" id="funnel"></div>
+  </div>
+
+  <div class="card c7">
+    <h2>What kills them — every cell-test on record</h2>
+    <div class="gates" id="gates"></div>
+    <div class="legend" id="gatesLegend"></div>
+    <div class="scroll"><table id="gatesTable"></table></div>
+    <div class="verdict" id="gatesNote"></div>
+  </div>
+
+  <div class="card c5">
+    <h2>Step 5 — the luck check</h2>
+    <div id="null"></div>
+  </div>
+
+  <div class="card c5">
+    <h2>Queue waiting</h2>
+    <div class="scroll"><table id="queue"></table></div>
+  </div>
+
+  <div class="card c7">
+    <h2>Does the model beat the enumerator?</h2>
+    <div class="scroll"><table id="source"></table></div>
+    <div class="verdict" id="sourceNote"></div>
+  </div>
+
+  <div class="card c12">
+    <h2>Reached step 7</h2>
+    <div class="scroll"><table id="cands"></table></div>
+  </div>
+
+  <div class="card c12">
+    <h2>Recent passes</h2>
+    <div class="scroll"><table id="runs"></table></div>
+  </div>
+
+</div>
+
+<footer>polls <span class="mono">/api/state</span> every 2s · nothing here starts a run</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const GATE_COLS = {trades:'#8ab4f8', cost:'#f5b955', concentration:'#c084fc',
+                   drift:'#ef6b6b', other:'#4b5563'};
+let S = null, tick = 0;
+
+function dur(s){
+  s = Math.max(0, Math.floor(s));
+  const d = Math.floor(s/86400), h = Math.floor(s%86400/3600),
+        m = Math.floor(s%3600/60), x = s%60;
+  const p = n => String(n).padStart(2,'0');
+  return d ? `${d}d ${p(h)}:${p(m)}:${p(x)}` : `${p(h)}:${p(m)}:${p(x)}`;
+}
+const esc = t => String(t ?? '').replace(/[<>&]/g, c =>
+  ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+function stations(){
+  const b = S.beat, cur = S.live ? b.step : 0;
+  const counts = b.counts || {};
+  const val = n => ({
+    1: S.queue.waiting + ' queued',
+    2: (counts.ideas ?? 0) + ' built',
+    3: (counts.step3_pass ?? 0) + ' pass',
+    4: (counts.step4_repaired ?? 0) + ' fixed',
+    5: S.step5 ? 'p ' + S.step5.p_value : '—',
+    // 6 and 7 read the pass in flight when there is one, so every station on
+    // the line is talking about the same batch. Between passes they fall back
+    // to the all-time total, which is what the funnel shows.
+    6: (S.live ? (counts.step6_pass ?? 0) : S.funnel.step6_pass) + ' held',
+    7: (S.live ? (counts.step7 ?? 0) : S.funnel.step7) + ' scored',
+  })[n];
+  $('line').innerHTML = S.steps.map(s => {
+    const on = cur === s.n, done = cur > s.n;
+    const pct = on && b.total ? Math.round(100*b.done/b.total) : (done?100:0);
+    return `<div class="station ${on?'active':done?'done':''}">
+      <div class="n mono">STEP ${s.n}</div>
+      <div class="nm">${esc(s.name)}</div>
+      <div class="d">${esc(s.detail)}</div>
+      <div class="v mono">${esc(val(s.n))}</div>
+      <i class="bar" style="width:${pct}%"></i></div>`;
+  }).join('');
+}
+
+function now(){
+  const b = S.beat;
+  if (!S.live){
+    $('nowStep').textContent = 'Idle';
+    $('nowDetail').textContent = 'No pass has reported in the last hour.';
+    $('nowIdea').textContent = 'Start one with  python -m factory.nightly';
+    $('nowAge').textContent = '';
+    return;
+  }
+  $('nowStep').textContent = b.step ? `Step ${b.step} — ${b.label}` : b.label;
+  $('nowDetail').textContent = b.detail || '';
+  $('nowIdea').textContent = [b.idea, b.cell,
+    b.total ? `${b.done}/${b.total}` : ''].filter(Boolean).join('   ·   ');
+  // HOW OLD THE LAST BEAT IS. A pass that was killed keeps the "running" dot
+  // until the stale timer expires an hour later, which would read as a factory
+  // working on nothing. The age is the one number that gives that away, so it
+  // is on the page rather than inferred.
+  const age = Math.max(0, S.now - b.updated);
+  $('nowAge').textContent = age < 15 ? 'updated just now'
+    : `last update ${dur(age)} ago` + (age > 120 ? '  —  the pass may have stopped' : '');
+  $('nowAge').style.color = age > 120 ? 'var(--warn)' : '';
+}
+
+function funnel(){
+  const f = S.funnel, max = Math.max(f.ideas, 1);
+  const rows = [['ideas tested', f.ideas], ['passed step 3', f.step3_pass],
+                ['repaired at 4', f.step4_repaired],
+                ['held at step 6', f.step6_pass], ['scored at 7', f.step7]];
+  $('funnel').innerHTML = rows.map(([k,v]) =>
+    `<div class="frow"><span class="k">${k}</span>
+       <span class="t"><i style="width:${Math.max(2, 100*v/max)}%"></i></span>
+       <span class="v mono">${v}</span></div>`).join('');
+}
+
+function gates(){
+  const g = S.gates, tot = Object.values(g).reduce((a,b)=>a+b,0);
+  if (!tot){ $('gates').innerHTML = '';
+    $('gatesLegend').innerHTML = '<span class="dim">no cell-tests recorded yet</span>';
+    $('gatesTable').innerHTML = ''; $('gatesNote').textContent = ''; return; }
+  $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
+    .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${GATE_COLS[k]}"></i>`).join('');
+  $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
+    .map(([k,v]) => `<span><i class="sw" style="background:${GATE_COLS[k]}"></i>
+       ${k} ${Math.round(100*v/tot)}%</span>`).join('');
+  const WHY = {
+    trades: 'fired too rarely — under 0.4/day or 100 trades',
+    cost: 'lost money once the round trip was charged',
+    concentration: 'profit sat in its best five trades',
+    drift: 'scored worse than entering at random',
+    other: 'no cell, or the control produced no trades',
+  };
+  $('gatesTable').innerHTML =
+    `<tr><th>gate</th><th>why it died</th><th style="text-align:right">cells</th>
+      <th style="text-align:right">share</th></tr>` +
+    Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
+      `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
+          <i class="sw" style="background:${GATE_COLS[k]}"></i>${k}</span></td>
+        <td class="wide dim">${WHY[k]}</td>
+        <td class="mono" style="text-align:right">${v}</td>
+        <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`
+    ).join('');
+  const pct = Math.round(100*g.trades/tot);
+  $('gatesNote').textContent = pct >= 60
+    ? `${pct}% die on trade count. Nothing downstream repairs that — it is the generator's job.`
+    : `Trade count takes ${pct}%.`;
+}
+
+function nullPanel(){
+  const n = S.step5;
+  if (!n){ $('null').innerHTML = '<div class="empty">No luck check recorded yet.</div>'; return; }
+  const beat = n.real > n.null_max;
+  $('null').innerHTML =
+    `<table>
+      <tr><td class="muted">real survivors</td><td class="mono" style="text-align:right">${n.real}</td></tr>
+      <tr><td class="muted">scrambled mean</td><td class="mono" style="text-align:right">${n.null_mean}</td></tr>
+      <tr><td class="muted">scrambled worst</td><td class="mono" style="text-align:right">${n.null_max}</td></tr>
+      <tr><td class="muted">seeds</td><td class="mono" style="text-align:right">${n.seeds}</td></tr>
+      <tr><td class="muted">p</td><td class="mono ${n.p_value<=0.1?'ok':'bad'}" style="text-align:right">${n.p_value}</td></tr>
+     </table>
+     <div class="verdict">${beat
+       ? 'The real market beat every scrambled copy on this batch.'
+       : 'A market with no information in it produced as many survivors. Nothing here is above luck yet.'}</div>`;
+}
+
+function queueTable(){
+  const by = S.queue.waiting_by_source || {};
+  const rows = Object.entries(by).sort((a,b)=>b[1]-a[1]);
+  $('queue').innerHTML = `<tr><th>source</th><th style="text-align:right">waiting</th></tr>` +
+    (rows.length ? rows.map(([k,v]) =>
+      `<tr><td><span class="tag ${esc(k)}">${esc(k)}</span></td>
+        <td class="mono" style="text-align:right">${v}</td></tr>`).join('')
+     : `<tr><td colspan="2" class="empty">queue is empty</td></tr>`) +
+    `<tr><td class="dim">already tested</td>
+      <td class="mono dim" style="text-align:right">${S.queue.tried}</td></tr>`;
+}
+
+function sourceTable(){
+  const t = S.by_source, keys = Object.keys(t);
+  $('source').innerHTML = `<tr><th>source</th><th>tested</th><th>survived</th><th>rate</th></tr>` +
+    (keys.length ? keys.map(k => {
+      const r = t[k];
+      return `<tr><td><span class="tag ${esc(k)}">${esc(k)}</span></td>
+        <td class="mono">${r.tested}</td><td class="mono">${r.survived}</td>
+        <td class="mono">${r.rate_pct==null?'—':r.rate_pct+'%'}</td></tr>`;
+    }).join('') : `<tr><td colspan="4" class="empty">no passes recorded yet</td></tr>`);
+  const a = t.agent, i = t.invent;
+  $('sourceNote').textContent = (a && i && a.tested >= 20 && i.tested >= 20)
+    ? (a.rate_pct > i.rate_pct
+        ? 'The model is surviving at a better rate than the enumerator.'
+        : 'The model is not surviving better than the enumerator. It is not earning its tokens yet.')
+    : 'Not enough passes to compare — this is the number that decides whether paying for a model is worth it.';
+}
+
+function candTable(){
+  const c = S.candidates;
+  $('cands').innerHTML =
+    `<tr><th>rule</th><th>cell</th><th>trades</th><th>/day</th><th>risk</th>
+      <th>pass %</th><th>days</th><th>band</th><th>accounts</th></tr>` +
+    (c.length ? c.map(x =>
+      `<tr><td class="wide">${esc(x.idea)}</td><td class="mono">${esc(x.cell)}</td>
+        <td class="mono">${x.trades}</td><td class="mono">${x.trades_per_day}</td>
+        <td class="mono">${x.risk==null?'—':(x.risk*100).toFixed(2)+'%'}</td>
+        <td class="mono">${x.pass_pct ?? '—'}</td>
+        <td class="mono">${x.expected_days ?? '—'}</td>
+        <td class="mono dim">${x.band ? x.band[0]+'–'+x.band[1] : '—'}</td>
+        <td class="mono">${x.accounts ?? '—'}</td></tr>`).join('')
+     : `<tr><td colspan="9" class="empty">nothing has reached step 7 yet</td></tr>`);
+}
+
+function runsTable(){
+  const r = S.runs;
+  $('runs').innerHTML =
+    `<tr><th>started</th><th>ideas</th><th>step 3</th><th>step 4</th>
+      <th>step 6</th><th>step 7</th><th>luck p</th><th>took</th></tr>` +
+    (r.length ? r.map(x => {
+      const p = x.p_value;
+      return `<tr><td class="mono dim">${esc((x.started||'').replace('T',' ').replace('+00:00',''))}</td>
+        <td class="mono">${x.ideas}</td><td class="mono">${x.step3}</td>
+        <td class="mono">${x.step4}</td><td class="mono">${x.step6}</td>
+        <td class="mono">${x.step7}</td>
+        <td class="mono ${p==null?'dim':p<=0.1?'ok':'bad'}">${p ?? '—'}</td>
+        <td class="mono dim">${Math.round(x.seconds/60)}m</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="empty">no passes yet</td></tr>`);
+}
+
+function paint(){
+  $('dot').className = 'dot' + (S.live ? ' on' : '');
+  $('status').textContent = S.live ? 'running' : 'idle';
+  $('passes').textContent = S.passes + (S.passes === 1 ? ' pass' : ' passes');
+  stations(); now(); funnel(); gates(); nullPanel();
+  queueTable(); sourceTable(); candTable(); runsTable();
+}
+
+async function pull(){
+  try{
+    const r = await fetch('/api/state', {cache:'no-store'});
+    S = await r.json(); tick = 0; paint();
+  }catch(e){
+    $('status').textContent = 'server unreachable';
+    $('dot').className = 'dot';
+  }
+}
+// The uptime reads as a clock, so it ticks locally between polls instead of
+// jumping in two-second steps.
+setInterval(() => {
+  if (!S) return;
+  $('uptime').textContent = S.live ? dur(S.uptime_s + (++tick)) : '—';
+}, 1000);
+pull(); setInterval(pull, 2000);
+</script>
+</body>
+</html>

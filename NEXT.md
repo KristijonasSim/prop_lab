@@ -101,6 +101,57 @@ Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
 
 ---
 
+## ADDED 2026-09-23 (late) — the factory floor, a page that shows the line running
+
+Kris: *"i want to have UI where i can see all 7 steps as in workflow... i would
+love to see live what is happening... i want to launch that page and understand
+everything what is going on there."*
+
+```
+python -m factory.dashboard        # http://127.0.0.1:8765
+```
+
+`factory/live.py`, `factory/dashboard.py`, `factory/ui/index.html`,
+`tests/test_factory_dashboard.py`.
+
+**WHY IT IS A LOCAL SERVER AND NOT A HOSTED PAGE.** Every number on it is read
+from this machine — `live.json`, `runs.jsonl`, `queue.jsonl`, `tried.jsonl` —
+and a page hosted anywhere else cannot see them. It is `http.server` from the
+standard library, bound to localhost, serving the page and `/api/state`.
+
+**WHY A HEARTBEAT FILE.** A run record is written when a pass FINISHES, which
+is nineteen minutes after it starts. A dashboard reading only run records has
+nothing to say for most of that time, and a factory floor with nothing moving
+on it looks broken rather than busy. `live.json` is rewritten as the pass moves
+— atomically, because the page polls it on a 2s timer and a torn read would
+blink "idle" at random.
+
+**THE UPTIME MEANS WITHOUT INTERRUPTION.** The clock is carried forward while
+beats keep arriving and **reset** when the gap exceeds an hour. A factory that
+was down for a day and came back has not been running for a week, and a counter
+that says it has is worse than no counter.
+
+**What the page shows:** the seven stations as a line, the active one lit and
+its progress bar moving; what is happening right now, down to the rule and the
+cell; the funnel from ideas tested to scored; **which gate is killing things**;
+the last luck check with its verdict in words; the queue by source; agent
+versus enumerator survival; everything that reached step 7; and the recent
+passes.
+
+**Verified in a browser at four widths** — 2 stations per row on a phone, 4 on
+a tablet, 7 on a desktop, **zero horizontal overflow at any of them**.
+
+**It cannot start a run.** No POST route, no call into `run_once`. A dashboard
+that can launch a pass is one that launches by accident, on a box that also
+runs a live bot.
+
+**One fix it forced:** the gate breakdown was reading only finished runs, so on
+a fresh install the one panel that explains the bottleneck sat empty for
+nineteen minutes while the thing it measures happened on screen. It now adds
+the pass in flight.
+
+---
+
 ## ADDED 2026-09-23 (evening) — a model writes the ideas, and the VM is wired
 
 Kris: *"on a simple script that runs locally we wont achieve anything without
