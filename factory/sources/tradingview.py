@@ -244,6 +244,39 @@ def load(folder: Path | None = None, *, ai: bool = False, model: str | None = No
     return out, skipped
 
 
+#: What the reader could NOT take, and why. Kris, 2026-09-23: he wants to see
+#: "how many strategies were found in tradingview" - a script that was read and
+#: refused is part of that count, and a grammar gap is the most actionable
+#: thing this source produces. Printing it and throwing it away meant the two
+#: extensions that would widen the whole factory lived in a terminal scrollback.
+SKIPPED = ROOT_DIR = None                       # set below, after ROOT resolves
+
+
+def record_skips(skipped, path=None) -> int:
+    """Persist the refusals so the dashboard can show them."""
+    import json as _json
+    from factory import queue as _queue
+
+    p = path or (_queue.DIR / "skipped.jsonl")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    seen = set()
+    if p.exists():
+        for line in p.read_text().splitlines():
+            if line.strip():
+                try:
+                    seen.add(_json.loads(line)["script"])
+                except (ValueError, KeyError):
+                    continue
+    new = [{"source": "tradingview", "script": n, "why": w,
+            "gap": w.startswith("grammar gap")}
+           for n, w in skipped if n not in seen]
+    if new:
+        with p.open("a") as fh:
+            for r in new:
+                fh.write(_json.dumps(r, separators=(",", ":")) + "\n")
+    return len(new)
+
+
 def _main(argv=None) -> int:
     """Read data/pine/, translate, and queue what came through."""
     import argparse
@@ -263,6 +296,7 @@ def _main(argv=None) -> int:
     gaps = [(n, w) for n, w in skipped if w.startswith("grammar gap")]
     for n, w in skipped:
         print(f"  SKIP {n}: {w}")
+    record_skips(skipped)
     print(f"\n{len(got)} translated, {len(skipped)} skipped, "
           f"{len(gaps)} naming a grammar gap")
     if not a.dry_run and got:

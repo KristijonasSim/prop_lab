@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from factory import live, nightly, queue                            # noqa: E402
+from factory.sources import catalogue                               # noqa: E402
 
 UI = Path(__file__).resolve().parent / "ui" / "index.html"
 HOST, PORT = "127.0.0.1", 8765
@@ -98,6 +99,75 @@ def _last_null() -> dict | None:
     return None
 
 
+def per_source() -> list[dict]:
+    """One row per source: found, tested, where they died, what survived.
+
+    Kris, 2026-09-23: *"its not really possible to see how many strategies were
+    found in tradingview, how many tested, how many passed / failed."* This is
+    that table, and it is built from the RECORDS rather than from the run
+    summaries - a run record knows how many ideas it took, not which source
+    each one came from once they are mixed in a batch.
+
+    Every source in the catalogue appears even with nothing against it. A
+    source missing from the page is indistinguishable from a source that found
+    nothing, and the whole point of the catalogue is to say which is which.
+    """
+    # Rows flagged `carried` are fingerprints kept by `factory.reset` so an
+    # archived idea is never re-tested. They are not results of this board and
+    # counting them would make a cleared board report 158 tested ideas.
+    tried = [r for r in queue.rows(queue.TRIED) if not r.get("carried")]
+    kept = [r for r in queue.rows(queue.SURVIVORS) if not r.get("carried")]
+    waiting = queue.rows(queue.QUEUE)
+
+    keys = {c.key for c in catalogue.CATALOGUE}
+    keys |= {r.get("source", "?") for r in tried + kept + waiting}
+
+    out = []
+    for key in sorted(keys, key=lambda k: catalogue.get(k).order):
+        src = catalogue.get(key)
+        t = [r for r in tried if r.get("source") == key]
+        k = [r for r in kept if r.get("source") == key]
+        w = [r for r in waiting if r.get("source") == key]
+        gates = {}
+        for r in t:
+            if int(r.get("died_at") or 0) == 3:
+                g = r.get("gate") or "other"
+                gates[g] = gates.get(g, 0) + 1
+        reached = {}
+        for r in k:
+            n = int(r.get("reached") or 3)
+            reached[n] = reached.get(n, 0) + 1
+        tested = len(t) + len(k)
+        out.append({
+            "key": key, "label": src.label, "how": src.how,
+            "status": src.status, "note": src.note,
+            "waiting": len(w),
+            "found": len(w) + tested,
+            "tested": tested,
+            "passed3": sum(v for n, v in reached.items() if n >= 3),
+            "repaired4": reached.get(4, 0),
+            "held6": sum(v for n, v in reached.items() if n >= 7),
+            "scored7": reached.get(7, 0),
+            "failed": len(t),
+            "failed_at_3": sum(1 for r in t if int(r.get("died_at") or 0) == 3),
+            "failed_at_6": sum(1 for r in t if int(r.get("died_at") or 0) == 6),
+            "failed_unknown": sum(1 for r in t if not r.get("died_at")),
+            "gates": gates,
+        })
+    return out
+
+
+def gaps() -> list[dict]:
+    """Scripts a source could read but the GRAMMAR could not express.
+
+    The most actionable thing the factory produces. The enumerator's grammar
+    holds 308 combinations in total; a named gap is a term that multiplies that
+    rather than adding to it, and these come from scripts people actually
+    trade. They were being printed to a terminal and lost.
+    """
+    return queue.rows(queue.DIR / "skipped.jsonl")
+
+
 def state() -> dict:
     """Everything the page draws, in one object."""
     b = live.read()
@@ -112,6 +182,8 @@ def state() -> dict:
         "funnel": _funnel(),
         "gates": _gates(),
         "by_source": nightly.by_source(),
+        "sources": per_source(),
+        "gaps": gaps(),
         "step5": _last_null(),
         "survivors": _survivors(),
         "candidates": _candidates(),

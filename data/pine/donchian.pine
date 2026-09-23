@@ -1,0 +1,6 @@
+//@version=5
+strategy("Donchian 20 Breakout", overlay=true)
+up = ta.highest(high, 20)
+enter = close > up
+if enter
+    strategy.entry("Long", strategy.long)

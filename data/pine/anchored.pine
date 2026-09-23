@@ -1,0 +1,7 @@
+//@version=5
+strategy("Anchored VWAP session reclaim", overlay=true)
+av = ta.vwap(hlc3, session.isfirstbar)
+pivotHigh = ta.pivothigh(high, 5, 5)
+cond = close > av and not na(pivotHigh) and volume > ta.sma(volume, 20) * 1.5
+if cond
+    strategy.entry("L", strategy.long)

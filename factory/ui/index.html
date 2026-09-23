@@ -39,7 +39,41 @@ header{display:flex;flex-wrap:wrap;gap:var(--gap);align-items:center;
                 100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
 .clock{text-align:right}
 .clock .t{font-size:26px;font-weight:600;letter-spacing:.02em}
+.clock .t:not(.mono-on){font-size:26px}
 .clock .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- source picker ---------- */
+.sources{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.src{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;
+  min-width:132px;transition:border-color .2s,background .2s;text-align:left;
+  font:inherit;color:inherit}
+.src:hover{border-color:#3a414b}
+.src[aria-selected="true"]{border-color:var(--accent);background:var(--panel-2)}
+.src .t{font-weight:600;font-size:13px;display:flex;align-items:center;gap:7px}
+.src .c{font-size:11.5px;color:var(--ink-3)}
+.src[aria-selected="true"] .t{color:var(--accent)}
+.pill{width:7px;height:7px;border-radius:50%;flex:none}
+.pill.ready{background:var(--live)}
+.pill.needs-input{background:var(--warn)}
+.pill.blocked{background:var(--dead)}
+
+.srcHead{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:var(--gap);display:flex;gap:18px;
+  flex-wrap:wrap;align-items:center;justify-content:space-between}
+.srcHead .who{display:flex;flex-direction:column;gap:3px;min-width:200px}
+.srcHead .who b{font-size:16px}
+.srcHead .who span{font-size:12.5px;color:var(--ink-3)}
+.stats{display:flex;gap:26px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:1px}
+.stat b{font-size:20px;font-weight:600;letter-spacing:.01em}
+.stat span{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.warnbox{width:100%;font-size:12.5px;color:var(--warn);border-left:2px solid var(--warn);
+  padding-left:11px;line-height:1.5}
+@media (max-width:560px){
+  .stats{gap:18px} .stat b{font-size:17px}
+  .src{flex:1 1 calc(50% - 8px);min-width:0}
+}
 
 /* ---------- the line ---------- */
 .line{display:grid;gap:10px;margin-bottom:var(--gap);
@@ -130,9 +164,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
   <div class="clock">
     <div class="t mono" id="uptime">—</div>
-    <div class="l dim">running without interruption</div>
+    <div class="l dim" id="uptimeLabel">running without interruption</div>
   </div>
 </header>
+
+<div class="sources" id="sources"></div>
+
+<div class="srcHead" id="srcHead"></div>
 
 <div class="line" id="line"></div>
 
@@ -149,11 +187,11 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7">
-    <h2>The funnel — everything on record</h2>
+    <h2>The funnel — every idea tested</h2>
     <div class="fun" id="funnel"></div>
   </div>
 
-  <div class="card c7">
+  <div class="card c7" id="gatesCard">
     <h2>What kills them — every cell-test on record</h2>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
@@ -161,19 +199,22 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
     <div class="verdict" id="gatesNote"></div>
   </div>
 
-  <div class="card c5">
+  <div class="card c5" id="nullCard">
     <h2>Step 5 — the luck check</h2>
     <div id="null"></div>
   </div>
 
-  <div class="card c5">
-    <h2>Queue waiting</h2>
-    <div class="scroll"><table id="queue"></table></div>
+  <div class="card c12" id="gapsCard">
+    <h2>Read, but the grammar could not say it</h2>
+    <div class="scroll"><table id="gapsTable"></table></div>
+    <div class="verdict">Each of these is a term the factory does not have.
+      A new term multiplies the 308 rules the enumerator can build, rather than
+      adding one — and these come from scripts people actually trade.</div>
   </div>
 
-  <div class="card c7">
-    <h2>Does the model beat the enumerator?</h2>
-    <div class="scroll"><table id="source"></table></div>
+  <div class="card c12">
+    <h2>Every source — found, tested, passed, failed</h2>
+    <div class="scroll"><table id="srcTable"></table></div>
     <div class="verdict" id="sourceNote"></div>
   </div>
 
@@ -197,6 +238,16 @@ const $ = id => document.getElementById(id);
 const GATE_COLS = {trades:'#8ab4f8', cost:'#f5b955', concentration:'#c084fc',
                    drift:'#ef6b6b', other:'#4b5563'};
 let S = null, tick = 0;
+// Which source the page is looking at. Kris, 2026-09-23: the source is the
+// thing you pick first, so it is remembered between reloads.
+let SRC = (() => { try { return localStorage.getItem('factory.src') || ''; }
+                   catch(e) { return ''; } })();
+const pick = k => {
+  SRC = k;
+  try { localStorage.setItem('factory.src', k); } catch(e) {}
+  paint();
+};
+const row = () => (S.sources || []).find(r => r.key === SRC) || null;
 
 function dur(s){
   s = Math.max(0, Math.floor(s));
@@ -208,11 +259,39 @@ function dur(s){
 const esc = t => String(t ?? '').replace(/[<>&]/g, c =>
   ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 
+function sourceBar(){
+  const rows = S.sources || [];
+  if (!rows.some(r => r.key === SRC)) SRC = rows.length ? rows[0].key : '';
+  $('sources').innerHTML = rows.map(r =>
+    `<button class="src" role="tab" aria-selected="${r.key===SRC}" data-k="${esc(r.key)}">
+       <span class="t"><i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span>
+       <span class="c">${r.found} found · ${r.tested} tested</span>
+     </button>`).join('');
+  $('sources').querySelectorAll('.src').forEach(b =>
+    b.onclick = () => pick(b.dataset.k));
+
+  const r = row();
+  if (!r){ $('srcHead').innerHTML = ''; return; }
+  const stat = (v,l) => `<div class="stat"><b class="mono">${v}</b><span>${l}</span></div>`;
+  // A source with nothing against it must say WHY, or "0 found" reads as
+  // "this source found nothing" when it means "this source has not been run".
+  const warn = (r.found === 0 && r.status !== 'ready')
+    ? `<div class="warnbox">${esc(r.note)}</div>` : '';
+  $('srcHead').innerHTML =
+    `<div class="who"><b>${esc(r.label)}</b><span>${esc(r.how)}</span></div>
+     <div class="stats">
+       ${stat(r.found,'found')}${stat(r.tested,'tested')}
+       ${stat(r.passed3,'passed step 3')}${stat(r.failed,'failed')}
+       ${stat(r.held6,'held at 6')}${stat(r.scored7,'scored at 7')}
+       ${stat(r.waiting,'waiting')}
+     </div>${warn}`;
+}
+
 function stations(){
   const b = S.beat, cur = S.live ? b.step : 0;
   const counts = b.counts || {};
   const val = n => ({
-    1: S.queue.waiting + ' queued',
+    1: ((row() ? row().waiting : S.queue.waiting)) + ' queued',
     2: (counts.ideas ?? 0) + ' built',
     3: (counts.step3_pass ?? 0) + ' pass',
     4: (counts.step4_repaired ?? 0) + ' fixed',
@@ -271,9 +350,8 @@ function funnel(){
 
 function gates(){
   const g = S.gates, tot = Object.values(g).reduce((a,b)=>a+b,0);
-  if (!tot){ $('gates').innerHTML = '';
-    $('gatesLegend').innerHTML = '<span class="dim">no cell-tests recorded yet</span>';
-    $('gatesTable').innerHTML = ''; $('gatesNote').textContent = ''; return; }
+  $('gatesCard').style.display = tot ? '' : 'none';
+  if (!tot) return;
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${GATE_COLS[k]}"></i>`).join('');
   $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
@@ -304,7 +382,8 @@ function gates(){
 
 function nullPanel(){
   const n = S.step5;
-  if (!n){ $('null').innerHTML = '<div class="empty">No luck check recorded yet.</div>'; return; }
+  $('nullCard').style.display = n ? '' : 'none';
+  if (!n) return;
   const beat = n.real > n.null_max;
   $('null').innerHTML =
     `<table>
@@ -317,6 +396,47 @@ function nullPanel(){
      <div class="verdict">${beat
        ? 'The real market beat every scrambled copy on this batch.'
        : 'A market with no information in it produced as many survivors. Nothing here is above luck yet.'}</div>`;
+}
+
+const GATE_WHY = {
+  trades: 'fired too rarely', cost: 'lost money after fees',
+  concentration: 'one lucky run', drift: 'worse than random',
+  other: 'no usable cell',
+};
+
+function srcTable(){
+  const rows = S.sources || [];
+  $('srcTable').innerHTML =
+    `<tr><th>source</th><th>how ideas arrive</th><th>found</th><th>tested</th>
+       <th>passed 3</th><th>held 6</th><th>scored 7</th><th>failed</th>
+       <th>died on</th><th>waiting</th></tr>` +
+    rows.map(r => {
+      const top = Object.entries(r.gates).sort((a,b)=>b[1]-a[1])[0];
+      return `<tr style="${r.key===SRC?'background:#1b1e23':''}">
+        <td><span class="t" style="display:inline-flex;align-items:center;gap:7px">
+            <i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span></td>
+        <td class="wide dim">${esc(r.how)}</td>
+        <td class="mono">${r.found}</td><td class="mono">${r.tested}</td>
+        <td class="mono">${r.passed3}</td><td class="mono">${r.held6}</td>
+        <td class="mono">${r.scored7}</td><td class="mono">${r.failed}</td>
+        <td class="dim">${top ? esc(GATE_WHY[top[0]] || top[0]) + ' ' + top[1] : '—'}</td>
+        <td class="mono">${r.waiting}</td></tr>`;
+    }).join('');
+
+  const ready = rows.filter(r => r.status !== 'ready' && r.found === 0);
+  $('sourceNote').textContent = ready.length
+    ? ready.map(r => `${r.label}: ${r.note}`).join('  ')
+    : 'Every source in the catalogue has been run at least once.';
+}
+
+function gapsTable(){
+  const g = (S.gaps || []).filter(x => !SRC || x.source === SRC);
+  $('gapsCard').style.display = g.length ? '' : 'none';
+  if (!g.length) return;
+  $('gapsTable').innerHTML =
+    `<tr><th>script</th><th>what is missing</th></tr>` +
+    g.map(x => `<tr><td class="mono">${esc(x.script)}</td>
+      <td class="wide dim">${esc(String(x.why).replace(/^grammar gap:\s*/,''))}</td></tr>`).join('');
 }
 
 function queueTable(){
@@ -384,8 +504,8 @@ function paint(){
   $('dot').className = 'dot' + (S.live ? ' on' : '');
   $('status').textContent = S.live ? 'running' : 'idle';
   $('passes').textContent = S.passes + (S.passes === 1 ? ' pass' : ' passes');
-  stations(); now(); funnel(); gates(); nullPanel();
-  queueTable(); sourceTable(); candTable(); runsTable();
+  sourceBar(); stations(); now(); funnel(); gates(); nullPanel();
+  gapsTable(); srcTable(); candTable(); runsTable();
 }
 
 async function pull(){
@@ -401,7 +521,9 @@ async function pull(){
 // jumping in two-second steps.
 setInterval(() => {
   if (!S) return;
-  $('uptime').textContent = S.live ? dur(S.uptime_s + (++tick)) : '—';
+  $('uptime').textContent = S.live ? dur(S.uptime_s + (++tick)) : 'not running';
+  $('uptimeLabel').textContent = S.live
+    ? 'running without interruption' : 'nothing on the line right now';
 }, 1000);
 pull(); setInterval(pull, 2000);
 </script>

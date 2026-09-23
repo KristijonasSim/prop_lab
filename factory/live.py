@@ -127,6 +127,15 @@ def uptime(b: Beat | None = None) -> float:
     return max(0.0, b.updated - b.started)
 
 
+#: Labels that mean the factory is NOT working, however fresh the beat is.
+#: `resting` counts as live - the factory is up, between passes - but `idle`
+#: does not: `factory.reset` writes one to clear the board, and the header
+#: showed RUNNING with a two-second uptime on a board with nothing on it.
+NOT_WORKING = ("idle",)
+
+
 def is_live(b: Beat | None = None) -> bool:
     b = b or read()
+    if b.label in NOT_WORKING:
+        return False
     return bool(b.updated) and (time.time() - b.updated) <= STALE_AFTER

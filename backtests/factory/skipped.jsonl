@@ -1,0 +1,2 @@
+{"source":"tradingview","script":"anchored","why":"grammar gap: ta.pivothigh() pivot detection","gap":true}
+{"source":"tradingview","script":"squeeze","why":"grammar gap: composite Bollinger Band indicator (basis + mult*stdev) and derived bandwidth series compared against its own historical lowest","gap":true}

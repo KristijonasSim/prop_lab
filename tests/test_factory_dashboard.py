@@ -15,6 +15,7 @@ import time
 import pytest
 
 from factory import dashboard, live
+from factory.spec import Condition, Strategy, Term
 
 
 @pytest.fixture
@@ -132,3 +133,148 @@ def test_the_dashboard_has_no_route_that_starts_a_run():
 
 def test_the_server_binds_to_localhost_only():
     assert dashboard.HOST == "127.0.0.1"
+
+
+# --------------------------------------------------------- the source layer
+def test_every_catalogue_source_appears_even_with_nothing_against_it():
+    """Kris, 2026-09-23: he picks a source, then reads its numbers. A source
+    missing from the page is indistinguishable from one that found nothing,
+    and the catalogue exists to say which is which."""
+    from factory.sources import catalogue
+
+    keys = {r["key"] for r in dashboard.per_source()}
+    assert {c.key for c in catalogue.CATALOGUE} <= keys
+
+
+def test_a_source_that_is_not_ready_carries_the_reason():
+    """A source showing 0 found and no explanation reads as 'this found
+    nothing' when it means 'this has not been run'."""
+    rows = {r["key"]: r for r in dashboard.per_source()}
+    assert rows["quantpedia"]["status"] != "ready"
+    assert len(rows["quantpedia"]["note"]) > 20
+    assert rows["tradingview"]["note"]
+
+
+def test_the_drain_order_cannot_disagree_with_the_catalogue():
+    """SOURCE_ORDER used to be hand-written and an unlisted source sorted last,
+    which is how the agent's first batch went untested."""
+    from factory import queue
+    from factory.sources import catalogue
+
+    assert queue.SOURCE_ORDER == catalogue.ORDER
+    assert catalogue.ORDER[0] == "tradingview"
+
+
+def test_a_source_row_adds_up():
+    for r in dashboard.per_source():
+        assert r["found"] == r["waiting"] + r["tested"]
+        assert r["failed"] <= r["tested"]
+        assert r["scored7"] <= r["passed3"]
+
+
+def test_an_unregistered_source_still_gets_a_row():
+    from factory.sources import catalogue
+
+    s = catalogue.get("nowhere")
+    assert s.key == "nowhere" and s.label == "nowhere"
+
+
+# ------------------------------------------------------------- clearing it
+def test_reset_archives_rather_than_deletes(tmp_path, monkeypatch):
+    """CLAUDE.md: the failures are the denominator, and core/searchcost.py
+    charges every trial. A trial does not become uncharged because the page
+    stopped showing it."""
+    from factory import queue, reset
+
+    monkeypatch.setattr(queue, "DIR", tmp_path)
+    monkeypatch.setattr(queue, "TRIED", tmp_path / "tried.jsonl")
+    monkeypatch.setattr(queue, "QUEUE", tmp_path / "queue.jsonl")
+    monkeypatch.setattr(queue, "SURVIVORS", tmp_path / "survivors.jsonl")
+    monkeypatch.setattr(reset, "ARCHIVE", tmp_path / "archive")
+
+    s = Strategy(name="x", side="long",
+                 entry=(Condition(Term("price"), "above", Term("sma", 50)),),
+                 source="tradingview")
+    queue.mark_tried(s, "FAIL", "died on trades", step=3, gate="trades")
+    out = reset.reset()
+
+    archived = list((tmp_path / "archive").rglob("tried.jsonl"))
+    assert archived, "nothing was archived"
+    assert out["archived"]["tried.jsonl"] == 1
+
+
+def test_reset_keeps_the_dedupe_but_not_the_counts(tmp_path, monkeypatch):
+    """THE TWO THINGS THAT MUST BOTH BE TRUE after clearing the board: the idea
+    is never re-tested, and the cleared board reports zero. A first version
+    carried the rows forward unflagged and a freshly cleared board reported 158
+    tested ideas."""
+    from factory import queue, reset
+
+    monkeypatch.setattr(queue, "DIR", tmp_path)
+    monkeypatch.setattr(queue, "TRIED", tmp_path / "tried.jsonl")
+    monkeypatch.setattr(queue, "QUEUE", tmp_path / "queue.jsonl")
+    monkeypatch.setattr(queue, "SURVIVORS", tmp_path / "survivors.jsonl")
+    monkeypatch.setattr(reset, "ARCHIVE", tmp_path / "archive")
+
+    s = Strategy(name="x", side="long",
+                 entry=(Condition(Term("price"), "above", Term("sma", 50)),),
+                 source="tradingview")
+    queue.mark_tried(s, "FAIL", "died on trades", step=3, gate="trades")
+    reset.reset()
+
+    assert s.fingerprint() in queue.fingerprints()          # never re-tested
+    kept = queue.rows(queue.TRIED)
+    assert len(kept) == 1 and kept[0]["carried"] == 1
+    assert "verdict" not in kept[0] and "died_at" not in kept[0]
+
+
+def test_forget_drops_the_fingerprints(tmp_path, monkeypatch):
+    from factory import queue, reset
+
+    monkeypatch.setattr(queue, "DIR", tmp_path)
+    monkeypatch.setattr(queue, "TRIED", tmp_path / "tried.jsonl")
+    monkeypatch.setattr(queue, "QUEUE", tmp_path / "queue.jsonl")
+    monkeypatch.setattr(queue, "SURVIVORS", tmp_path / "survivors.jsonl")
+    monkeypatch.setattr(reset, "ARCHIVE", tmp_path / "archive")
+
+    s = Strategy(name="x", side="long",
+                 entry=(Condition(Term("price"), "above", Term("sma", 50)),),
+                 source="tradingview")
+    queue.mark_tried(s, "FAIL", "", step=3, gate="trades")
+    out = reset.reset(forget=True)
+    assert out["dedupe_kept"] == 0
+    assert s.fingerprint() not in queue.fingerprints()
+
+
+def test_an_idle_beat_is_not_a_running_factory(tmp_path):
+    """`factory.reset` used to write one to clear the board and the header
+    showed RUNNING with a two-second uptime on an empty board."""
+    f = tmp_path / "live.json"
+    live.beat(0, "idle", path=f)
+    assert not live.is_live(live.read(f))
+    live.beat(0, "resting", path=f)
+    assert live.is_live(live.read(f))        # between passes IS running
+
+
+# -------------------------------------------------------- the grammar gaps
+def test_a_refused_translation_is_kept_not_printed(tmp_path):
+    """A named gap is the most actionable thing the factory produces - it is a
+    term that multiplies the 308 rules the enumerator can build. They were
+    going to a terminal and being lost."""
+    from factory.sources import tradingview
+
+    f = tmp_path / "skipped.jsonl"
+    n = tradingview.record_skips(
+        [("squeeze", "grammar gap: composite bands"),
+         ("other", "no JSON object in output")], path=f)
+    assert n == 2
+    rows = [json.loads(l) for l in f.read_text().splitlines()]
+    assert [r["gap"] for r in rows] == [True, False]
+
+
+def test_the_same_script_is_not_recorded_twice(tmp_path):
+    from factory.sources import tradingview
+
+    f = tmp_path / "skipped.jsonl"
+    tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f)
+    assert tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f) == 0

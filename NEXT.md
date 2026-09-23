@@ -101,6 +101,69 @@ Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
 
 ---
 
+## ADDED 2026-09-23 (late, 2) — the board is cleared and the SOURCE is the unit
+
+Kris: *"now its impossible to understand what is our main source of ideas...
+clean all UI from data, we will start with tradingview... its not really
+possible to see how many strategies were found in tradingview, how many tested,
+how many passed / failed, then i would want to choose other source for example
+quantpedia."*
+
+**The board is cleared.** `python -m factory.reset` — 39 queued, 158 tried, 18
+survivors and 2 runs moved to `backtests/factory/archive/20260923T104359Z/`.
+**Archived, not deleted**: `CLAUDE.md` says the failures are the denominator
+and `core/searchcost.py` charges every trial, and a trial does not become
+uncharged because the page stopped showing it. The 158 fingerprints are
+**carried forward flagged `carried`**, so nothing is re-tested and nothing is
+counted — a first version carried them unflagged and the freshly cleared board
+reported 158 tested ideas.
+
+**The source is now the unit of work.** `factory/sources/catalogue.py` is the
+list, and `queue.SOURCE_ORDER` is derived from it so the two cannot disagree.
+
+| source | how ideas arrive | status |
+|---|---|---|
+| **TradingView** | Pine scripts read from `data/pine/` | needs input — drop files in |
+| Quantpedia | published write-ups | **blocked** — no reader, paid library, terms unchecked |
+| AI agent | a model proposes rules with a mechanism | ready |
+| Enumerator | walks the grammar, 308 combinations | ready |
+| Kris | injected by hand | ready |
+
+**A source that is not ready says why on the page.** "0 found" with no reason
+reads as "this source found nothing" when it means "this source has not been
+run", and that was the exact confusion.
+
+**Where an idea died is now a field, not prose.** `mark_tried` records
+`died_at` and `gate`; `keep` records `reached`. Before this the note was free
+text assembled differently at each call site, so "how many TradingView ideas
+passed" was answerable and "where did they die" was not.
+
+**TradingView is seeded and the regex reader is measured useless on it.** Six
+real Pine scripts in `data/pine/`: the regex read **0 of 6** — it cannot
+resolve a variable, so `fast = ta.sma(close,20)` then `ta.crossover(fast,slow)`
+defeats it. The model read 4, queued 3 (one was a duplicate of an archived
+idea, so the dedupe worked), and **named the two it refused**:
+
+* `ta.pivothigh()` — pivot detection
+* composite Bollinger bands — a derived series compared against its own low
+
+**Those refusals are now kept, not printed.** `backtests/factory/skipped.jsonl`
+and a panel on the page. Each one is a term that **multiplies** the 308 rules
+the enumerator can build rather than adding one, and they come from scripts
+people actually trade. They were going to a terminal and being lost.
+
+**The page.** Source tabs across the top; pick one and the whole page is about
+it — found, tested, passed step 3, failed, held at 6, scored at 7, waiting.
+Below, every source in one table with what killed most of its ideas. The choice
+is remembered between reloads. Verified at 390/768/1280px with no horizontal
+overflow.
+
+**Two UI bugs it exposed:** an `idle` beat was reading as a running factory, so
+the header showed RUNNING with a two-second uptime on an empty board; and the
+empty panels left holes instead of hiding.
+
+---
+
 ## ADDED 2026-09-23 (late) — the factory floor, a page that shows the line running
 
 Kris: *"i want to have UI where i can see all 7 steps as in workflow... i would

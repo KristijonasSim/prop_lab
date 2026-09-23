@@ -29,6 +29,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from factory.sources import catalogue
 from factory.spec import Condition, Strategy, Term
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +38,8 @@ QUEUE = DIR / "queue.jsonl"
 TRIED = DIR / "tried.jsonl"
 SURVIVORS = DIR / "survivors.jsonl"
 
-#: The order sources are drained in. Kris set the first version:
+#: The order sources are drained in, DERIVED from the catalogue so the two
+#: cannot disagree. Kris set the first version:
 #: TradingView, then the bot inventing its own, then Kris injecting one.
 #:
 #: `agent` ADDED 2026-09-23, AND ITS POSITION IS THE POINT. A source missing
@@ -50,7 +52,7 @@ SURVIVORS = DIR / "survivors.jsonl"
 #: It goes ABOVE `invent` because the enumerator is the FLOOR, not a peer: its
 #: job is to keep the queue non-empty when the thinking sources run dry, and a
 #: floor that is drained first is not a floor. See `factory/nightly.top_up`.
-SOURCE_ORDER = ("tradingview", "agent", "invent", "kris")
+SOURCE_ORDER = catalogue.ORDER
 
 
 def _to_json(s: Strategy) -> str:
@@ -58,7 +60,8 @@ def _to_json(s: Strategy) -> str:
 
 
 #: Keys `mark_tried` and `keep` add to a row that are NOT part of a Strategy.
-_EXTRA = ("verdict", "note_result")
+_EXTRA = ("verdict", "note_result", "died_at", "gate", "reached",
+          "carried")
 
 
 def _from_json(line: str) -> Strategy:
@@ -78,6 +81,24 @@ def _from_json(line: str) -> Strategy:
     for k in _EXTRA:
         d.pop(k, None)
     return Strategy(**d)
+
+
+def rows(path: Path) -> list[dict]:
+    """The raw records, outcome fields and all.
+
+    `_read` returns Strategy objects and drops `verdict`, `died_at` and `gate`,
+    which is exactly what the per-source breakdown needs. Both exist.
+    """
+    if not path.exists():
+        return []
+    out = []
+    for line in path.read_text().splitlines():
+        if line.strip():
+            try:
+                out.append(json.loads(line))
+            except ValueError:
+                continue                  # a torn last line is not a crash
+    return out
 
 
 def _read(path: Path) -> list[Strategy]:
@@ -134,16 +155,27 @@ def take() -> Strategy | None:
     return nxt
 
 
-def mark_tried(s: Strategy, verdict: str, note: str = "") -> None:
-    """Record that it has been through the pipeline, so it is never re-offered."""
+def mark_tried(s: Strategy, verdict: str, note: str = "",
+               step: int = 0, gate: str = "") -> None:
+    """Record that it has been through the pipeline, so it is never re-offered.
+
+    `step` AND `gate` ADDED 2026-09-23. Kris: *"its not really possible to see
+    how many strategies were found in tradingview, how many tested, how many
+    passed / failed."* The row already carried the source and the verdict, so
+    "how many did TradingView give us" was answerable and "where did they die"
+    was not - the note was free text assembled differently at each call site.
+    Recording the step and the gate as fields is what lets the page break a
+    source down without parsing prose.
+    """
     DIR.mkdir(parents=True, exist_ok=True)
     d = asdict(s)
     d["verdict"], d["note_result"] = verdict, note
+    d["died_at"], d["gate"] = int(step), gate
     with TRIED.open("a") as fh:
         fh.write(json.dumps(d, separators=(",", ":"), sort_keys=True) + "\n")
 
 
-def keep(s: Strategy, note: str = "") -> None:
+def keep(s: Strategy, note: str = "", reached: int = 3) -> None:
     """A survivor. It has passed step 3 (possibly after a step 4 repair) and is
     waiting for step 5.
 
@@ -153,7 +185,7 @@ def keep(s: Strategy, note: str = "") -> None:
     """
     DIR.mkdir(parents=True, exist_ok=True)
     d = asdict(s)
-    d["note_result"] = note
+    d["note_result"], d["reached"] = note, int(reached)
     with SURVIVORS.open("a") as fh:
         fh.write(json.dumps(d, separators=(",", ":"), sort_keys=True) + "\n")
 

@@ -107,7 +107,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         if won:
             best = max(won, key=lambda c: c.mean_r.get(1.0, 0.0))
             survivors.append((s, best.market, best.tf, False))
-            queue.keep(s, f"step 3 on {best.market} {best.tf}")
+            queue.keep(s, f"step 3 on {best.market} {best.tf}", reached=3)
             s3 += 1
             continue
         live.beat(4, "repair", idea=s.label(), done=i, total=len(ideas),
@@ -116,11 +116,16 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         if fixed is not None:
             tgt = repair.best_near_miss(checks)
             survivors.append((fixed, tgt.market, tgt.tf, True))
-            queue.keep(fixed, f"step 4 repair on {tgt.market} {tgt.tf}")
+            queue.keep(fixed, f"step 4 repair on {tgt.market} {tgt.tf}", reached=4)
             s4 += 1
         else:
-            queue.mark_tried(s, "FAIL",
-                             "; ".join(sorted({repair.failed_gate(c) for c in checks})))
+            # The gate recorded is the one the BEST cell died on, not a set
+            # union of all 24 - "trades; cost; drift" says nothing about what
+            # to fix, and a source breakdown built on it cannot add up.
+            best_cell = max(checks, key=repair.closeness, default=None)
+            gate = repair.failed_gate(best_cell) if best_cell else "other"
+            queue.mark_tried(s, "FAIL", f"best cell died on {gate}",
+                             step=3, gate=gate)
     rec["gates"] = dict(gates)
     rec["step3_pass"] = s3
     rec["step4_repaired"] = s4
@@ -150,6 +155,9 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
                       done=i, total=len(survivors),
                       counts={"step6_pass": len(cleared)})
+        else:
+            queue.mark_tried(s, "FAIL", f"step 6: {r.verdict}", step=6,
+                             gate="holdout")
     rec["step6_pass"] = len(cleared)
 
     rec["step7"] = []
@@ -161,6 +169,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         ev = evaluate.evaluate(s, m, tf, frame=evaluate.five_year_frame(m, tf),
                                resamples=resamples)
         f = ev.fastest()
+        queue.keep(s, f"step 7 on {m} {tf}", reached=7)
         rec["step7"].append({
             "idea": ev.idea, "cell": ev.cell, "trades": ev.n_trades,
             "trades_per_day": round(ev.trades_per_day, 2),
