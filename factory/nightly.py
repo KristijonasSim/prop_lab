@@ -156,8 +156,15 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                       done=i, total=len(survivors),
                       counts={"step6_pass": len(cleared)})
         else:
-            queue.mark_tried(s, "FAIL", f"step 6: {r.verdict}", step=6,
-                             gate="holdout")
+            # THE GATE, NOT THE STEP. This recorded a hardcoded "holdout" and
+            # the board therefore told Kris his script "fell apart on the years
+            # it was not selected on" - when it had in fact failed the TRADE
+            # COUNT floor on that window and its edge was never measured there
+            # at all. Two different facts, and the wrong one was displayed.
+            g = repair.failed_gate(r.holdout) if r.holdout else "other"
+            why = "; ".join(r.holdout.reasons) if r.holdout else "no holdout data"
+            queue.mark_tried(s, "FAIL", f"step 6: {why}", step=6,
+                             gate=g or "other")
     rec["step6_pass"] = len(cleared)
 
     rec["step7"] = []

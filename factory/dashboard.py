@@ -204,18 +204,21 @@ def per_source() -> list[dict]:
             stopped[k] = stopped.get(k, 0) + 1
 
         for e in seen.values():
-            if e["died_at"] == 3:
-                _bump(e["gate"] or "other")
-            elif e["died_at"] == 6:
-                _bump("holdout")
+            if e["died_at"]:
+                # KEYED BY STEP AND GATE. "trades" at step 3 means the rule
+                # never traded enough anywhere; at step 6 it means it traded
+                # enough on the recent window and not on the older one, which
+                # is a different finding and used to be displayed as the edge
+                # falling apart.
+                _bump(f'{e["died_at"]}:{e["gate"] or "other"}')
             elif e["reached"] >= 7:
                 _bump("scored")
             elif e["reached"] >= 3:
                 _bump("alive")
             else:
                 _bump("other")
-        gates = {k: v for k, v in stopped.items()
-                 if k in ("trades", "cost", "concentration", "drift", "other")}
+        gates = {k.split(":", 1)[1]: v for k, v in stopped.items()
+                 if k.startswith("3:")}
 
         # EVERYTHING THE PAGE DRAWS, SCOPED TO THIS SOURCE. Kris, 2026-09-23:
         # *"when i go to quantpedia tab i see same stats... we didint test

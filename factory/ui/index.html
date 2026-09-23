@@ -243,19 +243,27 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 
 <script>
 const $ = id => document.getElementById(id);
-const GATE_COLS = {trades:'#8ab4f8', cost:'#f5b955', concentration:'#c084fc',
-                   drift:'#ef6b6b', holdout:'#e879a0', other:'#4b5563',
-                   alive:'#5b6472', scored:'#4ade80'};
+// Keyed "<step>:<gate>". The SAME gate at two steps is two different
+// findings: "never traded enough" versus "traded enough recently but not on
+// the older window", and reporting the second as the first told Kris his
+// script fell apart when its edge had never been measured there at all.
 const STOP_WHY = {
-  trades:        ['step 3', 'fired too rarely — under 0.4/day or 100 trades'],
-  cost:          ['step 3', 'lost money once the round trip was charged'],
-  concentration: ['step 3', 'profit sat in its best five trades'],
-  drift:         ['step 3', 'scored worse than entering at random'],
-  holdout:       ['step 6', 'fell apart on the years it was not selected on'],
-  scored:        ['step 7', 'got all the way through'],
-  alive:         ['—',      'passed step 3, not yet re-checked'],
-  other:         ['—',      'no usable cell'],
+  '3:trades':        ['step 3', 'fired too rarely — under 0.4/day or 100 trades'],
+  '3:cost':          ['step 3', 'lost money once the round trip was charged'],
+  '3:concentration': ['step 3', 'profit sat in its best five trades'],
+  '3:drift':         ['step 3', 'scored worse than entering at random'],
+  '3:other':         ['step 3', 'no usable cell'],
+  '6:trades':        ['step 6', 'traded enough on recent years, too rarely on the older ones — its edge was never measured there'],
+  '6:cost':          ['step 6', 'lost money on the years it was not selected on'],
+  '6:concentration': ['step 6', 'on older years its profit sat in a few trades'],
+  '6:drift':         ['step 6', 'on older years it scored worse than random'],
+  '6:other':         ['step 6', 'no usable holdout'],
+  scored:            ['step 7', 'got all the way through'],
+  alive:             ['—',      'passed step 3, not yet re-checked'],
+  other:             ['—',      'no usable cell'],
 };
+const STOP_COL = k => ({'3':'#8ab4f8','6':'#e879a0'}[String(k).split(':')[0]]
+                        || (k === 'scored' ? '#4ade80' : '#4b5563'));
 let S = null, tick = 0;
 // Which source the page is looking at. Kris, 2026-09-23: the source is the
 // thing you pick first, so it is remembered between reloads.
@@ -396,26 +404,29 @@ function gates(){
     + `each counted once at the point it stopped. `
     + `Every idea is run on 24 cells — six markets × four timeframes — and `
     + `survives if any one of them passes.`;
+  const nice = k => (STOP_WHY[k] ? STOP_WHY[k][0] + ' · ' : '')
+                    + String(k).split(':').pop();
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
-    .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${GATE_COLS[k]}"></i>`).join('');
+    .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${STOP_COL(k)}"></i>`).join('');
   $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
-    .map(([k,v]) => `<span><i class="sw" style="background:${GATE_COLS[k]}"></i>
-       ${k} ${Math.round(100*v/tot)}%</span>`).join('');
+    .map(([k,v]) => `<span><i class="sw" style="background:${STOP_COL(k)}"></i>
+       ${esc(nice(k))} ${Math.round(100*v/tot)}%</span>`).join('');
   $('gatesTable').innerHTML =
     `<tr><th>stopped at</th><th>reason</th><th style="text-align:right">ideas</th>
       <th style="text-align:right">share</th></tr>` +
     Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
       const [step, why] = STOP_WHY[k] || ['—', k];
       return `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
-          <i class="sw" style="background:${GATE_COLS[k]||'#4b5563'}"></i>${esc(step)}</span></td>
+          <i class="sw" style="background:${STOP_COL(k)}"></i>${esc(step)}</span></td>
         <td class="wide dim">${esc(why)}</td>
         <td class="mono ${k==='scored'?'good':'bad'}" style="text-align:right">${v}</td>
         <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
     }).join('');
-  const t = g.trades || 0;
+  const t = (g['3:trades'] || 0) + (g['6:trades'] || 0);
   $('gatesNote').textContent = t && t / tot >= 0.6
-    ? `${Math.round(100*t/tot)}% never traded enough to test. Nothing downstream `
-      + `repairs that — it is the generator's job.`
+    ? `${Math.round(100*t/tot)}% stopped on TRADE COUNT, not on edge — they did `
+      + `not fire often enough to be judged. Nothing downstream repairs that; `
+      + `it is the rule's own frequency.`
     : (g.scored ? `${g.scored} made it all the way through.` : '');
 }
 
@@ -440,6 +451,9 @@ function nullPanel(){
          + esc(Object.entries(n.batch||{}).map(([k,v])=>k+' '+v).join(', '))
          + '. The luck check scores a batch, not one source.</span>'}</div>`;
 }
+
+const nice2 = k => (STOP_WHY[k] ? STOP_WHY[k][0] + ' · ' : '')
+                    + String(k).split(':').pop();
 
 function srcTable(){
   const rows = S.sources || [];
@@ -466,10 +480,7 @@ function srcTable(){
         <td class="mono ${r.held6?'good':''}">${r.held6}</td>
         <td class="mono ${r.scored7?'good':''}">${r.scored7}</td>
         <td class="mono ${r.failed?'bad':''}">${r.failed}</td>
-        <td class="dim">${top
-          ? esc((STOP_WHY[top[0]] ? STOP_WHY[top[0]][0] + ' · ' : '') + top[0])
-            + ' ' + top[1]
-          : '—'}</td>
+        <td class="dim">${top ? esc(nice2(top[0])) + ' ' + top[1] : '—'}</td>
         <td class="mono">${r.waiting}</td></tr>`;
     }).join('');
 
