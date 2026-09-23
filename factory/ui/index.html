@@ -161,6 +161,8 @@ td.wide{white-space:normal;word-break:break-word;min-width:170px}
 .verdict{margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--ink-2);
   border-left:2px solid var(--line);padding-left:11px}
 .lede{margin:-4px 0 12px;font-size:12.5px;line-height:1.5;color:var(--ink-3)}
+.means{margin-top:5px;font-size:11.5px;line-height:1.55;color:var(--ink-3);
+  max-width:66ch;white-space:normal}
 .empty{color:var(--ink-3);font-size:12.5px;padding:8px 0}
 footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 
@@ -216,7 +218,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7" id="gatesCard">
-    <h2>Where every idea stopped</h2>
+    <h2>Where every idea stopped — and what that means</h2>
     <p class="lede" id="gatesLede"></p>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
@@ -270,20 +272,46 @@ const $ = id => document.getElementById(id);
 // findings: "never traded enough" versus "traded enough recently but not on
 // the older window", and reporting the second as the first told Kris his
 // script fell apart when its edge had never been measured there at all.
+// PLAIN ENGLISH, and it is not decoration. Kris, 2026-09-23: *"what it says
+// is 'lost money on the years it was not selected on', i dont understand what
+// it means."* Every reason is a sentence someone who did not build the
+// pipeline can act on, with the jargon - holdout, selected on, drift control -
+// spelled out rather than named.  [step, the reason, what it means]
 const STOP_WHY = {
-  '3:trades':        ['step 3', 'fired too rarely — under 0.4/day or 100 trades'],
-  '3:cost':          ['step 3', 'lost money once the round trip was charged'],
-  '3:concentration': ['step 3', 'profit sat in its best five trades'],
-  '3:drift':         ['step 3', 'scored worse than entering at random'],
-  '3:other':         ['step 3', 'no usable cell'],
-  '6:trades':        ['step 6', 'traded enough on recent years, too rarely on the older ones — its edge was never measured there'],
-  '6:cost':          ['step 6', 'lost money on the years it was not selected on'],
-  '6:concentration': ['step 6', 'on older years its profit sat in a few trades'],
-  '6:drift':         ['step 6', 'on older years it scored worse than random'],
-  '6:other':         ['step 6', 'no usable holdout'],
-  scored:            ['step 7', 'got all the way through'],
-  alive:             ['—',      'passed step 3, not yet re-checked'],
-  other:             ['—',      'no usable cell'],
+  '3:trades': ['step 3', 'Too few trades to judge it',
+    'Under 100 trades. Below that the average is a story about a handful of '
+    + 'episodes, and no amount of waiting fixes it.'],
+  '3:cost': ['step 3', 'Loses money once you pay the spread and fees',
+    'It may look profitable on paper. Charged what it actually costs to get '
+    + 'in and out, it does not.'],
+  '3:concentration': ['step 3', 'All the profit came from a few lucky trades',
+    'Delete its best five trades and it stops making money. One good run is '
+    + 'not an edge.'],
+  '3:drift': ['step 3', 'Buying at random times did better',
+    'Same rule, same stop, same target, same number of trades - but entering '
+    + 'at random moments. Random beat it, so the timing added nothing and the '
+    + 'profit was the market moving, not the rule.'],
+  '3:other': ['step 3', 'No market and timeframe produced usable trades', ''],
+
+  '6:trades': ['step 6', 'Barely traded on the older years',
+    'Enough trades on recent years, almost none on the earlier ones, so there '
+    + 'was not enough there to judge whether it still works.'],
+  '6:cost': ['step 6', 'Made money on recent years, lost money on older ones',
+    'We keep the two years BEFORE the test window hidden, so a rule cannot '
+    + 'have been shaped to fit them. On those hidden years it loses. A rule '
+    + 'that only works on the years we looked at fits that period, not the '
+    + 'market.'],
+  '6:concentration': ['step 6', 'On the older years the profit was a few trades',
+    'Delete its best five trades on the hidden years and it stops making '
+    + 'money there.'],
+  '6:drift': ['step 6', 'On the older years, random entries beat it',
+    'Same rule, same stops, entries at random moments - and random won on the '
+    + 'hidden years.'],
+  '6:other': ['step 6', 'Not enough older history to re-test it', ''],
+
+  scored: ['step 7', 'Got all the way through', 'It cleared every check.'],
+  alive:  ['-', 'Passed the quick check, not yet re-tested', ''],
+  other:  ['-', 'No market and timeframe produced usable trades', ''],
 };
 const STOP_COL = k => ({'3':'#8ab4f8','6':'#e879a0'}[String(k).split(':')[0]]
                         || (k === 'scored' ? '#4ade80' : '#4b5563'));
@@ -433,8 +461,7 @@ function gates(){
     + `each counted once at the point it stopped. `
     + `Every idea is run on 24 cells — six markets × four timeframes — and `
     + `survives if any one of them passes.`;
-  const nice = k => (STOP_WHY[k] ? STOP_WHY[k][0] + ' · ' : '')
-                    + String(k).split(':').pop();
+  const nice = k => STOP_WHY[k] ? STOP_WHY[k][1] : String(k).split(':').pop();
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${STOP_COL(k)}"></i>`).join('');
   $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
@@ -444,10 +471,11 @@ function gates(){
     `<tr><th>stopped at</th><th>reason</th><th style="text-align:right">ideas</th>
       <th style="text-align:right">share</th></tr>` +
     Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
-      const [step, why] = STOP_WHY[k] || ['—', k];
+      const [step, why, means] = STOP_WHY[k] || ['—', k, ''];
       return `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
           <i class="sw" style="background:${STOP_COL(k)}"></i>${esc(step)}</span></td>
-        <td class="wide dim">${esc(why)}</td>
+        <td class="wide">${esc(why)}
+          ${means ? `<div class="means">${esc(means)}</div>` : ''}</td>
         <td class="mono ${k==='scored'?'good':'bad'}" style="text-align:right">${v}</td>
         <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
     }).join('');
@@ -556,10 +584,40 @@ function ideaDetail(x){
         <td class="wide dim">${esc((x.holdout.reasons||[]).join('; ')||'—')}</td></tr>
     </table>` : '';
 
+  // THE TWO WINDOWS SIDE BY SIDE. Kris, 2026-09-23: *"so it earned money on
+  // some years but on others lost?"* That is exactly the finding, and it was
+  // buried in two tables forty rows apart. Put next to each other it needs no
+  // explanation at all.
+  const best = (x.cells || []).find(c => c.cell === x.cell);
+  const cmp = (best && x.holdout) ? `
+    <h3>The answer in one line</h3>
+    <div class="scroll"><table>
+      <tr><th>years</th><th>what they are</th><th>trades</th><th>per trade</th>
+        <th>random entry got</th><th>verdict</th></tr>
+      <tr><td class="mono">2023 – 2026</td>
+        <td class="wide dim">the window it was tested and chosen on</td>
+        <td class="mono">${best.trades}</td>
+        <td class="mono ${(best.mean_r||0)>0?'good':'bad'}">${num(best.mean_r)}</td>
+        <td>${num(best.control_p90)}</td>
+        <td class="${best.verdict==='PASS'?'pass':'fail'}">${esc(best.verdict)}</td></tr>
+      <tr><td class="mono">2021 – 2023</td>
+        <td class="wide dim">kept hidden, so the rule cannot have been fitted to them</td>
+        <td class="mono">${x.holdout.trades}</td>
+        <td class="mono ${(x.holdout.mean_r||0)>0?'good':'bad'}">${num(x.holdout.mean_r)}</td>
+        <td>${num(x.holdout.control_p90)}</td>
+        <td class="${x.holdout.verdict==='PASS'?'pass':'fail'}">${esc(x.holdout.verdict)}</td></tr>
+    </table></div>
+    <p class="why">${(best.mean_r||0) > 0 && (x.holdout.mean_r||0) <= 0
+      ? 'It made money on the years we looked at and lost money on the years we '
+        + 'hid. That is the shape of a rule that fits a period rather than a '
+        + 'market — which is the whole reason the older years are held back.'
+      : 'Both windows agree.'}</p>` : '';
+
   return `<div class="det">
     ${x.note ? `<p class="why">${esc(x.note)}</p>` : ''}
     <p class="why">stop ${x.stop_atr} ATR · target ${x.target_atr} ATR ·
        max hold ${x.max_hold} bars</p>
+    ${cmp}
     <h3>Step 3 — all 24 cells</h3>
     <div class="scroll"><table>
       <tr><th>cell</th><th>verdict</th><th>trades</th><th>/day</th><th>mean R</th>
