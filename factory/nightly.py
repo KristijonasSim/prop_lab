@@ -44,6 +44,12 @@ from factory import (cells, check, evaluate, live, null, queue,      # noqa: E40
 from factory.sources import agent, invent                              # noqa: E402
 
 RUNS = queue.DIR / "runs.jsonl"
+#: ONE RECORD PER IDEA, with every gate and every repair attempt on it.
+#: Kris, 2026-09-23: *"i dont see no repairs here, nothing, i dont understand."*
+#: The run record held totals and the board showed "0 fixed" while eight
+#: repairs had just been tried and reported nowhere. Aggregates cannot answer
+#: "what happened to THIS idea", and that is the question being asked.
+IDEAS = queue.DIR / "ideas.jsonl"
 #: Ideas proposed per pass, and how far below this the queue must fall before
 #: the enumerator is asked to backfill.
 BATCH = 20
@@ -85,6 +91,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         return rec
 
     cl = cell_list or cells.all_cells()
+    stories: list[dict] = []
     live.beat(2, "build", detail=f"{len(ideas)} ideas into runnable code",
               total=len(ideas), counts={"ideas": len(ideas)})
     survivors, s3, s4 = [], 0, 0
@@ -103,20 +110,34 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             g = repair.failed_gate(c)
             if g in gates:
                 gates[g] += 1
+        story = {"idea": s.label(), "source": s.source, "note": s.note,
+                 "when": rec["started"], "stop_atr": s.stop_atr,
+                 "target_atr": s.target_atr, "max_hold": s.max_hold,
+                 "cells": [_cell_row(c) for c in checks], "repairs": [],
+                 "outcome": "", "cell": ""}
+        stories.append(story)
         won = [c for c in checks if c.verdict == "PASS"]
         if won:
             best = max(won, key=lambda c: c.mean_r.get(1.0, 0.0))
             survivors.append((s, best.market, best.tf, False))
             queue.keep(s, f"step 3 on {best.market} {best.tf}", reached=3)
+            story["outcome"] = "passed step 3"
+            story["cell"] = f"{best.market} {best.tf}"
             s3 += 1
             continue
         live.beat(4, "repair", idea=s.label(), done=i, total=len(ideas),
                   detail="six fixed tweaks on the best near-miss")
-        _, fixed = repair.repair(s, checks, control_seeds=control_seeds)
+        atts, fixed = repair.repair(s, checks, control_seeds=control_seeds)
+        story["repairs"] += [{"step": 3, "name": a.repair,
+                              "verdict": a.after.verdict,
+                              "cell": f"{a.after.market} {a.after.tf}",
+                              "reasons": list(a.after.reasons)} for a in atts]
         if fixed is not None:
             tgt = repair.best_near_miss(checks)
             survivors.append((fixed, tgt.market, tgt.tf, True))
             queue.keep(fixed, f"step 4 repair on {tgt.market} {tgt.tf}", reached=4)
+            story["outcome"] = "repaired at step 4"
+            story["cell"] = f"{tgt.market} {tgt.tf}"
             s4 += 1
         else:
             # The gate recorded is the one the BEST cell died on, not a set
@@ -126,6 +147,9 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             gate = repair.failed_gate(best_cell) if best_cell else "other"
             queue.mark_tried(s, "FAIL", f"best cell died on {gate}",
                              step=3, gate=gate)
+            story["outcome"] = f"stopped at step 3 ({gate})"
+            if best_cell:
+                story["cell"] = f"{best_cell.market} {best_cell.tf}"
     rec["gates"] = dict(gates)
     rec["step3_pass"] = s3
     rec["step4_repaired"] = s4
@@ -144,8 +168,11 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                         "null_max": res["null_max"],
                         "seeds": seeds, "p_value": round(res["p_value"], 3)}
 
+    by_label = {st["idea"]: st for st in stories}
+
     cleared = []
     for i, (s, m, tf, _rep) in enumerate(survivors, 1):
+        st = by_label.get(s.label()) or {"repairs": [], "cells": []}
         live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
                   done=i, total=len(survivors),
                   detail="years the idea was not selected on")
@@ -155,6 +182,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
                       done=i, total=len(survivors),
                       counts={"step6_pass": len(cleared)})
+            st["outcome"] = "held at step 6"
         else:
             # A NEAR-MISS AT STEP 6 GETS THE SAME SIX TRIES STEP 4 GIVES A
             # NEAR-MISS AT STEP 3. Nothing was offered here before, so an idea
@@ -162,13 +190,19 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             # in silence. It spends the holdout - see `repair.repair_holdout`.
             attempts, fixed6 = ([], None)
             if r.holdout is not None:
+                st["holdout"] = _cell_row(r.holdout)
                 attempts, fixed6 = repair.repair_holdout(
                     s, r.holdout, m, tf, control_seeds=control_seeds)
+            st["repairs"] += [{"step": 6, "name": a.repair,
+                               "verdict": a.after.verdict,
+                               "cell": f"{a.after.market} {a.after.tf}",
+                               "reasons": list(a.after.reasons)} for a in attempts]
             rec["repair6_attempts"] = rec.get("repair6_attempts", 0) + len(attempts)
             if fixed6 is not None:
                 cleared.append((fixed6, m, tf))
                 queue.keep(fixed6, f"step 6 repair on {m} {tf} "
                                    f"(NOT holdout-clean)", reached=6)
+                st["outcome"] = "repaired at step 6 (NOT holdout-clean)"
                 rec["repaired_at_6"] = rec.get("repaired_at_6", 0) + 1
                 continue
             # THE GATE, NOT THE STEP. This recorded a hardcoded "holdout" and
@@ -180,6 +214,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             why = "; ".join(r.holdout.reasons) if r.holdout else "no holdout data"
             queue.mark_tried(s, "FAIL", f"step 6: {why}", step=6,
                              gate=g or "other")
+            st["outcome"] = f"stopped at step 6 ({g or 'other'})"
     rec["step6_pass"] = len(cleared)
 
     rec["step7"] = []
@@ -192,6 +227,9 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                                resamples=resamples)
         f = ev.fastest()
         queue.keep(s, f"step 7 on {m} {tf}", reached=7)
+        stx = by_label.get(s.label())
+        if stx is not None:
+            stx["outcome"] = "scored at step 7"
         rec["step7"].append({
             "idea": ev.idea, "cell": ev.cell, "trades": ev.n_trades,
             "trades_per_day": round(ev.trades_per_day, 2),
@@ -203,6 +241,8 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             "accounts": round(f.accounts, 2) if f and f.accounts else None,
             "note": ev.note,
         })
+    for st in stories:
+        record_idea(st)
     rec["seconds"] = round(time.time() - t0, 1)
     # The last beat keeps the uptime clock alive between passes - the sleep
     # between them is longer than a step, and without this the dashboard would
@@ -210,6 +250,39 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
     live.beat(0, "resting", detail=f"pass finished in {rec['seconds']:.0f}s",
               counts={"step3_pass": s3, "step4_repaired": s4, "gates": gates})
     return rec
+
+
+def _cell_row(c) -> dict:
+    """One cell's four gates, whatever they said. Nothing short-circuits now,
+    so every number here is real rather than "not reached"."""
+    return {"cell": f"{c.market} {c.tf}", "verdict": c.verdict,
+            "trades": c.n_trades, "per_day": round(c.trades_per_day, 3),
+            "mean_r": (None if c.mean_r.get(1.0) is None
+                       else round(c.mean_r.get(1.0, float("nan")), 4)),
+            "drop_best": (None if c.mean_r_drop_best != c.mean_r_drop_best
+                          else round(c.mean_r_drop_best, 4)),
+            "control_p90": (None if c.control_p90 != c.control_p90
+                            else round(c.control_p90, 4)),
+            "reasons": list(c.reasons), "flags": list(c.flags)}
+
+
+def record_idea(rec: dict) -> None:
+    IDEAS.parent.mkdir(parents=True, exist_ok=True)
+    with IDEAS.open("a") as fh:
+        fh.write(json.dumps(rec, separators=(",", ":")) + "\n")
+
+
+def ideas(limit: int = 500) -> list[dict]:
+    if not IDEAS.exists():
+        return []
+    out = []
+    for line in IDEAS.read_text().splitlines():
+        if line.strip():
+            try:
+                out.append(json.loads(line))
+            except ValueError:
+                continue
+    return out[-limit:]
 
 
 def record(rec: dict) -> None:

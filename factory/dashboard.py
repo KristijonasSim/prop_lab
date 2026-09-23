@@ -245,6 +245,12 @@ def per_source() -> list[dict]:
             "funnel": funnel,
             "runs": runs[-20:],
             "step5": last_null,
+            # The whole story of each idea: every cell's four gates, every
+            # repair attempt and what it said. Aggregates cannot answer "what
+            # happened to THIS idea", which is what Kris was asking when the
+            # board showed "0 fixed" after eight repairs had been tried.
+            "ideas": [x for x in nightly.ideas(500)
+                      if x.get("source") == key][-25:][::-1],
             "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len(w) + tested + len(ref),

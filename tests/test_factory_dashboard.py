@@ -373,3 +373,37 @@ def test_every_idea_is_counted_once_at_the_point_it_stopped():
     single script look like 46 tests."""
     for r in dashboard.per_source():
         assert sum(r["stopped"].values()) == r["tested"]
+
+
+# ------------------------------------------------- the per-idea drill-down
+def test_every_idea_record_carries_its_cells_and_its_repairs():
+    """Kris, 2026-09-23: *"i dont see no repairs here, nothing, i dont
+    understand."* Eight repairs had just run and the board said "0 fixed" with
+    no trace of them. Aggregates cannot answer "what happened to THIS idea"."""
+    from factory import nightly
+
+    for x in nightly.ideas():
+        assert {"idea", "source", "cells", "repairs", "outcome"} <= set(x)
+        assert isinstance(x["cells"], list) and isinstance(x["repairs"], list)
+        for c in x["cells"]:
+            assert {"cell", "verdict", "trades", "reasons", "flags"} <= set(c)
+        for rp in x["repairs"]:
+            assert {"step", "name", "verdict", "reasons"} <= set(rp)
+            assert rp["step"] in (3, 6)
+
+
+def test_an_idea_records_every_cell_not_just_the_winner():
+    """Nothing short-circuits, so all 24 cells have real numbers and the page
+    can show why the other 23 lost rather than leaving them blank."""
+    from factory import nightly
+
+    for x in nightly.ideas():
+        if x["cells"]:
+            assert len(x["cells"]) >= 20
+            assert all(c["trades"] >= 0 for c in x["cells"])
+
+
+def test_the_ideas_list_is_scoped_to_its_source():
+    for r in dashboard.per_source():
+        for x in r["ideas"]:
+            assert x.get("source") == r["key"]
