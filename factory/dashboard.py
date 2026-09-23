@@ -119,8 +119,15 @@ def per_source() -> list[dict]:
     kept = [r for r in queue.rows(queue.SURVIVORS) if not r.get("carried")]
     waiting = queue.rows(queue.QUEUE)
 
+    # SCRIPTS READ IS NOT IDEAS FOUND, and the difference is the point.
+    # A source can read a script and refuse it: `boxes_pro` was read, understood
+    # and correctly rejected, and with only `found` on the page TradingView
+    # showed 0 - indistinguishable from a source nobody had pointed at anything.
+    refused = queue.rows(queue.DIR / "skipped.jsonl")
+
     keys = {c.key for c in catalogue.CATALOGUE}
     keys |= {r.get("source", "?") for r in tried + kept + waiting}
+    keys |= {r.get("source", "?") for r in refused}
 
     out = []
     for key in sorted(keys, key=lambda k: catalogue.get(k).order):
@@ -137,8 +144,12 @@ def per_source() -> list[dict]:
         for r in k:
             n = int(r.get("reached") or 3)
             reached[n] = reached.get(n, 0) + 1
+        ref = [r for r in refused if r.get("source") == key]
         tested = len(t) + len(k)
         out.append({
+            "read": len(w) + tested + len(ref),
+            "refused": len(ref),
+            "gaps": sum(1 for r in ref if r.get("gap")),
             "key": key, "label": src.label, "how": src.how,
             "status": src.status, "note": src.note,
             "waiting": len(w),

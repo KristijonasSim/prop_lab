@@ -1,8 +1,0 @@
-//@version=5
-strategy("Volatility Contraction Trend", overlay=true)
-fast = ta.atr(14)
-slow = ta.atr(100)
-trend = ta.ema(close, 50)
-enter = fast < slow and close > trend
-if enter
-    strategy.entry("Long", strategy.long)

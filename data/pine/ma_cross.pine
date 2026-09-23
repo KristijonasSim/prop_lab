@@ -1,7 +1,0 @@
-//@version=5
-strategy("Golden Cross 20/50", overlay=true)
-fast = ta.sma(close, 20)
-slow = ta.sma(close, 50)
-longCondition = ta.crossover(fast, slow)
-if (longCondition)
-    strategy.entry("Long", strategy.long)

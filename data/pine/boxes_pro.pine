@@ -1,0 +1,133 @@
+// ════════════════════════════════════════════════════════════════
+//  BOXES  PRO  |  Pine Script v6  |  INDICATOR
+//  Enhanced "Boxes" momentum-exhaustion tool (Williams %R, fast+slow).
+// ════════════════════════════════════════════════════════════════
+
+//@version=6
+indicator("Boxes PRO", overlay=true, max_boxes_count=300, max_labels_count=500)
+
+import HeWhoMustNotBeNamed/ta/1
+
+const string G  = "Settings"
+const string LG = "Dual Signal Setup (Fast/Slow Lookback)"
+const string SG = "Signal Labels"
+const string QG = "★ Box Quality  (fix small boxes & early exits)"
+
+var ob_color = input.color(#089981, "OB Color (Long)",  group=G, inline="col")
+var os_color = input.color(#F23645, "OS Color (Short)", group=G, inline="col")
+
+max_boxes   = input.int(60, "Max Boxes", minval=1, maxval=300, group=G)
+
+src         = input.source(close, "Source",               group=G)
+threshold   = input.int(20, "Exhaustion Threshold",       group=G, minval=1, maxval=50)
+smoothType  = input.string("ema", "Smoothing Type",       group=G, options=["sma","ema","hma","rma","wma","vwma","swma","highlow","linreg","median","mom","percentrank"])
+
+formula1    = "Standard (2 Period)"
+formula2    = "Average"
+formula     = input.string(formula1, "Formula",           group=G, options=[formula1, formula2])
+use_average = formula == formula2
+average_ma  = input.int(3, "Average Formula MA",          group=G)
+
+shortLength          = input.int(21,  "Fast Length",           group=LG)
+shortSmoothingLength = input.int(7,   "Fast Smoothing Length", group=LG)
+longLength           = input.int(112, "Slow Length",  minval=1, group=LG)
+longSmoothingLength  = input.int(3,   "Slow Smoothing Length", group=LG)
+
+showBuy     = input.bool(true,  "Show BUY labels",  group=SG)
+showSell    = input.bool(true,  "Show SELL labels", group=SG)
+showExit    = input.bool(false, "Show EXIT labels", group=SG)
+
+i_exitHyst      = input.int(15, "Exit hysteresis (%R points)", 0, 60, group=QG)
+i_graceBars     = input.int(2,  "Grace bars before closing",   0, 30, group=QG)
+i_minBoxBars    = input.int(2,  "Min bars to confirm a box",   1, 60, group=QG)
+i_minBoxAtr     = input.float(0.0, "Min box height (ATR×, 0=off)", 0, 10, 0.1, group=QG)
+i_atrLen        = input.int(14, "ATR Length",                  2, 100, group=QG)
+i_useTrendFilter= input.bool(false, "Trend filter (EMA)",      group=QG)
+i_trendLen      = input.int(50, "Trend EMA Length",            10, 400, group=QG)
+
+// ── %R calculation ────────────────────────────────────────────────────────────
+_pr(length) =>
+    float mx = ta.highest(length)
+    float mn = ta.lowest(length)
+    100 * (src - mx) / (mx - mn)
+
+float s_percentR   = _pr(shortLength)
+float l_percentR   = _pr(longLength)
+float avg_percentR = math.avg(s_percentR, l_percentR)
+
+if shortSmoothingLength > 1
+    s_percentR := ta.ma(s_percentR, smoothType, shortSmoothingLength)
+if longSmoothingLength > 1
+    l_percentR := ta.ma(l_percentR, smoothType, longSmoothingLength)
+if average_ma > 1
+    avg_percentR := ta.ma(avg_percentR, smoothType, average_ma)
+
+// ── Zone levels (with hysteresis) ──────────────────────────────────────────────
+float obStart = -threshold
+float obHold  = -(threshold + i_exitHyst)
+float osStart = -100 + threshold
+float osHold  = -100 + threshold + i_exitHyst
+
+obIn   = use_average ? avg_percentR >= obStart : (s_percentR >= obStart and l_percentR >= obStart)
+obKeep = use_average ? avg_percentR >= obHold  : (s_percentR >= obHold  and l_percentR >= obHold)
+osIn   = use_average ? avg_percentR <= osStart : (s_percentR <= osStart and l_percentR <= osStart)
+osKeep = use_average ? avg_percentR <= osHold  : (s_percentR <= osHold  and l_percentR <= osHold)
+
+atr        = ta.atr(i_atrLen)
+trendEma   = ta.ema(close, i_trendLen)
+longTrendOk  = not i_useTrendFilter or close > trendEma
+shortTrendOk = not i_useTrendFilter or close < trendEma
+
+// LONG (overbought) BOX — confirm before drawing, hysteresis exit
+var bool  obActive   = false
+var int   obBars     = 0
+var int   obOut      = 0
+var bool  obDrawn    = false
+bool buyFires   = false
+
+if not obActive
+    if obIn and longTrendOk
+        obActive   := true
+        obBars     := 1
+        obOut      := 0
+        obDrawn    := false
+else
+    obBars    += 1
+    obOut     := obKeep ? 0 : obOut + 1
+    bool closeNow = obOut > i_graceBars
+    bool qualifies = obBars >= i_minBoxBars
+    if not obDrawn and qualifies and not closeNow
+        obDrawn := true
+        buyFires := true
+    if closeNow
+        obActive := false
+
+// SHORT (oversold) BOX
+var bool  osActive   = false
+var int   osBars     = 0
+var int   osOut      = 0
+var bool  osDrawn    = false
+bool sellFires  = false
+
+if not osActive
+    if osIn and shortTrendOk
+        osActive   := true
+        osBars     := 1
+        osOut      := 0
+        osDrawn    := false
+else
+    osBars    += 1
+    osOut     := osKeep ? 0 : osOut + 1
+    bool closeNow = osOut > i_graceBars
+    bool qualifies = osBars >= i_minBoxBars
+    if not osDrawn and qualifies and not closeNow
+        osDrawn := true
+        sellFires := true
+    if closeNow
+        osActive := false
+
+if buyFires and showBuy
+    label.new(bar_index, low, "BUY", yloc=yloc.belowbar, style=label.style_label_up, color=ob_color, textcolor=color.white, size=size.small)
+
+if sellFires and showSell
+    label.new(bar_index, high, "SELL", yloc=yloc.abovebar, style=label.style_label_down, color=os_color, textcolor=color.white, size=size.small)

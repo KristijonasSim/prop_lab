@@ -265,7 +265,7 @@ function sourceBar(){
   $('sources').innerHTML = rows.map(r =>
     `<button class="src" role="tab" aria-selected="${r.key===SRC}" data-k="${esc(r.key)}">
        <span class="t"><i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span>
-       <span class="c">${r.found} found · ${r.tested} tested</span>
+       <span class="c">${r.read} read · ${r.found} usable</span>
      </button>`).join('');
   $('sources').querySelectorAll('.src').forEach(b =>
     b.onclick = () => pick(b.dataset.k));
@@ -280,10 +280,11 @@ function sourceBar(){
   $('srcHead').innerHTML =
     `<div class="who"><b>${esc(r.label)}</b><span>${esc(r.how)}</span></div>
      <div class="stats">
-       ${stat(r.found,'found')}${stat(r.tested,'tested')}
-       ${stat(r.passed3,'passed step 3')}${stat(r.failed,'failed')}
-       ${stat(r.held6,'held at 6')}${stat(r.scored7,'scored at 7')}
-       ${stat(r.waiting,'waiting')}
+       ${stat(r.read,'read')}${stat(r.found,'usable')}
+       ${r.refused ? stat(r.refused,'refused') : ''}
+       ${stat(r.tested,'tested')}${stat(r.passed3,'passed step 3')}
+       ${stat(r.failed,'failed')}${stat(r.held6,'held at 6')}
+       ${stat(r.scored7,'scored at 7')}${stat(r.waiting,'waiting')}
      </div>${warn}`;
 }
 
@@ -407,16 +408,18 @@ const GATE_WHY = {
 function srcTable(){
   const rows = S.sources || [];
   $('srcTable').innerHTML =
-    `<tr><th>source</th><th>how ideas arrive</th><th>found</th><th>tested</th>
-       <th>passed 3</th><th>held 6</th><th>scored 7</th><th>failed</th>
-       <th>died on</th><th>waiting</th></tr>` +
+    `<tr><th>source</th><th>how ideas arrive</th><th>read</th><th>usable</th>
+       <th>refused</th><th>tested</th><th>passed 3</th><th>held 6</th>
+       <th>scored 7</th><th>failed</th><th>died on</th><th>waiting</th></tr>` +
     rows.map(r => {
       const top = Object.entries(r.gates).sort((a,b)=>b[1]-a[1])[0];
       return `<tr style="${r.key===SRC?'background:#1b1e23':''}">
         <td><span class="t" style="display:inline-flex;align-items:center;gap:7px">
             <i class="pill ${esc(r.status)}"></i>${esc(r.label)}</span></td>
         <td class="wide dim">${esc(r.how)}</td>
-        <td class="mono">${r.found}</td><td class="mono">${r.tested}</td>
+        <td class="mono">${r.read}</td><td class="mono">${r.found}</td>
+        <td class="mono ${r.refused?'mid':''}">${r.refused}</td>
+        <td class="mono">${r.tested}</td>
         <td class="mono">${r.passed3}</td><td class="mono">${r.held6}</td>
         <td class="mono">${r.scored7}</td><td class="mono">${r.failed}</td>
         <td class="dim">${top ? esc(GATE_WHY[top[0]] || top[0]) + ' ' + top[1] : '—'}</td>

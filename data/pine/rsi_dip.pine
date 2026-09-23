@@ -1,6 +1,0 @@
-//@version=5
-strategy("RSI Dip Buy", overlay=true)
-r = ta.rsi(close, 14)
-buy = r < 30
-if buy
-    strategy.entry("Long", strategy.long)
