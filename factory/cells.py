@@ -70,31 +70,62 @@ def common_window(years: int = YEARS) -> tuple[pd.Timestamp, pd.Timestamp]:
     return window(MARKETS, ("1h",), years=years)
 
 
+#: Where the five-year caches live. Built by `scripts/build_5y.py` from the
+#: Dukascopy raw .bi5 already on disk, under their OWN name rather than by
+#: extending `{sym}_dukascopy_{tf}.parquet`. Overwriting the three-year file
+#: would silently change the input of every board number in the repo for a
+#: gain step 6 can get without it.
+DEEP_SUFFIX = "dukascopy5y"
+
+
+def _deep(sym: str, tf: str) -> pd.DataFrame:
+    """The five-year cache if it exists, otherwise whatever `markets` has."""
+    p = markets.DATA / f"{sym}_{DEEP_SUFFIX}_{tf}.parquet"
+    if p.exists():
+        return pd.read_parquet(p).sort_index()
+    return markets.load(sym, tf)
+
+
 @lru_cache(maxsize=64)
-def load(sym: str, tf: str) -> pd.DataFrame:
-    """Bars for one cell, trimmed to the common three-year window.
+def untrimmed(sym: str, tf: str) -> pd.DataFrame:
+    """Every bar on disk for one cell, with the clock column attached.
+
+    SEPARATE FROM `load` BECAUSE STEP 6 NEEDS THE YEARS `load` THROWS AWAY.
+    `load` trims to the common three-year window, which is the whole point of
+    steps 3 and 4; the five-year re-check has to reach behind that start date,
+    and re-reading and re-resampling the parquet for every cell made it the
+    slowest thing in the pipeline. Cached here once, sliced by both.
 
     `core.markets.TF_RULE` has no `1d` entry and adding one there would change a
     mapping the board reads, so the daily resample is done here instead.
     """
     if tf == "1d":
-        base = markets.load(sym, "1h")
+        base = untrimmed(sym, "1h")
         df = ((base.resample(_DAILY_RULE, label="left", closed="left",
                              offset=_DAILY_OFFSET)
                    .agg(markets.AGG).dropna(subset=["open"]))
               if len(base) else base)
     else:
-        df = markets.load(sym, tf)
+        df = _deep(sym, tf)
     if not len(df):
         return df
-    lo, hi = common_window()
-    df = df.loc[(df.index >= lo) & (df.index <= hi)].copy()
+    df = df.copy()
     # THE CLOCK, carried as a column because `build.run` resets the index
     # before a strategy ever sees the frame. It is a property of bar t alone,
     # so it cannot leak - see `guard.Window.COLUMNS`. Step 4's session repairs
     # are the only thing that reads it.
     df["hour"] = df.index.hour.astype(float)
     return df
+
+
+@lru_cache(maxsize=64)
+def load(sym: str, tf: str) -> pd.DataFrame:
+    """Bars for one cell, trimmed to the common three-year window."""
+    df = untrimmed(sym, tf)
+    if not len(df):
+        return df
+    lo, hi = common_window()
+    return df.loc[(df.index >= lo) & (df.index <= hi)]
 
 
 @lru_cache(maxsize=64)
@@ -109,6 +140,38 @@ def trading_days(sym: str) -> float:
     """
     from factory.check import trading_days as _days           # local: cycle
     return _days(load(sym, "1h"))
+
+
+#: Step 6's ceiling. Kris, 2026-09-15: "maximum we need is 5 always not more
+#: then 5 ideal 3 years". Steps 3 and 4 use YEARS (3); the re-check is allowed
+#: the other two and nothing beyond them.
+RECHECK_YEARS = 5
+
+
+@lru_cache(maxsize=64)
+def holdout(sym: str, tf: str, years: int = RECHECK_YEARS) -> pd.DataFrame:
+    """The years BEFORE the step-3 window - bars the idea has never been on.
+
+    NOT "the same test on five years", which is what step 6 was drawn as and
+    what the first version of this function did. The five-year window CONTAINS
+    the three the idea already passed, so a rule that did well there is carried
+    by its own training data and the re-check is not an independent draw. The
+    two years in front of it are, so that is what is returned.
+
+    The full five years is still worth reporting and `recheck` reports it, as
+    context rather than as the gate.
+
+    The span is per MARKET and not common across the universe, deliberately.
+    `common_window` exists so that markets can be RANKED against each other;
+    step 6 asks one question about one idea on one cell, so trimming gold back
+    to silver's history would throw away evidence and buy nothing.
+    """
+    df = untrimmed(sym, tf)
+    if not len(df):
+        return df
+    lo, _ = common_window()
+    start = lo - pd.DateOffset(years=years - YEARS)
+    return df.loc[(df.index >= start) & (df.index < lo)]
 
 
 def cost_bps(sym: str) -> float:

@@ -2,6 +2,76 @@
 
 Long findings. Chat stays short; detail lives here.
 
+## STEP 5 — the factory's first luck check, and it failed (2026-09-23)
+
+`factory/null.py`, `docs/STEP5.md`, `tests/test_factory_steps567.py`.
+
+**The question nothing in the pipeline was asking.** Step 3's fourth gate
+already compares a rule against random entries — same side, same stop, same
+target, same hold, same trade count, different bars — and it is the gate with
+teeth, removing fourteen of nineteen profitable ideas on the 45-idea sample
+because gold rose 123% over the window. What it cannot see is the SEARCH: it is
+applied one cell at a time, while the factory tests 24 cells, keeps an idea if
+any of them passes, and then hands the best near-miss up to twelve repairs. A
+survivor is the best of roughly thirty draws and nothing priced that.
+
+**The design.** Scramble the market, run the same pipeline, count survivors.
+Bars are block-resampled as per-bar factors `(o,h,l,c) / previous live close`
+and re-chained, which preserves the drift (real total return 2.087 on gold 1h,
+null mean over twelve seeds **2.164**), the volatility (0.00260 against
+**0.00262**), the bar shapes and the weekend gaps, and destroys only the
+alignment between a signal and what follows it. Timestamps, the hour column and
+the volume column never leave their rows, so the null is **hour-matched by
+construction** — the defect `core/probe.py` was caught with on 2026-09-13,
+where an event fixed at 00:00 UTC was scored against a population drawn from
+every hour and gifted about 5 bps.
+
+**The result. 25 enumerated ideas, gold 1h and 4h, four scrambled markets:**
+
+| market | step 3 | repaired | survivors |
+|---|---|---|---|
+| **real** | 0 | 2 | **2** |
+| scrambled #0 | 3 | 4 | 7 |
+| scrambled #1 | 2 | 1 | 3 |
+| scrambled #2 | 0 | 1 | 1 |
+| scrambled #3 | 3 | 3 | 6 |
+
+**Real 2, scrambled mean 4.2, worst case 7, p = 0.80.** Three of four scrambled
+markets produced more survivors than the real one.
+
+**The obvious objection, tested.** A one-day block destroys structure at
+horizons longer than a day. Most factory ideas hold up to 48 bars, and real
+markets mean-revert at multi-day horizons — removing that would help a breakout
+rule in the null and make the comparison unfair. Re-run at longer blocks:
+
+| block | null survivors | mean |
+|---|---|---|
+| 1 day | 1, 2, 10, 4 | 4.2 |
+| 1 week | 2, 4, 4, 6 | 4.0 |
+| 1 month | 4, 7, 2, 5 | 4.5 |
+
+Flat. The null beats the real market at every block length, so it is not
+winning because the blocks are short.
+
+**Stated against the finding.** 25 ideas, two cells, four seeds. With four
+seeds the p-value cannot fall below 0.20 whatever the counts, so this is a
+reason to run it at 40 ideas x 24 cells x 10 seeds — one overnight job — not a
+verdict. The spread across seeds (1 to 10) is also wide enough that a single
+seed would have been worthless, which is itself the argument for running many.
+
+**What it does not say.** It is a statement about the pipeline on this idea
+list. It says nothing about H-027, which the factory never produced, and it does
+not condemn any individual idea. What it says is that on a batch of enumerated
+crossing rules, surviving steps 3 and 4 is not yet evidence.
+
+**The most likely mechanism, and it is already on the page.** 87% of cell-tests
+die on trade count (`docs/STEP4.md`). A rule that fires a few times a year has
+a survival that is mostly a coin flip — on real bars and on scrambled ones
+alike. That makes the generator, not the gates, the thing to fix, and it is the
+same conclusion step 4's measurement reached from the other direction.
+
+---
+
 ## Known-dead directions (inherited from ~/trading-bots, same trader)
 
 See CLAUDE.md "Known-dead" for the list and the numbers. Summary: the whole

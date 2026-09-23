@@ -45,10 +45,26 @@ def _to_json(s: Strategy) -> str:
     return json.dumps(asdict(s), separators=(",", ":"), sort_keys=True)
 
 
+#: Keys `mark_tried` and `keep` add to a row that are NOT part of a Strategy.
+_EXTRA = ("verdict", "note_result")
+
+
 def _from_json(line: str) -> Strategy:
+    """One row back into a Strategy, ignoring the outcome keys written beside it.
+
+    FIXED 2026-09-23. `mark_tried` writes `verdict` and `note_result` into the
+    row and `keep` writes `note_result`; `Strategy(**d)` then raised
+    `TypeError: unexpected keyword argument 'note_result'` on the first read of
+    `tried.jsonl`. That is worse than it looks: `fingerprints()` reads TRIED, so
+    the dedupe silently stopped working the moment anything had been tried, and
+    `take()` could not run at all. The queue's one job is not to test the same
+    idea twice.
+    """
     d = json.loads(line)
     d["entry"] = tuple(
         Condition(Term(**c["left"]), c["op"], Term(**c["right"])) for c in d["entry"])
+    for k in _EXTRA:
+        d.pop(k, None)
     return Strategy(**d)
 
 

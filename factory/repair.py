@@ -280,7 +280,7 @@ def best_near_miss(checks: list[Check]) -> Check | None:
 
 
 def repair(strategy: Strategy, checks: list[Check], *,
-           control_seeds: int = check.CONTROL_SEEDS
+           control_seeds: int = check.CONTROL_SEEDS, loader=None
            ) -> tuple[list[Attempt], Strategy | None]:
     """Try the matching repairs on the idea's best near-miss cell.
 
@@ -293,8 +293,8 @@ def repair(strategy: Strategy, checks: list[Check], *,
     if target is None:
         return [], None
 
-    frame = cells.load(target.market, target.tf)
-    days = cells.trading_days(target.market)
+    frame = (loader or cells.load)(target.market, target.tf)
+    days = check.trading_days(frame)
     attempts: list[Attempt] = []
     fixed: Strategy | None = None
     for r in repairs_for(failed_gate(target)):

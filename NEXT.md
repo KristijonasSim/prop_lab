@@ -101,6 +101,89 @@ Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
 
 ---
 
+## ADDED 2026-09-23 — steps 5, 6 and 7 are built, and step 5's first run is the finding
+
+Kris: *"download what is missing and build all pipeline workflow untill step 7."*
+Done. `factory/null.py`, `factory/recheck.py`, `factory/evaluate.py`,
+`factory/run.py`, 22 tests, `docs/STEP5.md` / `STEP6.md` / `STEP7.md`. The
+diagram is updated and steps 3 to 7 are green.
+
+```
+python -m factory.run -n 40 --seeds 10        # steps 3 to 7, one command
+python -m factory.null -n 40 --seeds 10       # step 5 alone
+python -m factory.recheck --coverage          # what holdout each cell has
+python -m factory.evaluate                    # the risk curve
+```
+
+### THE SCRAMBLED MARKET BEAT THE REAL ONE
+
+First run of step 5. 25 generated ideas, gold 1h and 4h, the same ideas through
+the same pipeline on the real market and on four scrambled copies of it:
+
+| market | step 3 | repaired | survivors |
+|---|---|---|---|
+| **real** | 0 | 2 | **2** |
+| scrambled #0 | 3 | 4 | 7 |
+| scrambled #1 | 2 | 1 | 3 |
+| scrambled #2 | 0 | 1 | 1 |
+| scrambled #3 | 3 | 3 | 6 |
+
+**Real 2, scrambled mean 4.2, p = 0.80.** The null does not merely match the
+real market, it **beats** it — the same shape as the top-N withdrawal on
+2026-09-17, where the null sped up more than the real data on four markets of
+six.
+
+**It is not an artifact of the block length**, which was the obvious objection:
+a one-day block destroys structure at horizons longer than a day, and most
+factory ideas hold up to 48 bars, so a short block could be flattering
+breakout rules in the null. Re-run at three block lengths, four seeds each:
+
+| block | null survivors | mean |
+|---|---|---|
+| 1 day | 1, 2, 10, 4 | 4.2 |
+| 1 week | 2, 4, 4, 6 | 4.0 |
+| 1 month | 4, 7, 2, 5 | 4.5 |
+
+**Stated against the result, not for it:** 25 ideas, two cells, four seeds is a
+small run, and with four seeds the p-value cannot go below 0.20 whatever
+happens. This is a reason to run it properly (40 ideas, 24 cells, 10 seeds —
+an overnight job), not a verdict. But the direction is not marginal and it is
+the direction the repo's own history predicts.
+
+**What it does NOT say.** It is a statement about the PIPELINE on this idea
+list, not about any single idea, and not about H-027 — which was never produced
+by the factory. What it says is that on a 25-idea batch of enumerated crossing
+rules, surviving steps 3 and 4 is not yet evidence of anything.
+
+### The data is backfilled
+
+Two extra years pulled for XAGUSD, EURUSD, GBPUSD and USDJPY (their caches
+started 2023-09). Gold needed nothing — eleven years of raw 1-minute `.bi5`
+were already on disk — and BTC has nine. `scripts/build_5y.py` builds
+`{sym}_dukascopy5y_{tf}.parquet`, **under a new name so no board number moves**.
+Step 6 coverage went 8 of 24 cells to 24 of 24.
+
+### Two corrections to what the diagram said
+
+* **Step 5 is not "the same test on scrambled data".** That is step 3 gate 4,
+  which already exists and already kills fourteen ideas in nineteen. Step 5 is
+  a batch-level question: the factory takes the best of ~30 tries per idea
+  (24 cells, then 12 repairs), and nothing priced that. `docs/STEP5.md` §1.
+* **Step 6 tests the years BEFORE the step-3 window, not five years.** The
+  five-year window contains the three the idea was selected on, so two thirds
+  of it would be a re-read of the exam paper. And the "removes 98%" figure is
+  optimistic: the two windows are adjacent stretches of one history, not
+  independent draws. `docs/STEP6.md` §2.
+
+### One bug fixed on the way
+
+`factory/queue.py` could not read its own `tried.jsonl`: `mark_tried` writes
+`verdict` and `note_result` into the row and `Strategy(**d)` raised on them.
+`fingerprints()` reads that file, so **the dedupe had silently stopped working**
+and `take()` could not run at all. Regression test added.
+
+---
+
 ## ADDED 2026-09-22 — step 4 is built, and it found the factory's real bottleneck
 
 `factory/repair.py`, 14 tests, `docs/STEP4.md`. Step 4 is a **repair stage, not
@@ -146,23 +229,33 @@ crossings. That is a step 1-2 job. It is now the top item below.
 
 ---
 
-### WHAT IS LEFT, in the order we stopped
+### WHAT IS LEFT, in the order we stopped — REVISED 2026-09-23
 
-0. **Make the generator produce denser rules.** 87% of everything dies on trade
-   count. Nothing downstream can repair it. `factory/sources/invent.py`.
-1. **Steps 5 to 7 are not written.** Steps 3 and 4 are done (2026-09-22, above).
-2. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
+0. **Run step 5 properly before anything else.** 40 ideas, all 24 cells, 10
+   seeds, overnight. The 25-idea run says the pipeline's survivors are not
+   distinguishable from luck and may be worse than it. **If that holds, every
+   item below it is work on a machine that has not been shown to find
+   anything**, and the fix is not more ideas — it is the generator.
+1. **Make the generator produce denser rules.** 87% of everything dies on trade
+   count. Nothing downstream can repair it. `factory/sources/invent.py`. This
+   is now also the most likely explanation of item 0: a rule that fires a few
+   times a year is a rule whose survival is mostly a coin flip, on real bars
+   and on scrambled ones alike.
+2. ~~Steps 5 to 7 are not written.~~ **Built 2026-09-23** (above).
+3. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
    "mean and median disagree in sign" — the two exact ways the dilution defect
    kills a real signal. Neither verdict was earned.
-3. **TradingView needs Kris's decision.** `factory/sources/tradingview.py`
+4. **TradingView needs Kris's decision.** `factory/sources/tradingview.py`
    translates Pine and skips what it cannot read, but it does NOT download.
    Bulk collection is a terms-of-service question, and this session's
    tradingview MCP server failed to connect. Drop `.pine` files in
    `data/pine/` and it reads them today.
-4. **Where on the curve do we sit?** Pass % and days pull against each other
+5. **Where on the curve do we sit?** Pass % and days pull against each other
    through risk per trade, so a candidate has a curve, not a score. Parked
-   until a real candidate produces one.
-5. **What a funded account earns per month.** Parked at Kris's request —
+   until a real candidate produces one. **`factory/evaluate.py` now prints that
+   curve**, with accounts-consumed beside every days figure, so the question is
+   answerable the moment a candidate clears step 6.
+6. **What a funded account earns per month.** Parked at Kris's request —
    "focus on passing first" — but it is the number that decides whether to buy
    several evaluations at once.
 

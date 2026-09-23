@@ -282,21 +282,39 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     return c
 
 
+def market_days(sym: str, loader=None) -> float:
+    """Full sessions this MARKET was open, measured once on its 1h series.
+
+    All four of a market's cells must divide by the SAME denominator or their
+    trades/day figures are not comparable - `cells.trading_days` has the
+    measurement. This wrapper is what keeps that true when the bars come from
+    somewhere other than the default cache: step 5's scrambled market has to be
+    measured through its own loader, not through the real one.
+    """
+    if loader is None:
+        return cells.trading_days(sym)
+    return trading_days(loader(sym, "1h"))
+
+
 def check_all(strategy: Strategy, cell_list=None, *,
-              control_seeds: int = CONTROL_SEEDS) -> list[Check]:
+              control_seeds: int = CONTROL_SEEDS, loader=None) -> list[Check]:
     """The four gates on every cell. An idea survives if ANY cell passes.
 
     Kris, 2026-09-21: *"If only ONE of the 24 works, that is fine. Keep it."*
     The cell is part of the survivor's identity and step 4 carries it forward
     rather than searching for it again.
+
+    `loader(sym, tf)` overrides where the bars come from, and exists so that
+    step 5 can run this exact function over scrambled markets. Nothing else in
+    the gates changes, which is what makes the two counts comparable.
     """
     out = []
     for sym, tf in (cell_list or cells.all_cells()):
-        frame = cells.load(sym, tf)
+        frame = (loader or cells.load)(sym, tf)
         if not len(frame):
             continue
         out.append(check(strategy, frame, market=sym, tf=tf,
-                         days=cells.trading_days(sym),
+                         days=market_days(sym, loader),
                          control_seeds=control_seeds))
     return out
 
