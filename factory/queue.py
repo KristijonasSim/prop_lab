@@ -76,8 +76,16 @@ def _from_json(line: str) -> Strategy:
     idea twice.
     """
     d = json.loads(line)
+    # `hold` MUST be carried. Added to Condition on 2026-09-23 and missed here,
+    # so every idea round-tripping through the queue silently lost it: Kris's
+    # first translated script was written as "%R above -20 for 2 bars" and
+    # TESTED as "%R above -20". The whole confirmation rule - the thing the
+    # script exists to do - was dropped between writing and running, and the
+    # only visible trace was a label in the survivors file.
     d["entry"] = tuple(
-        Condition(Term(**c["left"]), c["op"], Term(**c["right"])) for c in d["entry"])
+        Condition(Term(**c["left"]), c["op"], Term(**c["right"]),
+                  hold=int(c.get("hold", 1) or 1))
+        for c in d["entry"])
     for k in _EXTRA:
         d.pop(k, None)
     return Strategy(**d)

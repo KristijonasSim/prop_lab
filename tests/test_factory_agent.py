@@ -16,7 +16,7 @@ import json
 import pytest
 
 from factory.sources import agent, tradingview
-from factory.spec import INDICATORS, Strategy
+from factory.spec import INDICATORS, Condition, Strategy, Term
 
 
 def _idea(**kw) -> dict:
@@ -258,3 +258,26 @@ def test_a_degenerate_lookback_is_refused(n):
     with pytest.raises(agent.ProposalError, match="length"):
         agent.validate(_idea(entry=[{"left": {"kind": "price"}, "op": "above",
                                      "right": {"kind": "vwap", "length": n}}]))
+
+
+def test_a_condition_keeps_its_hold_through_the_queue(tmp_path, monkeypatch):
+    """EVERY FIELD OF A CONDITION MUST SURVIVE THE ROUND TRIP. `hold` was added
+    to Condition and missed in `_from_json`, so Kris's first translated script
+    was written as "%R above -20 for 2 bars" and TESTED as "%R above -20" - the
+    confirmation rule the script exists to express was dropped between the
+    queue and the backtest, and the only trace was a label in a results file.
+    """
+    from factory import queue
+
+    monkeypatch.setattr(queue, "DIR", tmp_path)
+    monkeypatch.setattr(queue, "QUEUE", tmp_path / "queue.jsonl")
+    monkeypatch.setattr(queue, "TRIED", tmp_path / "tried.jsonl")
+
+    s = Strategy(name="x", side="long",
+                 entry=(Condition(Term("wpr", 21), "above",
+                                  Term("const", value=-20.0), hold=2),))
+    queue.add([s], quiet=True)
+    back = queue.take()
+    assert back.entry[0].hold == 2
+    assert back.fingerprint() == s.fingerprint()
+    assert "for 2 bars" in back.label()

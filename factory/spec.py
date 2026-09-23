@@ -77,6 +77,30 @@ def _atr(w, n):
     c = np.asarray(w.close[-(n+1):-1], dtype=float)
     return float(np.mean(np.maximum(h-l, np.maximum(abs(h-c), abs(l-c)))))
 
+def _wpr(w, n):
+    """Williams %R over n bars: 0 at the top of the range, -100 at the bottom.
+
+    ADDED 2026-09-23, from Kris's first real TradingView script. "Boxes PRO"
+    is built on a fast/slow %R pair and the grammar had no oscillator bounded
+    to a price RANGE - `rsi` measures the size of up moves against down moves,
+    which is a different quantity and cannot stand in for it.
+
+    THE CURRENT BAR IS INCLUDED HERE, unlike `_highest`. The two exclude or
+    include for the same reason: `highest` is a level price must BREAK, so a
+    bar cannot break its own high; %R asks where this bar's close sits INSIDE
+    the recent range, which is meaningless without the bar in it. Pine's
+    ta.wpr does the same.
+    """
+    if not _need(w, n):
+        return np.nan
+    hi = float(np.max(w.high[-n:]))
+    lo = float(np.min(w.low[-n:]))
+    rng = hi - lo
+    if rng <= 0:
+        return np.nan                 # a flat range has no position in it
+    return float(100.0 * (float(w.close[-1]) - hi) / rng)
+
+
 def _hour(w, _n=0):
     """UTC hour of THIS bar, 0-23. The session filter, expressed in the grammar.
 
@@ -130,6 +154,7 @@ INDICATORS = {
     # idea GENERATOR - `sources/invent.py` does not enumerate them - because
     # they exist to be bolted onto an idea that already nearly works, not to
     # widen the search. See `factory/repair.py`.
+    "wpr":     (_wpr,     True),
     "hour":    (_hour,    False),
     "vwap":    (_vwap,    True),
 }
@@ -162,12 +187,36 @@ class Term:
 
 @dataclass(frozen=True)
 class Condition:
+    """One comparison, optionally required to have HELD for several bars.
+
+    `hold` ADDED 2026-09-23, and it is the structural gap Kris's first real
+    script exposed. Every condition here was a single-bar test, while real
+    TradingView scripts are state machines: "Boxes PRO" will not signal until
+    momentum has sat in the zone for `i_minBoxBars` bars, which is its entire
+    answer to "small boxes / one-bar pokes". With `hold` that is expressible;
+    without it the script cannot be translated at all, only refused.
+
+    It reads only bars at or before t, so `guard.Window` still covers it - the
+    streak is counted forward as the backtest walks, never looked up.
+
+    `hold` applies to `above` and `below`. A CROSS is a one-bar event by
+    definition and "crossed for three bars running" is not a thing, so
+    `__post_init__` refuses it rather than quietly ignoring it.
+    """
     left: Term
     op: str
     right: Term
+    hold: int = 1
+
+    def __post_init__(self):
+        if self.hold < 1:
+            raise ValueError("hold must be >= 1")
+        if self.hold > 1 and self.op.startswith("cross"):
+            raise ValueError(f"{self.op} is a one-bar event; hold must be 1")
 
     def label(self) -> str:
-        return f"{self.left.label()} {self.op} {self.right.label()}"
+        base = f"{self.left.label()} {self.op} {self.right.label()}"
+        return base if self.hold <= 1 else f"{base} for {self.hold} bars"
 
 
 @dataclass(frozen=True)
@@ -205,6 +254,10 @@ class Strategy:
         tests the idea once. The name, the note and the source are deliberately
         NOT part of it.
         """
+        # c.label() carries `hold`, so a rule that requires two bars and one
+        # that requires one are DIFFERENT ideas to the queue. Without this they
+        # collapse to the same fingerprint and the second is dropped as a
+        # duplicate of the first.
         terms = "&".join(sorted(c.label() for c in self.entry))
         return (f"{self.side}|{terms}|stop{self.stop_atr:g}"
                 f"|tgt{self.target_atr:g}|hold{self.max_hold}")

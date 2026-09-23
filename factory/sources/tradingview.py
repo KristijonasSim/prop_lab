@@ -156,21 +156,46 @@ describing the ENTRY RULE it trades. Return ONLY the JSON object, no prose.
 
 {{"side": "long"|"short",
   "entry": [{{"left": {{"kind": "...", "length": 0, "value": 0.0}},
-              "op": "...", "right": {{...}}}}],
+              "op": "...", "right": {{...}}, "hold": 1}}],
   "stop_atr": 2.0, "target_atr": 3.0, "max_hold": 48,
   "name": "short label",
   "note": "what the author says this captures, in one sentence"}}
+
+TRANSLATE THE ENTRY ONLY. Our engine exits on a fixed stop, target and hold,
+so a script's own exit logic - trailing stops, state machines closing a
+position, hysteresis on the way out - is OUT OF SCOPE and its absence is NOT a
+reason to refuse. Say what makes the script ENTER.
+
+"hold": N means the condition must have been true N bars running. This is how
+a confirmation rule is expressed - "momentum has sat in the zone for 2 bars
+before we signal". Only on above/below.
 
 GRAMMAR - nothing outside it exists:
 {grammar}
 kind "const" carries its number in "value". Others carry a lookback in "length".
 ALL entry conditions must hold on the same bar. 1-3 conditions.
 
-IF THE SCRIPT DOES SOMETHING THIS GRAMMAR CANNOT SAY, DO NOT APPROXIMATE IT.
-Return instead: {{"cannot": "<the exact Pine feature that is missing>"}}
-A wrong translation occupies a test slot and tells us nothing about the
-original, so silence is cheap and a guess is not. Naming the missing feature is
-useful on its own - it is how the grammar gets extended.
+THREE OUTCOMES, NOT TWO. Choose honestly:
+
+1. EXACT - the entry trigger maps cleanly. Return the object.
+
+2. SIMPLIFIED - you can express the TRIGGER, but some of the script's
+   machinery around it does not fit. Return the object AND a
+   "simplified": ["what you dropped", "..."] list saying exactly what.
+   This is the normal outcome for a real script and it is WANTED. Dropping
+   exit machinery is not a simplification worth listing - it is out of scope
+   by definition. Do list: a threshold you had to collapse, a second
+   condition you could not state, a smoothing you ignored.
+
+3. CANNOT - the ENTRY TRIGGER ITSELF is not expressible. Return only
+   {{"cannot": "<the exact Pine feature that is missing>"}}.
+   Use this when there is no honest trigger to extract, not when the
+   translation would merely be approximate. Naming the missing feature is
+   useful on its own - it is how the grammar gets extended.
+
+A silent wrong translation occupies a test slot and tells us nothing about the
+original. A translation that SAYS what it dropped does not have that problem,
+which is why 2 exists.
 
 SCRIPT:
 {pine}"""
@@ -220,7 +245,19 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
         s = agent.validate({**item, "name": item.get("name") or name})
     except agent.ProposalError as exc:
         return None, f"invalid translation: {exc}"
-    return replace(s, source="tradingview"), ""
+
+    # WHAT WAS DROPPED TRAVELS WITH THE IDEA. Kris's first real script was
+    # refused twice for machinery our engine replaces anyway - the fixed
+    # stop/target/hold means a script's own exit logic can never be carried,
+    # so "not exact" was being treated as "not testable". A simplification
+    # recorded in the note is honest and testable; a silent one is neither.
+    dropped = item.get("simplified") or []
+    if isinstance(dropped, str):
+        dropped = [dropped]
+    note = s.note
+    if dropped:
+        note = (note + "  SIMPLIFIED: " + "; ".join(str(d) for d in dropped))[:600]
+    return replace(s, source="tradingview", note=note), ""
 
 
 def load(folder: Path | None = None, *, ai: bool = False, model: str | None = None

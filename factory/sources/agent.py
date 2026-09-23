@@ -83,6 +83,9 @@ MIN_NOTE = 30
 #: The enumerator's own `spec.LENGTHS` starts at 5; the model is allowed finer
 #: than that, which is part of why it is here, but not degenerate.
 MIN_LENGTH, MAX_LENGTH = 3, 400
+#: A condition required to hold longer than this is a regime, not an entry,
+#: and it will fail step 3's trade-count floor before it tells us anything.
+MAX_HOLD = 20
 
 #: THE BOTTLENECK, told to the model in its own words. 833 of 960 cell-tests
 #: (87%) failed on trade count, against 99 on cost and 4 on the drift control.
@@ -97,7 +100,11 @@ class ProposalError(ValueError):
 def _grammar() -> str:
     names = ", ".join(sorted(k for k in INDICATORS if k != "hour"))
     return (f"indicators: {names}, or a plain number\n"
+            f"  wpr = Williams %R, 0 at the top of the n-bar range, -100 at the bottom\n"
+            f"  roc = rate of change in BASIS POINTS, not percent\n"
             f"comparisons: {', '.join(COMPARISONS)}\n"
+            f'a condition may add "hold": N - it must have been true N bars '
+            f"running. Only on above/below; a cross is a one-bar event.\n"
             f"sides: {', '.join(SIDES)}")
 
 
@@ -114,6 +121,9 @@ Each object:
   "stop_atr": 2.0, "target_atr": 3.0, "max_hold": 48,
   "name": "short label",
   "note": "the MECHANISM: who is on the other side of this trade and why they lose"}}
+
+A condition may carry "hold": N, meaning it must have been true for N bars
+running before the rule fires. Use it for confirmation rules.
 
 GRAMMAR - anything outside it is rejected:
 {_grammar()}
@@ -189,7 +199,16 @@ def validate(item: dict) -> Strategy:
         right = _term(c.get("right"), f"condition {i} right")
         if left == right:
             raise ProposalError(f"condition {i}: both sides are the same term")
-        entry.append(Condition(left, c["op"], right))
+        try:
+            hold = int(c.get("hold", 1) or 1)
+        except (TypeError, ValueError):
+            raise ProposalError(f"condition {i}: hold must be a whole number")
+        if not 1 <= hold <= MAX_HOLD:
+            raise ProposalError(f"condition {i}: hold must be 1-{MAX_HOLD}, got {hold}")
+        try:
+            entry.append(Condition(left, c["op"], right, hold=hold))
+        except ValueError as exc:
+            raise ProposalError(f"condition {i}: {exc}") from exc
 
     note = str(item.get("note", "")).strip()
     if len(note) < MIN_NOTE:

@@ -64,6 +64,10 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
     fire = np.zeros(n, dtype=bool)
     atr = np.full(n, np.nan)
     prev = {}
+    # How many bars in a row each condition has been true. Counted FORWARD as
+    # the backtest walks, so `hold` reads nothing the window does not already
+    # allow - see `spec.Condition`.
+    streak = {}
     for t in range(n):
         w = Window(frame, t)
         atr[t] = _atr_at(w)
@@ -73,16 +77,18 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
             pl, pr = prev.get(i, (np.nan, np.nan))
             prev[i] = (lv, rv)
             if np.isnan(lv) or np.isnan(rv):
+                streak[i] = 0
                 ok = False; continue
-            if c.op == "above":        hit = lv > rv
-            elif c.op == "below":      hit = lv < rv
+            if c.op == "above":        raw = lv > rv
+            elif c.op == "below":      raw = lv < rv
             elif c.op == "cross_above":
-                hit = (not np.isnan(pl) and not np.isnan(pr)
+                raw = (not np.isnan(pl) and not np.isnan(pr)
                        and pl <= pr and lv > rv)
             else:                                        # cross_below
-                hit = (not np.isnan(pl) and not np.isnan(pr)
+                raw = (not np.isnan(pl) and not np.isnan(pr)
                        and pl >= pr and lv < rv)
-            ok = ok and hit
+            streak[i] = streak.get(i, 0) + 1 if raw else 0
+            ok = ok and streak[i] >= c.hold
         fire[t] = ok
     return fire, atr
 
