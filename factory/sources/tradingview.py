@@ -36,6 +36,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from dataclasses import replace
+
 from factory.spec import Condition, Strategy, Term
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -145,13 +147,128 @@ def _side(body: str) -> str | None:
     return "long" if lo else "short"
 
 
-def load(folder: Path | None = None) -> tuple[list[Strategy], list[tuple[str, str]]]:
-    """Every readable script in the folder, plus what was skipped and why."""
+#: What a model is asked to produce when the regex gives up. Kris, 2026-09-23:
+#: "so for example we take 1 strategy from tradingview so AI will take it? or
+#: script will take it and AI will adapt it for step 2?" - the script fetches,
+#: the MODEL translates, the script tests. This is the translating half.
+_AI_PROMPT = """Translate this TradingView Pine script into one JSON object
+describing the ENTRY RULE it trades. Return ONLY the JSON object, no prose.
+
+{{"side": "long"|"short",
+  "entry": [{{"left": {{"kind": "...", "length": 0, "value": 0.0}},
+              "op": "...", "right": {{...}}}}],
+  "stop_atr": 2.0, "target_atr": 3.0, "max_hold": 48,
+  "name": "short label",
+  "note": "what the author says this captures, in one sentence"}}
+
+GRAMMAR - nothing outside it exists:
+{grammar}
+kind "const" carries its number in "value". Others carry a lookback in "length".
+ALL entry conditions must hold on the same bar. 1-3 conditions.
+
+IF THE SCRIPT DOES SOMETHING THIS GRAMMAR CANNOT SAY, DO NOT APPROXIMATE IT.
+Return instead: {{"cannot": "<the exact Pine feature that is missing>"}}
+A wrong translation occupies a test slot and tells us nothing about the
+original, so silence is cheap and a guess is not. Naming the missing feature is
+useful on its own - it is how the grammar gets extended.
+
+SCRIPT:
+{pine}"""
+
+
+def translate_ai(pine: str, name: str, *, model: str | None = None,
+                 timeout: int | None = None, text: str | None = None
+                 ) -> tuple[Strategy | None, str]:
+    """The model's reading of one script, validated as hard as a proposal is.
+
+    WHY A MODEL AT ALL. The regex above understands four patterns and skips
+    everything else silently, which on a real library is most of it. A model
+    reads Pine properly - and these ideas come from people who trade them, so
+    each arrives with a mechanism already attached, which is the thing the
+    enumerator can never supply.
+
+    WHAT IT IS STILL NOT ALLOWED TO DO. It returns a `spec.Strategy`, never
+    Python, so a translated script cannot read a future bar any more than an
+    enumerated one can: `factory/guard.Window` exposes only negative indexing
+    and the model is not writing the reader. Anything outside the grammar is
+    validated to death by `sources.agent.validate` rather than approximated.
+
+    `text` short-circuits the model call, for tests.
+    """
+    from factory.sources import agent
+
+    prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=pine[:12000])
+    try:
+        out = text if text is not None else agent._call(
+            prompt, model or agent.CLI_MODEL, timeout or agent.TIMEOUT)
+    except agent.ProposalError as exc:
+        return None, f"model call failed: {exc}"
+
+    a, b = out.find("{"), out.rfind("}")
+    if a < 0 or b < a:
+        return None, f"no JSON object in output: {out[:120]}"
+    import json as _json
+    try:
+        item = _json.loads(out[a:b + 1])
+    except ValueError as exc:
+        return None, f"bad JSON: {exc}"
+    if "cannot" in item:
+        # NOT a failure. The model naming the missing Pine feature is the
+        # signal that widens the grammar, so it is reported in those words.
+        return None, f"grammar gap: {item['cannot']}"
+    try:
+        s = agent.validate({**item, "name": item.get("name") or name})
+    except agent.ProposalError as exc:
+        return None, f"invalid translation: {exc}"
+    return replace(s, source="tradingview"), ""
+
+
+def load(folder: Path | None = None, *, ai: bool = False, model: str | None = None
+         ) -> tuple[list[Strategy], list[tuple[str, str]]]:
+    """Every readable script in the folder, plus what was skipped and why.
+
+    `ai=True` sends whatever the regex could not read to a model. The regex
+    runs FIRST and always: it is free, deterministic and reproducible, so the
+    model is only paid for the remainder. On a library that is most of it.
+    """
     folder = folder or PINE_DIR
     if not folder.exists():
         return [], [("(folder)", f"{folder} does not exist - nothing to read")]
     out, skipped = [], []
     for p in sorted(folder.glob("*.pine")):
-        s, why = translate(p.read_text(errors="ignore"), p.stem)
+        body = p.read_text(errors="ignore")
+        s, why = translate(body, p.stem)
+        if s is None and ai:
+            s, why = translate_ai(body, p.stem, model=model)
         (out.append(s) if s else skipped.append((p.stem, why)))
     return out, skipped
+
+
+def _main(argv=None) -> int:
+    """Read data/pine/, translate, and queue what came through."""
+    import argparse
+
+    from factory import queue
+
+    ap = argparse.ArgumentParser(description=_main.__doc__)
+    ap.add_argument("--ai", action="store_true",
+                    help="send what the regex cannot read to a model")
+    ap.add_argument("--folder", type=Path)
+    ap.add_argument("--dry-run", action="store_true")
+    a = ap.parse_args(argv)
+
+    got, skipped = load(a.folder, ai=a.ai)
+    for s in got:
+        print(f"  {s.label()}")
+    gaps = [(n, w) for n, w in skipped if w.startswith("grammar gap")]
+    for n, w in skipped:
+        print(f"  SKIP {n}: {w}")
+    print(f"\n{len(got)} translated, {len(skipped)} skipped, "
+          f"{len(gaps)} naming a grammar gap")
+    if not a.dry_run and got:
+        print(queue.add(got, quiet=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

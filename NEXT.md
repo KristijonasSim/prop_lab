@@ -101,6 +101,140 @@ Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
 
 ---
 
+## ADDED 2026-09-23 (evening) — a model writes the ideas, and the VM is wired
+
+Kris: *"on a simple script that runs locally we wont achieve anything without
+someone who can think."* He is right, and the measurement agrees: the
+enumerator's grammar has **308 combinations in total**, 135 already tried, and
+87% of what it makes dies on trade count.
+
+**The model sits in step 1 and nowhere else.** `factory/sources/agent.py` and
+an AI path in `factory/sources/tradingview.py`. Steps 2-7 never call a model —
+they run thousands of times, must give the same answer twice, and a model in
+that path makes a result nobody can reproduce. It is explicitly kept out of
+step 4's repair list, where choosing the tweak after seeing the failure is the
+difference between a repair stage and a fishing expedition.
+
+```
+python -m factory.sources.agent -n 20 --dry-run     # propose, print, queue nothing
+python -m factory.sources.tradingview --ai          # translate data/pine/
+python -m factory.nightly -n 20 --seeds 5           # one unattended pass
+python -m factory.nightly --status                  # by-source survival
+./factory/deploy_vm.sh                              # install on the VM, idle
+./factory/deploy_vm.sh --arm                        # and start it
+```
+
+**The safety property, and it is the reason this is allowed at all.** The model
+returns JSON in the `spec.Strategy` grammar and **never Python**. So a proposed
+idea cannot read a future bar (`guard.Window` exposes only negative indexing
+and the model is not writing the reader), cannot invent an indicator
+(`validate` rejects any kind outside `spec.INDICATORS`), and cannot smuggle in
+a sweep (`queue.add` drops anything already tried). Every idea must carry a
+**mechanism** or it is rejected — which is the thing an enumerator can never
+supply and `CLAUDE.md` has always asked for.
+
+**Tested live.** Five proposals, five valid, and they came back as dense states
+rather than rare crossings — `price above ema20 and rsi14 above 50`, not
+`sma5 cross_above sma200` — which is the bottleneck the prompt names.
+
+**The Pine translator names what it cannot express, and that is the point.**
+The regex runs first (free, deterministic) and the model is only paid for the
+remainder. On three real scripts it translated one and refused two **with the
+exact missing feature named**: `ta.pivothigh` pivot detection, and composite
+band arithmetic. Those two names are the grammar extensions that break the
+308 ceiling — the refusals are worth more than the translation.
+
+### THE VM CANNOT RUN STEP 1, AND THAT SHAPED THE DESIGN
+
+Checked on the box, 2026-09-23: **no `claude` CLI and no node to install one
+with**, and `claude -p` needs an interactive authenticated login that cannot be
+scripted from here.
+
+So the handoff is the **queue file**: the desktop fills `queue.jsonl` with model
+ideas, `deploy_vm.sh --queue` pushes it, the VM drains it with `--no-agent`.
+That is better architecture anyway — token spend stays on a box Kris is sitting
+at, and the 24/7 loop has no network dependency on Anthropic.
+
+| | desktop | Oracle VM |
+|---|---|---|
+| cores / RAM | 28 / 30 GB | 2 / 952 MB, **423 MB free** |
+| `claude` CLI | yes | **no** |
+| factory peak RSS | — | **341 MB measured** |
+| one idea, 24 cells | 13.4s | ~50s |
+| already running there | — | live bot (cron :02), research loop |
+
+**341 MB against 423 MB free is the tightest fit on that box**, so the unit is
+niced 15, IO-idle and capped at `MemoryMax=600M`, and `deploy_vm.sh` installs
+it **stopped**. Starting it is `--arm`, deliberately.
+
+### Tokens
+
+| | tokens | cadence |
+|---|---|---|
+| 20 proposed ideas | ~10-15k | per top-up |
+| one Pine script | ~3k | once per script |
+| steps 2-7 | **0** | always |
+
+Nightly is ~450k a month, inside Claude Pro. Hourly is ~11M a month and would
+compete with an interactive session on the same account. `--no-agent` runs the
+whole pipeline for nothing when the queue is already full.
+
+### Two bugs the first run found, and the second one mattered
+
+* **The scramble was a Python loop over every bar** — 145,000 iterations per
+  cell per seed, and step 5 does 24 cells times the seed count. Re-chaining is
+  a cumulative product, so it vectorises: **2-5s to 0.01s** on gold 15m, with
+  the drift, the dead bars and the bar shapes unchanged. This is what makes
+  step 5 affordable on a 2-core VM at all.
+* **A one-bar average is not an average.** The first live batch proposed
+  `price above vwap1`, which is trivially true or false. `agent.MIN_LENGTH` is
+  now 3.
+* **The model's ideas would never have been tested.** `queue.SOURCE_ORDER` was
+  `("tradingview", "invent", "kris")` and an unlisted source sorts LAST, so the
+  first nightly run queued eight model-written ideas and then tested eight
+  enumerated ones — the model's sat behind 48 enumerated ideas. `agent` now
+  ranks above `invent`, because the enumerator is the FLOOR under the queue and
+  a floor that is drained first is not a floor. **Found by reading the run
+  record's `by_source` field**, which is the one thing that field is for.
+
+### The first end-to-end pass, and how to read it
+
+8 ideas, all 24 cells, 3 null seeds, 19 minutes. 2 passed step 3, 2 more were
+repaired, 1 cleared step 6, and step 7 scored it:
+
+| | |
+|---|---|
+| rule | `short when sma5 cross_below sma20 and price above ema200`, EURUSD 15m |
+| trades | 1,405 — **1.12/day** |
+| fastest rung | 5% risk, 31.0% pass, **12.9 expected days [11.3-14.0]** |
+| accounts consumed | **3.2 per funded seat** |
+
+**It is not a candidate and nothing here says it is.** Step 5 on that same
+batch returned **real 4 against a null mean of 2.67, p = 0.50** — the batch's
+survivors are not distinguishable from luck, so a number drawn out of it is a
+number from a batch that failed its own control. The fastest rung is also the
+**top of the ladder at 5% risk**, which is where the ladder stops being a
+choice and starts being a dare.
+
+What it does establish is that the pipeline runs end to end unattended and
+produces the fields the board needs, including accounts-consumed.
+
+### What is still missing, and who it needs
+
+1. **`./factory/deploy_vm.sh` has not been run.** Written and syntax-checked;
+   this session's sandbox refused the remote write. It is additive — own
+   service name, own unit, capped memory — and it installs idle.
+2. **The queue handoff is manual.** Top up and push when the desktop is on. A
+   desktop cron could do it; not built, because it spends tokens on a schedule
+   and that is Kris's call.
+3. **TradingView still does not download.** Terms-of-service question, open
+   since 2026-09-21. `data/pine/` works today with no download at all.
+4. **The model has never been scored against the enumerator.**
+   `nightly.by_source()` records it from the first run; there are no runs yet.
+   Until that table has numbers, "the model thinks better" is a hope.
+
+---
+
 ## ADDED 2026-09-23 — steps 5, 6 and 7 are built, and step 5's first run is the finding
 
 Kris: *"download what is missing and build all pipeline workflow untill step 7."*

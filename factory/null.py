@@ -110,31 +110,34 @@ def scramble(frame: pd.DataFrame, seed: int, block: int) -> pd.DataFrame:
     idx = np.clip(idx, 0, n - 1)
     drawn = fac[idx]
 
-    # re-chain: each drawn bar is applied to the close we have arrived at
-    c = np.empty(n + 1)
-    c[0] = px[0, 3]
+    # RE-CHAIN, VECTORISED. Each drawn bar multiplies the close we have arrived
+    # at, so the base of bar i is the first close times the running product of
+    # every close factor before it - a cumprod, not a Python loop. On gold 15m
+    # that is 145,000 iterations per cell per seed, and step 5 does 24 cells
+    # times the seed count; the loop version made the scramble the slowest
+    # thing in the pipeline and the VM is four times slower again.
+    base = px[0, 3] * np.concatenate(([1.0], np.cumprod(drawn[:, 3])[:-1]))
     rebuilt = np.empty((n + 1, 4))
     rebuilt[0] = px[0]
-    for i in range(n):
-        base = c[i]
-        bar = drawn[i] * base
-        # the drawn factors come from one real bar, so high >= max(open, close)
-        # and low <= min(open, close) hold by construction; the clip above is
-        # the only thing that could break it, so it is restored explicitly.
-        bar[1] = max(bar[1], bar[0], bar[3])
-        bar[2] = min(bar[2], bar[0], bar[3])
-        rebuilt[i + 1] = bar
-        c[i + 1] = bar[3]
+    rebuilt[1:] = drawn * base[:, None]
+    # the drawn factors come from one real bar, so high >= max(open, close) and
+    # low <= min(open, close) hold by construction; the clip above is the only
+    # thing that could break it, so it is restored explicitly.
+    rebuilt[1:, 1] = np.maximum(rebuilt[1:, 1], np.maximum(rebuilt[1:, 0], rebuilt[1:, 3]))
+    rebuilt[1:, 2] = np.minimum(rebuilt[1:, 2], np.minimum(rebuilt[1:, 0], rebuilt[1:, 3]))
 
     vals = out[["open", "high", "low", "close"]].values.astype(float)
     vals[live] = rebuilt
-    # dead bars are frozen at the last live close, which is what the feed does.
-    last = np.nan
-    for i in range(len(vals)):
-        if live[i]:
-            last = vals[i, 3]
-        elif last == last:
-            vals[i] = last
+    # Dead bars are frozen at the last live close, which is what the feed does.
+    # Forward-filling the live closes onto the dead rows says that in one pass:
+    # `idx` carries the position of the most recent live bar at every row.
+    dead = ~live
+    if dead.any():
+        pos = np.where(live, np.arange(len(vals)), -1)
+        idx = np.maximum.accumulate(pos)
+        has = idx >= 0
+        fill = dead & has
+        vals[fill] = vals[idx[fill], 3][:, None]
     out[["open", "high", "low", "close"]] = vals
     return out
 

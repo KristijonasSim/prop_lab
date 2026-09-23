@@ -37,8 +37,20 @@ QUEUE = DIR / "queue.jsonl"
 TRIED = DIR / "tried.jsonl"
 SURVIVORS = DIR / "survivors.jsonl"
 
-#: The order sources are drained in. Kris set this.
-SOURCE_ORDER = ("tradingview", "invent", "kris")
+#: The order sources are drained in. Kris set the first version:
+#: TradingView, then the bot inventing its own, then Kris injecting one.
+#:
+#: `agent` ADDED 2026-09-23, AND ITS POSITION IS THE POINT. A source missing
+#: from this tuple sorts LAST (`rank.get(source, len(rank))`), so the first
+#: nightly run queued eight model-written ideas and then tested eight
+#: enumerated ones instead - the model's ideas sat behind 48 enumerated ones
+#: and would not have been reached for days. Found by reading the run record's
+#: `by_source`, which is exactly what that field is for.
+#:
+#: It goes ABOVE `invent` because the enumerator is the FLOOR, not a peer: its
+#: job is to keep the queue non-empty when the thinking sources run dry, and a
+#: floor that is drained first is not a floor. See `factory/nightly.top_up`.
+SOURCE_ORDER = ("tradingview", "agent", "invent", "kris")
 
 
 def _to_json(s: Strategy) -> str:
