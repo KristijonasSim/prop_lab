@@ -1,0 +1,60 @@
+// © BigBeluga  CC BY-NC-SA 4.0
+//@version=6
+indicator('HTF Power of 3 (PO3) with Trailing Stop', overlay = true)
+// prop_lab: pasted by Kris 2026-09-24. Candle projection, lines and labels removed;
+// the session state machine kept. Auto HTF on a 1H chart = weekly session,
+// 15m = 2 days, 5m = 12h, 1m = 2h.
+int accumMultiplier = input.int(10, title = 'Accumulation Phase Length (Bars)')
+float trailMultiplier = input.float(3.0, title = 'Trailing Stop ATR Multiplier')
+int atrPeriod = input.int(14, title = 'Trailing Stop ATR Period')
+string htfInput = 'W'
+bool isNewHTF = timeframe.change(htfInput)
+var bool manipulated = false
+var int breakoutDir = 0
+var bool sessionDone = false
+var bool inDistribution = false
+var float trailingStop = na
+var float accTop = na
+var float accBot = na
+var int accStart = na
+float currentAtr = ta.atr(atrPeriod)
+if isNewHTF
+    manipulated := false
+    sessionDone := false
+    inDistribution := false
+    breakoutDir := 0
+    trailingStop := na
+    accTop := open
+    accBot := open
+    accStart := bar_index
+else
+    // Accumulation: range of the first `accumMultiplier` bars of the session
+    if not manipulated
+        if bar_index - accStart <= accumMultiplier
+            accTop := math.max(accTop, high)
+            accBot := math.min(accBot, low)
+        // Manipulation: first close outside the accumulation range -> trade that way
+        if close > accTop and barstate.isconfirmed
+            manipulated := true
+            breakoutDir := 1
+            trailingStop := close - currentAtr * trailMultiplier
+        else if close < accBot and barstate.isconfirmed
+            manipulated := true
+            breakoutDir := -1
+            trailingStop := close + currentAtr * trailMultiplier
+    if manipulated and not sessionDone
+        bool stopHit = (breakoutDir == 1 and close < trailingStop) or (breakoutDir == -1 and close > trailingStop)
+        if stopHit
+            if not inDistribution
+                // Distribution: stop hit -> reverse, trail the other way
+                inDistribution := true
+                breakoutDir := -breakoutDir
+                trailingStop := breakoutDir == 1 ? close - currentAtr * trailMultiplier : close + currentAtr * trailMultiplier
+            else
+                trailingStop := na
+                sessionDone := true
+        if not sessionDone
+            if breakoutDir == 1
+                trailingStop := math.max(trailingStop, close - currentAtr * trailMultiplier)
+            else if breakoutDir == -1
+                trailingStop := math.min(trailingStop, close + currentAtr * trailMultiplier)

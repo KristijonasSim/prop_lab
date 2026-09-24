@@ -72,13 +72,12 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
     # whose maths is prefix-stable and pinned equal to the per-bar reader
     # (tests/test_factory_speed.py) - so this is speed, not a second path
     # that could see ahead.
-    close = np.asarray(frame["close"].values, dtype=float)
+    cols = columns(frame)
     pre = {}
     for i, c in enumerate(strategy.entry):
         for side, term in (("l", c.left), ("r", c.right)):
             if term.kind in SERIES:
-                pre[(i, side)] = SERIES[term.kind](close, term.length)
-    cols = columns(frame)
+                pre[(i, side)] = SERIES[term.kind](cols, term.length)
     for t in range(n):
         w = Window(cols, t)
         atr[t] = _atr_at(w)

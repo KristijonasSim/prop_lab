@@ -216,7 +216,7 @@ def _squeeze_end(w, n):
 #: instead of once per bar. Only for prefix-stable maths, and each one is
 #: pinned equal to its per-bar reader in tests/test_factory_speed.py.
 SERIES = {
-    "squeeze_end": lambda close, n: _squeeze_core(close, n),
+    "squeeze_end": lambda cols, n: _squeeze_core(np.asarray(cols["close"], dtype=float), n),
 }
 
 #: name -> (function, does it need a window length?)
@@ -345,3 +345,32 @@ class Strategy:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+# --------------------------------------------------------------------------
+# SCRIPT PORTS (factory/scripts.py): one TradingView script's own entry signal
+# per term. Whole-series form in SERIES; the per-bar reader hands the guarded
+# history to the same port, and the two are pinned equal in
+# tests/test_factory_scripts.py.
+# --------------------------------------------------------------------------
+def _register_ports():
+    from factory import scripts as _sc
+
+    def _cols(w):
+        k = len(w)
+        return {c: np.asarray(getattr(w, c)[-k:], dtype=float) for c in
+                ("open", "high", "low", "close", "volume", "hour")}
+
+    for kind, (fn, side) in _sc.PORTS.items():
+        def series(cols, n, fn=fn, side=side):
+            return fn({k: np.asarray(v, dtype=float) for k, v in cols.items()},
+                      *( (n,) if n else ()))[side]
+
+        def reader(w, n=0, series=series):
+            return float(series(_cols(w), n)[-1])
+
+        SERIES[kind] = series
+        INDICATORS[kind] = (reader, False)
+
+
+_register_ports()

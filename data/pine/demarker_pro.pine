@@ -1,0 +1,64 @@
+//@version=6
+indicator("DeMarker Pro [v6] — Fast Confirm + Early Warning", shorttitle="DeM Pro", overlay=false)
+// prop_lab: pasted by Kris 2026-09-24. Labels/plots removed; signal logic kept.
+per = input.int(13, "DeMarker Period")
+sigLen = input.int(5, "Signal Line Length")
+obLevel = input.float(0.7, "Overbought Level")
+osLevel = input.float(0.3, "Oversold Level")
+divLookbackL = input.int(2, "Pivot Left Bars")
+divLookbackR = input.int(1, "Pivot Right Bars")
+divRangeMax = input.int(60, "Max Bars Between Pivots")
+divRangeMin = input.int(3, "Min Bars Between Pivots")
+demax = high > high[1] ? high - high[1] : 0.0
+demin = low < low[1] ? low[1] - low : 0.0
+demax_av = ta.sma(demax, per)
+demin_av = ta.sma(demin, per)
+denom = demax_av + demin_av
+dmark = denom == 0 ? 0.5 : demax_av / denom
+signalLine = ta.sma(dmark, sigLen)
+pivHighDeM = ta.pivothigh(dmark, divLookbackL, divLookbackR)
+pivLowDeM = ta.pivotlow(dmark, divLookbackL, divLookbackR)
+var float lastPHVal = na
+var int lastPHBar = na
+var float prevPHVal = na
+var int prevPHBar = na
+var float lastPLVal = na
+var int lastPLBar = na
+var float prevPLVal = na
+var int prevPLBar = na
+bullishDiv = false
+bearishDiv = false
+hiddenBullDiv = false
+hiddenBearDiv = false
+if not na(pivHighDeM)
+    prevPHVal := lastPHVal
+    prevPHBar := lastPHBar
+    lastPHVal := pivHighDeM
+    lastPHBar := bar_index - divLookbackR
+    if not na(prevPHVal) and not na(prevPHBar)
+        gap = lastPHBar - prevPHBar
+        if gap >= divRangeMin and gap <= divRangeMax
+            priceNow = high[divLookbackR]
+            pricePrev = high[bar_index - prevPHBar + divLookbackR]
+            if priceNow > pricePrev and lastPHVal < prevPHVal
+                bearishDiv := true
+            if priceNow < pricePrev and lastPHVal > prevPHVal
+                hiddenBearDiv := true
+if not na(pivLowDeM)
+    prevPLVal := lastPLVal
+    prevPLBar := lastPLBar
+    lastPLVal := pivLowDeM
+    lastPLBar := bar_index - divLookbackR
+    if not na(prevPLVal) and not na(prevPLBar)
+        gap = lastPLBar - prevPLBar
+        if gap >= divRangeMin and gap <= divRangeMax
+            priceNow = low[divLookbackR]
+            pricePrev = low[bar_index - prevPLBar + divLookbackR]
+            if priceNow < pricePrev and lastPLVal > prevPLVal
+                bullishDiv := true
+            if priceNow > pricePrev and lastPLVal < prevPLVal
+                hiddenBullDiv := true
+alertcondition(bullishDiv, title="Confirmed Bullish Divergence")
+alertcondition(bearishDiv, title="Confirmed Bearish Divergence")
+alertcondition(ta.crossover(dmark, osLevel), title="Exit Oversold")
+alertcondition(ta.crossunder(dmark, obLevel), title="Exit Overbought")

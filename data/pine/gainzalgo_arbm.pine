@@ -1,0 +1,24 @@
+// © GainzAlgo  MPL 2.0
+//@version=6
+indicator("Adaptive Regression Breakout Map | GainzAlgo", shorttitle="ARBM | GainzAlgo", overlay=true)
+// prop_lab: pasted by Kris 2026-09-24. Trendlines, drawing and stats table removed.
+length    = input.int(50, "Regression Length")
+devMult   = input.float(2.0, "Deviation Multiplier")
+sqzLen    = input.int(100, "Lookback Period")
+sqzPct    = input.float(20.0, "Contraction Threshold %")
+tp1Mult   = input.float(1.0, "TP1 Multiplier (x Bandwidth)")
+tp2Mult   = input.float(2.0, "TP2 Multiplier (x Bandwidth)")
+tp3Mult   = input.float(3.0, "TP3 Multiplier (x Bandwidth)")
+regBasis  = ta.linreg(close, length, 0)
+stdDev    = ta.stdev(close, length)
+upperBand = regBasis + (stdDev * devMult)
+lowerBand = regBasis - (stdDev * devMult)
+bandWidth = upperBand - lowerBand
+minWidth  = ta.lowest(bandWidth, sqzLen)
+maxWidth  = ta.highest(bandWidth, sqzLen)
+widthPct  = (bandWidth - minWidth) / math.max(maxWidth - minWidth, 0.000001) * 100
+isSqueeze = widthPct <= sqzPct
+bullTrigger = close > upperBand and close[1] <= upperBand[1] and isSqueeze[1]
+bearTrigger = close < lowerBand and close[1] >= lowerBand[1] and isSqueeze[1]
+// Trade: entry at close; SL = opposite band of previous bar; TP1/2/3 = 1/2/3 x bandwidth;
+// SL moves to entry after TP1 and to TP1 after TP2; closes at TP3 or SL. One trade at a time.

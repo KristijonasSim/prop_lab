@@ -1,0 +1,12 @@
+//@version=6
+indicator("Clean EMA Trend – DEMO", overlay=true)
+fastLen = input.int(9, "Fast EMA")
+slowLen = input.int(21, "Slow EMA")
+emaFast = ta.ema(close, fastLen)
+emaSlow = ta.ema(close, slowLen)
+buySignal  = ta.crossover(emaFast, emaSlow)
+sellSignal = ta.crossunder(emaFast, emaSlow)
+plot(emaFast, color=color.green, linewidth=2, title="Fast EMA")
+plot(emaSlow, color=color.red, linewidth=2, title="Slow EMA")
+plotshape(buySignal,  style=shape.triangleup,   location=location.belowbar, color=color.green, size=size.small, title="Buy")
+plotshape(sellSignal, style=shape.triangledown, location=location.abovebar, color=color.red,   size=size.small, title="Sell")

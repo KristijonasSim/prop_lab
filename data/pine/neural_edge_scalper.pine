@@ -1,0 +1,38 @@
+//@version=5
+indicator("Neural Edge — Quantum Momentum Scalper", shorttitle="NE QMScalper", overlay=true)
+// prop_lab: pasted by Kris 2026-09-24. Drawing/table removed; trade logic kept.
+almaLen    = input.int(9,    "ALMA Length")
+almaOff    = input.float(0.85,"ALMA Offset")
+almaSig    = input.float(6.0, "ALMA Sigma")
+stAtrLen   = input.int(7,     "Supertrend ATR Length")
+stFactor   = input.float(2.5, "Supertrend Factor")
+volLen     = input.int(20,    "Volume SMA Baseline")
+volMult    = input.float(1.5, "Surge Multiplier (x avg)")
+deltaLB    = input.int(10,    "Delta Lookback (bars)")
+atrRiskLen = input.int(14,    "Risk ATR Length")
+phiSL      = input.float(1.618,"SL multiplier")
+phiTP1     = input.float(1.618,"TP1 multiplier")
+phiTP2     = input.float(2.618,"TP2 multiplier")
+alma = ta.alma(close, almaLen, almaOff, almaSig)
+almaRising  = alma > alma[1]
+almaFalling = alma < alma[1]
+[stLine, stDir] = ta.supertrend(stFactor, stAtrLen)
+stBull = stDir < 0
+stBear = stDir > 0
+trendLong  = almaRising  and stBull and close > alma
+trendShort = almaFalling and stBear and close < alma
+volAvg   = ta.sma(volume, volLen)
+volSurge = volume >= volAvg * volMult
+rng     = math.max(high - low, syminfo.mintick)
+buyVol  = volume * (close - low)  / rng
+sellVol = volume * (high - close) / rng
+deltaBar = buyVol - sellVol
+cumDelta = math.sum(deltaBar, deltaLB)
+deltaPos = cumDelta > 0
+deltaNeg = cumDelta < 0
+vwapVal = ta.vwap
+longSignal  = barstate.isconfirmed and trendLong  and volSurge and deltaPos and close > vwapVal
+shortSignal = barstate.isconfirmed and trendShort and volSurge and deltaNeg and close < vwapVal
+// Exits: SL = entry -/+ 1.618 ATR(14), TP1 1.618 ATR, TP2 2.618 ATR
+alertcondition(longSignal,  "Long Signal")
+alertcondition(shortSignal, "Short Signal")
