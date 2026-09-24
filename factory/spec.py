@@ -139,6 +139,55 @@ def _vwap(w, n):
     return float((tp * v).sum() / tot) if tot > 0 else float(tp.mean())
 
 
+def _ema_arr(x: np.ndarray, n: int) -> np.ndarray:
+    """EMA of a whole array in C. Seeded on the first value, like `_ema`."""
+    from scipy.signal import lfilter
+    a = 2.0 / (n + 1.0)
+    y, _ = lfilter([a], [1.0, a - 1.0], x[1:], zi=[(1.0 - a) * x[0]])
+    return np.concatenate(([x[0]], y))
+
+
+def _falling(x: np.ndarray, n: int, end: int) -> bool:
+    """Pine's ta.falling at position `end`: n consecutive strict decreases."""
+    seg = x[end - n:end + 1] if end < -1 else x[end - n:]
+    return len(seg) == n + 1 and bool(np.all(np.diff(seg) < 0))
+
+
+def _squeeze_end(w, n):
+    """1 on the bar a band squeeze ENDS, else 0. The Quadapt ML Trader trigger.
+
+    ADDED 2026-09-24, from Kris's second real TradingView script, which the
+    translator refused because the grammar could not say it. The script builds
+    an envelope around EMA(n) - a band whose width is an EMA of a sin*cos of
+    the normalised distance from it - smooths each edge with a further EMA(n),
+    and fires when the edge-to-edge width has been FALLING for n bars on the
+    previous bar and is not falling now. A "wedge" (lower edge rising while
+    the upper falls, over n/5 bars) vetoes it. Direction is not part of it:
+    the script takes the side from its trend filter.
+
+    CAUSAL: every array is built from the last 6n closes of the window, and a
+    6n warm-up leaves the unseeded EMA error at e^-12 of its start.
+    """
+    L = 6 * n + 2
+    if not _need(w, L):
+        return np.nan
+    c = np.asarray(w.close[-L:], dtype=float)
+    ema_c = _ema_arr(c, n)
+    safe = np.maximum(np.abs(ema_c), 1e-12)
+    nb = np.abs(c - ema_c) / safe
+    q = 0.68 * nb * nb + 0.79 * nb + nb
+    b = np.abs(np.sin(q) * np.cos(q)) * safe
+    d = _ema_arr(b, n)
+    hi = _ema_arr(np.maximum(ema_c + d, c), n)
+    lo = _ema_arr(np.minimum(c, ema_c - d), n)
+    width = hi - lo
+    ended = _falling(width, n, -2) and not _falling(width, n, -1)
+    rp = max(1, n // 5)
+    wedge = bool(np.all(np.diff(lo[-rp - 1:]) > 0)
+                 and np.all(np.diff(hi[-rp - 1:]) < 0))
+    return 1.0 if (ended and not wedge) else 0.0
+
+
 #: name -> (function, does it need a window length?)
 INDICATORS = {
     "price":   (_price,   False),
@@ -157,6 +206,7 @@ INDICATORS = {
     "wpr":     (_wpr,     True),
     "hour":    (_hour,    False),
     "vwap":    (_vwap,    True),
+    "squeeze_end": (_squeeze_end, True),
 }
 
 #: The comparisons. The two CROSS ones fire on a single bar and are silent

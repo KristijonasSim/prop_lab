@@ -102,6 +102,8 @@ def _grammar() -> str:
     return (f"indicators: {names}, or a plain number\n"
             f"  wpr = Williams %R, 0 at the top of the n-bar range, -100 at the bottom\n"
             f"  roc = rate of change in BASIS POINTS, not percent\n"
+            f"  squeeze_end = 1 on the bar an EMA(n) envelope stops narrowing "
+            f"after n bars of narrowing (no wedge), else 0. Compare above 0.5\n"
             f"comparisons: {', '.join(COMPARISONS)}\n"
             f'a condition may add "hold": N - it must have been true N bars '
             f"running. Only on above/below; a cross is a one-bar event.\n"

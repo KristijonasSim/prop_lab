@@ -98,6 +98,8 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=$REMOTE
+# Two cores, and the live bot needs one. No 24-cell fan-out here.
+Environment=PROP_LAB_WORKERS=1
 # --no-agent: the VM has no claude CLI. Ideas arrive by queue from the desktop.
 ExecStart=/bin/sh -c 'while true; do $REMOTE/.venv/bin/python -m factory.nightly --no-agent -n 20 --seeds 3 >> $REMOTE/backtests/factory/nightly.log 2>&1; sleep $EVERY; done'
 Restart=always

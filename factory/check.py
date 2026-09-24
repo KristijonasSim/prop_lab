@@ -46,6 +46,8 @@ which on gold is measured and on USDJPY is an assumption.
 """
 from __future__ import annotations
 
+import os
+from collections import OrderedDict
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -223,6 +225,42 @@ def control_means(strategy: Strategy, frame: pd.DataFrame, cost_bps: float,
     return np.asarray(out, dtype=float)
 
 
+#: SPEED ONLY - NOTHING HERE CHANGES A RESULT (2026-09-24, Kris: "should not
+#: affect quality"). Building the entry signal is ~99% of a check's time and
+#: depends on the entry conditions and the bars, nothing else. 99 of step 4's
+#: 108 repairs change only the stop, target or hold, so they reuse it.
+#: `tests/test_factory_speed.py` pins cached == uncached, parallel == serial.
+SIGNAL_CACHE_SIZE = 256
+_SIGNALS: "OrderedDict[tuple, tuple]" = OrderedDict()
+
+
+def _signals(strategy: Strategy, frame: pd.DataFrame, reset: pd.DataFrame):
+    """build.series, remembered per (entry rule, bar frame).
+
+    Keyed on the frame OBJECT, and the frame is held in the entry so its id
+    cannot be recycled for different bars while the entry lives.
+    """
+    key = (strategy.entry, id(frame))
+    hit = _SIGNALS.get(key)
+    if hit is not None and hit[0] is frame:
+        _SIGNALS.move_to_end(key)
+        return hit[1]
+    sig = build.series(strategy, reset)
+    _SIGNALS[key] = (frame, sig)
+    if len(_SIGNALS) > SIGNAL_CACHE_SIZE:
+        _SIGNALS.popitem(last=False)
+    return sig
+
+
+def workers() -> int:
+    """Processes for the 24-cell fan-out. PROP_LAB_WORKERS overrides; the VM
+    sets 1 because the live bot shares its two cores."""
+    env = os.environ.get("PROP_LAB_WORKERS")
+    if env:
+        return max(1, int(env))
+    return max(1, min(24, (os.cpu_count() or 2) - 2))
+
+
 def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
           round_trip_bps: float | None = None, days: float | None = None,
           control_seeds: int = CONTROL_SEEDS) -> Check:
@@ -237,8 +275,9 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     c = Check(idea=strategy.label(), market=market, tf=tf, round_trip_bps=rt)
 
     days = trading_days(frame) if days is None else days
+    orig = frame
     frame = frame.reset_index(drop=True)
-    sig = build.series(strategy, frame)
+    sig = _signals(strategy, orig, frame)
 
     trades = build.run(strategy, frame, cost_bps=rt, signals=sig)
     c.n_trades = len(trades)
@@ -337,15 +376,37 @@ def check_all(strategy: Strategy, cell_list=None, *,
     step 5 can run this exact function over scrambled markets. Nothing else in
     the gates changes, which is what makes the two counts comparable.
     """
-    out = []
-    for sym, tf in (cell_list or cells.all_cells()):
-        frame = (loader or cells.load)(sym, tf)
-        if not len(frame):
-            continue
-        out.append(check(strategy, frame, market=sym, tf=tf,
-                         days=market_days(sym, loader),
-                         control_seeds=control_seeds))
-    return out
+    todo = list(cell_list or cells.all_cells())
+    n = min(workers(), len(todo))
+    if n <= 1:
+        out = [_one(strategy, sym, tf, control_seeds, loader) for sym, tf in todo]
+    else:
+        # FORK, so the child inherits `loader` (a closure, not picklable) and
+        # every cached bar frame. Order is kept: results come back in `todo`
+        # order, exactly as the serial loop produced them.
+        import multiprocessing as mp
+        global _JOB
+        _JOB = (strategy, control_seeds, loader)
+        with mp.get_context("fork").Pool(n) as pool:
+            out = pool.map(_one_job, todo, chunksize=1)
+        _JOB = None
+    return [c for c in out if c is not None]
+
+
+_JOB = None
+
+
+def _one_job(cell):
+    strategy, control_seeds, loader = _JOB
+    return _one(strategy, cell[0], cell[1], control_seeds, loader)
+
+
+def _one(strategy, sym, tf, control_seeds, loader):
+    frame = (loader or cells.load)(sym, tf)
+    if not len(frame):
+        return None
+    return check(strategy, frame, market=sym, tf=tf,
+                 days=market_days(sym, loader), control_seeds=control_seeds)
 
 
 def verdict_of(checks: list[Check]) -> tuple[str, list[Check]]:

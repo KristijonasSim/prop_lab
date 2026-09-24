@@ -215,3 +215,20 @@ def test_a_stop_narrower_than_the_cost_is_not_traded():
     s = Strategy(name="x", side="long",
                  entry=(Condition(Term("price"), "above", Term("highest", 10)),))
     assert run(s, f, cost_bps=50.0) == []
+
+
+def test_squeeze_end_cannot_see_the_future():
+    """Added 2026-09-24 for the Quadapt ML Trader. Same value on a frame cut
+    at t as on the full frame, so nothing after t can reach it."""
+    import numpy as np
+    import pandas as pd
+    from factory.guard import Window
+    from factory.spec import _squeeze_end
+    rng = np.random.default_rng(3)
+    c = 100 + np.cumsum(rng.normal(0, 0.5, 2000))
+    f = pd.DataFrame({"open": c, "high": c + 0.3, "low": c - 0.3, "close": c,
+                      "volume": 1.0})
+    cut = f.iloc[:1500].reset_index(drop=True)
+    for t in range(200, 1500, 7):
+        a, b = _squeeze_end(Window(f, t), 20), _squeeze_end(Window(cut, t), 20)
+        assert (np.isnan(a) and np.isnan(b)) or a == b

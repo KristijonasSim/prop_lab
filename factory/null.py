@@ -57,6 +57,7 @@ what luck gives". That sentence has never been available in this repo.
 from __future__ import annotations
 
 import sys
+import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -157,7 +158,7 @@ def loader(seed: int, block_bars: dict | None = None):
         if key not in cache:
             real = cells.load(sym, tf)
             cache[key] = (real.iloc[0:0] if not len(real) else
-                          scramble(real, seed + hash(key) % 1000,
+                          scramble(real, seed + zlib.crc32(f"{sym} {tf}".encode()) % 1000,
                                    bars.get(tf, DEFAULT_BLOCK)))
         return cache[key]
 

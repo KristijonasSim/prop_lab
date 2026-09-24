@@ -616,9 +616,13 @@ function ideaDetail(x){
 
 // "Boxes PRO - Dual %R Overbought Box (Long)" -> "Boxes PRO · long".
 // Enumerated ideas have no script name; their rule IS the name.
-const shortName = x => x.name && !x.name.includes(' when ') && x.name !== x.idea
-  ? `${x.name.split(' - ')[0].replace(/\s*\[.*$/, '')} · ${x.side || ''}`.replace(/ · $/, '')
-  : x.idea;
+const shortName = x => {
+  if (!x.name || x.name.includes(' when ') || x.name === x.idea) return x.idea;
+  const [head, tail = ''] = x.name.split(' - ');
+  // A short tail is a variant ("long 120"); a long one is a description.
+  return tail && tail.length <= 12 ? `${head} · ${tail}`
+       : `${head.replace(/\s*\[.*$/, '')}${x.side ? ' · ' + x.side : ''}`;
+};
 const plainOutcome = o => {
   o = o || '';
   const m = o.match(/step (\d)/);
