@@ -8,6 +8,16 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## DECIDED 2026-09-24 — no paper trading
+
+Kris: *"it works over last 5 years or not thats it we wont do paper trading"*.
+The open question in `wednseday after work.md` §5 is closed: failing the 5-year
+re-check at step 6 is a fail. No "works recently" outcome.
+
+VM: factory installed 2026-09-24 via `factory/deploy_vm.sh`, **not armed**.
+
+---
+
 ## ADDED 2026-09-18 — the workflow question, and the one number that reframes this page
 
 Kris: *"everything happens random ... we need some kind of workflow."* Full
