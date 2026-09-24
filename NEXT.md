@@ -8,6 +8,18 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## 2026-09-24 — VM armed for the weekend
+
+* 12 TradingView scripts through all 7 steps. Luck check: 17 real survivors vs
+  15.8 on random prices - **nothing above luck**. 3 reached step 7
+  (DeMarker long + EMA200 filter EURUSD 15m; Clean EMA and PO3 only via
+  step-6 repairs, so not clean).
+* VM factory ARMED 2026-09-24 with 218 AI ideas, 5 min between passes, 1 core.
+  `./factory/deploy_vm.sh --status` / `--pull` (results land in
+  `backtests/factory/vm/`, not on the local page).
+
+---
+
 ## DECIDED 2026-09-24 — no paper trading
 
 Kris: *"it works over last 5 years or not thats it we wont do paper trading"*.
