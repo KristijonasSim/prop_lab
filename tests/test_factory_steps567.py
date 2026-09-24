@@ -306,6 +306,7 @@ def test_a_near_miss_at_step_6_is_offered_the_same_six_tries():
 
     assert hasattr(repair, "repair_holdout")
     c = check.Check(idea="x", market="XAUUSD", tf="1h", verdict="FAIL")
+    c.n_trades = 150
     c.mean_r[1.0] = -0.001
     c.mean_r_se = 0.05
     c.reasons.append("mean -0.001 R at 1x cost")

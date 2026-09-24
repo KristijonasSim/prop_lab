@@ -134,9 +134,9 @@ def test_an_edge_near_miss_is_measured_in_standard_errors_not_percent():
     """The threshold on the edge gates is ZERO, and a percentage of zero says
     nothing. Within one standard error of breakeven is a result noise could
     have flipped, which is the honest reading of "not far off"."""
-    near = _check(mean_r={1.0: -0.01}, mean_r_se=0.02,
+    near = _check(n_trades=200, mean_r={1.0: -0.01}, mean_r_se=0.02,
                   reasons=["mean -0.010 R at 1x cost (1.83 bps)"])
-    far = _check(mean_r={1.0: -0.30}, mean_r_se=0.02,
+    far = _check(n_trades=200, mean_r={1.0: -0.30}, mean_r_se=0.02,
                  reasons=["mean -0.300 R at 1x cost (1.83 bps)"])
     assert repair.near_miss(near)
     assert not repair.near_miss(far)
@@ -154,7 +154,7 @@ def test_closeness_puts_the_four_gates_on_one_scale():
                      reasons=["0.38 trades/day, under 0.4 (mean hold 1.0 days)"])
     barely = _check(trades_per_day=0.31, n_trades=200,
                     reasons=["0.31 trades/day, under 0.4 (mean hold 1.0 days)"])
-    costly = _check(mean_r={1.0: -0.019}, mean_r_se=0.02,
+    costly = _check(n_trades=200, mean_r={1.0: -0.019}, mean_r_se=0.02,
                     reasons=["mean -0.019 R at 1x cost (1.83 bps)"])
     assert repair.closeness(counted) > repair.closeness(barely)
     assert repair.closeness(counted) > repair.closeness(costly)
@@ -214,3 +214,17 @@ def test_the_first_passing_repair_is_taken_not_the_best(monkeypatch):
     _, fixed = repair.repair(_simple(), [target], control_seeds=2)
     assert fixed is not None
     assert fixed.name.endswith(f"[{order[1]}]"), "took a later repair over the first"
+
+
+def test_a_thin_profitable_cell_is_not_labelled_drift_or_repaired():
+    """Quadapt, 2026-09-24: a 2-trade gold 1d cell failed trades AND drift,
+    was labelled drift (the word "trades" also sits in "without its best 5
+    trades"), ranked closest, and took 108 repairs."""
+    thin = _check(n_trades=2, trades_per_day=0.003, mean_r={1.0: 1.49},
+                  control_p90=1.49,
+                  reasons=["2 trades, under 100", "random entry scores +1.493 at p90"])
+    assert repair.failed_gate(thin) == "trades"
+    assert not repair.near_miss(thin)
+    loser = _check(n_trades=150, mean_r={1.0: -0.1},
+                   reasons=["mean -0.100 R at 1x cost", "-0.2 R without its best 5 trades"])
+    assert repair.failed_gate(loser) == "cost"

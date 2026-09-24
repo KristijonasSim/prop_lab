@@ -626,8 +626,26 @@ const shortName = x => {
   return tail && tail.length <= 12 ? `${head} · ${tail}`
        : `${head.replace(/\s*\[.*$/, '')}${x.side ? ' · ' + x.side : ''}`;
 };
-const plainOutcome = o => {
+// THE REASON FOR THE CELL ON THE ROW. Kris, 2026-09-24: "how can it say
+// loss after fees if its PF is 1.36?" The row showed BTC 1h and the reason
+// came from gold 1d. Now the result names what happened on the shown cell.
+const cellWhy = (x) => {
+  const shown = (x.score || {}).cell;
+  const c = (x.cells || []).find(c => c.cell === shown);
+  if (!c || c.verdict === 'PASS') return '';
+  const r = (c.reasons || []).join(' ');
+  if (/at 1x cost|no trades/.test(r)) return 'loses after fees';
+  const n = r.match(/(\d+) trades, under/);
+  if (n) return `too few trades (${n[1]})`;
+  if (/without its best/.test(r)) return 'profit from a few trades';
+  if (/random entry/.test(r)) return 'random did better';
+  return '';
+};
+const plainOutcome = (o, x) => {
   o = o || '';
+  if (x && /step 3/.test(o)) { const w = cellWhy(x); if (w) return `died · ${w}`; }
+  if (x && /step 6/.test(o) && !/repaired/.test(o))
+    return `died · older years${x.cell && x.cell !== (x.score||{}).cell ? ' (' + x.cell.split(' ')[1] + ')' : ''}`;
   const m = o.match(/step (\d)/);
   if (/scored|held/.test(o)) return 'passed';
   if (/repaired/.test(o)) return `fixed · step ${m ? m[1] : '?'}`;
@@ -664,7 +682,7 @@ function ideasTable(){
           <td class="mono">${k.max_dd_r == null ? '—' : k.max_dd_r + 'R'}</td>
           <td class="mono">${k.pass_pct ?? '—'}</td>
           <td class="mono">${k.eval_days ?? '—'}</td>
-          <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome))}</td>
+          <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome, x))}</td>
           <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
         </tr>` + (open ? `<tr class="detail"><td colspan="12">${ideaDetail(x)}</td></tr>` : '');
     }).join('');

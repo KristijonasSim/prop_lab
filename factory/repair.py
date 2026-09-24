@@ -206,18 +206,26 @@ def _levers(r: Repair) -> int:
 
 
 def failed_gate(c: Check) -> str:
-    """Which gate this cell died on: trades, cost, concentration, drift, or "".
+    """Which gate this cell died on: cost, trades, concentration, drift, or "".
 
-    Gates short-circuit, so a Check carries only its FIRST failure - which is
-    the one worth repairing.
+    Nothing short-circuits any more, so a cell can fail several gates and this
+    names the one that says the most. THE OLD VERSION matched "trades" in the reason text, which also appears in
+    "without its best 5 trades" - so it had to exclude "random", and a 2-trade
+    cell that failed both was labelled "drift", ranked as the closest miss and
+    handed 108 repairs (Quadapt ML Trader, 2026-09-24).
+
+    Order: losing money is the most informative fact, then too few trades
+    (a profitable thin cell is "not enough to judge"), then luck, then drift.
     """
     if c.verdict == "PASS":
         return ""
     r = " ".join(c.reasons)
-    if "trades" in r and "random" not in r:
-        return "trades"
-    if "at 1x cost" in r:
+    if "at 1x cost" in r or "no trades" in r:
         return "cost"
+    # "trades, under" / "trades/day, under" - NOT a bare "trades", which is
+    # also in "without its best 5 trades".
+    if "trades, under" in r or "trades/day, under" in r:
+        return "trades"
     if "without its best" in r:
         return "concentration"
     if "random entry" in r:
@@ -234,6 +242,10 @@ def near_miss(c: Check) -> bool:
     """
     gate = failed_gate(c)
     if gate == "":
+        return False
+    # A cell far below the trade floor is not close to anything, whatever its
+    # mean says - ten trades carry no edge to repair.
+    if c.n_trades < NEAR_RATIO * check.MIN_TRADES:
         return False
     if gate == "trades":
         return (c.trades_per_day >= NEAR_RATIO * check.MIN_TRADES_PER_DAY
