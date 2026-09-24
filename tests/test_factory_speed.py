@@ -70,9 +70,9 @@ def test_squeeze_end_series_equals_the_guarded_per_bar_reader():
     from factory.guard import Window
     from factory.spec import SERIES, _squeeze_end
     f = cells.load("XAUUSD", "4h").reset_index(drop=True).iloc[:1400]
-    close = f["close"].values.astype(float)
+    from factory.guard import columns
     for n in (20, 70):
-        full = SERIES["squeeze_end"](close, n)
+        full = SERIES["squeeze_end"](columns(f), n)
         for t in range(0, len(f), 3):
             ref = _squeeze_end(Window(f, t), n)
             assert (np.isnan(ref) and np.isnan(full[t])) or ref == full[t], (n, t)
