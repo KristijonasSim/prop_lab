@@ -647,6 +647,7 @@ const plainOutcome = (o, x) => {
   if (x && /step 6/.test(o) && !/repaired/.test(o))
     return `died · older years${x.cell && x.cell !== (x.score||{}).cell ? ' (' + x.cell.split(' ')[1] + ')' : ''}`;
   const m = o.match(/step (\d)/);
+  if (/NOT holdout-clean/.test(o)) return 'passed · but fixed on older years';
   if (/scored|held/.test(o)) return 'passed';
   if (/repaired/.test(o)) return `fixed · step ${m ? m[1] : '?'}`;
   if (/passed step 3/.test(o)) return 'waiting';

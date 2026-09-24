@@ -96,6 +96,11 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
 
     cl = cell_list or cells.all_cells()
     stories: list[dict] = []
+    # A repaired rule has a new label (a filter adds a condition), so each
+    # fixed rule remembers which idea's story it belongs to. Without this the
+    # step 6/7 outcome was written nowhere and the page kept saying
+    # "repaired at step 4" for ideas that went on to be scored (2026-09-24).
+    origin: dict[str, str] = {}
     live.beat(2, "build", detail=f"{len(ideas)} ideas into runnable code",
               total=len(ideas), counts={"ideas": len(ideas)})
     survivors, s3, s4 = [], 0, 0
@@ -144,6 +149,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
         if fixed is not None:
             tgt = repair.best_near_miss(checks)
             survivors.append((fixed, tgt.market, tgt.tf, True))
+            origin[fixed.label()] = s.label()
             queue.keep(fixed, f"step 4 repair on {tgt.market} {tgt.tf}", reached=4)
             story["outcome"] = "repaired at step 4"
             story["cell"] = f"{tgt.market} {tgt.tf}"
@@ -181,7 +187,8 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
 
     cleared = []
     for i, (s, m, tf, _rep) in enumerate(survivors, 1):
-        st = by_label.get(s.label()) or {"repairs": [], "cells": []}
+        st = (by_label.get(origin.get(s.label(), s.label()))
+              or {"repairs": [], "cells": []})
         live.beat(6, "re-check", idea=s.label(), cell=f"{m} {tf}",
                   done=i, total=len(survivors),
                   detail="years the idea was not selected on")
@@ -218,6 +225,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             rec["repair6_attempts"] = rec.get("repair6_attempts", 0) + len(attempts)
             if fixed6 is not None:
                 cleared.append((fixed6, m, tf))
+                origin[fixed6.label()] = origin.get(s.label(), s.label())
                 queue.keep(fixed6, f"step 6 repair on {m} {tf} "
                                    f"(NOT holdout-clean)", reached=6)
                 st["outcome"] = "repaired at step 6 (NOT holdout-clean)"
@@ -245,9 +253,11 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                                resamples=resamples)
         f = ev.fastest()
         queue.keep(s, f"step 7 on {m} {tf}", reached=7)
-        stx = by_label.get(s.label())
+        stx = by_label.get(origin.get(s.label(), s.label()))
         if stx is not None:
-            stx["outcome"] = "scored at step 7"
+            stx["outcome"] = ("scored at step 7 (repaired at step 6, NOT holdout-clean)"
+                              if "NOT holdout-clean" in stx.get("outcome", "")
+                              else "scored at step 7")
         rec["step7"].append({
             "idea": ev.idea, "cell": ev.cell, "trades": ev.n_trades,
             "trades_per_day": round(ev.trades_per_day, 2),
