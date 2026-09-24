@@ -374,12 +374,12 @@ function stations(){
     1: (r ? r.waiting : 0) + ' queued',
     2: f.ideas + ' built',
     3: f.step3_pass + ' pass',
+    // ONE IDEA SENT TO REPAIR COUNTS ONCE, however many tweaks it got.
+    // Kris, 2026-09-24: "0 / 8 fixed" was unreadable - he wants "1k tested,
+    // 450 sent to repair, N of those worked". Attempts are not the unit.
     4: (() => {
-      const tried = (r ? r.ideas : []).reduce(
-        (n, x) => n + (x.repairs || []).length, 0);
-      // "0 fixed" with no mention of eight attempts is what made Kris ask
-      // where the repairs were. The denominator belongs on the station.
-      return f.step4_repaired + (tried ? ` / ${tried}` : '') + ' fixed';
+      const sent = (r ? r.ideas : []).filter(x => (x.repairs || []).length).length;
+      return `${sent} repaired · ${f.step4_repaired} fixed`;
     })(),
     5: (r && r.step5) ? 'p ' + r.step5.p_value : '—',
     6: f.step6_pass + ' held',
@@ -394,7 +394,11 @@ function stations(){
       <div class="n mono">STEP ${s.n}</div>
       <div class="nm">${esc(s.name)}</div>
       <div class="d">${esc(s.detail)}</div>
-      <div class="v mono ${zero?'zero':(s.n>=3?'good':'')}">${esc(v)}</div>
+      <div class="v mono ${zero?'zero':(s.n>=3?'good':'')}">${s.n === 4
+        ? v.replace(/^(\d+) repaired · (\d+) fixed$/, (_, a, b) =>
+            `<span class="${+a ? 'mid' : 'dim'}">${a} repaired</span>`
+            + `<span class="${+b ? 'ok' : 'dim'}" style="display:block;font-size:13px">${b} of them fixed</span>`)
+        : esc(v)}</div>
       <i class="bar" style="width:${pct}%"></i></div>`;
   }).join('');
 }
