@@ -289,21 +289,32 @@ def load(folder: Path | None = None, *, ai: bool = False, model: str | None = No
 SKIPPED = ROOT_DIR = None                       # set below, after ROOT resolves
 
 
-def record_skips(skipped, path=None) -> int:
-    """Persist the refusals so the dashboard can show them."""
+def record_skips(skipped, path=None, translated=()) -> int:
+    """Persist the refusals so the dashboard can show them.
+
+    A script in `translated` read fine THIS time, so an old refusal of it is
+    dropped - Quadapt was refused, the grammar grew, and it then showed as
+    both refused and tested (2026-09-24).
+    """
     import json as _json
     from factory import queue as _queue
 
     p = path or (_queue.DIR / "skipped.jsonl")
     p.parent.mkdir(parents=True, exist_ok=True)
-    seen = set()
+    seen, keep = set(), []
     if p.exists():
         for line in p.read_text().splitlines():
             if line.strip():
                 try:
-                    seen.add(_json.loads(line)["script"])
-                except (ValueError, KeyError):
+                    row = _json.loads(line)
+                except ValueError:
                     continue
+                if row.get("script") in translated:
+                    continue
+                seen.add(row.get("script"))
+                keep.append(line)
+        if translated:
+            p.write_text("".join(l + "\n" for l in keep))
     new = [{"source": "tradingview", "script": n, "why": w,
             "gap": w.startswith("grammar gap")}
            for n, w in skipped if n not in seen]
@@ -333,7 +344,9 @@ def _main(argv=None) -> int:
     gaps = [(n, w) for n, w in skipped if w.startswith("grammar gap")]
     for n, w in skipped:
         print(f"  SKIP {n}: {w}")
-    record_skips(skipped)
+    folder = a.folder or PINE_DIR
+    names = {q.stem for q in folder.glob("*.pine")} if folder.exists() else set()
+    record_skips(skipped, translated=names - {n for n, _ in skipped})
     print(f"\n{len(got)} translated, {len(skipped)} skipped, "
           f"{len(gaps)} naming a grammar gap")
     if not a.dry_run and got:

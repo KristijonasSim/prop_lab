@@ -140,6 +140,55 @@ def _fingerprint(row: dict) -> str:
             f"|{row.get('target_atr')}|{row.get('max_hold')}")
 
 
+def script_of(name: str | None, fallback: str = "") -> str:
+    """Which SCRIPT a variant belongs to. Kris, 2026-09-24: *"it says 5
+    repaired even though we had only 2 strategies."* Quadapt ML Trader went in
+    as four variants (long/short x 120/70) and every count on the page said 4.
+    A script is the unit he reads; variants are named "<script> - <variant>"."""
+    n = (name or "").strip()
+    if not n or " when " in n:
+        return n or fallback
+    return n.split(" - ")[0].split(" [")[0].strip() or fallback
+
+
+def _stage(outcome: str) -> float:
+    o = outcome or ""
+    if "scored" in o: return 7
+    if "held" in o or "repaired at step 6" in o: return 6.5
+    if "step 6" in o: return 6
+    if "passed step 3" in o: return 3.5
+    return 3
+
+
+def best_variant(variants: list[dict]) -> dict:
+    """The variant shown for a script: furthest stage, then makes money, then
+    fewest days to pass, then highest pass %. Kris: show the BEST variant."""
+    def key(x):
+        k = x.get("score") or {}
+        days = k.get("eval_days")
+        # "Makes money" means clears the project's PF 1.2 gate - a PF 1.01
+        # cell won on fewest days and was shown as the best Quadapt variant.
+        return (-_stage(x.get("outcome")), -((k.get("pf") or 0) >= 1.2),
+                days if days is not None else 1e9, -(k.get("pass_pct") or 0))
+    return sorted(variants, key=key)[0]
+
+
+def scripts_view(ideas: list[dict]) -> list[dict]:
+    """One row per script: its best variant, plus how many variants ran and
+    whether any was sent to repair / fixed."""
+    groups: dict[str, list[dict]] = {}
+    for x in ideas:
+        groups.setdefault(script_of(x.get("name"), x.get("idea", "")), []).append(x)
+    out = []
+    for name, vs in groups.items():
+        b = best_variant(vs)
+        out.append({**b, "script": name, "variants": len(vs),
+                    "sent_to_repair": any(v.get("repairs") for v in vs),
+                    "fixed": any("repaired" in (v.get("outcome") or "") for v in vs),
+                    "repairs_total": sum(len(v.get("repairs") or []) for v in vs)})
+    return out
+
+
 def per_source() -> list[dict]:
     """One row per source: found, tested, where they died, what survived.
 
@@ -192,6 +241,20 @@ def per_source() -> list[dict]:
             if r.get("died_at"):
                 e["died_at"] = int(r["died_at"])
                 e["gate"] = r.get("gate") or "other"
+
+        # ONE ENTRY PER SCRIPT, not per variant: a script's result is its best
+        # variant's. Any variant alive beats any death; otherwise the furthest.
+        names = {_fingerprint(r): script_of(r.get("name"), _fingerprint(r))
+                 for r in k + t}
+        by_script: dict[str, dict] = {}
+        for fp, e in seen.items():
+            sk = names.get(fp, fp)
+            cur = by_script.get(sk)
+            rank = (e["reached"] if not e["died_at"] else 0,
+                    e["died_at"], e["reached"])
+            if cur is None or rank > cur["_rank"]:
+                by_script[sk] = {**e, "_rank": rank}
+        seen = by_script
 
         # WHERE EACH IDEA STOPPED, per source, covering EVERY stopping point.
         # The old panel counted step-3 gate failures at the CELL level, which
@@ -251,15 +314,17 @@ def per_source() -> list[dict]:
             # board showed "0 fixed" after eight repairs had been tried.
             "ideas": [x for x in nightly.ideas(500)
                       if x.get("source") == key][-25:][::-1],
+            "scripts": scripts_view([x for x in nightly.ideas(500)
+                                     if x.get("source") == key])[::-1][:25],
             "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
-            "read": len(w) + tested + len(ref),
+            "read": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested + len(ref),
             "refused": len(ref),
             "gaps": sum(1 for r in ref if r.get("gap")),
             "key": key, "label": src.label, "how": src.how,
             "status": src.status, "note": src.note,
-            "waiting": len(w),
-            "found": len(w) + tested,
+            "waiting": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}),
+            "found": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested,
             "tested": tested,
             "passed3": sum(1 for e in seen.values() if e["reached"] >= 3),
             "repaired4": sum(1 for e in seen.values() if e["reached"] == 4),
@@ -340,11 +405,27 @@ class _Handler(BaseHTTPRequestHandler):
         pass                       # a polling dashboard would fill the console
 
 
+def _code_mtime() -> float:
+    return max(p.stat().st_mtime for p in (ROOT / "factory").rglob("*.py"))
+
+
 def serve(host: str = HOST, port: int = PORT) -> None:
+    """Serve, and RESTART ITSELF when factory code changes. 2026-09-24: a
+    server started before `squeeze_end` existed crashed on the first idea
+    that used it, and the page just said "server unreachable"."""
+    import os
     srv = HTTPServer((host, port), _Handler)
+    srv.timeout = 2.0
+    born = _code_mtime()
     print(f"factory floor on http://{host}:{port}   (ctrl-c to stop)")
     try:
-        srv.serve_forever()
+        while True:
+            srv.handle_request()
+            if _code_mtime() > born:
+                srv.server_close()
+                print("factory code changed - restarting", flush=True)
+                os.execv(sys.executable, [sys.executable, "-m", "factory.dashboard",
+                                          "--host", host, "--port", str(port)])
     except KeyboardInterrupt:
         print("\nstopped")
 

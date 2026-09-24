@@ -436,3 +436,23 @@ def test_the_scorecard_is_measured_on_the_recent_window_only():
     src = open(nightly.__file__).read()
     assert "cells.load(market, tf)" in src
     assert "2023-2026" in src
+
+
+def test_variants_of_one_script_count_once():
+    """Kris, 2026-09-24: four Quadapt variants showed as four strategies."""
+    from factory import dashboard
+    ideas = [{"name": f"Quadapt ML Trader - {s} {n}", "idea": f"{s} {n}",
+              "outcome": "stopped at step 3 (cost)", "repairs": [{}],
+              "score": {"mean_r": m, "eval_days": d, "pass_pct": 20,
+                        "pf": 1.3 if m > 0 else 0.9}}
+             for (s, n, m, d) in [("long", 120, -0.1, 90), ("long", 70, 0.2, 140),
+                                  ("short", 120, 0.1, 80), ("short", 70, -0.2, 50)]]
+    ideas.append({"name": "Boxes PRO - Dual %R Box (Long)", "idea": "x",
+                  "outcome": "stopped at step 6 (cost)", "repairs": [],
+                  "score": {"mean_r": 0.16, "eval_days": 18.1}})
+    rows = dashboard.scripts_view(ideas)
+    assert sorted(r["script"] for r in rows) == ["Boxes PRO", "Quadapt ML Trader"]
+    q = next(r for r in rows if r["script"] == "Quadapt ML Trader")
+    assert q["variants"] == 4 and q["sent_to_repair"]
+    # makes money first, then fewest days
+    assert q["name"].endswith("short 120")

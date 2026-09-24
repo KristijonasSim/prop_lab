@@ -352,10 +352,11 @@ function stations(){
     // Kris, 2026-09-24: "0 / 8 fixed" was unreadable - he wants "1k tested,
     // 450 sent to repair, N of those worked". Attempts are not the unit.
     4: (() => {
-      const sent = (r ? r.ideas : []).filter(x => (x.repairs || []).length).length;
-      return `${sent} repaired · ${f.step4_repaired} fixed`;
+      const sc = r ? (r.scripts || []) : [];
+      const sent = sc.filter(x => x.sent_to_repair).length;
+      return `${sent} repaired · ${sc.filter(x => x.fixed).length} fixed`;
     })(),
-    5: (r && r.step5) ? (r.step5.real > r.step5.null_max ? 'not luck' : 'could be luck') : '—',
+    5: (r && r.step5) ? `${r.step5.real} vs ${r.step5.null_mean}` : '—',
     6: f.step6_pass + ' held',
     7: f.step7 + ' scored',
   })[n];
@@ -363,15 +364,17 @@ function stations(){
     const on = cur === s.n, done = cur > s.n;
     const pct = on && b.total ? Math.round(100*b.done/b.total) : (done?100:0);
     const v = String(val(s.n));
-    const zero = /^(0|—|p —)\b/.test(v);
+    const zero = s.n !== 5 && /^(0|—|p —)\b/.test(v);
     return `<div class="station ${on?'active':done?'done':''}">
       <div class="n mono">STEP ${s.n}</div>
       <div class="nm">${esc(s.name)}</div>
       <div class="d">${esc(s.detail)}</div>
-      <div class="v mono ${zero?'zero':(v==='could be luck'?'mid':(s.n>=3?'good':''))}">${s.n === 4
+      <div class="v mono ${zero?'zero':(s.n===5 ? ((r && r.step5 && r.step5.real > r.step5.null_max) ? 'good' : 'mid') : (s.n>=3?'good':''))}">${s.n === 4
         ? v.replace(/^(\d+) repaired · (\d+) fixed$/, (_, a, b) =>
             `<span class="${+a ? 'mid' : 'dim'}">${a} repaired</span>`
             + `<span class="${+b ? 'ok' : 'dim'}" style="display:block;font-size:13px">${b} of them fixed</span>`)
+        : s.n === 5 && v !== '—'
+          ? `${esc(v)}<span class="dim" style="display:block;font-size:13px">real vs random</span>`
         : esc(v)}</div>
       <i class="bar" style="width:${pct}%"></i></div>`;
   }).join('');
@@ -634,7 +637,8 @@ const plainOutcome = o => {
 
 function ideasTable(){
   const r = row();
-  const list = r ? r.ideas : [];
+  // ONE ROW PER SCRIPT, its best variant. Kris, 2026-09-24.
+  const list = r ? (r.scripts || []) : [];
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   $('ideas').innerHTML =
@@ -647,7 +651,8 @@ function ideasTable(){
       const k = x.score || {};
       const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
-          <td class="wide">${esc(shortName(x))}</td>
+          <td class="wide">${esc(x.script || shortName(x))}${x.variants > 1
+            ? `<span class="dim" style="display:block;font-size:11.5px">best of ${x.variants}: ${esc((x.name || '').split(' - ')[1] || '')}</span>` : ''}</td>
           <td class="mono">${esc(k.market || '—')}</td>
           <td class="mono">${esc(k.tf || '—')}</td>
           <td class="mono">${k.per_day == null ? '—' : k.per_day.toFixed(2)}</td>
@@ -660,7 +665,7 @@ function ideasTable(){
           <td class="mono">${k.pass_pct ?? '—'}</td>
           <td class="mono">${k.eval_days ?? '—'}</td>
           <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome))}</td>
-          <td class="mono">${(x.repairs||[]).length}</td>
+          <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
         </tr>` + (open ? `<tr class="detail"><td colspan="12">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
   $('ideas').querySelectorAll('tr.idea').forEach(tr => tr.onclick = () => {
