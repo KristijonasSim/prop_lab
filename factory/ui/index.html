@@ -213,12 +213,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7">
-    <h2>The funnel — ideas, not cell-tests</h2>
+    <h2>Funnel</h2>
     <div class="fun" id="funnel"></div>
   </div>
 
   <div class="card c7" id="gatesCard">
-    <h2>Where every idea stopped — and what that means</h2>
+    <h2>Why ideas died</h2>
     <p class="lede" id="gatesLede"></p>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
@@ -227,29 +227,24 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c5" id="nullCard">
-    <h2>Step 5 — the luck check</h2>
+    <h2>Luck check</h2>
     <div id="null"></div>
   </div>
 
   <div class="card c12" id="ideasCard">
-    <h2>Every strategy tested — best market and timeframe, 2023 to 2026</h2>
-    <p class="lede">One row per strategy, on the FASTEST cell that still makes
-      money — the pace target is 5&ndash;14 evaluation days, and sorting on profit
-      per trade always lands on the slowest chart. Click a row for the timeframe
-      trade-off, all 24 cells and every repair tried.</p>
+    <h2>Strategies tested · 2023–2026</h2>
+    <p class="lede">Best market and timeframe. Click a row for detail.</p>
     <div class="scroll"><table id="ideas"></table></div>
   </div>
 
   <div class="card c12" id="gapsCard">
-    <h2>Read, but the grammar could not say it</h2>
+    <h2>Could not translate</h2>
     <div class="scroll"><table id="gapsTable"></table></div>
-    <div class="verdict">Each of these is a term the factory does not have.
-      A new term multiplies the 308 rules the enumerator can build, rather than
-      adding one — and these come from scripts people actually trade.</div>
+    
   </div>
 
   <div class="card c12">
-    <h2>Every source — found, tested, passed, failed</h2>
+    <h2>Sources</h2>
     <div class="scroll"><table id="srcTable"></table></div>
     <div class="verdict" id="sourceNote"></div>
   </div>
@@ -271,40 +266,19 @@ const $ = id => document.getElementById(id);
 // pipeline can act on, with the jargon - holdout, selected on, drift control -
 // spelled out rather than named.  [step, the reason, what it means]
 const STOP_WHY = {
-  '3:trades': ['step 3', 'Too few trades to judge it',
-    'Under 100 trades. Below that the average is a story about a handful of '
-    + 'episodes, and no amount of waiting fixes it.'],
-  '3:cost': ['step 3', 'Loses money once you pay the spread and fees',
-    'It may look profitable on paper. Charged what it actually costs to get '
-    + 'in and out, it does not.'],
-  '3:concentration': ['step 3', 'All the profit came from a few lucky trades',
-    'Delete its best five trades and it stops making money. One good run is '
-    + 'not an edge.'],
-  '3:drift': ['step 3', 'Buying at random times did better',
-    'Same rule, same stop, same target, same number of trades - but entering '
-    + 'at random moments. Random beat it, so the timing added nothing and the '
-    + 'profit was the market moving, not the rule.'],
-  '3:other': ['step 3', 'No market and timeframe produced usable trades', ''],
-
-  '6:trades': ['step 6', 'Barely traded on the older years',
-    'Enough trades on recent years, almost none on the earlier ones, so there '
-    + 'was not enough there to judge whether it still works.'],
-  '6:cost': ['step 6', 'Made money on recent years, lost money on older ones',
-    'We keep the two years BEFORE the test window hidden, so a rule cannot '
-    + 'have been shaped to fit them. On those hidden years it loses. A rule '
-    + 'that only works on the years we looked at fits that period, not the '
-    + 'market.'],
-  '6:concentration': ['step 6', 'On the older years the profit was a few trades',
-    'Delete its best five trades on the hidden years and it stops making '
-    + 'money there.'],
-  '6:drift': ['step 6', 'On the older years, random entries beat it',
-    'Same rule, same stops, entries at random moments - and random won on the '
-    + 'hidden years.'],
-  '6:other': ['step 6', 'Not enough older history to re-test it', ''],
-
-  scored: ['step 7', 'Got all the way through', 'It cleared every check.'],
-  alive:  ['-', 'Passed the quick check, not yet re-tested', ''],
-  other:  ['-', 'No market and timeframe produced usable trades', ''],
+  '3:trades':        ['step 3', 'Too few trades', ''],
+  '3:cost':          ['step 3', 'Loses after fees', ''],
+  '3:concentration': ['step 3', 'Profit from a few lucky trades', ''],
+  '3:drift':         ['step 3', 'Random entries did better', ''],
+  '3:other':         ['step 3', 'No usable trades', ''],
+  '6:trades':        ['step 6', 'Too few trades on older years', ''],
+  '6:cost':          ['step 6', 'Lost money on older years', ''],
+  '6:concentration': ['step 6', 'Older years: profit from a few trades', ''],
+  '6:drift':         ['step 6', 'Older years: random did better', ''],
+  '6:other':         ['step 6', 'No older data', ''],
+  scored: ['step 7', 'Passed everything', ''],
+  alive:  ['-', 'Passed step 3, waiting', ''],
+  other:  ['-', 'No usable trades', ''],
 };
 const STOP_COL = k => ({'3':'#8ab4f8','6':'#e879a0'}[String(k).split(':')[0]]
                         || (k === 'scored' ? '#4ade80' : '#4b5563'));
@@ -381,7 +355,7 @@ function stations(){
       const sent = (r ? r.ideas : []).filter(x => (x.repairs || []).length).length;
       return `${sent} repaired · ${f.step4_repaired} fixed`;
     })(),
-    5: (r && r.step5) ? 'p ' + r.step5.p_value : '—',
+    5: (r && r.step5) ? (r.step5.real > r.step5.null_max ? 'not luck' : 'could be luck') : '—',
     6: f.step6_pass + ' held',
     7: f.step7 + ' scored',
   })[n];
@@ -394,7 +368,7 @@ function stations(){
       <div class="n mono">STEP ${s.n}</div>
       <div class="nm">${esc(s.name)}</div>
       <div class="d">${esc(s.detail)}</div>
-      <div class="v mono ${zero?'zero':(s.n>=3?'good':'')}">${s.n === 4
+      <div class="v mono ${zero?'zero':(v==='could be luck'?'mid':(s.n>=3?'good':''))}">${s.n === 4
         ? v.replace(/^(\d+) repaired · (\d+) fixed$/, (_, a, b) =>
             `<span class="${+a ? 'mid' : 'dim'}">${a} repaired</span>`
             + `<span class="${+b ? 'ok' : 'dim'}" style="display:block;font-size:13px">${b} of them fixed</span>`)
@@ -429,9 +403,9 @@ function now(){
 function funnel(){
   const r = row();
   const f = r ? r.funnel : S.funnel, max = Math.max(f.ideas, 1);
-  const rows = [['ideas tested', f.ideas], ['passed step 3', f.step3_pass],
-                ['repaired at 4', f.step4_repaired],
-                ['held at step 6', f.step6_pass], ['scored at 7', f.step7]];
+  const rows = [['tested', f.ideas], ['passed 3 years', f.step3_pass],
+                ['fixed by repair', f.step4_repaired],
+                ['passed older years', f.step6_pass], ['scored', f.step7]];
   $('funnel').innerHTML = rows.map(([k,v]) =>
     `<div class="frow"><span class="k">${k}</span>
        <span class="t"><i style="width:${Math.max(2, 100*v/max)}%"></i></span>
@@ -453,11 +427,7 @@ function gates(){
   // ONE ROW PER IDEA, not per cell-test. An idea is run on 24 cells and only
   // its FURTHEST outcome is a fact about the idea; counting cells here is what
   // made a single script look like 46 tests.
-  $('gatesLede').textContent =
-    `${tot} idea${tot===1?'':'s'} from ${esc(r ? r.label : '')}, `
-    + `each counted once at the point it stopped. `
-    + `Every idea is run on 24 cells — six markets × four timeframes — and `
-    + `survives if any one of them passes.`;
+  $('gatesLede').textContent = `${tot} idea${tot===1?'':'s'} · each tested on 6 markets × 4 timeframes`;
   const nice = k => STOP_WHY[k] ? STOP_WHY[k][1] : String(k).split(':').pop();
   $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${STOP_COL(k)}"></i>`).join('');
@@ -477,11 +447,7 @@ function gates(){
         <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
     }).join('');
   const t = (g['3:trades'] || 0) + (g['6:trades'] || 0);
-  $('gatesNote').textContent = t && t / tot >= 0.6
-    ? `${Math.round(100*t/tot)}% stopped on TRADE COUNT, not on edge — they did `
-      + `not fire often enough to be judged. Nothing downstream repairs that; `
-      + `it is the rule's own frequency.`
-    : (g.scored ? `${g.scored} made it all the way through.` : '');
+  $('gatesNote').textContent = '';
 }
 
 function nullPanel(){
@@ -492,22 +458,16 @@ function nullPanel(){
   const beat = n.real > n.null_max;
   $('null').innerHTML =
     `<table>
-      <tr><td class="muted">real survivors</td><td class="mono" style="text-align:right">${n.real}</td></tr>
-      <tr><td class="muted">scrambled mean</td><td class="mono" style="text-align:right">${n.null_mean}</td></tr>
-      <tr><td class="muted">scrambled worst</td><td class="mono" style="text-align:right">${n.null_max}</td></tr>
-      <tr><td class="muted">seeds</td><td class="mono" style="text-align:right">${n.seeds}</td></tr>
-      <tr><td class="muted">p</td><td class="mono ${n.p_value<=0.1?'ok':'bad'}" style="text-align:right">${n.p_value}</td></tr>
+      <tr><td class="muted">passed on real prices</td><td class="mono" style="text-align:right">${n.real}</td></tr>
+      <tr><td class="muted">passed on random prices (avg)</td><td class="mono" style="text-align:right">${n.null_mean}</td></tr>
+      <tr><td class="muted">passed on random prices (best)</td><td class="mono" style="text-align:right">${n.null_max}</td></tr>
      </table>
-     <div class="verdict">${beat
-       ? 'The real market beat every scrambled copy on this batch.'
-       : 'A market with no information in it produced as many survivors. Nothing here is above luck yet.'}
-       ${n.only_source ? '' : '<br><span class="dim">This batch mixed sources: '
-         + esc(Object.entries(n.batch||{}).map(([k,v])=>k+' '+v).join(', '))
-         + '. The luck check scores a batch, not one source.</span>'}</div>`;
+     <div class="verdict ${beat ? 'ok' : 'bad'}">${beat
+       ? 'Real beats random. Not luck.'
+       : 'Random did as well. Could be luck.'}</div>`;
 }
 
-const nice2 = k => (STOP_WHY[k] ? STOP_WHY[k][0] + ' · ' : '')
-                    + String(k).split(':').pop();
+const nice2 = k => STOP_WHY[k] ? STOP_WHY[k][1] : String(k).split(':').pop();
 
 function srcTable(){
   const rows = S.sources || [];
@@ -539,9 +499,7 @@ function srcTable(){
     }).join('');
 
   const ready = rows.filter(r => r.status !== 'ready' && r.found === 0);
-  $('sourceNote').textContent = ready.length
-    ? ready.map(r => `${r.label}: ${r.note}`).join('  ')
-    : 'Every source in the catalogue has been run at least once.';
+  $('sourceNote').textContent = '';
 }
 
 const OPEN = new Set();
@@ -569,9 +527,9 @@ function ideaDetail(x){
       <td class="${r.verdict==='PASS'?'pass':'fail'}">${esc(r.verdict)}</td>
       <td class="wide dim">${esc((r.reasons||[]).join('; ') || '—')}</td></tr>`).join('');
 
-  const hold = x.holdout ? `<h3>Step 6 — the years it was not selected on</h3>
+  const hold = x.holdout ? `<h3>Older 2 years</h3>
     <table><tr><th>cell</th><th>verdict</th><th>trades</th><th>/day</th>
-      <th>mean R</th><th>drop best 5</th><th>random p90</th><th>why</th></tr>
+      <th>R/trade</th><th>without best 5</th><th>random got</th><th>why</th></tr>
       <tr><td class="mono">${esc(x.holdout.cell)}</td>
         <td class="${x.holdout.verdict==='PASS'?'pass':'fail'}">${esc(x.holdout.verdict)}</td>
         <td class="mono">${x.holdout.trades}</td>
@@ -589,44 +547,43 @@ function ideaDetail(x){
   // `x.score.cell` and they are not always the same, so both the marker
   // and the two-window block have to follow the scorecard.
   const shown = (x.score || {}).cell;
-  const best = (x.cells || []).find(c => c.cell === shown)
+  // Same cell on both rows: the older-years test ran on x.holdout.cell, and
+  // pairing it with the headline cell compared 1h recent against 4h older.
+  const best = (x.cells || []).find(c => x.holdout && c.cell === x.holdout.cell)
+            || (x.cells || []).find(c => c.cell === shown)
             || (x.cells || []).find(c => c.cell === x.cell);
   const cmp = (best && x.holdout) ? `
-    <h3>The answer in one line</h3>
+    <h3>Recent vs older years</h3>
     <div class="scroll"><table>
-      <tr><th>years</th><th>what they are</th><th>trades</th><th>per trade</th>
-        <th>random entry got</th><th>verdict</th></tr>
+      <tr><th>years · ${esc(best.cell)}</th><th>what they are</th><th>trades</th><th>per trade</th>
+        <th>random got</th><th>verdict</th></tr>
       <tr><td class="mono">2023 – 2026</td>
-        <td class="wide dim">the window it was tested and chosen on</td>
+        <td class="wide dim">tested on</td>
         <td class="mono">${best.trades}</td>
         <td class="mono ${(best.mean_r||0)>0?'good':'bad'}">${num(best.mean_r)}</td>
         <td>${num(best.control_p90)}</td>
         <td class="${best.verdict==='PASS'?'pass':'fail'}">${esc(best.verdict)}</td></tr>
       <tr><td class="mono">2021 – 2023</td>
-        <td class="wide dim">kept hidden, so the rule cannot have been fitted to them</td>
+        <td class="wide dim">hidden check</td>
         <td class="mono">${x.holdout.trades}</td>
         <td class="mono ${(x.holdout.mean_r||0)>0?'good':'bad'}">${num(x.holdout.mean_r)}</td>
         <td>${num(x.holdout.control_p90)}</td>
         <td class="${x.holdout.verdict==='PASS'?'pass':'fail'}">${esc(x.holdout.verdict)}</td></tr>
     </table></div>
-    <p class="why">${(best.mean_r||0) > 0 && (x.holdout.mean_r||0) <= 0
-      ? 'It made money on the years we looked at and lost money on the years we '
-        + 'hid. That is the shape of a rule that fits a period rather than a '
-        + 'market — which is the whole reason the older years are held back.'
-      : 'Both windows agree.'}</p>` : '';
+` : '';
 
   // THE TIMEFRAME TRADE-OFF. Slower charts earn more per trade and take far
   // longer to resolve an evaluation. One headline number hides that; the
   // ladder is the choice Kris actually has to make.
   const lad = (x.ladder || []);
   const ladder = lad.length > 1 ? `
-    <h3>Same rule, four timeframes — faster or richer, pick one</h3>
+    <h3>By timeframe</h3>
     <div class="scroll"><table>
       <tr><th>timeframe</th><th>trades</th><th>trades / day</th><th>PF</th>
         <th>R / trade</th><th>max DD</th><th>pass %</th><th>eval days</th>
-        <th>accounts</th></tr>
+        </tr>
       ${lad.map(k => `<tr${k.cell === shown ? ' style="background:#1b1e23"' : ''}>
-        <td class="mono">${esc(k.tf)}${k.cell === shown ? '  ◂ shown above' : ''}</td>
+        <td class="mono">${esc(k.tf)}${k.cell === shown ? '  ◂' : ''}</td>
         <td class="mono">${k.trades}</td>
         <td class="mono">${Number(k.per_day).toFixed(2)}</td>
         <td class="mono ${(k.pf||0) >= 1.2 ? 'good' : 'bad'}">${k.pf == null ? '—' : k.pf.toFixed(2)}</td>
@@ -634,29 +591,42 @@ function ideaDetail(x){
         <td class="mono">${k.max_dd_r}R</td>
         <td class="mono">${k.pass_pct ?? '—'}</td>
         <td class="mono">${k.eval_days ?? '—'}</td>
-        <td class="mono dim">${k.accounts ?? '—'}</td></tr>`).join('')}
+        </tr>`).join('')}
     </table></div>
-    <p class="why">Slower charts earn more per trade and burn fewer accounts,
-      and take far longer to fund one. 5&ndash;14 days is the target.</p>` : '';
+` : '';
 
   return `<div class="det">
-    ${x.note ? `<p class="why">${esc(x.note)}</p>` : ''}
+    <p class="why mono">${esc(x.idea)}</p>
     ${ladder}
     <p class="why">stop ${x.stop_atr} ATR · target ${x.target_atr} ATR ·
        max hold ${x.max_hold} bars</p>
     ${cmp}
-    <h3>Step 3 — all 24 cells</h3>
+    <h3>All 24 markets × timeframes</h3>
     <div class="scroll"><table>
       <tr><th>cell</th><th>verdict</th><th>trades</th><th>/day</th><th>mean R</th>
-        <th>drop best 5</th><th>random p90</th><th>why</th></tr>${cellRows}</table></div>
+        <th>without best 5</th><th>random got</th><th>why</th></tr>${cellRows}</table></div>
     ${hold}
-    <h3>Repairs tried — ${reps.length}</h3>
+    <h3>Repairs · ${reps.length} tried · ${reps.filter(r => r.verdict==='PASS').length} worked</h3>
     ${reps.length
       ? `<div class="scroll"><table><tr><th>at</th><th>change</th><th>verdict</th>
            <th>why</th></tr>${repRows}</table></div>`
-      : '<p class="why">None offered — it was not a near-miss at any gate.</p>'}
+      : '<p class="why">None — not close enough.</p>'}
   </div>`;
 }
+
+// "Boxes PRO - Dual %R Overbought Box (Long)" -> "Boxes PRO · long".
+// Enumerated ideas have no script name; their rule IS the name.
+const shortName = x => x.name && !x.name.includes(' when ') && x.name !== x.idea
+  ? `${x.name.split(' - ')[0].replace(/\s*\[.*$/, '')} · ${x.side || ''}`.replace(/ · $/, '')
+  : x.idea;
+const plainOutcome = o => {
+  o = o || '';
+  const m = o.match(/step (\d)/);
+  if (/scored|held/.test(o)) return 'passed';
+  if (/repaired/.test(o)) return `fixed · step ${m ? m[1] : '?'}`;
+  if (/passed step 3/.test(o)) return 'waiting';
+  return m ? `died · step ${m[1]}` : (o || '—');
+};
 
 function ideasTable(){
   const r = row();
@@ -664,34 +634,30 @@ function ideasTable(){
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   $('ideas').innerHTML =
-    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades</th><th>trades / day</th>
-       <th>PF</th><th>win %</th><th>R / trade</th><th>max DD</th>
-       <th>risk</th><th>pass %</th><th>eval days</th><th>accounts</th>
-       <th>outcome</th><th>repairs</th></tr>` +
+    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades/day</th>
+       <th>PF</th><th>win %</th><th>R/trade</th><th>max DD</th>
+       <th>pass %</th><th>days</th><th>result</th><th>repairs</th></tr>` +
     list.map((x, i) => {
       const good = /passed|held|scored|repaired/.test(x.outcome || '');
       const open = OPEN.has(i);
       const k = x.score || {};
       const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
-          <td class="wide">${esc(x.idea)}</td>
+          <td class="wide">${esc(shortName(x))}</td>
           <td class="mono">${esc(k.market || '—')}</td>
           <td class="mono">${esc(k.tf || '—')}</td>
-          <td class="mono">${k.trades ?? '—'}</td>
           <td class="mono">${k.per_day == null ? '—' : k.per_day.toFixed(2)}</td>
           <td class="mono ${pf == null ? '' : (pf >= 1.2 ? 'good' : 'bad')}">
             ${pf == null ? '—' : pf.toFixed(2)}</td>
           <td class="mono">${k.win_pct ?? '—'}</td>
           <td class="mono ${(k.mean_r ?? 0) > 0 ? 'good' : 'bad'}">
-            ${k.mean_r == null ? '—' : k.mean_r.toFixed(3)}</td>
+            ${k.mean_r == null ? '—' : k.mean_r.toFixed(2)}</td>
           <td class="mono">${k.max_dd_r == null ? '—' : k.max_dd_r + 'R'}</td>
-          <td class="mono dim">${k.risk_pct == null ? '—' : k.risk_pct + '%'}</td>
           <td class="mono">${k.pass_pct ?? '—'}</td>
           <td class="mono">${k.eval_days ?? '—'}</td>
-          <td class="mono dim">${k.accounts ?? '—'}</td>
-          <td class="${good?'good':'bad'}">${esc(x.outcome || '—')}</td>
+          <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome))}</td>
           <td class="mono">${(x.repairs||[]).length}</td>
-        </tr>` + (open ? `<tr class="detail"><td colspan="15">${ideaDetail(x)}</td></tr>` : '');
+        </tr>` + (open ? `<tr class="detail"><td colspan="12">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
   $('ideas').querySelectorAll('tr.idea').forEach(tr => tr.onclick = () => {
     const i = Number(tr.dataset.i);

@@ -115,7 +115,8 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             if g in gates:
                 gates[g] += 1
         best_any = _headline_cell(s, checks)
-        story = {"idea": s.label(), "source": s.source, "note": s.note,
+        story = {"idea": s.label(), "name": s.name, "side": s.side,
+                 "source": s.source, "note": s.note,
                  "score": (scorecard(s, best_any.market, best_any.tf)
                            if best_any else {}),
                  "ladder": (ladder_rows(s, best_any.market) if best_any else []),

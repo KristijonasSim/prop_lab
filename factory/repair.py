@@ -138,42 +138,71 @@ def _set(tag: str, **kw):
     return f
 
 
-#: THE LIST. Fixed on 2026-09-22, before any near-miss was looked at.
-#: Adding to it later is a new search and has to be logged as one.
-REPAIRS: tuple[Repair, ...] = (
-    # --- the idea does not trade enough: let the slot come free sooner ------
-    Repair("hold 24", "trades", _set("hold 24", max_hold=24),
-           "one position at a time, so a shorter hold is the direct lever"),
-    Repair("hold 12", "trades", _set("hold 12", max_hold=12),
-           "same lever, harder"),
-    Repair("target 2", "trades", _set("target 2", target_atr=2.0),
-           "a nearer target is hit sooner and frees the slot"),
-    Repair("stop 1.5", "trades", _set("stop 1.5", stop_atr=1.5),
-           "a nearer stop does the same, at the cost of being hit more often"),
+#: THE LIST. First fixed 2026-09-22 at twelve; WIDENED 2026-09-24 on Kris's
+#: word: *"i dont care how many repairs you will do it can be 1k repairs"*.
+#: Every attempt is still logged and the first pass still wins, so the width is
+#: a known number of extra draws - and step 6 is what prices them.
+#:
+#: Exits: every stop x target x hold on the grid below (answers "either").
+#: Filters: sessions, trend, vwap, volatility regime (answer "edge" - a filter
+#: spends trades, so a thin idea is never handed one).
+STOPS = (1.0, 1.5, 2.0, 3.0, 4.0)
+TARGETS = (1.5, 2.0, 3.0, 4.0, 6.0)
+HOLDS = (12, 24, 48, 96)
+#: What an idea carries when step 2 builds it. A grid point's name lists only
+#: what differs from this, so the one-lever repairs read "hold 24", "stop 3".
+BASE = (2.0, 3.0, 48)
+ASIA = (-0.5, 6.5)
+FAST_EMA = 50
 
-    # --- the idea trades enough but the edge is weak: spend trades ---------
-    Repair("London+NY", "edge", _session(*LONDON_NY, tag="London+NY"),
-           "the liquid hours. Measured WORSE on H-027; kept because that was "
-           "one strategy and this list is applied to all of them"),
-    Repair("NY only", "edge", _session(*NY, tag="NY only"),
-           "the single busiest window"),
-    Repair("with trend", "edge", _trend(True),
-           "the one H-027 filter that survived screening, before it lost to "
-           "its own shuffled control"),
-    Repair("against trend", "edge", _trend(False),
-           "the control for the line above. If both directions 'help', the "
-           "help is the filter cutting trades, not the trend"),
-    Repair("price past vwap", "edge", _vwap_side(),
-           "a rolling volume-weighted reference, not H-027's session anchor"),
-    Repair("busy", "edge", _fast_vol(),
-           "short-term vol above long-term. A breakout wants a live market"),
 
-    # --- either -----------------------------------------------------------
-    Repair("stop 3", "either", _set("stop 3", stop_atr=3.0),
-           "more room, fewer stop-outs, a smaller R on each win"),
-    Repair("target 5", "either", _set("target 5", target_atr=5.0),
-           "let the winners run, at a lower hit rate"),
+def _exit(stop: float, target: float, hold: int) -> Repair:
+    parts = [f"stop {stop:g}" if stop != BASE[0] else "",
+             f"target {target:g}" if target != BASE[1] else "",
+             f"hold {hold}" if hold != BASE[2] else ""]
+    tag = " ".join(p for p in parts if p)
+    return Repair(tag, "either",
+                  _set(tag, stop_atr=stop, target_atr=target, max_hold=hold),
+                  "exit grid")
+
+
+def _ema_trend(n: int):
+    def f(s: Strategy) -> Strategy:
+        return _add(s, Condition(Term("price"),
+                                 "above" if s.side == "long" else "below",
+                                 Term("ema", n)), tag=f"with ema{n}")
+    return f
+
+
+def _quiet():
+    def f(s: Strategy) -> Strategy:
+        return _add(s, Condition(Term("atr", FAST_ATR), "below",
+                                 Term("atr", SLOW_ATR)), tag="quiet")
+    return f
+
+
+FILTERS: tuple[Repair, ...] = (
+    Repair("London+NY", "edge", _session(*LONDON_NY, tag="London+NY"), "liquid hours"),
+    Repair("NY only", "edge", _session(*NY, tag="NY only"), "busiest window"),
+    Repair("Asia only", "edge", _session(*ASIA, tag="Asia only"), "quiet hours"),
+    Repair("with trend", "edge", _trend(True), "price on the trade's side of EMA200"),
+    Repair("against trend", "edge", _trend(False), "control for the line above"),
+    Repair(f"with ema{FAST_EMA}", "edge", _ema_trend(FAST_EMA), "shorter trend"),
+    Repair("price past vwap", "edge", _vwap_side(), "rolling vwap side"),
+    Repair("busy", "edge", _fast_vol(), "short-term vol above long-term"),
+    Repair("quiet", "edge", _quiet(), "short-term vol below long-term"),
 )
+
+EXITS: tuple[Repair, ...] = tuple(
+    _exit(st, tg, h) for st in STOPS for tg in TARGETS for h in HOLDS
+    if (st, tg, h) != BASE)
+
+REPAIRS: tuple[Repair, ...] = FILTERS + EXITS
+
+
+def _levers(r: Repair) -> int:
+    """How many things a repair changes. Smallest changes are tried first."""
+    return 1 if r.answers == "edge" else len(r.name.split()) // 2
 
 
 def failed_gate(c: Check) -> str:
@@ -251,7 +280,14 @@ def closeness(c: Check) -> float:
 def repairs_for(gate: str) -> list[Repair]:
     """The subset of the fixed list that answers this failure. Never all of it."""
     kind = "trades" if gate == "trades" else "edge"
-    return [r for r in REPAIRS if r.answers in (kind, "either")]
+    return sorted((r for r in REPAIRS if r.answers in (kind, "either")),
+                  key=_levers)
+
+
+def _same(a: Strategy, b: Strategy) -> bool:
+    """A grid point that is the idea's own exit is not a repair."""
+    return (a.entry == b.entry and a.stop_atr == b.stop_atr
+            and a.target_atr == b.target_atr and a.max_hold == b.max_hold)
 
 
 @dataclass
@@ -299,6 +335,8 @@ def repair(strategy: Strategy, checks: list[Check], *,
     fixed: Strategy | None = None
     for r in repairs_for(failed_gate(target)):
         cand = r.apply(strategy)
+        if _same(cand, strategy):
+            continue
         after = check.check(cand, frame, market=target.market, tf=target.tf,
                             days=days, control_seeds=control_seeds)
         attempts.append(Attempt(repair=r.name, before=target, after=after))
@@ -324,7 +362,8 @@ def repair_holdout(strategy: Strategy, holdout: Check, market: str, tf: str, *,
     twelve repairs against them and it has been, so the repaired rule no
     longer has an independent test anywhere - which is why the survivor is
     flagged `repaired_at_6` and why the bar is BOTH windows, not just the one
-    it failed. Twelve fixed draws is what step 5's null is there to price.
+    it failed. With the 2026-09-24 grid this is ~100 draws on the holdout, so a
+    step-6 repair is effectively fitted on all five years - flagged, not hidden.
 
     A repaired rule must pass the holdout AND still pass the window it already
     passed. A change that fixes the old years by breaking the recent ones is
@@ -344,6 +383,8 @@ def repair_holdout(strategy: Strategy, holdout: Check, market: str, tf: str, *,
     fixed: Strategy | None = None
     for rp in repairs_for(failed_gate(holdout)):
         cand = rp.apply(strategy)
+        if _same(cand, strategy):
+            continue
         after = check.check(cand, hold_frame, market=market, tf=tf,
                             days=hold_days, control_seeds=control_seeds)
         attempts.append(Attempt(repair=rp.name, before=holdout, after=after))

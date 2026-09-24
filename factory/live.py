@@ -41,13 +41,13 @@ STALE_AFTER = 3600.0
 #: The line, in order. The dashboard draws one station per entry and this is
 #: the single place the order and the names live.
 STEPS = (
-    (1, "ideas", "TradingView, the model, the enumerator"),
-    (2, "build", "into code that cannot read a future bar"),
-    (3, "quick check", "four questions about trades, 24 cells"),
-    (4, "repair", "six fixed tweaks on a near-miss"),
-    (5, "luck check", "the same batch on scrambled markets"),
-    (6, "re-check", "years the idea was not selected on"),
-    (7, "evaluation", "pass %, days, accounts consumed"),
+    (1, "ideas", "new ideas in"),
+    (2, "build", "idea into code"),
+    (3, "quick check", "test on last 3 years"),
+    (4, "repair", "tweak the near-misses"),
+    (5, "luck check", "real market vs random"),
+    (6, "re-check", "test on older 2 years"),
+    (7, "score", "pass %, days to pass"),
 )
 
 
