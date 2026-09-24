@@ -97,6 +97,10 @@ class Check:
     mean_r_se: float = float("nan")
     mean_r_drop_best_se: float = float("nan")
     mean_hold_days: float = float("nan")
+    #: Profit factor and win rate at 1x cost. Not gates - Kris reads these
+    #: first, so the board quotes them for every window it shows.
+    pf: float = float("nan")
+    win_pct: float = float("nan")
     control_p90: float = float("nan")
     control_median: float = float("nan")
     round_trip_bps: float = float("nan")
@@ -266,6 +270,9 @@ def check(strategy: Strategy, frame: pd.DataFrame, *, market: str, tf: str,
     r = _r(trades)
     c.mean_r[1.0] = float(r.mean())
     c.mean_r_se = _stderr(r)
+    won, lost = r[r > 0].sum(), -r[r < 0].sum()
+    c.pf = float(won / lost) if lost > 0 else float("inf")
+    c.win_pct = float(100.0 * (r > 0).mean())
     # Re-pricing is exact arithmetic, not a re-run. Cost enters R linearly, so
     # the same trade at multiple m simply loses (m-1) x entry x bps / risk more.
     # Re-running at a higher cost would also re-open `build`'s min-risk guard

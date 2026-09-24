@@ -199,6 +199,15 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
             attempts, fixed6 = ([], None)
             if r.holdout is not None:
                 st["holdout"] = _cell_row(r.holdout)
+                st["holdout_span"] = r.holdout_span
+            # THE FACTS THE BOARD QUOTES. Kris, 2026-09-24: say "last 3 years
+            # PF, win %, R ... last 5 years was ..." instead of explaining
+            # what a holdout is. Recent = the step-3 window, full = 5 years.
+            st["recent"] = _cell_row(check.check(
+                s, cells.load(m, tf), market=m, tf=tf,
+                control_seeds=control_seeds))
+            if r.full is not None:
+                st["full"] = _cell_row(r.full)
                 attempts, fixed6 = repair.repair_holdout(
                     s, r.holdout, m, tf, control_seeds=control_seeds)
             st["repairs"] += [{"step": 6, "name": a.repair,
@@ -271,6 +280,9 @@ def _cell_row(c) -> dict:
                           else round(c.mean_r_drop_best, 4)),
             "control_p90": (None if c.control_p90 != c.control_p90
                             else round(c.control_p90, 4)),
+            "pf": (None if c.pf != c.pf or c.pf == float("inf")
+                   else round(c.pf, 3)),
+            "win_pct": None if c.win_pct != c.win_pct else round(c.win_pct, 1),
             "reasons": list(c.reasons), "flags": list(c.flags)}
 
 
