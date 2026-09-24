@@ -290,7 +290,10 @@ const STOP_WHY = {
     'Enough trades on recent years, almost none on the earlier ones, so there '
     + 'was not enough there to judge whether it still works.'],
   '6:cost': ['step 6', 'Made money on recent years, lost money on older ones',
-''],
+    'We keep the two years BEFORE the test window hidden, so a rule cannot '
+    + 'have been shaped to fit them. On those hidden years it loses. A rule '
+    + 'that only works on the years we looked at fits that period, not the '
+    + 'market.'],
   '6:concentration': ['step 6', 'On the older years the profit was a few trades',
     'Delete its best five trades on the hidden years and it stops making '
     + 'money there.'],
@@ -461,15 +464,11 @@ function gates(){
     `<tr><th>stopped at</th><th>reason</th><th style="text-align:right">ideas</th>
       <th style="text-align:right">share</th></tr>` +
     Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
-      const [step, why, means0] = STOP_WHY[k] || ['—', k, ''];
-      // FACTS, NOT A LECTURE. Kris, 2026-09-24: write "last 3 years PF, win %
-      // and R ... last 5 years was ..." rather than explaining the method.
-      const facts = String(k).startsWith('6:') ? windowFacts(k) : '';
-      const means = facts ? '' : means0;
+      const [step, why, means] = STOP_WHY[k] || ['—', k, ''];
       return `<tr><td><span style="display:inline-flex;align-items:center;gap:7px">
           <i class="sw" style="background:${STOP_COL(k)}"></i>${esc(step)}</span></td>
         <td class="wide">${esc(why)}
-          ${means ? `<div class="means">${esc(means)}</div>` : ''}${facts}</td>
+          ${means ? `<div class="means">${esc(means)}</div>` : ''}</td>
         <td class="mono ${k==='scored'?'good':'bad'}" style="text-align:right">${v}</td>
         <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
     }).join('');
@@ -479,23 +478,6 @@ function gates(){
       + `not fire often enough to be judged. Nothing downstream repairs that; `
       + `it is the rule's own frequency.`
     : (g.scored ? `${g.scored} made it all the way through.` : '');
-}
-
-// One line per window for every idea of this source that stopped on `k`.
-function windowFacts(k){
-  const r = row(); if (!r) return '';
-  const gate = String(k).split(':')[1];
-  const fmt = (lab, c) => !c ? '' :
-    `<div class="means"><b>${lab}</b> · PF ${c.pf ?? '—'} · win ${c.win_pct ?? '—'}% · `
-    + `${c.mean_r >= 0 ? '+' : ''}${(c.mean_r ?? 0).toFixed(2)} R per trade · `
-    + `${c.trades} trades</div>`;
-  return (r.ideas || [])
-    .filter(x => x.outcome === `stopped at step 6 (${gate})` && (x.recent || x.full))
-    .map(x => `<div class="means dim">${esc(x.cell)}</div>`
-         + fmt('Last 3 years', x.recent)
-         + fmt('Older 2 years' + (x.holdout_span ? ` (${esc(x.holdout_span)})` : ''), x.holdout)
-         + fmt('All 5 years', x.full))
-    .join('');
 }
 
 function nullPanel(){
