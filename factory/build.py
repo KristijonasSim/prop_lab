@@ -28,8 +28,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from factory.guard import Window
-from factory.spec import Strategy
+from factory.guard import Window, columns
+from factory.spec import SERIES, Strategy
 
 ATR_LEN = 14
 
@@ -68,12 +68,24 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
     # the backtest walks, so `hold` reads nothing the window does not already
     # allow - see `spec.Condition`.
     streak = {}
+    # WHOLE-SERIES FORMS, computed once. Only indicators in `spec.SERIES`,
+    # whose maths is prefix-stable and pinned equal to the per-bar reader
+    # (tests/test_factory_speed.py) - so this is speed, not a second path
+    # that could see ahead.
+    close = np.asarray(frame["close"].values, dtype=float)
+    pre = {}
+    for i, c in enumerate(strategy.entry):
+        for side, term in (("l", c.left), ("r", c.right)):
+            if term.kind in SERIES:
+                pre[(i, side)] = SERIES[term.kind](close, term.length)
+    cols = columns(frame)
     for t in range(n):
-        w = Window(frame, t)
+        w = Window(cols, t)
         atr[t] = _atr_at(w)
         ok = True
         for i, c in enumerate(strategy.entry):
-            lv, rv = c.left.at(w), c.right.at(w)
+            lv = pre[(i, "l")][t] if (i, "l") in pre else c.left.at(w)
+            rv = pre[(i, "r")][t] if (i, "r") in pre else c.right.at(w)
             pl, pr = prev.get(i, (np.nan, np.nan))
             prev[i] = (lv, rv)
             if np.isnan(lv) or np.isnan(rv):

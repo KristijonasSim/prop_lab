@@ -205,6 +205,60 @@ def run_pipeline(ideas: list[Strategy], *, label: str, loader_fn=None,
     return t
 
 
+_NJOB = None
+
+
+def _pipe_job(job):
+    """One (market, idea) pipeline in a worker. The 24-cell fan-out inside is
+    turned off: this level already fills the cores, and a pool worker may not
+    start a pool of its own."""
+    import os
+    os.environ["PROP_LAB_WORKERS"] = "1"
+    ideas, kw = _NJOB
+    seed, j = job
+    lf = None if seed is None else loader(1000 * (seed + 1))
+    lab = "real market" if seed is None else f"scrambled #{seed}"
+    return run_pipeline([ideas[j]], label=lab, loader_fn=lf, **kw)
+
+
+def _pipelines(ideas, seeds, kw):
+    """The real pipeline and every scrambled one, each idea on its own core.
+
+    SPEED ONLY (2026-09-24): pipelines share nothing - each idea is checked,
+    and repaired, independently, and a seed's scramble is deterministic - so
+    splitting by (seed, idea) and adding the tallies back up is the same
+    arithmetic as the serial loop. Pinned in tests/test_factory_speed.py.
+    """
+    jobs = [(sd, j) for sd in [None] + list(range(seeds)) for j in range(len(ideas))]
+    n = min(check.workers(), len(jobs))
+    global _NJOB
+    _NJOB = (ideas, kw)
+    try:
+        if n <= 1:
+            parts = [_pipe_job_serial(ideas, kw, jb) for jb in jobs]
+        else:
+            import multiprocessing as mp
+            with mp.get_context("fork").Pool(n) as pool:
+                parts = pool.map(_pipe_job, jobs, chunksize=1)
+    finally:
+        _NJOB = None
+    tallies = {}
+    for (sd, _j), t in zip(jobs, parts):
+        agg = tallies.setdefault(sd, Tally(label=t.label, ideas=0))
+        agg.ideas += t.ideas
+        agg.passed_step3 += t.passed_step3
+        agg.repaired += t.repaired
+        agg.survivor_names += t.survivor_names
+    return tallies[None], [tallies[i] for i in range(seeds)]
+
+
+def _pipe_job_serial(ideas, kw, job):
+    seed, j = job
+    lf = None if seed is None else loader(1000 * (seed + 1))
+    lab = "real market" if seed is None else f"scrambled #{seed}"
+    return run_pipeline([ideas[j]], label=lab, loader_fn=lf, **kw)
+
+
 def compare(ideas: list[Strategy], seeds: int = 10, **kw) -> dict:
     """The real pipeline against `seeds` scrambled ones, same ideas throughout.
 
@@ -213,10 +267,7 @@ def compare(ideas: list[Strategy], seeds: int = 10, **kw) -> dict:
     smallest value it can report is 0.09, and quoting a smaller number than the
     seed count supports is how this repo has been wrong before.
     """
-    real = run_pipeline(ideas, label="real market", **kw)
-    nulls = [run_pipeline(ideas, label=f"scrambled #{i}",
-                          loader_fn=loader(1000 * (i + 1)), **kw)
-             for i in range(seeds)]
+    real, nulls = _pipelines(ideas, seeds, kw)
     counts = np.array([n.survivors for n in nulls], dtype=float)
     beat = int((counts >= real.survivors).sum())
     return {

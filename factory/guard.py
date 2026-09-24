@@ -78,6 +78,14 @@ class Series:
         return f"<Series {self._name} {len(self._a)} bars, ends at the current one>"
 
 
+def columns(frame) -> dict:
+    """The Window's columns as arrays, pulled once. Missing ones are zeros,
+    exactly as `Window` fills them."""
+    n = len(frame)
+    return {c: (frame[c].values if c in frame else np.zeros(n))
+            for c in Window.COLUMNS}
+
+
 class Window:
     """Everything a strategy is allowed to know at bar `t`.
 
@@ -99,8 +107,16 @@ class Window:
             raise ValueError("t must be >= 0")
         n = t + 1
         self.t, self._n = t, n
+        # `frame` may be a DataFrame or `columns(frame)` - the same columns
+        # already pulled out as arrays. Pulling them once per BACKTEST instead
+        # of once per BAR was half the time of a 15m run (2026-09-24). Same
+        # arrays, same slice, so the window sees exactly the same bars.
+        cols = frame if isinstance(frame, dict) else None
         for col in self.COLUMNS:
-            arr = frame[col].values[:n] if col in frame else np.zeros(n)
+            if cols is not None:
+                arr = cols[col][:n]
+            else:
+                arr = frame[col].values[:n] if col in frame else np.zeros(n)
             object.__setattr__(self, col, Series(arr, col))
 
     def __len__(self) -> int:

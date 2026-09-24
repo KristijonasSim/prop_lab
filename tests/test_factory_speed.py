@@ -62,3 +62,31 @@ def test_a_different_entry_is_never_served_from_cache():
     ca = check.check(a, frame, market="XAUUSD", tf="4h", control_seeds=2)
     cb = check.check(b, frame, market="XAUUSD", tf="4h", control_seeds=2)
     assert ca.n_trades != cb.n_trades
+
+
+def test_squeeze_end_series_equals_the_guarded_per_bar_reader():
+    """The whole-series form must give the SAME float as the per-bar reader,
+    which can only see the past (guard.Window). Equal => nothing leaks."""
+    from factory.guard import Window
+    from factory.spec import SERIES, _squeeze_end
+    f = cells.load("XAUUSD", "4h").reset_index(drop=True).iloc[:1400]
+    close = f["close"].values.astype(float)
+    for n in (20, 70):
+        full = SERIES["squeeze_end"](close, n)
+        for t in range(0, len(f), 3):
+            ref = _squeeze_end(Window(f, t), n)
+            assert (np.isnan(ref) and np.isnan(full[t])) or ref == full[t], (n, t)
+        assert np.nansum(full) > 0, "the event must actually fire in the sample"
+
+
+def test_luck_check_parallel_equals_serial(monkeypatch):
+    from factory import null
+    ideas = [_idea(), replace(_idea(), side="short")]
+    kw = dict(cell_list=[("XAUUSD", "4h"), ("EURUSD", "1d")], control_seeds=2)
+    monkeypatch.setenv("PROP_LAB_WORKERS", "1")
+    a = null.compare(ideas, seeds=2, **kw)
+    monkeypatch.setenv("PROP_LAB_WORKERS", "4")
+    b = null.compare(ideas, seeds=2, **kw)
+    for k in ("real_survivors", "null_mean", "null_max", "p_value"):
+        assert a[k] == b[k], k
+    assert [t.survivor_names for t in a["nulls"]] == [t.survivor_names for t in b["nulls"]]

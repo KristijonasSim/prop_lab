@@ -147,10 +147,47 @@ def _ema_arr(x: np.ndarray, n: int) -> np.ndarray:
     return np.concatenate(([x[0]], y))
 
 
-def _falling(x: np.ndarray, n: int, end: int) -> bool:
-    """Pine's ta.falling at position `end`: n consecutive strict decreases."""
-    seg = x[end - n:end + 1] if end < -1 else x[end - n:]
-    return len(seg) == n + 1 and bool(np.all(np.diff(seg) < 0))
+def _run_all(ok: np.ndarray, n: int) -> np.ndarray:
+    """True at i when ok[i-n+1..i] are all True (integer rolling sum: exact)."""
+    k = np.concatenate(([0], np.cumsum(ok.astype(np.int64))))
+    out = np.zeros(len(ok), dtype=bool)
+    if len(ok) >= n:
+        out[n - 1:] = (k[n:] - k[:-n]) == n
+    return out
+
+
+def _squeeze_core(c: np.ndarray, n: int) -> np.ndarray:
+    """The squeeze-end event at EVERY bar of `c`, from bar 0's history on.
+
+    Every operation is prefix-stable - a sequential EMA filter, elementwise
+    maths, integer rolling sums - so the value at bar t depends on c[:t+1]
+    only, and computing it on the whole series or on the prefix gives the
+    same float. `tests/test_factory_speed.py` pins that against the
+    guard-protected per-bar reader `_squeeze_end`.
+    """
+    L = 6 * n + 2
+    out = np.full(len(c), np.nan)
+    if len(c) < 2:
+        return out
+    ema_c = _ema_arr(c, n)
+    safe = np.maximum(np.abs(ema_c), 1e-12)
+    nb = np.abs(c - ema_c) / safe
+    q = 0.68 * nb * nb + 0.79 * nb + nb
+    b = np.abs(np.sin(q) * np.cos(q)) * safe
+    d = _ema_arr(b, n)
+    hi = _ema_arr(np.maximum(ema_c + d, c), n)
+    lo = _ema_arr(np.minimum(c, ema_c - d), n)
+    width = hi - lo
+    dec = np.concatenate(([False], np.diff(width) < 0))
+    falling = _run_all(dec, n)
+    ended = np.concatenate(([False], falling[:-1] & ~falling[1:]))
+    rp = max(1, n // 5)
+    up = np.concatenate(([False], np.diff(lo) > 0))
+    dn = np.concatenate(([False], np.diff(hi) < 0))
+    wedge = _run_all(up, rp) & _run_all(dn, rp)
+    ev = (ended & ~wedge).astype(float)
+    out[L - 1:] = ev[L - 1:]
+    return out
 
 
 def _squeeze_end(w, n):
@@ -165,28 +202,22 @@ def _squeeze_end(w, n):
     the upper falls, over n/5 bars) vetoes it. Direction is not part of it:
     the script takes the side from its trend filter.
 
-    CAUSAL: every array is built from the last 6n closes of the window, and a
-    6n warm-up leaves the unseeded EMA error at e^-12 of its start.
+    THIS IS THE REFERENCE READER and it is slow on purpose: it hands the whole
+    visible history to `_squeeze_core` through the guard, once per bar. The
+    backtest uses `SERIES` instead, computed once; the two are pinned equal.
+    EMAs are seeded at the first bar, as Pine seeds them.
     """
-    L = 6 * n + 2
-    if not _need(w, L):
+    if not _need(w, 6 * n + 2):
         return np.nan
-    c = np.asarray(w.close[-L:], dtype=float)
-    ema_c = _ema_arr(c, n)
-    safe = np.maximum(np.abs(ema_c), 1e-12)
-    nb = np.abs(c - ema_c) / safe
-    q = 0.68 * nb * nb + 0.79 * nb + nb
-    b = np.abs(np.sin(q) * np.cos(q)) * safe
-    d = _ema_arr(b, n)
-    hi = _ema_arr(np.maximum(ema_c + d, c), n)
-    lo = _ema_arr(np.minimum(c, ema_c - d), n)
-    width = hi - lo
-    ended = _falling(width, n, -2) and not _falling(width, n, -1)
-    rp = max(1, n // 5)
-    wedge = bool(np.all(np.diff(lo[-rp - 1:]) > 0)
-                 and np.all(np.diff(hi[-rp - 1:]) < 0))
-    return 1.0 if (ended and not wedge) else 0.0
+    return float(_squeeze_core(np.asarray(w.close[-len(w):], dtype=float), n)[-1])
 
+
+#: Indicators that ALSO have a whole-series form, computed once per backtest
+#: instead of once per bar. Only for prefix-stable maths, and each one is
+#: pinned equal to its per-bar reader in tests/test_factory_speed.py.
+SERIES = {
+    "squeeze_end": lambda close, n: _squeeze_core(close, n),
+}
 
 #: name -> (function, does it need a window length?)
 INDICATORS = {
