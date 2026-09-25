@@ -8,6 +8,28 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## 2026-09-24 — VM armed for the weekend
+
+* 12 TradingView scripts through all 7 steps. Luck check: 17 real survivors vs
+  15.8 on random prices - **nothing above luck**. 3 reached step 7
+  (DeMarker long + EMA200 filter EURUSD 15m; Clean EMA and PO3 only via
+  step-6 repairs, so not clean).
+* VM factory ARMED 2026-09-24 with 218 AI ideas, 5 min between passes, 1 core.
+  `./factory/deploy_vm.sh --status` / `--pull` (results land in
+  `backtests/factory/vm/`, not on the local page).
+
+---
+
+## DECIDED 2026-09-24 — no paper trading
+
+Kris: *"it works over last 5 years or not thats it we wont do paper trading"*.
+The open question in `wednseday after work.md` §5 is closed: failing the 5-year
+re-check at step 6 is a fail. No "works recently" outcome.
+
+VM: factory installed 2026-09-24 via `factory/deploy_vm.sh`, **not armed**.
+
+---
+
 ## ADDED 2026-09-18 — the workflow question, and the one number that reframes this page
 
 Kris: *"everything happens random ... we need some kind of workflow."* Full
@@ -25,6 +47,517 @@ this search   needs 7.9y of history; luck alone reaches 2.81 sigma
 backfilled from `STRATEGY_LOG.md`. **The third method debt on this page is now
 paid**; the other two (hour-matched null, accounts-consumed) have functions
 behind them but are not yet wired into the board.
+
+## ADDED 2026-09-21 (evening) — where we stopped, and what is next
+
+The workflow is now agreed step by step and drawn: **`docs/WORKFLOW.drawio`**.
+Green boxes are settled, dashed orange are Kris's to decide. Read it first —
+it replaces most of what is below this section.
+
+**SETTLED WITH KRIS TODAY**
+
+| | |
+|---|---|
+| Step 1 | CLOSED. Ideas arrive by themselves — TradingView, then the bot inventing its own, then Kris injecting one if he wants. 24/7, no human input. |
+| Step 2 | BUILD IT SAFELY. Translate an idea into runnable code with a translator that physically cannot read future bars. |
+| Step 3 | The unit is a TRADE, not a bar. Floor: **at least 0.4 trades/day** (Kris: "this is day trading"). |
+| Step 4 | Test on ALL six markets x four timeframes. If one of the 24 works, keep it. |
+| Step 6 | The 5-year re-check is what makes step 4 safe. Junk reaching the desk: 31 per 1,000 on 3 years alone, **0.5 with it**. |
+| Step 7 | Score on **pass % and days**. Not profit factor, not trades per day. |
+| The bar | **Never moves** because other ideas failed. Kris was right and the simulation says so: a tougher bar killed 9 of every 10 REAL edges and caught no extra fakes. |
+
+**BUILT TODAY** — `factory/`, steps 1 and 2 only, 18 tests.
+
+```
+python -m factory.fill      top the queue up
+python -m factory.build     run what is waiting, on gold
+python -m factory.queue     what is left
+```
+
+`guard.Window` is the piece that matters: only negative indexing exists, so
+reading a future bar is not a mistake that can be made. No statistic
+downstream catches a leak.
+
+**FIXED TODAY** — both red boxes in the diagram are now green.
+`core/screen.py` measures an event signal on its events (`fires=`), and
+`research/vocab.py` gained four event transforms. Planted-edge recovery went
+**7 of 20 to 18 of 20**. Search space 2,795 -> 6,670.
+
+---
+
+## ADDED 2026-09-22 — step 3 is built
+
+`factory/check.py`, `factory/cells.py`, 13 tests. `docs/STEP3.md` is the design
+and every number behind it. The diagram's step-3 boxes are green.
+
+```
+python -m factory.check                  # 5 ideas off the queue, all 24 cells
+python -m factory.check -n 20 -v         # print every cell
+```
+
+**The two open numbers are now picked, both on measurement.**
+
+* **Cost multiple: 1x, reported at 1x/2x/3x.** Kris pushed back on 2x and he was
+  right — on 45 generated ideas 2x removed only two, and once the drift control
+  was applied both multiples left exactly five. It bought nothing and cost what
+  he said it costs.
+* **All 24 cells**, ~18 seconds an idea. Gold's round trip is 1.83 bps and
+  EURUSD's is 0.27; killing on gold alone kills at six times the bar.
+
+**The gate that does the work is the drift control, not the cost check:**
+
+| filter | of 45 |
+|---|---|
+| makes money at normal fees | 19 |
+| ...survives deleting its best 5 trades | 19 |
+| ...**beats its own random-entry control** | **5** |
+
+Gold rose 123% in the window. Fourteen of the nineteen scored *worse* than
+entering at random. The control does not ban trading with a trend — all five
+survivors are long gold — it bans trading one worse than random.
+
+**One claim of mine was wrong and a test caught it.** The first version said
+`max_hold` capped the trade rate and that twelve of the 24 cells were therefore
+impossible. It does not: nearly every trade exits early on its stop or target.
+Step 3 reports the measured mean hold instead. `docs/STEP3.md` last section.
+
+---
+
+## ADDED 2026-09-23 (late, 2) — the board is cleared and the SOURCE is the unit
+
+Kris: *"now its impossible to understand what is our main source of ideas...
+clean all UI from data, we will start with tradingview... its not really
+possible to see how many strategies were found in tradingview, how many tested,
+how many passed / failed, then i would want to choose other source for example
+quantpedia."*
+
+**The board is cleared.** `python -m factory.reset` — 39 queued, 158 tried, 18
+survivors and 2 runs moved to `backtests/factory/archive/20260923T104359Z/`.
+**Archived, not deleted**: `CLAUDE.md` says the failures are the denominator
+and `core/searchcost.py` charges every trial, and a trial does not become
+uncharged because the page stopped showing it. The 158 fingerprints are
+**carried forward flagged `carried`**, so nothing is re-tested and nothing is
+counted — a first version carried them unflagged and the freshly cleared board
+reported 158 tested ideas.
+
+**The source is now the unit of work.** `factory/sources/catalogue.py` is the
+list, and `queue.SOURCE_ORDER` is derived from it so the two cannot disagree.
+
+| source | how ideas arrive | status |
+|---|---|---|
+| **TradingView** | Pine scripts read from `data/pine/` | needs input — drop files in |
+| Quantpedia | published write-ups | **blocked** — no reader, paid library, terms unchecked |
+| AI agent | a model proposes rules with a mechanism | ready |
+| Enumerator | walks the grammar, 308 combinations | ready |
+| Kris | injected by hand | ready |
+
+**A source that is not ready says why on the page.** "0 found" with no reason
+reads as "this source found nothing" when it means "this source has not been
+run", and that was the exact confusion.
+
+**Where an idea died is now a field, not prose.** `mark_tried` records
+`died_at` and `gate`; `keep` records `reached`. Before this the note was free
+text assembled differently at each call site, so "how many TradingView ideas
+passed" was answerable and "where did they die" was not.
+
+**TradingView is seeded and the regex reader is measured useless on it.** Six
+real Pine scripts in `data/pine/`: the regex read **0 of 6** — it cannot
+resolve a variable, so `fast = ta.sma(close,20)` then `ta.crossover(fast,slow)`
+defeats it. The model read 4, queued 3 (one was a duplicate of an archived
+idea, so the dedupe worked), and **named the two it refused**:
+
+* `ta.pivothigh()` — pivot detection
+* composite Bollinger bands — a derived series compared against its own low
+
+**Those refusals are now kept, not printed.** `backtests/factory/skipped.jsonl`
+and a panel on the page. Each one is a term that **multiplies** the 308 rules
+the enumerator can build rather than adding one, and they come from scripts
+people actually trade. They were going to a terminal and being lost.
+
+**The page.** Source tabs across the top; pick one and the whole page is about
+it — found, tested, passed step 3, failed, held at 6, scored at 7, waiting.
+Below, every source in one table with what killed most of its ideas. The choice
+is remembered between reloads. Verified at 390/768/1280px with no horizontal
+overflow.
+
+**Two UI bugs it exposed:** an `idle` beat was reading as a running factory, so
+the header showed RUNNING with a two-second uptime on an empty board; and the
+empty panels left holes instead of hiding.
+
+---
+
+## ADDED 2026-09-23 (late) — the factory floor, a page that shows the line running
+
+Kris: *"i want to have UI where i can see all 7 steps as in workflow... i would
+love to see live what is happening... i want to launch that page and understand
+everything what is going on there."*
+
+```
+python -m factory.dashboard        # http://127.0.0.1:8765
+```
+
+`factory/live.py`, `factory/dashboard.py`, `factory/ui/index.html`,
+`tests/test_factory_dashboard.py`.
+
+**WHY IT IS A LOCAL SERVER AND NOT A HOSTED PAGE.** Every number on it is read
+from this machine — `live.json`, `runs.jsonl`, `queue.jsonl`, `tried.jsonl` —
+and a page hosted anywhere else cannot see them. It is `http.server` from the
+standard library, bound to localhost, serving the page and `/api/state`.
+
+**WHY A HEARTBEAT FILE.** A run record is written when a pass FINISHES, which
+is nineteen minutes after it starts. A dashboard reading only run records has
+nothing to say for most of that time, and a factory floor with nothing moving
+on it looks broken rather than busy. `live.json` is rewritten as the pass moves
+— atomically, because the page polls it on a 2s timer and a torn read would
+blink "idle" at random.
+
+**THE UPTIME MEANS WITHOUT INTERRUPTION.** The clock is carried forward while
+beats keep arriving and **reset** when the gap exceeds an hour. A factory that
+was down for a day and came back has not been running for a week, and a counter
+that says it has is worse than no counter.
+
+**What the page shows:** the seven stations as a line, the active one lit and
+its progress bar moving; what is happening right now, down to the rule and the
+cell; the funnel from ideas tested to scored; **which gate is killing things**;
+the last luck check with its verdict in words; the queue by source; agent
+versus enumerator survival; everything that reached step 7; and the recent
+passes.
+
+**Verified in a browser at four widths** — 2 stations per row on a phone, 4 on
+a tablet, 7 on a desktop, **zero horizontal overflow at any of them**.
+
+**It cannot start a run.** No POST route, no call into `run_once`. A dashboard
+that can launch a pass is one that launches by accident, on a box that also
+runs a live bot.
+
+**One fix it forced:** the gate breakdown was reading only finished runs, so on
+a fresh install the one panel that explains the bottleneck sat empty for
+nineteen minutes while the thing it measures happened on screen. It now adds
+the pass in flight.
+
+---
+
+## ADDED 2026-09-23 (evening) — a model writes the ideas, and the VM is wired
+
+Kris: *"on a simple script that runs locally we wont achieve anything without
+someone who can think."* He is right, and the measurement agrees: the
+enumerator's grammar has **308 combinations in total**, 135 already tried, and
+87% of what it makes dies on trade count.
+
+**The model sits in step 1 and nowhere else.** `factory/sources/agent.py` and
+an AI path in `factory/sources/tradingview.py`. Steps 2-7 never call a model —
+they run thousands of times, must give the same answer twice, and a model in
+that path makes a result nobody can reproduce. It is explicitly kept out of
+step 4's repair list, where choosing the tweak after seeing the failure is the
+difference between a repair stage and a fishing expedition.
+
+```
+python -m factory.sources.agent -n 20 --dry-run     # propose, print, queue nothing
+python -m factory.sources.tradingview --ai          # translate data/pine/
+python -m factory.nightly -n 20 --seeds 5           # one unattended pass
+python -m factory.nightly --status                  # by-source survival
+./factory/deploy_vm.sh                              # install on the VM, idle
+./factory/deploy_vm.sh --arm                        # and start it
+```
+
+**The safety property, and it is the reason this is allowed at all.** The model
+returns JSON in the `spec.Strategy` grammar and **never Python**. So a proposed
+idea cannot read a future bar (`guard.Window` exposes only negative indexing
+and the model is not writing the reader), cannot invent an indicator
+(`validate` rejects any kind outside `spec.INDICATORS`), and cannot smuggle in
+a sweep (`queue.add` drops anything already tried). Every idea must carry a
+**mechanism** or it is rejected — which is the thing an enumerator can never
+supply and `CLAUDE.md` has always asked for.
+
+**Tested live.** Five proposals, five valid, and they came back as dense states
+rather than rare crossings — `price above ema20 and rsi14 above 50`, not
+`sma5 cross_above sma200` — which is the bottleneck the prompt names.
+
+**The Pine translator names what it cannot express, and that is the point.**
+The regex runs first (free, deterministic) and the model is only paid for the
+remainder. On three real scripts it translated one and refused two **with the
+exact missing feature named**: `ta.pivothigh` pivot detection, and composite
+band arithmetic. Those two names are the grammar extensions that break the
+308 ceiling — the refusals are worth more than the translation.
+
+### THE VM CANNOT RUN STEP 1, AND THAT SHAPED THE DESIGN
+
+Checked on the box, 2026-09-23: **no `claude` CLI and no node to install one
+with**, and `claude -p` needs an interactive authenticated login that cannot be
+scripted from here.
+
+So the handoff is the **queue file**: the desktop fills `queue.jsonl` with model
+ideas, `deploy_vm.sh --queue` pushes it, the VM drains it with `--no-agent`.
+That is better architecture anyway — token spend stays on a box Kris is sitting
+at, and the 24/7 loop has no network dependency on Anthropic.
+
+| | desktop | Oracle VM |
+|---|---|---|
+| cores / RAM | 28 / 30 GB | 2 / 952 MB, **423 MB free** |
+| `claude` CLI | yes | **no** |
+| factory peak RSS | — | **341 MB measured** |
+| one idea, 24 cells | 13.4s | ~50s |
+| already running there | — | live bot (cron :02), research loop |
+
+**341 MB against 423 MB free is the tightest fit on that box**, so the unit is
+niced 15, IO-idle and capped at `MemoryMax=600M`, and `deploy_vm.sh` installs
+it **stopped**. Starting it is `--arm`, deliberately.
+
+### Tokens
+
+| | tokens | cadence |
+|---|---|---|
+| 20 proposed ideas | ~10-15k | per top-up |
+| one Pine script | ~3k | once per script |
+| steps 2-7 | **0** | always |
+
+Nightly is ~450k a month, inside Claude Pro. Hourly is ~11M a month and would
+compete with an interactive session on the same account. `--no-agent` runs the
+whole pipeline for nothing when the queue is already full.
+
+### Two bugs the first run found, and the second one mattered
+
+* **The scramble was a Python loop over every bar** — 145,000 iterations per
+  cell per seed, and step 5 does 24 cells times the seed count. Re-chaining is
+  a cumulative product, so it vectorises: **2-5s to 0.01s** on gold 15m, with
+  the drift, the dead bars and the bar shapes unchanged. This is what makes
+  step 5 affordable on a 2-core VM at all.
+* **A one-bar average is not an average.** The first live batch proposed
+  `price above vwap1`, which is trivially true or false. `agent.MIN_LENGTH` is
+  now 3.
+* **The model's ideas would never have been tested.** `queue.SOURCE_ORDER` was
+  `("tradingview", "invent", "kris")` and an unlisted source sorts LAST, so the
+  first nightly run queued eight model-written ideas and then tested eight
+  enumerated ones — the model's sat behind 48 enumerated ideas. `agent` now
+  ranks above `invent`, because the enumerator is the FLOOR under the queue and
+  a floor that is drained first is not a floor. **Found by reading the run
+  record's `by_source` field**, which is the one thing that field is for.
+
+### The first end-to-end pass, and how to read it
+
+8 ideas, all 24 cells, 3 null seeds, 19 minutes. 2 passed step 3, 2 more were
+repaired, 1 cleared step 6, and step 7 scored it:
+
+| | |
+|---|---|
+| rule | `short when sma5 cross_below sma20 and price above ema200`, EURUSD 15m |
+| trades | 1,405 — **1.12/day** |
+| fastest rung | 5% risk, 31.0% pass, **12.9 expected days [11.3-14.0]** |
+| accounts consumed | **3.2 per funded seat** |
+
+**It is not a candidate and nothing here says it is.** Step 5 on that same
+batch returned **real 4 against a null mean of 2.67, p = 0.50** — the batch's
+survivors are not distinguishable from luck, so a number drawn out of it is a
+number from a batch that failed its own control. The fastest rung is also the
+**top of the ladder at 5% risk**, which is where the ladder stops being a
+choice and starts being a dare.
+
+What it does establish is that the pipeline runs end to end unattended and
+produces the fields the board needs, including accounts-consumed.
+
+### What is still missing, and who it needs
+
+1. **`./factory/deploy_vm.sh` has not been run.** Written and syntax-checked;
+   this session's sandbox refused the remote write. It is additive — own
+   service name, own unit, capped memory — and it installs idle.
+2. **The queue handoff is manual.** Top up and push when the desktop is on. A
+   desktop cron could do it; not built, because it spends tokens on a schedule
+   and that is Kris's call.
+3. **TradingView still does not download.** Terms-of-service question, open
+   since 2026-09-21. `data/pine/` works today with no download at all.
+4. **The model has never been scored against the enumerator.**
+   `nightly.by_source()` records it from the first run; there are no runs yet.
+   Until that table has numbers, "the model thinks better" is a hope.
+
+---
+
+## ADDED 2026-09-23 — steps 5, 6 and 7 are built, and step 5's first run is the finding
+
+Kris: *"download what is missing and build all pipeline workflow untill step 7."*
+Done. `factory/null.py`, `factory/recheck.py`, `factory/evaluate.py`,
+`factory/run.py`, 22 tests, `docs/STEP5.md` / `STEP6.md` / `STEP7.md`. The
+diagram is updated and steps 3 to 7 are green.
+
+```
+python -m factory.run -n 40 --seeds 10        # steps 3 to 7, one command
+python -m factory.null -n 40 --seeds 10       # step 5 alone
+python -m factory.recheck --coverage          # what holdout each cell has
+python -m factory.evaluate                    # the risk curve
+```
+
+### THE SCRAMBLED MARKET BEAT THE REAL ONE
+
+First run of step 5. 25 generated ideas, gold 1h and 4h, the same ideas through
+the same pipeline on the real market and on four scrambled copies of it:
+
+| market | step 3 | repaired | survivors |
+|---|---|---|---|
+| **real** | 0 | 2 | **2** |
+| scrambled #0 | 3 | 4 | 7 |
+| scrambled #1 | 2 | 1 | 3 |
+| scrambled #2 | 0 | 1 | 1 |
+| scrambled #3 | 3 | 3 | 6 |
+
+**Real 2, scrambled mean 4.2, p = 0.80.** The null does not merely match the
+real market, it **beats** it — the same shape as the top-N withdrawal on
+2026-09-17, where the null sped up more than the real data on four markets of
+six.
+
+**It is not an artifact of the block length**, which was the obvious objection:
+a one-day block destroys structure at horizons longer than a day, and most
+factory ideas hold up to 48 bars, so a short block could be flattering
+breakout rules in the null. Re-run at three block lengths, four seeds each:
+
+| block | null survivors | mean |
+|---|---|---|
+| 1 day | 1, 2, 10, 4 | 4.2 |
+| 1 week | 2, 4, 4, 6 | 4.0 |
+| 1 month | 4, 7, 2, 5 | 4.5 |
+
+**Stated against the result, not for it:** 25 ideas, two cells, four seeds is a
+small run, and with four seeds the p-value cannot go below 0.20 whatever
+happens. This is a reason to run it properly (40 ideas, 24 cells, 10 seeds —
+an overnight job), not a verdict. But the direction is not marginal and it is
+the direction the repo's own history predicts.
+
+**What it does NOT say.** It is a statement about the PIPELINE on this idea
+list, not about any single idea, and not about H-027 — which was never produced
+by the factory. What it says is that on a 25-idea batch of enumerated crossing
+rules, surviving steps 3 and 4 is not yet evidence of anything.
+
+### The data is backfilled
+
+Two extra years pulled for XAGUSD, EURUSD, GBPUSD and USDJPY (their caches
+started 2023-09). Gold needed nothing — eleven years of raw 1-minute `.bi5`
+were already on disk — and BTC has nine. `scripts/build_5y.py` builds
+`{sym}_dukascopy5y_{tf}.parquet`, **under a new name so no board number moves**.
+Step 6 coverage went 8 of 24 cells to 24 of 24.
+
+### Two corrections to what the diagram said
+
+* **Step 5 is not "the same test on scrambled data".** That is step 3 gate 4,
+  which already exists and already kills fourteen ideas in nineteen. Step 5 is
+  a batch-level question: the factory takes the best of ~30 tries per idea
+  (24 cells, then 12 repairs), and nothing priced that. `docs/STEP5.md` §1.
+* **Step 6 tests the years BEFORE the step-3 window, not five years.** The
+  five-year window contains the three the idea was selected on, so two thirds
+  of it would be a re-read of the exam paper. And the "removes 98%" figure is
+  optimistic: the two windows are adjacent stretches of one history, not
+  independent draws. `docs/STEP6.md` §2.
+
+### One bug fixed on the way
+
+`factory/queue.py` could not read its own `tried.jsonl`: `mark_tried` writes
+`verdict` and `note_result` into the row and `Strategy(**d)` raised on them.
+`fingerprints()` reads that file, so **the dedupe had silently stopped working**
+and `take()` could not run at all. Regression test added.
+
+---
+
+## ADDED 2026-09-22 — step 4 is built, and it found the factory's real bottleneck
+
+`factory/repair.py`, 14 tests, `docs/STEP4.md`. Step 4 is a **repair stage, not
+a walk-forward**: step 3 already tests all 24 cells on 3 years, and every idea
+the factory makes has a fixed stop, target and hold, so there is nothing to fit
+in a training window. An idea that missed ONE gate narrowly gets six fixed
+tweaks, once each, on one cell, then moves on.
+
+```
+python -m factory.repair                 # steps 3 and 4 end to end
+```
+
+**Measured on 40 ideas through the real pipeline, all 24 cells:**
+
+| | |
+|---|---|
+| passed step 3 | 1 of 40 |
+| near-misses | 14 |
+| repair attempts | 94 |
+| **repaired** | **1** |
+
+A repair attempt produced a survivor **1.06% of the time against 0.10% for a
+fresh cell-test** — ten times better, which is what you would hope from
+something aimed at a known near-miss. Step 4 doubled the session's survivors.
+**It is one success, so it is a reason to keep counting, not a result.**
+
+**Which repairs did anything:** trades repairs 0 of 36, filters 0 of 30, wider
+stop/target 1 of 28. The trades repairs failed for the reason `docs/STEP3.md`
+already flagged — the hold is not what limits the trade rate. **This is the
+third time the filter family has been measured here and produced nothing.**
+
+### THE BOTTLENECK IS NOT EDGE, IT IS TRADE COUNT
+
+**833 of 960 cell-tests — 87% — failed on trade count**, against 99 on cost and
+4 on the drift control. The factory's ideas barely trade: `sources/invent.py`
+enumerates crossings on lookbacks up to 200 bars and those fire a few times a
+year.
+
+**Neither step 3 nor step 4 can fix that, and step 4 is now measured not to.**
+The cheapest improvement available to this pipeline is a generator that makes
+DENSER rules — shorter lookbacks, more `above`/`below` states, fewer rare
+crossings. That is a step 1-2 job. It is now the top item below.
+
+---
+
+### WHAT IS LEFT, in the order we stopped — REVISED 2026-09-23
+
+0. **Run step 5 properly before anything else.** 40 ideas, all 24 cells, 10
+   seeds, overnight. The 25-idea run says the pipeline's survivors are not
+   distinguishable from luck and may be worse than it. **If that holds, every
+   item below it is work on a machine that has not been shown to find
+   anything**, and the fix is not more ideas — it is the generator.
+1. **Make the generator produce denser rules.** 87% of everything dies on trade
+   count. Nothing downstream can repair it. `factory/sources/invent.py`. This
+   is now also the most likely explanation of item 0: a rule that fires a few
+   times a year is a rule whose survival is mostly a coin flip, on real bars
+   and on scrambled ones alike.
+2. ~~Steps 5 to 7 are not written.~~ **Built 2026-09-23** (above).
+3. **Re-run H-046 and H-046c.** Both died with "effect under the bar" and
+   "mean and median disagree in sign" — the two exact ways the dilution defect
+   kills a real signal. Neither verdict was earned.
+4. **TradingView needs Kris's decision.** `factory/sources/tradingview.py`
+   translates Pine and skips what it cannot read, but it does NOT download.
+   Bulk collection is a terms-of-service question, and this session's
+   tradingview MCP server failed to connect. Drop `.pine` files in
+   `data/pine/` and it reads them today.
+5. **Where on the curve do we sit?** Pass % and days pull against each other
+   through risk per trade, so a candidate has a curve, not a score. Parked
+   until a real candidate produces one. **`factory/evaluate.py` now prints that
+   curve**, with accounts-consumed beside every days figure, so the question is
+   answerable the moment a candidate clears step 6.
+6. **What a funded account earns per month.** Parked at Kris's request —
+   "focus on passing first" — but it is the number that decides whether to buy
+   several evaluations at once.
+
+---
+
+## ADDED 2026-09-21 — the survey Kris asked for, and what it does to this page
+
+Kris: *"we are walking blindly."* **`docs/AI_RESEARCH_2026.md`** — sourced
+survey of how strategies are built with AI in 2026: models, method, test
+environments, indicators, prompts, venue.
+
+**It contradicts the section below, and the contradiction is the point.**
+
+* **The signal axis is already ahead of the published frontier.** H-027's
+  implied per-bet IC is **0.077**; the best published LLM alpha miner's is
+  **0.0056**, and it buys its IR with ~43,000 bets a year against H-027's 225.
+  **The deficit is breadth, not signal.** So "give the loop the gold order-flow
+  feed" — the next step written below — is work on the axis that is already
+  winning. It is still worth the ten minutes for `reconcile()`; it is no longer
+  obviously worth fourteen hours before the two items above it.
+* **There has never been a positive control here.** 457 charged trials, and
+  nothing establishes that this pipeline could see an edge if one existed. One
+  day of work turns every past failure into "nothing above X bps".
+* **The venue may matter more than any of it.** COMEX gold futures: real tape,
+  **0.61-0.84 bps** round trip against the CFD's measured 1.64, and **Topstep
+  allows full API automation on funded accounts**. Apex allows 20 funded
+  accounts and bans bots on them.
+
+**Nothing here is chosen. Kris picks.** The ranked list is `docs/
+AI_RESEARCH_2026.md` Part 10.
+
+---
 
 ## THE NEXT STEP — one thing, written 2026-09-18
 

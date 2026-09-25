@@ -1,0 +1,321 @@
+{
+ "book_tpd": 0,
+ "min_tpd": 0.2,
+ "solo": 0,
+ "researched": 2990,
+ "tested": 229,
+ "waiting": 2771,
+ "per_hour": 32.7,
+ "passed": [],
+ "near": [
+  {
+   "name": "Yields rising over 5 days \u2192 sell Euro (10 days)",
+   "arm": "DFII10.change5.EURUSD.h10",
+   "market": "EURUSD",
+   "events": 92,
+   "effect": 36.491,
+   "bar": 0.374,
+   "rho": 0.6,
+   "p": null,
+   "note": "response not monotone, rho 0.60",
+   "why": "shape almost held (rho 0.60 of 0.80)",
+   "trades": 40,
+   "trades_per_day": 0.037,
+   "trades_per_week": 0.2593,
+   "avg_hold_bars": 10.0,
+   "win_pct": 55.0,
+   "avg_bps": 9.8446,
+   "pf_1x": 1.2215,
+   "pf_2x": 1.2169,
+   "pf_3x": 1.2124,
+   "max_dd_bps": 741.9788,
+   "sharpe": 0.2682,
+   "span_days": 1080.0,
+   "total_bps": 393.7857,
+   "cadence": "1d"
+  },
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (20 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h20",
+   "market": "XAUUSD",
+   "events": 46,
+   "effect": 152.687,
+   "bar": 2.13,
+   "rho": 1.0,
+   "p": 0.11,
+   "note": "loses to its own shuffle, p=0.110",
+   "why": "lost to shuffled data, but only just (p 0.110)",
+   "trades": 29,
+   "trades_per_day": 0.0268,
+   "trades_per_week": 0.1876,
+   "avg_hold_bars": 20.0,
+   "win_pct": 72.4138,
+   "avg_bps": 223.0934,
+   "pf_1x": 3.924,
+   "pf_2x": 3.899,
+   "pf_3x": 3.8742,
+   "max_dd_bps": 1417.6138,
+   "sharpe": 1.6865,
+   "span_days": 1082.0,
+   "total_bps": 6469.709,
+   "cadence": "1d"
+  },
+  {
+   "name": "Real yields outpacing inflation over 5 days \u2192 sell Euro (10 days)",
+   "arm": "REAL_MINUS_BE.change5.EURUSD.h10",
+   "market": "EURUSD",
+   "events": 92,
+   "effect": 24.518,
+   "bar": 0.374,
+   "rho": 0.7,
+   "p": null,
+   "note": "response not monotone, rho 0.70",
+   "why": "shape almost held (rho 0.70 of 0.80)",
+   "trades": 38,
+   "trades_per_day": 0.0352,
+   "trades_per_week": 0.2463,
+   "avg_hold_bars": 10.0,
+   "win_pct": 55.2632,
+   "avg_bps": 11.2366,
+   "pf_1x": 1.2571,
+   "pf_2x": 1.2524,
+   "pf_3x": 1.2477,
+   "max_dd_bps": 451.1031,
+   "sharpe": 0.3442,
+   "span_days": 1080.0,
+   "total_bps": 426.9913,
+   "cadence": "1d"
+  },
+  {
+   "name": "Real yields outpacing inflation over 5 days \u2192 sell Euro (20 days)",
+   "arm": "REAL_MINUS_BE.change5.EURUSD.h20",
+   "market": "EURUSD",
+   "events": 45,
+   "effect": 23.222,
+   "bar": 0.374,
+   "rho": 0.7,
+   "p": null,
+   "note": "response not monotone, rho 0.70",
+   "why": "shape almost held (rho 0.70 of 0.80)",
+   "trades": 27,
+   "trades_per_day": 0.0253,
+   "trades_per_week": 0.177,
+   "avg_hold_bars": 20.0,
+   "win_pct": 44.4444,
+   "avg_bps": -2.6664,
+   "pf_1x": 0.9638,
+   "pf_2x": 0.9611,
+   "pf_3x": 0.9584,
+   "max_dd_bps": 916.0968,
+   "sharpe": -0.0468,
+   "span_days": 1068.0,
+   "total_bps": -71.9928,
+   "cadence": "1d"
+  },
+  {
+   "name": "Yields rising over 5 days \u2192 sell Pound (10 days)",
+   "arm": "DFII10.change5.GBPUSD.h10",
+   "market": "GBPUSD",
+   "events": 88,
+   "effect": 40.276,
+   "bar": 0.82,
+   "rho": 0.6,
+   "p": null,
+   "note": "response not monotone, rho 0.60",
+   "why": "shape almost held (rho 0.60 of 0.80)",
+   "trades": 39,
+   "trades_per_day": 0.0361,
+   "trades_per_week": 0.2528,
+   "avg_hold_bars": 10.0,
+   "win_pct": 53.8462,
+   "avg_bps": 15.3937,
+   "pf_1x": 1.362,
+   "pf_2x": 1.3511,
+   "pf_3x": 1.3403,
+   "max_dd_bps": 634.4238,
+   "sharpe": 0.4516,
+   "span_days": 1080.0,
+   "total_bps": 600.3559,
+   "cadence": "1d"
+  },
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (10 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h10",
+   "market": "XAUUSD",
+   "events": 93,
+   "effect": 90.036,
+   "bar": 2.13,
+   "rho": 0.9,
+   "p": 0.235,
+   "note": "loses to its own shuffle, p=0.235",
+   "why": "lost to shuffled data, but only just (p 0.235)",
+   "trades": 46,
+   "trades_per_day": 0.042,
+   "trades_per_week": 0.2943,
+   "avg_hold_bars": 10.0,
+   "win_pct": 65.2174,
+   "avg_bps": 130.8865,
+   "pf_1x": 3.2919,
+   "pf_2x": 3.2589,
+   "pf_3x": 3.2263,
+   "max_dd_bps": 448.1466,
+   "sharpe": 1.8391,
+   "span_days": 1094.0,
+   "total_bps": 6020.7775,
+   "cadence": "1d"
+  },
+  {
+   "name": "Calm building over 5 days \u2192 sell Gold (5 days)",
+   "arm": "VIX_TERM.change5.XAUUSD.h5",
+   "market": "XAUUSD",
+   "events": 179,
+   "effect": 80.635,
+   "bar": 2.13,
+   "rho": 0.9,
+   "p": 0.115,
+   "note": "loses to its own shuffle, p=0.115",
+   "why": "lost to shuffled data, but only just (p 0.115)",
+   "trades": 66,
+   "trades_per_day": 0.0602,
+   "trades_per_week": 0.4215,
+   "avg_hold_bars": 5.0,
+   "win_pct": 63.6364,
+   "avg_bps": 64.3955,
+   "pf_1x": 1.9761,
+   "pf_2x": 1.9547,
+   "pf_3x": 1.9335,
+   "max_dd_bps": 648.6261,
+   "sharpe": 1.1403,
+   "span_days": 1096.0,
+   "total_bps": 4250.1039,
+   "cadence": "1d"
+  },
+  {
+   "name": "Yields rising over 5 days \u2192 sell Pound (20 days)",
+   "arm": "DFII10.change5.GBPUSD.h20",
+   "market": "GBPUSD",
+   "events": 43,
+   "effect": 30.359,
+   "bar": 0.82,
+   "rho": 0.6,
+   "p": null,
+   "note": "response not monotone, rho 0.60",
+   "why": "shape almost held (rho 0.60 of 0.80)",
+   "trades": 26,
+   "trades_per_day": 0.0243,
+   "trades_per_week": 0.1704,
+   "avg_hold_bars": 20.0,
+   "win_pct": 46.1538,
+   "avg_bps": 5.5021,
+   "pf_1x": 1.0968,
+   "pf_2x": 1.0898,
+   "pf_3x": 1.0828,
+   "max_dd_bps": 584.7894,
+   "sharpe": 0.1061,
+   "span_days": 1068.0,
+   "total_bps": 143.0558,
+   "cadence": "1d"
+  }
+ ],
+ "series": [
+  {
+   "h": "13",
+   "n": 0
+  },
+  {
+   "h": "14",
+   "n": 0
+  },
+  {
+   "h": "15",
+   "n": 0
+  },
+  {
+   "h": "16",
+   "n": 0
+  },
+  {
+   "h": "17",
+   "n": 0
+  },
+  {
+   "h": "18",
+   "n": 0
+  },
+  {
+   "h": "19",
+   "n": 0
+  },
+  {
+   "h": "20",
+   "n": 0
+  },
+  {
+   "h": "21",
+   "n": 0
+  },
+  {
+   "h": "22",
+   "n": 0
+  },
+  {
+   "h": "23",
+   "n": 0
+  },
+  {
+   "h": "00",
+   "n": 0
+  },
+  {
+   "h": "01",
+   "n": 0
+  },
+  {
+   "h": "02",
+   "n": 0
+  },
+  {
+   "h": "03",
+   "n": 0
+  },
+  {
+   "h": "04",
+   "n": 0
+  },
+  {
+   "h": "05",
+   "n": 0
+  },
+  {
+   "h": "06",
+   "n": 38
+  },
+  {
+   "h": "07",
+   "n": 21
+  },
+  {
+   "h": "08",
+   "n": 48
+  },
+  {
+   "h": "09",
+   "n": 48
+  },
+  {
+   "h": "10",
+   "n": 48
+  },
+  {
+   "h": "11",
+   "n": 24
+  },
+  {
+   "h": "12",
+   "n": 2
+  }
+ ],
+ "ideas": 227,
+ "status": "idle",
+ "built": "12:38:08 UTC"
+}

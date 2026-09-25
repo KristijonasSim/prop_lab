@@ -85,7 +85,7 @@ def test_signal_is_shifted_by_the_declared_lag(monkeypatch):
 
     c = P.Candidate(feed="RAMP", transform="level", window=0, lag=2,
                     market="XAUUSD", hold=3, direction=1, mechanism="test")
-    sig, fwd, _ = R.build_signal(c)
+    sig, fwd, _, _ = R.build_signal(c)
 
     # level transform, lag 2: the signal on day i is the raw value from day i-2
     day = idx[50]

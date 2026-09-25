@@ -1,0 +1,81 @@
+// © veryfid  CC BY-NC-SA 4.0
+//@version=5
+indicator(title='Boom Hunter Pro 1.022', shorttitle='Boom Pro', overlay=false)
+// prop_lab: pasted by Kris 2026-09-24. Plots, fib lines, S/R break drawing and
+// bar colours removed; the three Ehlers oscillators and the entry rules kept.
+LPPeriod = input.int(6, title='Quotient | LPPeriod')
+K1 = input.int(0, title='K1')
+K2 = 0.3
+esize = 60
+ey = 50
+trigno = input.int(2, 'Trigger Length')
+LPPeriod2 = input.int(27, title='LPPeriod2')
+K12 = input.float(0.8, title='K1')
+K22 = input.float(0.3, title='K2')
+n1 = input.int(9, 'WT | master')
+n2 = input.int(6, 'time 1')
+n3 = input.int(3, '2')
+n4 = input.int(21, 'LSMA | 1')
+n5 = input.int(0, '2')
+lsmaline = input.int(200, title='LSMA Long')
+pi = 2 * math.asin(1)
+// EOT 1: 2-pole high-pass (100 bars) -> SuperSmoother(LPPeriod) -> fast-attack/slow-decay peak normaliser
+alpha1 = (math.cos(.707 * 2 * pi / 100) + math.sin(.707 * 2 * pi / 100) - 1) / math.cos(.707 * 2 * pi / 100)
+HP = 0.0
+HP := (1 - alpha1 / 2) * (1 - alpha1 / 2) * (close - 2 * nz(close[1]) + nz(close[2])) + 2 * (1 - alpha1) * nz(HP[1]) - (1 - alpha1) * (1 - alpha1) * nz(HP[2])
+a1 = math.exp(-1.414 * pi / LPPeriod)
+b1 = 2 * a1 * math.cos(1.414 * pi / LPPeriod)
+c2 = b1
+c3 = -a1 * a1
+c1 = 1 - c2 - c3
+Filt = 0.0
+Filt := c1 * (HP + nz(HP[1])) / 2 + c2 * nz(Filt[1]) + c3 * nz(Filt[2])
+Peak = 0.0
+Peak := .991 * nz(Peak[1])
+if math.abs(Filt) > Peak
+    Peak := math.abs(Filt)
+X = 0.0
+if Peak != 0
+    X := Filt / Peak
+Quotient1 = (X + K1) / (K1 * X + 1)
+Quotient2 = (X + K2) / (K2 * X + 1)
+// EOT 2: same with LPPeriod2 = 27
+a12 = math.exp(-1.414 * pi / LPPeriod2)
+b12 = 2 * a12 * math.cos(1.414 * pi / LPPeriod2)
+c22 = b12
+c32 = -a12 * a12
+c12 = 1 - c22 - c32
+Filt2 = 0.0
+Filt2 := c12 * (HP + nz(HP[1])) / 2 + c22 * nz(Filt2[1]) + c32 * nz(Filt2[2])
+Peak2 = 0.0
+Peak2 := .991 * nz(Peak2[1])
+if math.abs(Filt2) > Peak2
+    Peak2 := math.abs(Filt2)
+X2 = 0.0
+if Peak2 != 0
+    X2 := Filt2 / Peak2
+Quotient3 = (X2 + K12) / (K12 * X2 + 1)
+Quotient4 = (X2 + K22) / (K22 * X2 + 1)
+q1 = Quotient1 * esize + ey
+trigger = ta.sma(q1, trigno)
+// LSMA wave trend
+tci(src) =>
+    ta.ema((src - ta.ema(src, n1)) / (0.025 * ta.ema(math.abs(src - ta.ema(src, n1)), n1)), n2) + 50
+mf(src) =>
+    100.0 - 100.0 / (1.0 + math.sum(volume * (ta.change(src) <= 0 ? 0 : src), n3) / math.sum(volume * (ta.change(src) >= 0 ? 0 : src), n3))
+tradition(src) =>
+    math.avg(tci(src), mf(src), ta.rsi(src, n3))
+wt1 = tradition(hlc3)
+wt3 = ta.linreg(wt1, n4, n5)
+lsma = ta.linreg(wt3, lsmaline, 0)
+// Entries
+warn = ta.crossover(Quotient3, -0.9)
+warn2 = ta.crossover(Quotient1, -0.9)
+warn3 = ta.crossunder(Quotient1, 0.9)
+enter3 = Quotient3 <= -0.9 and ta.crossover(q1, trigger) and ta.barssince(warn2) <= 7 and q1 <= 20 and ta.barssince(ta.crossover(q1, 20)) <= 21
+enter5 = ta.barssince(q1 <= 0 and ta.crossunder(q1, trigger)) <= 5 and ta.crossover(q1, trigger)
+enter6 = ta.barssince(q1 <= 20 and ta.crossunder(q1, trigger)) <= 11 and ta.crossover(q1, trigger)
+enter7 = Quotient3 <= -0.9 and ta.crossover(q1, trigger)
+senter3 = Quotient3 >= -0.9 and ta.crossunder(q1, trigger) and ta.barssince(warn3) <= 7 and q1 >= 99 and ta.barssince(ta.crossover(q1, 80)) <= 21
+alertcondition(enter6 or enter7 or enter5 or enter3, title='Long')
+alertcondition(senter3, title='Short')

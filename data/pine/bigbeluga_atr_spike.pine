@@ -1,0 +1,32 @@
+// © BigBeluga  CC BY-NC-SA 4.0
+//@version=6
+indicator("Auto-ATR Volatility Spike & Trend Tracker [BigBeluga]", overlay=true)
+// prop_lab: pasted by Kris 2026-09-24. Drawing/table removed; state machine kept.
+atrMultInput    = input.float(2.0, title="ATR Multiplier")
+atrLengthInput  = input.int(14, title="ATR Length")
+atrMultInput1   = input.float(3.0, title="Trailing ATR Multiplier")
+atr         = ta.atr(atrLengthInput)
+candleRange = math.max(close, open) - math.min(close, open)   // body, wicks OFF by default
+var int trendState = 0
+var float trailStop = na
+isBigCandleUp   = candleRange > (atr * atrMultInput) and close > open
+isBigCandleDown = candleRange > (atr * atrMultInput) and close < open
+upSpike   = isBigCandleUp and trendState != 1
+downSpike = isBigCandleDown and trendState != -1
+if upSpike and trendState <= 0
+    trendState := 1
+    trailStop  := low - atr * atrMultInput1
+if downSpike and trendState >= 0
+    trendState := -1
+    trailStop  := high + atr * atrMultInput1
+if trendState == 1
+    trailStop := math.max(trailStop, low - atr * atrMultInput1)
+    if close < trailStop
+        trendState := 0
+        trailStop  := na
+else if trendState == -1
+    trailStop := math.min(trailStop, high + atr * atrMultInput1)
+    if close > trailStop
+        trendState := 0
+        trailStop  := na
+// Long on upSpike, short on downSpike; exit when close crosses the 3-ATR trailing stop.

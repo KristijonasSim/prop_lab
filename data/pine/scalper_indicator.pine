@@ -1,0 +1,33 @@
+//@version=4
+study("Scalper Indicator", shorttitle="SI", overlay=true)
+// prop_lab: pasted by Kris 2026-09-24. Plots, labels and the candlestick-pattern
+// and ichimoku sections (all OFF by default) removed. What is ON by default is
+// kept: the MA ribbon, RSI 30/70 bound markers and CCI +-100 bound markers.
+sma9 = sma(close, 9)
+ema21  = ema(close, 21)
+sma50  = sma(close, 50)
+sma100  = sma(close, 100)
+sma200  = sma(close, 200)
+// Golden/Death cross signals (OFF by default in the original)
+gcs = crossover(sma9, ema21)
+dcs = crossunder(sma9, ema21)
+gcm = crossover(ema21, sma50)
+dcm = crossunder(ema21, sma50)
+// RSI bound (ON by default)
+rsi_Standard = rsi(close, 14)
+rsiOversold = rsi_Standard < 30
+rsiOverbought = rsi_Standard > 70
+// MACD (OFF by default)
+macd = ema(close, 12) - ema(close, 26)
+macd_signal = sma(macd, 9)
+macdBuy = crossover(macd, macd_signal)
+macdSell = crossunder(macd, macd_signal)
+// CCI bound (ON by default)
+cci_ma = sma(close, 20)
+cci = (close - cci_ma) / (0.015 * dev(close, 20))
+cciOversold = cci < -100
+cciOverbought = cci > 100
+plotshape(rsiOversold, title = "RSI Oversold")
+plotshape(rsiOverbought, title = "RSI Overbought")
+plotshape(cciOversold, title = "CCI Oversold")
+plotshape(cciOverbought, title = "CCI Overbought")

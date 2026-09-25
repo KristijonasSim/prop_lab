@@ -1,0 +1,65 @@
+//@version=5
+indicator("SMC Engine v1", shorttitle="SMC v1", overlay=true)
+// prop_lab: pasted by Kris 2026-09-24. Drawing/table/labels removed; trade logic kept.
+swing_len    = input.int(10,   "Swing Detection Length")
+fvg_min_atr  = input.float(0.1, "Min FVG size (x ATR)")
+ob_bars      = input.int(3,     "OB impulse bars to confirm")
+pd_len       = input.int(50,    "Premium/Discount range length")
+atr_len      = input.int(14,    "ATR Length")
+sl_atr       = input.float(1.0, "Signal SL buffer (x ATR)")
+atr      = ta.atr(atr_len)
+ph       = ta.pivothigh(high, swing_len, swing_len)
+pl       = ta.pivotlow(low,  swing_len, swing_len)
+var float last_sh     = na
+var float last_sl     = na
+var bool  is_uptrend  = true
+bos_bull = not na(last_sh) and close > last_sh and close[1] <= last_sh
+bos_bear = not na(last_sl) and close < last_sl and close[1] >= last_sl
+prev_trend  = is_uptrend
+choch_bull  = not prev_trend and bos_bull
+choch_bear  = prev_trend and bos_bear
+if bos_bull
+    is_uptrend := true
+if bos_bear
+    is_uptrend := false
+if not na(ph)
+    last_sh := ph
+if not na(pl)
+    last_sl := pl
+bull_fvg_size = low - high[2]
+bear_fvg_size = low[2] - high
+bull_fvg = high[2] < low  and bull_fvg_size >= atr * fvg_min_atr
+bear_fvg = low[2]  > high and bear_fvg_size >= atr * fvg_min_atr
+bull_impulse = true
+bear_impulse = true
+for i = 0 to ob_bars - 1
+    bull_impulse := bull_impulse and close[i] > open[i]
+    bear_impulse := bear_impulse and close[i] < open[i]
+bull_ob = bull_impulse and close[ob_bars] < open[ob_bars]
+bear_ob = bear_impulse and close[ob_bars] > open[ob_bars]
+range_high = ta.highest(high, pd_len)
+range_low  = ta.lowest(low,  pd_len)
+range_eq   = (range_high + range_low) / 2
+pct_in_range = (close - range_low) / (range_high - range_low + 0.0001) * 100
+in_discount  = close < range_eq
+in_premium   = close > range_eq
+deep_discount = pct_in_range < 25
+deep_premium  = pct_in_range > 75
+long_score  = 0
+short_score = 0
+long_score  += choch_bull  ? 3 : 0
+long_score  += in_discount ? 1 : 0
+long_score  += deep_discount ? 1 : 0
+long_score  += bull_fvg    ? 1 : 0
+long_score  += bull_ob     ? 1 : 0
+long_score  += is_uptrend  ? 1 : 0
+short_score += choch_bear  ? 3 : 0
+short_score += in_premium  ? 1 : 0
+short_score += deep_premium ? 1 : 0
+short_score += bear_fvg    ? 1 : 0
+short_score += bear_ob     ? 1 : 0
+short_score += not is_uptrend ? 1 : 0
+smc_long  = long_score  >= 5
+smc_short = short_score >= 5
+alertcondition(smc_long,   "SMC - Long Confluence")
+alertcondition(smc_short,  "SMC - Short Confluence")

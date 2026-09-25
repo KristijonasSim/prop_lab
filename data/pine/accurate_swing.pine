@@ -1,0 +1,16 @@
+// © ceyhun
+//@version=4
+study("Accurate Swing Trading System",overlay=true)
+no=input(3,title="Swing")
+res=highest(high,no)
+sup=lowest(low,no)
+avd=iff(close>res[1],1,iff(close<sup[1],-1,0))
+avn=valuewhen(avd!=0,avd,0)
+tsl=iff(avn==1,sup,res)
+Buy=crossover(close,tsl)
+Sell=crossunder(close,tsl)
+plotshape(Buy,"BUY", shape.labelup, location.belowbar, color.green, text="BUY")
+plotshape(Sell,"SELL", shape.labeldown, location.abovebar, color.red, text="SELL")
+plot(tsl, linewidth=3, title="TSL")
+alertcondition(Buy, title="Buy Signal", message="Buy")
+alertcondition(Sell, title="Sell Signal", message="Sell")

@@ -2,6 +2,76 @@
 
 Long findings. Chat stays short; detail lives here.
 
+## STEP 5 — the factory's first luck check, and it failed (2026-09-23)
+
+`factory/null.py`, `docs/STEP5.md`, `tests/test_factory_steps567.py`.
+
+**The question nothing in the pipeline was asking.** Step 3's fourth gate
+already compares a rule against random entries — same side, same stop, same
+target, same hold, same trade count, different bars — and it is the gate with
+teeth, removing fourteen of nineteen profitable ideas on the 45-idea sample
+because gold rose 123% over the window. What it cannot see is the SEARCH: it is
+applied one cell at a time, while the factory tests 24 cells, keeps an idea if
+any of them passes, and then hands the best near-miss up to twelve repairs. A
+survivor is the best of roughly thirty draws and nothing priced that.
+
+**The design.** Scramble the market, run the same pipeline, count survivors.
+Bars are block-resampled as per-bar factors `(o,h,l,c) / previous live close`
+and re-chained, which preserves the drift (real total return 2.087 on gold 1h,
+null mean over twelve seeds **2.164**), the volatility (0.00260 against
+**0.00262**), the bar shapes and the weekend gaps, and destroys only the
+alignment between a signal and what follows it. Timestamps, the hour column and
+the volume column never leave their rows, so the null is **hour-matched by
+construction** — the defect `core/probe.py` was caught with on 2026-09-13,
+where an event fixed at 00:00 UTC was scored against a population drawn from
+every hour and gifted about 5 bps.
+
+**The result. 25 enumerated ideas, gold 1h and 4h, four scrambled markets:**
+
+| market | step 3 | repaired | survivors |
+|---|---|---|---|
+| **real** | 0 | 2 | **2** |
+| scrambled #0 | 3 | 4 | 7 |
+| scrambled #1 | 2 | 1 | 3 |
+| scrambled #2 | 0 | 1 | 1 |
+| scrambled #3 | 3 | 3 | 6 |
+
+**Real 2, scrambled mean 4.2, worst case 7, p = 0.80.** Three of four scrambled
+markets produced more survivors than the real one.
+
+**The obvious objection, tested.** A one-day block destroys structure at
+horizons longer than a day. Most factory ideas hold up to 48 bars, and real
+markets mean-revert at multi-day horizons — removing that would help a breakout
+rule in the null and make the comparison unfair. Re-run at longer blocks:
+
+| block | null survivors | mean |
+|---|---|---|
+| 1 day | 1, 2, 10, 4 | 4.2 |
+| 1 week | 2, 4, 4, 6 | 4.0 |
+| 1 month | 4, 7, 2, 5 | 4.5 |
+
+Flat. The null beats the real market at every block length, so it is not
+winning because the blocks are short.
+
+**Stated against the finding.** 25 ideas, two cells, four seeds. With four
+seeds the p-value cannot fall below 0.20 whatever the counts, so this is a
+reason to run it at 40 ideas x 24 cells x 10 seeds — one overnight job — not a
+verdict. The spread across seeds (1 to 10) is also wide enough that a single
+seed would have been worthless, which is itself the argument for running many.
+
+**What it does not say.** It is a statement about the pipeline on this idea
+list. It says nothing about H-027, which the factory never produced, and it does
+not condemn any individual idea. What it says is that on a batch of enumerated
+crossing rules, surviving steps 3 and 4 is not yet evidence.
+
+**The most likely mechanism, and it is already on the page.** 87% of cell-tests
+die on trade count (`docs/STEP4.md`). A rule that fires a few times a year has
+a survival that is mostly a coin flip — on real bars and on scrambled ones
+alike. That makes the generator, not the gates, the thing to fix, and it is the
+same conclusion step 4's measurement reached from the other direction.
+
+---
+
 ## Known-dead directions (inherited from ~/trading-bots, same trader)
 
 See CLAUDE.md "Known-dead" for the list and the numbers. Summary: the whole
@@ -3037,3 +3107,122 @@ been topped up since it was first screened; that is the harvest, not the gates.
 real and the wrong *shape* for this product. The evidence machinery — paired
 nulls, walk-forward with train-only selection, noise bands, the ledger — is good
 and was not touched.
+
+---
+
+## AI-assisted strategy research — the state of the field (2026-09-21)
+
+Kris: *"we are walking blindly."* Full survey, sourced:
+**`docs/AI_RESEARCH_2026.md`**. Three findings change what to work on.
+
+**1. The signal axis is ahead of the literature, not behind it.** Backing
+Grinold's `IR = IC × √breadth` out of this repo's own numbers — annual Sharpe
+1.16 (`research/README.md`), ~0.9 trades/day (`core/chosen.py`) — gives H-027 an
+implied per-bet **IC of 0.077 on 225 bets a year**. The best published LLM alpha
+miner (AlphaAgent, KDD 2025, S&P 500) reports **IC 0.0056**, and reaches its IR
+by making on the order of **43,000** bets a year. **H-027's skill per decision is
+~14x the published frontier; its breadth is ~1/190th.** The deficit was never
+signal quality. *(Order of magnitude only — the two ICs are not the same
+measurement; see the caveat in §2.1.)*
+
+**That re-prices H-012.** The wide book failed on *dilution from equal
+weighting*, not on breadth being wrong. Breadth is the actual deficit and the
+weighting is the unsolved part — which makes meta-labeling (a conviction score
+per signal) the missing half of it rather than a separate idea.
+
+**2. This repo has no positive control, and that is the cheapest gap on the
+page.** arXiv 2605.04004 ran this exact search on MNQ futures — 14 signal
+families, 947 days, expanding walk-forward, five pre-set criteria — and **none
+passed**, with 11 of 14 dying to costs before statistics mattered. What makes
+those 14 failures *mean* something is that the study planted **two positive
+controls** which scored T=3.11 and T=4.30. `prop_lab` has an extensive
+negative-control apparatus (paired nulls, block shuffles, noise bands) and has
+**never run a positive control**. After 457 charged trials, "the market has no
+edge at this size" and "the pipeline cannot detect one" are observationally
+identical here. Injecting a synthetic edge of swept size through the unmodified
+pipeline yields a **detection floor in bps** and settles it. ~1 day.
+
+**3. Venue beats method.** Spot XAUUSD is a CFD: no central book, so its
+"order flow" is one LP's indicative size. COMEX gold futures have a real tape,
+and cost less — computed at gold $4,490 from `data/flow/XAUUSD/20260320.parquet`:
+**MGC 0.61–0.84 bps round trip, GC 0.31–0.53**, against this repo's measured
+**1.64 bps** CFD spread. And **Topstep permits full API automation on evaluation
+*and* funded accounts**; Apex allows 20 funded accounts but **bans bots on
+funded**. Unverified and decisive: Topstep's max-loss limit **trails the highest
+end-of-day balance** and never resets down, which is harsher than
+`core/prop_rules.HOUSE`'s static 6% and would require re-simulating the board.
+
+**Also settled, so nobody re-derives it:** direct price prediction is closed.
+Zero-shot time-series foundation models (TimesFM, Chronos-2, Moirai) beat a
+random walk by skill scores of order **1e-3**, significant in **2 of 10** tasks
+(arXiv 2606.27100). End-to-end RL's own reference library (FinRL) mitigates its
+sim-to-real gap with quarterly refit-and-pick-best-validation-Sharpe, which is
+the selector `strategies/beat/` already measured as a dead end. And LLMs carry
+their own look-ahead: matched-period testing shows alpha decaying **+20.7% ->
+-1.0%** across a training cutoff, with *larger* models decaying *worse*.
+
+## POSITIVE CONTROL — the screen is blind to intermittent signals (2026-09-21)
+
+**Kris's instinct was right.** He said *"i think our parameters are not good and
+thats why we miss so many times."* Ran the positive control the AI survey
+recommended (`docs/AI_RESEARCH_2026.md` §5.1) and it found a defect in
+`core/screen.py` on the first attempt. Code and full table:
+**`research/poscontrol.py`**.
+
+**Method.** Plant an edge of known size in real gold 1h next-bar returns
+(22,799 bars, 3 years, sd 23.4 bps) and hand it to `core.screen` unmodified.
+`k` is bps of return per sigma of signal; `fires` is the fraction of bars on
+which the signal carries information at all, the rest being pure noise — which
+is what an event feed looks like. 5 seeds per cell.
+
+| 20 planted edges, all real and tradeable | found |
+|---|---|
+| screened the way the loop screens today | **7 of 20** |
+| screened on their own event rows | **18 of 20** |
+
+| fires | today | on events |
+|---|---|---|
+| 100% (continuous) | 5 of 5 | 5 of 5 |
+| 20% | 2 of 5 | 5 of 5 |
+| **5%** | **0 of 5** | 4 of 5 |
+| **1%** | **0 of 5** | 4 of 5 |
+
+**The mechanism is dilution and it is arithmetic.** `bucket_response` buckets
+every row of the series. A signal live 5% of the time has its bucket means
+diluted ~20x before the cost gate sees it. At 1% firing a **40 bps** edge — 228
+events in three years, each paying twelve times the round trip — is rejected
+for *"effect 0.4 under the 3.3 bar"*.
+
+**The screen is asking the wrong question.** It asks whether the signal predicts
+the AVERAGE BAR. Nobody trades the average bar. The question is whether it
+predicts the bars it fires on.
+
+**It dies in exactly the two ways the recorded deaths died.** `effect under the
+bar` and `mean and median disagree in sign` are the logged causes of death for
+**H-046 (footprint, COST)** and **H-046c (long holds, SKEW)** in `core/screen.py`'s
+own docstring. Both were plausibly event-shaped. **Neither should stay dead
+until it has been re-screened on its events.**
+
+**SECOND DEFECT, same root.** `research/vocab.py` has four transforms and all
+four are continuous — `level`, `change`, `zscore`, `pctile`. There is no
+threshold or event transform. **So the loop cannot express an intermittent
+signal at all**, including the shape of H-027 itself, which is a rare breakout
+past a band. The registry that has produced 0 survivors in 457 trials cannot
+generate the one shape that has ever worked here.
+
+**What this does and does not mean.**
+* It does **not** resurrect any specific dead hypothesis. It says the verdicts
+  on event-shaped candidates were never earned.
+* It does **not** mean the thresholds are miscalibrated. On a continuous signal
+  the screen's floor is ~2 bps, an implied IC of ~0.08, which is about H-027's
+  own 0.077. **The numbers are right; the aggregation is wrong.**
+* It **does** mean the 457 charged trials overstate what was actually searched.
+  Dead space that was never reachable was still charged.
+
+**Nothing is fixed. Two proposals, Kris picks:**
+1. `core/screen.py` — screen an event signal on its events. A candidate declares
+   whether it is continuous or event-shaped; event candidates bucket only live
+   rows. Hours.
+2. `research/vocab.py` — add a threshold transform so the loop can express "when
+   X is beyond Y". Hours. Expands the search space, so it must be charged.
+

@@ -41,7 +41,9 @@ sys.path.insert(0, str(ROOT))
 from core import screen as SC                                   # noqa: E402
 from core.ledger import log                                     # noqa: E402
 from core.markets import COSTS, EXEC_MODE, load                 # noqa: E402
+from research import tradestats as TS                           # noqa: E402
 from research import vocab                                      # noqa: E402
+from core.run_hypothesis import YEARS                           # noqa: E402
 from research.propose import Candidate                          # noqa: E402
 
 PREREG = ROOT / "docs" / "prereg"
@@ -59,6 +61,7 @@ class Result:
     round_trip_bps: float
     events: int
     verdict: str
+    stats: object = None
 
     def as_row(self) -> dict:
         c = self.candidate
@@ -91,6 +94,7 @@ class Result:
             direction=c.direction,
             lag=c.lag,
             hold=c.hold,
+            **(self.stats.as_dict() if self.stats else {}),
         )
 
 
@@ -149,8 +153,8 @@ def frame_for(market: str, cadence: str) -> pd.DataFrame:
     raise ValueError(f"no bar frame for cadence {cadence!r}")
 
 
-def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
-    """Return (signal, forward return in bps, round-trip bps).
+def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float, pd.Series | None]:
+    """Return (signal, forward return in bps, round-trip bps, fires-or-None).
 
     THE LAG IS APPLIED HERE AND NOWHERE ELSE. `shift(lag)` on the transformed
     series, after the transform's own rolling window has closed. A value dated
@@ -163,8 +167,17 @@ def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
     """
     spec = vocab.FEEDS[c.feed]
     raw = spec.load()
-    fn, needs_window = vocab.TRANSFORMS[c.transform]
-    sig_raw = fn(raw, c.window if needs_window else 0)
+    # An EVENT transform (added 2026-09-21) returns a second series marking the
+    # bars the signal actually speaks on. It travels with the signal all the way
+    # to `core.screen`, which measures the response on those bars only. Without
+    # it a signal live on 5% of bars is diluted twenty times before the cost
+    # gate sees it - `research/poscontrol.py` has the measurement.
+    if c.transform in vocab.EVENT_TRANSFORMS:
+        fn, needs_window = vocab.EVENT_TRANSFORMS[c.transform]
+        sig_raw, fires_raw = fn(raw, c.window if needs_window else 0)
+    else:
+        fn, needs_window = vocab.TRANSFORMS[c.transform]
+        sig_raw, fires_raw = fn(raw, c.window if needs_window else 0), None
 
     mkt = frame_for(c.market, spec.cadence)
     sig_raw.index = pd.to_datetime(sig_raw.index, utc=True)
@@ -178,11 +191,34 @@ def build_signal(c: Candidate) -> tuple[pd.Series, pd.Series, float]:
     sig = sig.reindex(mkt.index).ffill(limit=5)
     sig = sig.shift(c.lag) * c.direction
 
+    fires = None
+    if fires_raw is not None:
+        fires_raw.index = pd.to_datetime(fires_raw.index, utc=True)
+        if spec.cadence in ("1d", "1D"):
+            fires_raw.index = fires_raw.index.normalize()
+        fires = fires_raw[~fires_raw.index.duplicated(keep="last")]
+        # An event does NOT forward-fill. It happened on one bar and is over;
+        # ffill would smear one event across the next five and inflate the
+        # count that `independent_events` exists to keep honest.
+        fires = fires.reindex(mkt.index).fillna(False).astype(bool)
+        fires = fires.shift(c.lag, fill_value=False).astype(bool)
+
     fwd = (mkt.open.shift(-c.hold) / mkt.open - 1.0) * 1e4
     both = pd.concat([sig.rename("s"), fwd.rename("f")], axis=1).dropna()
 
+    # THE TEST WINDOW IS ENFORCED, NOT INHERITED. CLAUDE.md caps every study at
+    # 3 years (5 absolute maximum, set 2026-09-15). Until now this file simply
+    # used whatever the caches held, which happened to be 3.0 years for the
+    # daily feeds - so the rule was being obeyed by accident. Extending a bar
+    # cache by a year would have silently broken it with nothing to notice.
+    if len(both):
+        cutoff = both.index[-1] - pd.DateOffset(years=YEARS)
+        both = both[both.index >= cutoff]
+
     rt = COSTS[c.market].round_trip(EXEC_MODE)
-    return both.s, both.f, rt
+    if fires is not None:
+        return both.s, both.f, rt, fires.reindex(both.index).fillna(False)
+    return both.s, both.f, rt, None
 
 
 # ---------------------------------------------------------------------------
@@ -264,16 +300,53 @@ one.
 # The run
 # ---------------------------------------------------------------------------
 def run_candidate(c: Candidate, dry: bool = False) -> Result:
-    sig, fwd, rt = build_signal(c)
-    events = SC.independent_events(sig, c.hold)
+    sig, fwd, rt, fires = build_signal(c)
+    # An event candidate's sample is its EVENTS, not its bars.
+    events = (int(fires.sum()) // max(1, c.hold) if fires is not None
+              else SC.independent_events(sig, c.hold))
     prereg = write_prereg(c, rt, events) if not dry else Path("(dry run)")
 
-    s = SC.screen(c.name, sig, fwd, rt, hold=c.hold, run_null=True)
+    s = SC.screen(c.name, sig, fwd, rt, hold=c.hold, run_null=True, fires=fires)
     verdict = "PASS" if s.verdict == "WORK" else "FAIL"
+
+    # THE SIGN HAS TO MATCH THE BET, and `core/screen.py` cannot enforce that -
+    # it is a generic tool that tests |effect| and |rho|, with no idea which way
+    # the candidate claimed. The direction is already applied to the signal by
+    # `build_signal`, so a NEGATIVE effect here means the response ran opposite
+    # to the mechanism that was pre-registered.
+    #
+    # Accepting that is a free second bite: it is the same "test it both ways"
+    # the registry's `prior_sign` exists to forbid, arriving through the back
+    # door. Caught 2026-09-18 on T10YIE.change5.GBPUSD.h20, which passed with
+    # effect -77.4 and rho -0.90 against a mechanism that said Pound UP.
+    #
+    # A mechanism that predicts the opposite of what happens is a WRONG
+    # mechanism, not a discovery. If the reverse is worth testing, the registry
+    # sign changes in a commit, with a reason, and it is a new trial.
+    # THE PACE BAR. Kris, 2026-09-18: 0.2 trades a day for a rule that stands
+    # alone, and a slower one is only acceptable as a leg of a book. A rule that
+    # cannot trade often enough cannot resolve an evaluation, however good its
+    # profit factor - the whole project is scored on time to funded, not on PF.
+    stats = TS.compute(sig, fwd, rt, c.hold, vocab.FEEDS[c.feed].cadence)
+    if verdict == "PASS" and stats.trades_per_day < TS.MIN_TPD_LEG:
+        verdict = "FAIL"
+        s.verdict = "DEAD"
+        s.notes.append(
+            f"only {stats.trades_per_day:.3f} trades/day - below the "
+            f"{TS.MIN_TPD_LEG} floor even as one leg of a book")
+
+    if verdict == "PASS" and s.effect < 0:
+        verdict = "FAIL"
+        s.verdict = "DEAD"
+        s.notes.append(
+            f"cleared every check but ran OPPOSITE to its mechanism "
+            f"(effect {s.effect:+.1f} bps, rho {s.rho:+.2f}) - the mechanism "
+            f"is wrong, not the market")
 
     res = Result(candidate=c, screen=s, prereg_path=(
         str(prereg.relative_to(ROOT)) if not dry else ""),
-        round_trip_bps=rt, events=s.events or events, verdict=verdict)
+        round_trip_bps=rt, events=s.events or events, verdict=verdict,
+        stats=stats)
     if not dry:
         log(**res.as_row())
     return res

@@ -78,7 +78,7 @@ class FeedStrategy:
 
     def features(self, df: pd.DataFrame):
         """Signal and trailing vol on the bar index. Backward-looking only."""
-        sig, _fwd, _rt = build_signal(self.c)
+        sig, _fwd, _rt, _fires = build_signal(self.c)
         s = sig.reindex(df.index).ffill(limit=5)
         # Threshold from a TRAILING window, never the whole sample - a global
         # quantile would be a look-ahead that no test in this repo would catch,
