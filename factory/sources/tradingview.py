@@ -260,19 +260,22 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
     return replace(s, source="tradingview", note=note), ""
 
 
-def load(folder: Path | None = None, *, ai: bool = False, model: str | None = None
-         ) -> tuple[list[Strategy], list[tuple[str, str]]]:
+def load(folder: Path | None = None, *, ai: bool = False, model: str | None = None,
+         paths=None) -> tuple[list[Strategy], list[tuple[str, str]]]:
     """Every readable script in the folder, plus what was skipped and why.
 
     `ai=True` sends whatever the regex could not read to a model. The regex
     runs FIRST and always: it is free, deterministic and reproducible, so the
     model is only paid for the remainder. On a library that is most of it.
+
+    `paths` reads just those files - the fetcher's fresh downloads - so a
+    folder of hundreds is not re-sent to the model every pass.
     """
     folder = folder or PINE_DIR
-    if not folder.exists():
+    if paths is None and not folder.exists():
         return [], [("(folder)", f"{folder} does not exist - nothing to read")]
     out, skipped = [], []
-    for p in sorted(folder.glob("*.pine")):
+    for p in (sorted(paths) if paths is not None else sorted(folder.glob("*.pine"))):
         body = p.read_text(errors="ignore")
         s, why = translate(body, p.stem)
         if s is None and ai:

@@ -147,13 +147,22 @@ def add(strategies, *, quiet: bool = False) -> dict:
     return out
 
 
-def take() -> Strategy | None:
+def take(source: str | None = None) -> Strategy | None:
     """The next idea, in the order Kris set. Removes it from the queue.
 
     Returns None when the queue is empty, which is the honest signal that the
     current source is exhausted and the next one should be asked to top it up.
     """
     q = _read(QUEUE)
+    if source is not None:
+        # One source only - the rest of the queue stays exactly as it was.
+        mine = [s for s in q if s.source == source]
+        if not mine:
+            return None
+        nxt = mine[0]
+        rest = [s for s in q if s is not nxt]
+        QUEUE.write_text("".join(_to_json(s) + "\n" for s in rest))
+        return nxt
     if not q:
         return None
     rank = {s: i for i, s in enumerate(SOURCE_ORDER)}

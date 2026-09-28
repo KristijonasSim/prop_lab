@@ -74,15 +74,21 @@ def top_up(n: int = BATCH, *, use_agent: bool = True) -> dict:
 
 def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
              cell_list=None, control_seeds: int = check.CONTROL_SEEDS,
-             resamples: int = evaluate.BAND_RESAMPLES) -> dict:
+             resamples: int = evaluate.BAND_RESAMPLES,
+             only_source: str | None = None) -> dict:
     """One full pass. Returns the record that is appended to `runs.jsonl`."""
     t0 = time.time()
     rec: dict = {"started": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     live.clear_counts()
     live.beat(1, "ideas", detail="the model proposes, the enumerator backfills")
-    rec["top_up"] = top_up(batch, use_agent=use_agent)
+    # ONE SOURCE ONLY (the TradingView run): its own loop fills the queue, so
+    # the model and the enumerator are not asked to top anything up.
+    rec["top_up"] = ({} if only_source else top_up(batch, use_agent=use_agent))
+    if only_source:
+        rec["only_source"] = only_source
 
-    ideas = [s for s in (queue.take() for _ in range(batch)) if s is not None]
+    ideas = [s for s in (queue.take(only_source) for _ in range(batch))
+             if s is not None]
     rec["ideas"] = len(ideas)
     # BY SOURCE, from the first run. The comparison this file exists to make -
     # does the model's source survive at a better rate than the enumerator's -

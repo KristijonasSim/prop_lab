@@ -8,6 +8,16 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## 2026-09-28 — TradingView runs by itself, 24h run started on this PC
+
+* `factory/sources/tvfetch.py` downloads open scripts (strategies first,
+  ~1,000+ reachable, one request / 5 s, stops on a block).
+* `python -m factory.tvloop --hours 24` - fetch 20, AI-translate, test
+  steps 3-7 on TradingView ideas only, repeat. Log `backtests/factory/tvloop.jsonl`.
+* `python -m factory.tvloop --status` - totals so far.
+
+---
+
 ## 2026-09-24 — VM armed for the weekend
 
 * 12 TradingView scripts through all 7 steps. Luck check: 17 real survivors vs
