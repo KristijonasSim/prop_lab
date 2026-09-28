@@ -222,7 +222,7 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
     """
     from factory.sources import agent
 
-    prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=pine[:12000])
+    prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=pine[:40000])
     try:
         out = text if text is not None else agent._call(
             prompt, model or agent.CLI_MODEL, timeout or agent.TIMEOUT)
