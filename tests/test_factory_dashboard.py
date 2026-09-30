@@ -399,7 +399,8 @@ def test_an_idea_records_every_cell_not_just_the_winner():
 
     for x in nightly.ideas():
         if x["cells"]:
-            assert len(x["cells"]) >= 20
+            # A run narrowed to fewer cells says so; a full run covers 24.
+            assert len(x["cells"]) >= min(x.get("cells_run", 24), 20)
             assert all(c["trades"] >= 0 for c in x["cells"])
 
 

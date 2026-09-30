@@ -14,10 +14,21 @@ ONE ROUND
 Rounds repeat until the deadline. A TradingView block (403/429) stops the
 fetching but not the testing - whatever is already queued still runs.
 Every round is one line in `backtests/factory/tvloop.jsonl`.
+
+SURVIVES A REBOOT, 2026-09-30. The first 24h run was started from a terminal
+and died with the PC at 16:26 on 2026-09-28, after 2 rounds, taking the eight
+ideas it was testing with it. Now the deadline lives in `tvloop_state.json`,
+`--resume` carries on to it, held ideas go back on the queue at start
+(`queue.recover`), and `factory/tvloop.sh start 24` runs it as a systemd user
+service that restarts on a crash and comes back after a reboot.
+
+    ./factory/tvloop.sh start 24     # a new 24h run, as a service
+    ./factory/tvloop.sh status|stop|log
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import traceback
@@ -31,6 +42,7 @@ from factory import cells, nightly, queue                           # noqa: E402
 from factory.sources import tradingview, tvfetch                    # noqa: E402
 
 LOG = queue.DIR / "tvloop.jsonl"
+STATE = queue.DIR / "tvloop_state.json"
 FETCH = 20
 BATCH = 20
 
@@ -63,14 +75,46 @@ def intake(n: int) -> dict:
     return out
 
 
-def run(hours: float = 24.0, fetch_n: int = FETCH, batch: int = BATCH,
+def _state() -> dict:
+    try:
+        return json.loads(STATE.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def _save(st: dict) -> None:
+    tmp = STATE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(st, indent=2))
+    tmp.replace(STATE)
+
+
+def start(hours: float) -> dict:
+    """A NEW run: the deadline is fixed now and survives restarts."""
+    st = {"run": _now(), "end": time.time() + hours * 3600, "hours": hours,
+          "rounds": 0}
+    _save(st)
+    return st
+
+
+def run(hours: float | None = 24.0, fetch_n: int = FETCH, batch: int = BATCH,
         seeds: int = 5) -> None:
-    end = time.time() + hours * 3600
+    """`hours=None` resumes the saved run; past its deadline it just returns."""
+    st = start(hours) if hours is not None else _state()
+    if not st or time.time() >= st.get("end", 0):
+        print("no run in progress" + (" - deadline passed" if st else ""))
+        return
+    st["pid"] = os.getpid()
+    _save(st)
+    back = queue.recover()
+    if back:
+        _log({"run": st["run"], "note": f"recovered {back} ideas a killed round was holding",
+              "started": _now()})
     blocked = False
-    rnd = 0
-    while time.time() < end:
-        rnd += 1
-        rec, t0 = {"round": rnd, "started": _now()}, time.time()
+    while time.time() < st["end"]:
+        st["rounds"] = rnd = st.get("rounds", 0) + 1
+        st["beat"] = _now()
+        _save(st)
+        rec, t0 = {"run": st["run"], "round": rnd, "started": _now()}, time.time()
         try:
             if not blocked and waiting() < batch:
                 rec["intake"] = intake(fetch_n)
@@ -96,6 +140,9 @@ def run(hours: float = 24.0, fetch_n: int = FETCH, batch: int = BATCH,
         except Exception as exc:                    # keep the run alive
             rec["error"] = f"{type(exc).__name__}: {exc}"
             rec["trace"] = traceback.format_exc()[-1500:]
+            # An exception, unlike a kill, is not retried: the round's ideas
+            # are dropped as before, with the error on record.
+            queue.finish()
             time.sleep(60)
         rec["seconds"] = round(time.time() - t0)
         _log(rec)
@@ -123,7 +170,26 @@ def status() -> dict:
         tot["step7"] += r.get("step7") or []
     tot["waiting"] = waiting()
     tot["tv"] = tvfetch.status()
+    st = _state()
+    if st:
+        left = (st["end"] - time.time()) / 3600
+        alive = _alive(st.get("pid"))
+        tot["run"] = {"started": st["run"], "rounds": st.get("rounds", 0),
+                      "last_round": st.get("beat"),
+                      "hours_left": round(max(left, 0), 1),
+                      "state": ("finished" if left <= 0 else
+                                "running" if alive else "STOPPED - not running")}
     return tot
+
+
+def _alive(pid) -> bool:
+    if not pid:
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except (OSError, ValueError):
+        return False
+    return True
 
 
 def _main(argv=None) -> int:
@@ -134,12 +200,14 @@ def _main(argv=None) -> int:
     ap.add_argument("--fetch", type=int, default=FETCH)
     ap.add_argument("-n", "--batch", type=int, default=BATCH)
     ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--resume", action="store_true",
+                    help="carry on to the saved deadline (what the service runs)")
     ap.add_argument("--status", action="store_true")
     a = ap.parse_args(argv)
     if a.status:
         print(json.dumps(status(), indent=2))
         return 0
-    run(a.hours, a.fetch, a.batch, a.seeds)
+    run(None if a.resume else a.hours, a.fetch, a.batch, a.seeds)
     return 0
 
 

@@ -133,7 +133,10 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                  "ladder": (ladder_rows(s, best_any.market) if best_any else []),
                  "when": rec["started"], "stop_atr": s.stop_atr,
                  "target_atr": s.target_atr, "max_hold": s.max_hold,
-                 "cells": [_cell_row(c) for c in checks], "repairs": [],
+                 "cells": [_cell_row(c) for c in checks],
+                 # How many cells this run was asked to cover, so a narrowed
+                 # run (`--market X --tf Y`) is not mistaken for a short-circuit.
+                 "cells_run": len(cl), "repairs": [],
                  "outcome": "", "cell": ""}
         stories.append(story)
         won = [c for c in checks if c.verdict == "PASS"]
@@ -283,6 +286,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
     # call the factory dead every time it rested.
     live.beat(0, "resting", detail=f"pass finished in {rec['seconds']:.0f}s",
               counts={"step3_pass": s3, "step4_repaired": s4, "gates": gates})
+    queue.finish()
     return rec
 
 
@@ -479,6 +483,9 @@ def _main(argv=None) -> int:
         return 0
 
     cl = cells.all_cells(a.market, tuple(a.tf) if a.tf else None)
+    back = queue.recover()
+    if back:
+        print(f"recovered {back} ideas a killed run was holding")
     rec = run_once(batch=a.batch, seeds=a.seeds, use_agent=not a.no_agent,
                    cell_list=cl, control_seeds=a.control_seeds,
                    resamples=a.resamples)

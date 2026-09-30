@@ -1,0 +1,125 @@
+// prop_lab: fetched from TradingView 2026-09-28
+// url: https://www.tradingview.com/script/ANmKXWWJ-ATR-Breakout-Trend-Strategy/
+// id: PUB;5215ca2761414fe58c5ca4f4c59bed02  kind: strategy
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/ MPL-2.0
+//@version=6
+strategy("ATR Breakout Trend Strategy", shorttitle="ATR Breakout", overlay=true, pyramiding=0,
+     initial_capital=10000, currency=currency.USD, default_qty_type=strategy.fixed, default_qty_value=1,
+     commission_type=strategy.commission.percent, commission_value=0.06, slippage=2,
+     process_orders_on_close=true, max_boxes_count=10)
+
+// --- Inputs ---
+string CHANNEL_GROUP = "Breakout Channels"
+string RISK_GROUP = "Risk Management"
+string STYLE_GROUP = "Style"
+
+int entryLengthInput = input.int(20, "Entry channel length", minval=1, group=CHANNEL_GROUP, tooltip="Bars used to calculate the prior high/low breakout levels.")
+int exitLengthInput = input.int(20, "Exit channel length", minval=1, group=CHANNEL_GROUP, tooltip="Exit a long when the close breaks the prior low channel, or a short when it breaks the prior high channel.")
+int trendLengthInput = input.int(200, "Trend SMA length", minval=1, group=CHANNEL_GROUP, tooltip="Long trades require price above this SMA; short trades require price below it.")
+bool allowShortsInput = input.bool(true, "Enable short trades", group=CHANNEL_GROUP, tooltip="When enabled, take downside breakouts below the trend SMA.")
+int atrLengthInput = input.int(20, "ATR length", minval=1, group=RISK_GROUP, tooltip="Length of the simple moving average of true range.")
+float stopAtrMultipleInput = input.float(2.0, "Initial stop (ATR multiple)", minval=0.1, step=0.1, group=RISK_GROUP, tooltip="Initial protective stop distance, measured from the entry signal close.")
+float riskPercentInput = input.float(1.0, "Equity risk per trade (%)", minval=0.1, maxval=10.0, step=0.1, group=RISK_GROUP, tooltip="Target account risk if the initial stop is hit, before fees, slippage, and gaps.")
+float maxExposurePercentInput = input.float(100.0, "Maximum exposure (% of equity)", minval=1.0, maxval=1000.0, step=1.0, group=RISK_GROUP, tooltip="Caps position notional to limit leverage. Actual stop risk can be lower than the risk target when this cap applies.")
+bool trailingStopEnabledInput = input.bool(false, "Enable ATR trailing stop", group=RISK_GROUP, tooltip="When enabled, the protective stop ratchets toward price and never loosens.")
+float trailingStopAtrInput = input.float(2.0, "Trailing stop distance (ATR)", minval=0.1, step=0.1, group=RISK_GROUP, tooltip="Longs: stop trails the current bar's high minus this many ATRs. Shorts: the current bar's low plus this many ATRs.")
+color trendColorInput = input.color(#5b9cf6, "Trend SMA color", group=STYLE_GROUP, tooltip="Color of the trend-filter moving average.")
+color stopColorInput = input.color(#f23645, "Protective stop color", group=STYLE_GROUP, tooltip="Color of the active stop level and risk zones.")
+bool showPositionBoxesInput = input.bool(true, "Show position boxes", group=STYLE_GROUP, tooltip="Draw the projected reward and initial-risk zones for the latest position.")
+float targetRiskRewardInput = input.float(2.0, "Projected target (R multiple)", minval=0.1, step=0.1, group=STYLE_GROUP, tooltip="Display only. The strategy exits by its channel rule or protective stop, never at this target.")
+int projectionBarsInput = input.int(12, "Box projection length (bars)", minval=2, maxval=100, group=STYLE_GROUP, tooltip="Fixed box width from entry; shortened if the trade exits earlier.")
+bool showStopLineInput = input.bool(false, "Show active stop line", group=STYLE_GROUP, tooltip="Plot the active protective stop in addition to the risk box.")
+color longBoxColorInput = input.color(#089981, "Long reward color", group=STYLE_GROUP, tooltip="Color for the projected reward zone on long trades.")
+color shortBoxColorInput = input.color(#089981, "Short reward color", group=STYLE_GROUP, tooltip="Color for the projected reward zone on short trades.")
+
+// --- Calculations ---
+float entryHigh = ta.highest(high, entryLengthInput)[1]
+float entryLow = ta.lowest(low, entryLengthInput)[1]
+float exitHigh = ta.highest(high, exitLengthInput)[1]
+float exitLow = ta.lowest(low, exitLengthInput)[1]
+float atrValue = ta.sma(ta.tr(true), atrLengthInput)
+float trendSma = ta.sma(close, trendLengthInput)
+float stopDistance = atrValue * stopAtrMultipleInput
+
+float riskCash = strategy.equity * riskPercentInput / 100.0
+float contractPointValue = na(syminfo.pointvalue) or syminfo.pointvalue <= 0 ? 1.0 : syminfo.pointvalue
+float riskPerUnit = stopDistance * contractPointValue
+float exposurePerUnit = close * contractPointValue
+float qtyByRisk = riskPerUnit > 0 ? riskCash / riskPerUnit : na
+float qtyByExposure = exposurePerUnit > 0 ? strategy.equity * maxExposurePercentInput / 100.0 / exposurePerUnit : na
+float orderQty = not na(qtyByRisk) and not na(qtyByExposure) ? math.min(qtyByRisk, qtyByExposure) : na
+
+// Cross functions evaluated on every bar (not inside short-circuited conditions) so their history stays consistent.
+bool crossedUp = ta.crossover(close, entryHigh)
+bool crossedDown = ta.crossunder(close, entryLow)
+bool longBreakout = barstate.isconfirmed and crossedUp and close > trendSma
+bool shortBreakout = barstate.isconfirmed and crossedDown and close < trendSma
+
+var float longStopPrice = na
+var float shortStopPrice = na
+var box rewardBox = na
+var box riskBox = na
+var int boxEntryBar = na
+var int lastClosedTradeCount = 0
+
+// Keep only the latest trade's boxes; shorten them when the trade exits before the projection ends.
+if strategy.closedtrades > lastClosedTradeCount
+    int lastExitBar = strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1)
+    if not na(boxEntryBar)
+        int exitRight = math.max(boxEntryBar + 1, math.min(lastExitBar, boxEntryBar + projectionBarsInput))
+        if not na(rewardBox)
+            box.set_right(rewardBox, exitRight)
+        if not na(riskBox)
+            box.set_right(riskBox, exitRight)
+    lastClosedTradeCount := strategy.closedtrades
+
+// --- Entries and initial protective stops ---
+if longBreakout and strategy.position_size <= 0 and not na(orderQty) and orderQty > 0
+    longStopPrice := close - stopDistance
+    shortStopPrice := na
+    if showPositionBoxesInput
+        if not na(rewardBox)
+            box.delete(rewardBox)
+        if not na(riskBox)
+            box.delete(riskBox)
+        boxEntryBar := bar_index
+        rewardBox := box.new(bar_index, close + stopDistance * targetRiskRewardInput, bar_index + projectionBarsInput, close, border_color=color.new(longBoxColorInput, 45), bgcolor=color.new(longBoxColorInput, 78))
+        riskBox := box.new(bar_index, close, bar_index + projectionBarsInput, longStopPrice, border_color=color.new(stopColorInput, 45), bgcolor=color.new(stopColorInput, 78))
+    strategy.entry("Long", strategy.long, qty=orderQty)
+    strategy.exit("L Exit", from_entry="Long", stop=longStopPrice)
+
+if allowShortsInput and shortBreakout and strategy.position_size >= 0 and not na(orderQty) and orderQty > 0
+    shortStopPrice := close + stopDistance
+    longStopPrice := na
+    if showPositionBoxesInput
+        if not na(rewardBox)
+            box.delete(rewardBox)
+        if not na(riskBox)
+            box.delete(riskBox)
+        boxEntryBar := bar_index
+        rewardBox := box.new(bar_index, close, bar_index + projectionBarsInput, close - stopDistance * targetRiskRewardInput, border_color=color.new(shortBoxColorInput, 45), bgcolor=color.new(shortBoxColorInput, 78))
+        riskBox := box.new(bar_index, shortStopPrice, bar_index + projectionBarsInput, close, border_color=color.new(stopColorInput, 45), bgcolor=color.new(stopColorInput, 78))
+    strategy.entry("Short", strategy.short, qty=orderQty)
+    strategy.exit("S Exit", from_entry="Short", stop=shortStopPrice)
+
+// --- Channel exits and optional ATR trailing stops ---
+if strategy.position_size > 0 and not na(longStopPrice)
+    if trailingStopEnabledInput
+        longStopPrice := math.max(longStopPrice, high - atrValue * trailingStopAtrInput)
+    if close < exitLow
+        strategy.close("Long", comment="Channel exit")
+    else
+        strategy.exit("L Exit", from_entry="Long", stop=longStopPrice)
+
+if strategy.position_size < 0 and not na(shortStopPrice)
+    if trailingStopEnabledInput
+        shortStopPrice := math.min(shortStopPrice, low + atrValue * trailingStopAtrInput)
+    if close > exitHigh
+        strategy.close("Short", comment="Channel exit")
+    else
+        strategy.exit("S Exit", from_entry="Short", stop=shortStopPrice)
+
+// --- Visuals ---
+plot(trendSma, "Trend SMA", color=trendColorInput, linewidth=2)
+float activeStop = strategy.position_size > 0 ? longStopPrice : strategy.position_size < 0 ? shortStopPrice : na
+plot(showStopLineInput ? activeStop : na, "Active stop", color=stopColorInput, linewidth=2, style=plot.style_linebr)

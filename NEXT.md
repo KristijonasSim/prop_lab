@@ -8,6 +8,18 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## 2026-09-30 — TradingView loop now survives a reboot
+
+* The 9-28 24h run died after 2 rounds: **the PC was shut down at 16:26**, not a
+  code crash. The 8 ideas mid-test were lost (`take()` drops them before testing).
+* Fixed: the deadline is saved, in-flight ideas go back on the queue after a kill,
+  and it runs as a systemd user service (restarts on crash and comes back after
+  a reboot). `./factory/tvloop.sh start 24 | status | stop | resume | log`.
+* New 24h run started 2026-09-30 06:05 UTC. The lost round was re-translated and
+  re-queued (11 ideas).
+
+---
+
 ## 2026-09-28 — TradingView runs by itself, 24h run started on this PC
 
 * `factory/sources/tvfetch.py` downloads open scripts (strategies first,
