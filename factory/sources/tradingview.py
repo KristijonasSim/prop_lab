@@ -206,6 +206,48 @@ SCRIPT:
 {pine}"""
 
 
+#: Pine lines that only DRAW. None of them can change when a script enters.
+#: `plotshape`, `plotchar` and `alertcondition` are KEPT: an indicator often
+#: states its buy signal only there.
+_DRAW = re.compile(r"^\s*(plot|plotcandle|plotbar|bgcolor|barcolor|fill|hline|"
+                   r"label\.\w+|line\.\w+|box\.\w+|table\.\w+)\s*\(")
+
+
+def lean_pine(pine: str) -> str:
+    """The script with comments, blank lines and drawing calls removed.
+
+    TOKEN DIET, 2026-10-06. The model reads the ENTRY; a third of a typical
+    published script is tooltips, plots, labels and tables. Multi-line calls
+    are dropped whole by following their parentheses. String literals
+    containing `//` (URLs) are left alone by only cutting a comment that
+    starts outside a string.
+    """
+    out, depth = [], 0
+    for line in pine.splitlines():
+        if depth > 0:
+            depth += line.count("(") - line.count(")")
+            continue
+        if _DRAW.match(line):
+            depth = line.count("(") - line.count(")")
+            continue
+        code, q = [], None
+        i = 0
+        while i < len(line):
+            ch = line[i]
+            if q:
+                q = None if ch == q else q
+            elif ch in "\"'":
+                q = ch
+            elif line.startswith("//", i):
+                break
+            code.append(ch)
+            i += 1
+        code = "".join(code).rstrip()
+        if code.strip():
+            out.append(code)
+    return "\n".join(out)
+
+
 def translate_ai(pine: str, name: str, *, model: str | None = None,
                  timeout: int | None = None, text: str | None = None
                  ) -> tuple[Strategy | None, str]:
@@ -227,7 +269,7 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
     """
     from factory.sources import agent
 
-    prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=pine[:40000])
+    prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=lean_pine(pine)[:40000])
     try:
         out = text if text is not None else agent._call(
             prompt, model or agent.CLI_MODEL, timeout or agent.TIMEOUT)

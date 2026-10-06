@@ -254,9 +254,21 @@ def validate(item: dict) -> Strategy:
                     note=note, **nums)
 
 
+#: TOKEN DIET, 2026-10-06. Kris: the backlog retry used a 5-hour usage window
+#: in ~30 minutes. Each `claude -p` call carried Claude Code's whole system
+#: prompt, every built-in tool and every connected MCP server's tools (Gmail,
+#: Drive, Chrome...) - thousands of tokens of instructions for a job that
+#: needs none of them. This job reads text and returns JSON.
+LEAN = ["--tools", "",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--system-prompt", "You convert trading-rule descriptions into JSON. "
+                           "Reply with the JSON only."]
+
+
 def _call(prompt: str, model: str, timeout: int) -> str:
     try:
-        proc = subprocess.run(["claude", "-p", prompt, "--model", model],
+        proc = subprocess.run(["claude", "-p", prompt, "--model", model, *LEAN],
                               capture_output=True, text=True, timeout=timeout,
                               cwd=NEUTRAL_CWD)
     except FileNotFoundError as exc:

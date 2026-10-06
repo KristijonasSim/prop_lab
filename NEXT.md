@@ -18,7 +18,10 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
   "passed · valid last 3 years, issues on older years".
 * Grammar +39 terms (`factory/terms.py`: Supertrend, BB/Keltner, MACD, ADX,
   stoch, pivots, candles, clock ranges...). Refused list 293 -> 79.
-* 260 TradingView ideas queued, **untested**. Loop PAUSED - translation burned
+* **Token diet done** (`agent.LEAN`, `tradingview.lean_pine`): per-call overhead
+  19,761 -> ~820 tokens, scripts 32% shorter. Testing the queue now runs with
+  `--fetch 0` (no model calls): unit `proplab-testqueue`.
+* 260 TradingView ideas queued, testing started 2026-10-06. Loop PAUSED - translation burned
   a 5h usage window in ~30 min. Before restarting: `claude -p --bare` with a
   short system prompt, strip Pine comments/plots, Haiku (check 20 vs Sonnet).
 

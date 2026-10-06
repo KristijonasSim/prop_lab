@@ -23,3 +23,4 @@
 {"run":"2026-09-30T06:05:14+00:00","round":21,"started":"2026-09-30T10:36:00+00:00","intake":{"fetched":20,"translated":0,"skipped":20,"queued":0},"note":"nothing to test"}
 {"run":"2026-09-30T06:05:14+00:00","round":22,"started":"2026-09-30T10:45:27+00:00","intake":{"fetched":20,"translated":0,"skipped":20,"queued":0},"note":"nothing to test"}
 {"run":"2026-10-06T10:18:41+00:00","note":"recovered 11 ideas a killed round was holding","started":"2026-10-06T10:18:42+00:00"}
+{"run":"2026-10-06T11:33:46+00:00","note":"recovered 18 ideas a killed round was holding","started":"2026-10-06T11:33:47+00:00"}
