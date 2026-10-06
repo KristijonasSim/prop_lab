@@ -27,7 +27,7 @@ once.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 
 import numpy as np
 
@@ -248,22 +248,44 @@ LENGTHS = (5, 10, 14, 20, 50, 100, 200)
 SIDES = ("long", "short")
 
 
+def _back(w, k: int):
+    """The Window as it was k bars ago: the same columns, k bars shorter."""
+    from factory.guard import Window
+    n = len(w) - k
+    return Window({c: np.asarray(getattr(w, c)[-len(w):])[:n]
+                   for c in Window.COLUMNS}, n - 1)
+
+
 @dataclass(frozen=True)
 class Term:
     """One side of a comparison: an indicator, or a plain number."""
     kind: str                     # an INDICATORS name, or "const"
     length: int = 0
-    value: float = 0.0            # only for kind == "const"
+    value: float = 0.0            # const's number, or a MULT kind's width
+    # Pine's `x[k]`: the value k bars AGO. Added 2026-10-06 - "the previous
+    # bar's SMA" and "highest(high, 20)[1]" were the most common reason a
+    # script was refused or approximated that a plain grammar term could fix.
+    offset: int = 0
 
     def at(self, w) -> float:
+        if self.offset:
+            if len(w) <= self.offset:
+                return np.nan
+            return replace(self, offset=0).at(_back(w, self.offset))
         if self.kind == "const":
             return self.value
         fn, needs_n = INDICATORS[self.kind]
+        if self.kind in MULT:
+            return fn(w, self.length, self.value)
         return fn(w, self.length) if needs_n else fn(w)
 
     def label(self) -> str:
         if self.kind == "const": return f"{self.value:g}"
-        return self.kind if not INDICATORS[self.kind][1] else f"{self.kind}{self.length}"
+        base = self.kind if not INDICATORS[self.kind][1] else f"{self.kind}{self.length}"
+        # A band width / factor is part of WHAT the term computes, so it is in
+        # the label and therefore in the fingerprint (bb_upper20x2 != x2.5).
+        base = f"{base}x{self.value:g}" if self.kind in MULT and self.value else base
+        return f"{base}[{self.offset}]" if self.offset else base
 
 
 @dataclass(frozen=True)
@@ -374,3 +396,30 @@ def _register_ports():
 
 
 _register_ports()
+
+
+# --------------------------------------------------------------------------
+# GRAMMAR TERMS (factory/terms.py, 2026-10-06): the features refused
+# TradingView scripts named. Same two-form registration as the ports.
+# --------------------------------------------------------------------------
+from factory.terms import MULT, TERMS, ZERO_LENGTH_OK  # noqa: E402,F401
+
+
+def _register_terms():
+    def _cols(w):
+        k = len(w)
+        return {c: np.asarray(getattr(w, c)[-k:], dtype=float) for c in
+                ("open", "high", "low", "close", "volume", "hour")}
+
+    for kind, (fn, needs_n, _help) in TERMS.items():
+        def series(cols, n=0, m=0.0, fn=fn):
+            return fn({k: np.asarray(v, dtype=float) for k, v in cols.items()}, n, m)
+
+        def reader(w, n=0, m=0.0, series=series):
+            return float(series(_cols(w), n, m)[-1])
+
+        SERIES[kind] = series
+        INDICATORS[kind] = (reader, needs_n)
+
+
+_register_terms()

@@ -29,7 +29,9 @@ import numpy as np
 import pandas as pd
 
 from factory.guard import Window, columns
-from factory.spec import SERIES, Strategy
+from dataclasses import replace
+
+from factory.spec import MULT, SERIES, Strategy
 
 ATR_LEN = 14
 
@@ -76,8 +78,23 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
     pre = {}
     for i, c in enumerate(strategy.entry):
         for side, term in (("l", c.left), ("r", c.right)):
-            if term.kind in SERIES:
-                pre[(i, side)] = SERIES[term.kind](cols, term.length)
+            if term.offset:
+                # x[k]: the term's own series, shifted k bars later. Built from
+                # the same per-bar or whole-series value, so no new look-ahead.
+                base = replace(term, offset=0)
+                if base.kind in SERIES:
+                    arr = np.asarray(SERIES[base.kind](cols, base.length, base.value)
+                                     if base.kind in MULT else
+                                     SERIES[base.kind](cols, base.length), dtype=float)
+                else:
+                    arr = np.array([base.at(Window(cols, t)) for t in range(n)])
+                sh = np.full(n, np.nan)
+                sh[term.offset:] = arr[:n - term.offset]
+                pre[(i, side)] = sh
+            elif term.kind in SERIES:
+                pre[(i, side)] = (SERIES[term.kind](cols, term.length, term.value)
+                                  if term.kind in MULT else
+                                  SERIES[term.kind](cols, term.length))
     for t in range(n):
         w = Window(cols, t)
         atr[t] = _atr_at(w)

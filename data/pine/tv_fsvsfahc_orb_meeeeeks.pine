@@ -1,0 +1,1419 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/fsVSfAhc-orb-meeeeeks/
+// id: PUB;448759d4093b4b71934c4147626fd58d  kind: strategy
+//@version=6
+strategy(
+     title="ORB + VWAP + RSI + Order Flow Strategy",
+     shorttitle="ORBVRSI",
+     overlay=true,
+     pyramiding=0,
+     process_orders_on_close=true,
+     calc_on_every_tick=false,
+     calc_on_order_fills=true,
+     initial_capital=100000,
+     currency=currency.USD,
+     default_qty_type=strategy.fixed,
+     default_qty_value=1,
+     commission_type=strategy.commission.percent,
+     commission_value=0,
+     slippage=0,
+     margin_long=100,
+     margin_short=100,
+     max_labels_count=500,
+     max_lines_count=500,
+     max_boxes_count=100,
+     max_bars_back=5000
+)
+
+//====================================================================
+// GROUPS
+//====================================================================
+groupPresets = "00. Auto Presets"
+groupSession = "01. ORB Settings"
+groupFilters = "02. Filters"
+groupRSI = "03. RSI Settings"
+groupOrderFlow = "04. Order Flow Filter"
+groupTrade = "05. Trade / Direction"
+groupRisk = "06. Stop Loss"
+groupTP = "07. Take Profit"
+groupBE = "08. Break Even / Exits"
+groupVisualMain = "09. Main Visual"
+groupTradeVisual = "10. Trade Visualization"
+groupAlerts = "11. Alerts / Webhook"
+
+//====================================================================
+// CONSTANTS
+//====================================================================
+DIR_BOTH = "Обе"
+DIR_LONG = "Только Long"
+DIR_SHORT = "Только Short"
+
+STOP_OPPOSITE_ORB = "Opposite ORB"
+STOP_SIGNAL = "Signal Candle Low/High"
+STOP_ATR = "ATR Stop"
+STOP_ORB_RANGE = "ORB Range Stop"
+STOP_VWAP = "VWAP Stop"
+
+TP_R = "R Multiple"
+TP_ATR = "ATR"
+TP_ORB_RANGE = "ORB Range"
+TP_FIXED = "Fixed Points/Ticks"
+
+TICKS = "Ticks"
+POINTS = "Points"
+
+DISPLAY_ACTIVE = "Только активная сделка"
+DISPLAY_ALL = "Показывать всё"
+
+ORB_FIXED = "Fixed Window"
+ORB_THREE = "3 Fixed Windows"
+ORB_ROLLING = "Rolling Window"
+
+//====================================================================
+// INPUTS — AUTO PRESETS
+//====================================================================
+useAutoPresetsInput = input.bool(true, "Use Auto Symbol Presets", group=groupPresets)
+showPresetInfo = input.bool(true, "Show Preset In Data Window", group=groupPresets)
+
+//====================================================================
+// INPUTS — ORB
+//====================================================================
+orbModeInput = input.string("Fixed Window", "ORB Mode", options=["Fixed Window", "3 Fixed Windows", "Rolling Window"], group=groupSession)
+
+orbSessionInput = input.session("0930-0945", "ORB Window 1", group=groupSession)
+useOrbWindow2Input = input.bool(false, "Use ORB Window 2", group=groupSession)
+orbSession2Input = input.session("1000-1015", "ORB Window 2", group=groupSession)
+useOrbWindow3Input = input.bool(false, "Use ORB Window 3", group=groupSession)
+orbSession3Input = input.session("1015-1030", "ORB Window 3", group=groupSession)
+
+rollingSessionInput = input.session("0930-1600", "Rolling ORB Active Session", group=groupSession)
+rollingTfInput = input.string("15", "Rolling ORB Update TF", options=["5", "10", "15", "30", "60"], group=groupSession)
+
+orbTimezoneInput = input.string("America/New_York", "ORB Timezone", options=["America/New_York", "Europe/Berlin", "Etc/UTC", "Exchange"], group=groupSession)
+showOrbLinesInput = input.bool(true, "Show ORB High/Low", group=groupSession)
+oneSignalPerDirectionInput = input.bool(true, "One Signal Per Direction Per Day", group=groupSession)
+
+//====================================================================
+// INPUTS — FILTERS
+//====================================================================
+useVWAPFilterInput = input.bool(true, "Use VWAP Filter", group=groupFilters)
+useRetestFilterInput = input.bool(true, "Require Retest", group=groupFilters)
+useBiasRSIFilterInput = input.bool(true, "Use 5m Bias RSI Filter", group=groupFilters)
+useEntryRSIFilterInput = input.bool(true, "Use Entry RSI Filter", group=groupFilters)
+entryTFInput = input.string("1", "Entry RSI Timeframe", options=["1", "3", "5", "10", "15"], group=groupFilters)
+
+//====================================================================
+// INPUTS — RSI
+//====================================================================
+biasRsiLenInput = input.int(14, "5m Bias RSI Length", minval=1, group=groupRSI)
+entryRsiLenInput = input.int(9, "Entry RSI Length", minval=1, group=groupRSI)
+biasBullLevelInput = input.float(50.0, "Bias Bull Level", step=0.1, group=groupRSI)
+biasBearLevelInput = input.float(50.0, "Bias Bear Level", step=0.1, group=groupRSI)
+entryBullLevelInput = input.float(50.0, "Entry Bull Level", step=0.1, group=groupRSI)
+entryBearLevelInput = input.float(50.0, "Entry Bear Level", step=0.1, group=groupRSI)
+
+//====================================================================
+// INPUTS — ORDER FLOW
+//====================================================================
+useOrderFlowInput = input.bool(true, "Use Order-Flow Filter", group=groupOrderFlow)
+deltaLookbackInput = input.int(8, "Delta Smoothing Length", minval=1, group=groupOrderFlow)
+minDeltaStrengthInput = input.float(0.0, "Min Smoothed Delta", step=0.1, group=groupOrderFlow)
+
+//====================================================================
+// INPUTS — TRADE
+//====================================================================
+orderSizeInput = input.float(1.0, "Размер позиции", minval=0.001, step=0.001, group=groupTrade)
+tradeDirectionInput = input.string("Обе", "Направление торговли", options=["Обе", "Только Long", "Только Short"], group=groupTrade)
+sendCloseAtSessionEndInput = input.bool(false, "Закрывать сделку в конце сессии", group=groupTrade)
+useSessionFilterInput = input.bool(false, "Включить фильтр торговой сессии", group=groupTrade)
+tradeSessionInput = input.session("0700-1900", "Торговое окно", group=groupTrade)
+sessionTimezoneInput = input.string("America/New_York", "Часовой пояс", options=["America/New_York", "Europe/Berlin", "Etc/UTC"], group=groupTrade)
+
+//====================================================================
+// INPUTS — STOP LOSS
+//====================================================================
+stopModeInput = input.string("VWAP Stop", "Stop Mode", options=["Opposite ORB", "Signal Candle Low/High", "ATR Stop", "ORB Range Stop", "VWAP Stop"], group=groupRisk)
+atrStopLenInput = input.int(14, "ATR Length for SL", minval=1, group=groupRisk)
+stopAtrMultInput = input.float(1.0, "ATR Stop Multiplier", minval=0.1, step=0.1, group=groupRisk)
+stopOrbRangeMultInput = input.float(1.0, "ORB Range Stop Multiplier", minval=0.1, step=0.1, group=groupRisk)
+stopOffsetTypeInput = input.string("Ticks", "SL Offset Type", options=["Ticks", "Points"], group=groupRisk)
+stopOffsetValueInput = input.float(0.0, "SL Offset", minval=0.0, step=0.1, group=groupRisk)
+
+//====================================================================
+// INPUTS — TAKE PROFIT
+//====================================================================
+tpModeInput = input.string("Fixed Points/Ticks", "TP Mode", options=["R Multiple", "ATR", "ORB Range", "Fixed Points/Ticks"], group=groupTP)
+atrTpLenInput = input.int(14, "ATR Length for TP", minval=1, group=groupTP)
+
+enableTP1Input = input.bool(true, "TP1", inline="tpOn", group=groupTP)
+enableTP2Input = input.bool(true, "TP2", inline="tpOn", group=groupTP)
+enableTP3Input = input.bool(true, "TP3", inline="tpOn", group=groupTP)
+
+tp1RInput = input.float(1.0, "TP1 R", minval=0.1, step=0.1, group=groupTP, inline="r1")
+tp2RInput = input.float(1.5, "TP2 R", minval=0.1, step=0.1, group=groupTP, inline="r1")
+tp3RInput = input.float(2.5, "TP3 R", minval=0.1, step=0.1, group=groupTP, inline="r1")
+
+tp1AtrMultInput = input.float(1.0, "TP1 ATR", minval=0.1, step=0.1, group=groupTP, inline="atr")
+tp2AtrMultInput = input.float(2.0, "TP2 ATR", minval=0.1, step=0.1, group=groupTP, inline="atr")
+tp3AtrMultInput = input.float(3.0, "TP3 ATR", minval=0.1, step=0.1, group=groupTP, inline="atr")
+
+tp1OrbMultInput = input.float(1.0, "TP1 ORB", minval=0.1, step=0.1, group=groupTP, inline="orb")
+tp2OrbMultInput = input.float(2.0, "TP2 ORB", minval=0.1, step=0.1, group=groupTP, inline="orb")
+tp3OrbMultInput = input.float(3.0, "TP3 ORB", minval=0.1, step=0.1, group=groupTP, inline="orb")
+
+fixedTPTypeInput = input.string("Points", "Fixed TP Type", options=["Ticks", "Points"], group=groupTP)
+tp1FixedInput = input.float(20.0, "TP1 Fixed", minval=0.1, step=0.1, group=groupTP, inline="fx")
+tp2FixedInput = input.float(40.0, "TP2 Fixed", minval=0.1, step=0.1, group=groupTP, inline="fx")
+tp3FixedInput = input.float(60.0, "TP3 Fixed", minval=0.1, step=0.1, group=groupTP, inline="fx")
+
+tp1QtyInput = input.float(33.3, "TP1 %", minval=0.1, maxval=100.0, step=0.1, group=groupTP, inline="qty")
+tp2QtyInput = input.float(33.3, "TP2 %", minval=0.1, maxval=100.0, step=0.1, group=groupTP, inline="qty")
+tp3QtyInput = input.float(33.4, "TP3 %", minval=0.1, maxval=100.0, step=0.1, group=groupTP, inline="qty")
+
+//====================================================================
+// INPUTS — BE / EXITS
+//====================================================================
+moveStopToBEAfterFirstTpInput = input.bool(true, "Переводить в BE после первого активного TP", group=groupBE)
+useReturnInsideOrbExitInput = input.bool(false, "Закрывать при возврате внутрь ORB-зоны", group=groupBE)
+useVWAPInvalidExitInput = input.bool(false, "Закрывать при обратном закрытии за VWAP", group=groupBE)
+
+//====================================================================
+// INPUTS — MAIN VISUAL
+//====================================================================
+showVWAPInput = input.bool(true, "Show VWAP", group=groupVisualMain)
+showSignalsInput = input.bool(false, "Show Buy/Sell Labels", group=groupVisualMain)
+showBackgroundInput = input.bool(false, "Show Bias Background", group=groupVisualMain)
+
+vwapColorInput = input.color(color.yellow, "VWAP Color", group=groupVisualMain)
+vwapWidthInput = input.int(2, "VWAP Width", minval=1, maxval=5, group=groupVisualMain)
+
+orbHighColorInput = input.color(color.rgb(0, 230, 118), "ORB High Color", group=groupVisualMain)
+orbLowColorInput = input.color(color.rgb(255, 82, 82), "ORB Low Color", group=groupVisualMain)
+orbWidthInput = input.int(2, "ORB Line Width", minval=1, maxval=5, group=groupVisualMain)
+
+buyLabelColorInput = input.color(color.lime, "BUY Label Color", group=groupVisualMain)
+sellLabelColorInput = input.color(color.red, "SELL Label Color", group=groupVisualMain)
+
+//====================================================================
+// INPUTS — TRADE VISUALIZATION
+//====================================================================
+displayModeInput = input.string("Показывать всё", "Режим отображения", options=["Только активная сделка", "Показывать всё"], group=groupTradeVisual)
+showTradeVisualsInput = input.bool(true, "Показывать визуал сделки", group=groupTradeVisual)
+lineExtendBarsInput = input.int(100, "Продление линий вправо", minval=5, maxval=500, group=groupTradeVisual)
+labelOffsetBarsInput = input.int(0, "Смещение плашек вправо", minval=0, maxval=100, group=groupTradeVisual)
+showEntryMarkerInput = input.bool(true, "Показывать маркер входа", group=groupTradeVisual)
+
+longMarkerColorInput = input.color(color.rgb(78, 226, 57), "Цвет маркера Long", group=groupTradeVisual)
+shortMarkerColorInput = input.color(color.rgb(239, 65, 65), "Цвет маркера Short", group=groupTradeVisual)
+
+entryLineColorInput = input.color(color.black, "Цвет линии Entry", group=groupTradeVisual)
+stopLineColorInput = input.color(color.black, "Цвет линии Stop", group=groupTradeVisual)
+tpLineColorInput = input.color(color.black, "Цвет линий TP", group=groupTradeVisual)
+verticalLineColorInput = input.color(color.black, "Цвет вертикальной пунктирной линии", group=groupTradeVisual)
+
+entryTextColorInput = input.color(color.rgb(160, 160, 160), "Цвет текста Entry", group=groupTradeVisual)
+stopTextColorInput = input.color(color.rgb(235, 84, 84), "Цвет текста Stop", group=groupTradeVisual)
+tpTextColorInput = input.color(color.rgb(187, 214, 45), "Цвет текста TP", group=groupTradeVisual)
+tpDoneTextColorInput = input.color(color.rgb(187, 214, 45), "Цвет текста выполненного TP", group=groupTradeVisual)
+beTextColorInput = input.color(color.rgb(241, 196, 15), "Цвет текста BE", group=groupTradeVisual)
+
+plaqueBgColorInput = input.color(color.rgb(16, 18, 26), "Цвет плашек", group=groupTradeVisual)
+horizontalLineWidthInput = input.int(1, "Толщина горизонтальных линий", minval=1, maxval=5, group=groupTradeVisual)
+verticalLineWidthInput = input.int(1, "Толщина вертикальной пунктирной линии", minval=1, maxval=5, group=groupTradeVisual)
+tagSizeOptInput = input.string("tiny", "Размер плашек", options=["tiny", "small", "normal"], group=groupTradeVisual)
+
+//====================================================================
+// INPUTS — ALERTS / WEBHOOK
+//====================================================================
+webhookSecret = input.string("12345", "Webhook Secret", group=groupAlerts)
+jsonStrategyName = input.string("ORB_VWAP_RSI_OF", "JSON Strategy Name", group=groupAlerts)
+jsonStrategyVersion = input.string("1.0", "JSON Strategy Version", group=groupAlerts)
+mt5SymbolOverride = input.string("", "MT5 Symbol Override", group=groupAlerts)
+magicNumber = input.int(26043001, "Magic Number", minval=1, group=groupAlerts)
+maxSignalAgeSeconds = input.int(60, "Max Signal Age Seconds", minval=1, group=groupAlerts)
+maxSlippagePoints = input.int(30, "Max Slippage Points", minval=0, group=groupAlerts)
+
+//====================================================================
+// SYMBOL DETECTION
+//====================================================================
+tickerUpper = str.upper(syminfo.ticker)
+tickerIdUpper = str.upper(syminfo.tickerid)
+descUpper = str.upper(syminfo.description)
+
+isBTC = str.contains(tickerUpper, "BTC") or str.contains(descUpper, "BITCOIN")
+isXAU = str.contains(tickerUpper, "XAU") or str.contains(tickerUpper, "GOLD") or str.contains(descUpper, "GOLD")
+isNAS = str.contains(tickerUpper, "NAS100") or str.contains(tickerUpper, "US100") or str.contains(tickerUpper, "NASDAQ") or str.contains(tickerUpper, "NQ") or str.contains(descUpper, "NASDAQ")
+isDJ = str.contains(tickerUpper, "DJ30") or str.contains(tickerUpper, "US30") or str.contains(tickerUpper, "DJI") or str.contains(tickerUpper, "DOW") or str.contains(descUpper, "DOW")
+isSP = str.contains(tickerUpper, "SP500") or str.contains(tickerUpper, "US500") or str.contains(tickerUpper, "SPX") or str.contains(tickerUpper, "SPY") or str.contains(tickerUpper, "ES") or str.contains(descUpper, "S&P")
+
+presetFound = isDJ or isNAS or isSP or isBTC or isXAU
+usePreset = useAutoPresetsInput and presetFound
+
+presetName = isDJ ? "DJ30" : isNAS ? "NAS100" : isSP ? "SP500" : isBTC ? "BTCUSD" : isXAU ? "XAUUSD" : "Manual"
+
+//====================================================================
+// EFFECTIVE SETTINGS
+//====================================================================
+orbSessionEff = usePreset and isDJ ? "0930-0955" : usePreset and isNAS ? "0930-0955" : usePreset and isSP ? "0930-1000" : usePreset and isBTC ? "0915-1000" : usePreset and isXAU ? "0930-1000" : orbSessionInput
+orbTimezoneEff = usePreset ? "America/New_York" : orbTimezoneInput
+showOrbLinesEff = usePreset ? true : showOrbLinesInput
+oneSignalPerDirectionEff = usePreset ? true : oneSignalPerDirectionInput
+
+useVWAPFilterEff = usePreset and isDJ ? false : usePreset and isNAS ? true : usePreset and isSP ? true : usePreset and isBTC ? true : usePreset and isXAU ? false : useVWAPFilterInput
+useRetestFilterEff = usePreset ? true : useRetestFilterInput
+useBiasRSIFilterEff = usePreset ? true : useBiasRSIFilterInput
+useEntryRSIFilterEff = usePreset ? true : useEntryRSIFilterInput
+entryTFEff = usePreset ? "1" : entryTFInput
+
+biasRsiLenEff = usePreset ? 14 : biasRsiLenInput
+entryRsiLenEff = usePreset ? 9 : entryRsiLenInput
+
+biasBullLevelEff = usePreset and isSP ? 55.0 : usePreset ? 50.0 : biasBullLevelInput
+biasBearLevelEff = usePreset and isSP ? 45.0 : usePreset ? 50.0 : biasBearLevelInput
+entryBullLevelEff = usePreset and isSP ? 55.0 : usePreset ? 50.0 : entryBullLevelInput
+entryBearLevelEff = usePreset and isSP ? 45.0 : usePreset ? 50.0 : entryBearLevelInput
+
+useOrderFlowEff = usePreset ? true : useOrderFlowInput
+deltaLookbackEff = usePreset ? 8 : deltaLookbackInput
+minDeltaStrengthEff = usePreset ? 0.0 : minDeltaStrengthInput
+
+orderSizeEff = usePreset ? 1.0 : orderSizeInput
+tradeDirectionEff = usePreset ? "Обе" : tradeDirectionInput
+sendCloseAtSessionEndEff = usePreset ? false : sendCloseAtSessionEndInput
+useSessionFilterEff = usePreset ? false : useSessionFilterInput
+tradeSessionEff = usePreset ? "0700-1900" : tradeSessionInput
+sessionTimezoneEff = usePreset ? "America/New_York" : sessionTimezoneInput
+
+stopModeEff = usePreset ? "VWAP Stop" : stopModeInput
+atrStopLenEff = usePreset ? 14 : atrStopLenInput
+stopAtrMultEff = usePreset ? 1.0 : stopAtrMultInput
+stopOrbRangeMultEff = usePreset ? 1.0 : stopOrbRangeMultInput
+stopOffsetTypeEff = usePreset ? "Ticks" : stopOffsetTypeInput
+stopOffsetValueEff = usePreset ? 0.0 : stopOffsetValueInput
+
+tpModeEff = usePreset ? "Fixed Points/Ticks" : tpModeInput
+atrTpLenEff = usePreset ? 14 : atrTpLenInput
+
+enableTP1Eff = usePreset ? true : enableTP1Input
+enableTP2Eff = usePreset ? true : enableTP2Input
+enableTP3Eff = usePreset and isDJ ? true : usePreset and isNAS ? false : usePreset and isSP ? true : usePreset and isBTC ? false : usePreset and isXAU ? false : enableTP3Input
+
+tp1REff = usePreset ? 1.0 : tp1RInput
+tp2REff = usePreset ? 1.5 : tp2RInput
+tp3REff = usePreset ? 2.5 : tp3RInput
+
+tp1AtrMultEff = usePreset ? 1.0 : tp1AtrMultInput
+tp2AtrMultEff = usePreset ? 2.0 : tp2AtrMultInput
+tp3AtrMultEff = usePreset ? 3.0 : tp3AtrMultInput
+
+tp1OrbMultEff = usePreset ? 1.0 : tp1OrbMultInput
+tp2OrbMultEff = usePreset ? 2.0 : tp2OrbMultInput
+tp3OrbMultEff = usePreset ? 3.0 : tp3OrbMultInput
+
+fixedTPTypeEff = usePreset ? "Points" : fixedTPTypeInput
+
+tp1FixedEff = usePreset and isDJ ? 30.0 : usePreset and isNAS ? 9.0 : usePreset and isSP ? 7.0 : usePreset and isBTC ? 25.0 : usePreset and isXAU ? 8.0 : tp1FixedInput
+tp2FixedEff = usePreset and isDJ ? 900.0 : usePreset and isNAS ? 40.0 : usePreset and isSP ? 14.0 : usePreset and isBTC ? 50.0 : usePreset and isXAU ? 15.0 : tp2FixedInput
+tp3FixedEff = usePreset and isDJ ? 1500.0 : usePreset and isNAS ? 25.0 : usePreset and isSP ? 21.0 : usePreset and isBTC ? 80.0 : usePreset and isXAU ? 25.0 : tp3FixedInput
+
+tp1QtyEff = usePreset and isDJ ? 70.0 : usePreset and isNAS ? 75.0 : usePreset and isSP ? 70.0 : usePreset and isBTC ? 75.0 : usePreset and isXAU ? 75.0 : tp1QtyInput
+tp2QtyEff = usePreset and isDJ ? 20.0 : usePreset and isNAS ? 25.0 : usePreset and isSP ? 20.0 : usePreset and isBTC ? 25.0 : usePreset and isXAU ? 25.0 : tp2QtyInput
+tp3QtyEff = usePreset and isDJ ? 10.0 : usePreset and isNAS ? 1.0 : usePreset and isSP ? 10.0 : usePreset and isBTC ? 1.0 : usePreset and isXAU ? 3.0 : tp3QtyInput
+
+moveStopToBEAfterFirstTpEff = usePreset ? true : moveStopToBEAfterFirstTpInput
+useReturnInsideOrbExitEff = usePreset and isSP ? true : usePreset and isBTC ? true : usePreset ? false : useReturnInsideOrbExitInput
+useVWAPInvalidExitEff = usePreset and isSP ? true : usePreset and isBTC ? true : usePreset ? false : useVWAPInvalidExitInput
+
+showVWAPEff = usePreset ? true : showVWAPInput
+showSignalsEff = usePreset ? false : showSignalsInput
+showBackgroundEff = usePreset ? false : showBackgroundInput
+
+//====================================================================
+// HELPERS
+//====================================================================
+f_inSession(string _sess, string _tz) =>
+    not na(time(timeframe.period, _sess, _tz))
+
+f_num(float _v) =>
+    str.tostring(_v, format.mintick)
+
+f_qty(float _v) =>
+    str.tostring(_v, "#.####")
+
+f_int(int _v) =>
+    str.tostring(_v)
+
+f_bool(bool _v) =>
+    _v ? "true" : "false"
+
+f_str(string _s) =>
+    "\"" + _s + "\""
+
+f_tagSize(string _opt) =>
+    switch _opt
+        "small" => size.small
+        "normal" => size.normal
+        => size.tiny
+
+f_deleteLine(line _ln) =>
+    if not na(_ln)
+        line.delete(_ln)
+    0
+
+f_deleteLabel(label _lb) =>
+    if not na(_lb)
+        label.delete(_lb)
+    0
+
+f_sign(float _x) =>
+    _x > 0 ? 1.0 : _x < 0 ? -1.0 : 0.0
+
+f_offset(string _type, float _value) =>
+    _type == "Ticks" ? _value * syminfo.mintick : _value
+
+f_alertTimeUtc() =>
+    str.format_time(time, "yyyy-MM-dd'T'HH:mm:ss", "Etc/UTC") + "Z"
+
+f_signalTimeUtc() =>
+    str.format_time(time, "yyyyMMdd-HHmmss", "Etc/UTC")
+
+f_tpId(int _idx) =>
+    "tp" + str.tostring(_idx)
+
+f_mt5Symbol() =>
+    str.length(mt5SymbolOverride) > 0 ? mt5SymbolOverride : syminfo.ticker
+
+f_openSignalId(string _side) =>
+    jsonStrategyName + "_" + syminfo.ticker + "_" + timeframe.period + "_" + f_signalTimeUtc() + "_" + _side + "_open"
+
+f_closeSignalId(string _parentSignalId, string _reason) =>
+    _parentSignalId + "_" + _reason + "_" + f_signalTimeUtc() + "_close"
+
+f_buildTpObj(string _id, float _price, float _qtyPercent) =>
+    string s = "{"
+    s += "\"id\":" + f_str(_id)
+    s += ",\"price\":" + f_num(_price)
+    s += ",\"close_percent\":" + f_qty(_qtyPercent)
+    s += "}"
+    s
+
+f_buildTpList(bool _tp1On, bool _tp2On, bool _tp3On, float _tp1, float _tp2, float _tp3, float _q1, float _q2, float _q3) =>
+    string result = "["
+    bool hasItem = false
+
+    if _tp1On and not na(_tp1)
+        result += f_buildTpObj("tp1", _tp1, _q1)
+        hasItem := true
+
+    if _tp2On and not na(_tp2)
+        if hasItem
+            result += ","
+        result += f_buildTpObj("tp2", _tp2, _q2)
+        hasItem := true
+
+    if _tp3On and not na(_tp3)
+        if hasItem
+            result += ","
+        result += f_buildTpObj("tp3", _tp3, _q3)
+        hasItem := true
+
+    result += "]"
+    result
+
+f_activeTpCount(bool _tp1On, bool _tp2On, bool _tp3On, float _tp1, float _tp2, float _tp3) =>
+    int count = 0
+    if _tp1On and not na(_tp1)
+        count += 1
+    if _tp2On and not na(_tp2)
+        count += 1
+    if _tp3On and not na(_tp3)
+        count += 1
+    count
+
+f_buildFlatTpFields(bool _tp1On, bool _tp2On, bool _tp3On, float _tp1, float _tp2, float _tp3, float _q1, float _q2, float _q3) =>
+    string s = ""
+
+    if _tp1On and not na(_tp1)
+        s += ",\"tp1\":" + f_num(_tp1)
+        s += ",\"tp1_qty\":" + f_qty(_q1)
+
+    if _tp2On and not na(_tp2)
+        s += ",\"tp2\":" + f_num(_tp2)
+        s += ",\"tp2_qty\":" + f_qty(_q2)
+
+    if _tp3On and not na(_tp3)
+        s += ",\"tp3\":" + f_num(_tp3)
+        s += ",\"tp3_qty\":" + f_qty(_q3)
+
+    s
+
+f_buildOpenJson(string _signalId, string _side, float _entry, float _sl, float _tp1, float _tp2, float _tp3, bool _tp1On, bool _tp2On, bool _tp3On, float _q1, float _q2, float _q3, int _firstTpIndex, int _finalTpIndex) =>
+    string timeUtc = f_alertTimeUtc()
+    string mt5Symbol = f_mt5Symbol()
+    string tpList = f_buildTpList(_tp1On, _tp2On, _tp3On, _tp1, _tp2, _tp3, _q1, _q2, _q3)
+    string flatTpFields = f_buildFlatTpFields(_tp1On, _tp2On, _tp3On, _tp1, _tp2, _tp3, _q1, _q2, _q3)
+    int tpCount = f_activeTpCount(_tp1On, _tp2On, _tp3On, _tp1, _tp2, _tp3)
+    string firstTpId = f_tpId(_firstTpIndex)
+    string finalTpId = f_tpId(_finalTpIndex)
+
+    string s = "{"
+    s += "\"version\":\"1.0\""
+    s += ",\"secret\":" + f_str(webhookSecret)
+    s += ",\"source\":\"tradingview\""
+
+    s += ",\"signal_id\":" + f_str(_signalId)
+    s += ",\"symbol\":" + f_str(syminfo.ticker)
+    s += ",\"mt5_symbol\":" + f_str(mt5Symbol)
+    s += ",\"timeframe\":" + f_str(timeframe.period)
+    s += ",\"time\":" + f_str(timeUtc)
+    s += ",\"action\":\"open\""
+    s += ",\"side\":" + f_str(_side)
+    s += ",\"entry\":" + f_num(_entry)
+    s += ",\"sl\":" + f_num(_sl)
+    s += ",\"tp_count\":" + f_int(tpCount)
+    s += flatTpFields
+    s += ",\"move_to_be_after_first_tp\":" + f_bool(moveStopToBEAfterFirstTpEff)
+    s += ",\"be_trigger_tp_id\":" + f_str(firstTpId)
+    s += ",\"lot\":" + f_qty(orderSizeEff)
+    s += ",\"magic_number\":" + f_int(magicNumber)
+
+    s += ",\"strategy\":{"
+    s += "\"name\":" + f_str(jsonStrategyName)
+    s += ",\"version\":" + f_str(jsonStrategyVersion)
+    s += "}"
+
+    s += ",\"signal\":{"
+    s += "\"signal_id\":" + f_str(_signalId)
+    s += ",\"timestamp_utc\":" + f_str(timeUtc)
+    s += ",\"bar_time_utc\":" + f_str(timeUtc)
+    s += ",\"timeframe\":" + f_str(timeframe.period)
+    s += ",\"action\":\"open\""
+    s += ",\"side\":" + f_str(_side)
+    s += ",\"reason\":\"strategy_entry\""
+    s += "}"
+
+    s += ",\"market\":{"
+    s += "\"tv_symbol\":" + f_str(syminfo.ticker)
+    s += ",\"tv_symbol_id\":" + f_str(syminfo.tickerid)
+    s += ",\"mt5_symbol\":" + f_str(mt5Symbol)
+    s += ",\"price\":" + f_num(close)
+    s += "}"
+
+    s += ",\"trade_plan\":{"
+    s += "\"entry_type\":\"market\""
+    s += ",\"entry_price\":" + f_num(_entry)
+    s += ",\"stop_loss\":" + f_num(_sl)
+    s += ",\"tp_count\":" + f_int(tpCount)
+    s += ",\"take_profits\":" + tpList
+
+    s += ",\"break_even\":{"
+    s += "\"enabled\":" + f_bool(moveStopToBEAfterFirstTpEff)
+    s += ",\"trigger\":\"after_first_active_tp\""
+    s += ",\"trigger_tp_id\":" + f_str(firstTpId)
+    s += ",\"price\":" + f_num(_entry)
+    s += ",\"offset_points\":0"
+    s += "}"
+
+    s += ",\"management\":{"
+    s += "\"allow_partial_close\":true"
+    s += ",\"close_existing_opposite_before_open\":true"
+    s += ",\"first_active_tp_id\":" + f_str(firstTpId)
+    s += ",\"final_active_tp_id\":" + f_str(finalTpId)
+    s += "}"
+
+    s += ",\"settings\":{"
+    s += "\"preset\":" + f_str(presetName)
+    s += ",\"auto_preset_enabled\":" + f_bool(usePreset)
+    s += ",\"orb_mode\":" + f_str(orbModeInput)
+    s += ",\"stop_mode\":" + f_str(stopModeEff)
+    s += ",\"tp_mode\":" + f_str(tpModeEff)
+    s += ",\"session_filter_enabled\":" + f_bool(useSessionFilterEff)
+    s += ",\"close_at_session_end_enabled\":" + f_bool(sendCloseAtSessionEndEff)
+    s += "}"
+
+    s += "}"
+
+    s += ",\"risk\":{"
+    s += "\"mode\":\"fixed_lot\""
+    s += ",\"lot\":" + f_qty(orderSizeEff)
+    s += ",\"max_slippage_points\":" + f_int(maxSlippagePoints)
+    s += "}"
+
+    s += ",\"execution\":{"
+    s += "\"max_signal_age_seconds\":" + f_int(maxSignalAgeSeconds)
+    s += ",\"dedupe_key\":" + f_str(_signalId)
+    s += ",\"magic_number\":" + f_int(magicNumber)
+    s += ",\"comment\":" + f_str("TV_" + jsonStrategyName + "_" + syminfo.ticker + "_" + timeframe.period)
+    s += "}"
+
+    s += "}"
+    s
+
+f_buildCloseJson(string _parentSignalId, string _side, string _reason, float _closePrice) =>
+    string timeUtc = f_alertTimeUtc()
+    string signalId = f_closeSignalId(_parentSignalId, _reason)
+    string mt5Symbol = f_mt5Symbol()
+
+    string s = "{"
+    s += "\"version\":\"1.0\""
+    s += ",\"secret\":" + f_str(webhookSecret)
+    s += ",\"source\":\"tradingview\""
+    s += ",\"signal_id\":" + f_str(signalId)
+    s += ",\"parent_signal_id\":" + f_str(_parentSignalId)
+    s += ",\"symbol\":" + f_str(syminfo.ticker)
+    s += ",\"mt5_symbol\":" + f_str(mt5Symbol)
+    s += ",\"timeframe\":" + f_str(timeframe.period)
+    s += ",\"time\":" + f_str(timeUtc)
+    s += ",\"action\":\"close\""
+    s += ",\"side\":" + f_str(_side)
+    s += ",\"reason\":" + f_str(_reason)
+    s += ",\"close_price\":" + f_num(_closePrice)
+    s += ",\"magic_number\":" + f_int(magicNumber)
+
+    s += ",\"strategy\":{"
+    s += "\"name\":" + f_str(jsonStrategyName)
+    s += ",\"version\":" + f_str(jsonStrategyVersion)
+    s += "}"
+
+    s += ",\"signal\":{"
+    s += "\"signal_id\":" + f_str(signalId)
+    s += ",\"parent_signal_id\":" + f_str(_parentSignalId)
+    s += ",\"timestamp_utc\":" + f_str(timeUtc)
+    s += ",\"bar_time_utc\":" + f_str(timeUtc)
+    s += ",\"timeframe\":" + f_str(timeframe.period)
+    s += ",\"action\":\"close\""
+    s += ",\"side\":" + f_str(_side)
+    s += ",\"reason\":" + f_str(_reason)
+    s += "}"
+
+    s += ",\"market\":{"
+    s += "\"tv_symbol\":" + f_str(syminfo.ticker)
+    s += ",\"tv_symbol_id\":" + f_str(syminfo.tickerid)
+    s += ",\"mt5_symbol\":" + f_str(mt5Symbol)
+    s += ",\"price\":" + f_num(_closePrice)
+    s += "}"
+
+    s += "}"
+    s
+
+f_resolveTpEnabled(bool _e1, bool _e2, bool _e3) =>
+    bool r1 = _e1
+    bool r2 = _e2
+    bool r3 = _e3
+    if not r1 and not r2 and not r3
+        r1 := true
+    [r1, r2, r3]
+
+f_normQty(bool _e1, bool _e2, bool _e3, float _q1, float _q2, float _q3) =>
+    float w1 = _e1 ? _q1 : 0.0
+    float w2 = _e2 ? _q2 : 0.0
+    float w3 = _e3 ? _q3 : 0.0
+    float sumQ = math.max(w1 + w2 + w3, 0.0001)
+    float nq1 = w1 / sumQ * 100.0
+    float nq2 = w2 / sumQ * 100.0
+    float nq3 = w3 / sumQ * 100.0
+    [nq1, nq2, nq3]
+
+f_calcLongStop(string _mode, float _entry, float _sigLow, float _orbLow, float _vwap, float _atr, float _orbRange) =>
+    float result = na
+    if _mode == "Opposite ORB"
+        result := _orbLow
+    else if _mode == "Signal Candle Low/High"
+        result := _sigLow
+    else if _mode == "ATR Stop"
+        result := _entry - _atr * stopAtrMultEff
+    else if _mode == "ORB Range Stop"
+        result := _entry - _orbRange * stopOrbRangeMultEff
+    else if _mode == "VWAP Stop"
+        result := _vwap
+    result
+
+f_calcShortStop(string _mode, float _entry, float _sigHigh, float _orbHigh, float _vwap, float _atr, float _orbRange) =>
+    float result = na
+    if _mode == "Opposite ORB"
+        result := _orbHigh
+    else if _mode == "Signal Candle Low/High"
+        result := _sigHigh
+    else if _mode == "ATR Stop"
+        result := _entry + _atr * stopAtrMultEff
+    else if _mode == "ORB Range Stop"
+        result := _entry + _orbRange * stopOrbRangeMultEff
+    else if _mode == "VWAP Stop"
+        result := _vwap
+    result
+
+f_tpDistance(string _mode, float _risk, float _atr, float _orbRange, float _rMult, float _atrMult, float _orbMult, float _fixedValue) =>
+    float dist = na
+    if _mode == "R Multiple"
+        dist := _risk * _rMult
+    else if _mode == "ATR"
+        dist := _atr * _atrMult
+    else if _mode == "ORB Range"
+        dist := _orbRange * _orbMult
+    else if _mode == "Fixed Points/Ticks"
+        dist := f_offset(fixedTPTypeEff, _fixedValue)
+    dist
+
+//====================================================================
+// TP STATE
+//====================================================================
+[tp1On, tp2On, tp3On] = f_resolveTpEnabled(enableTP1Eff, enableTP2Eff, enableTP3Eff)
+[tp1QtyNorm, tp2QtyNorm, tp3QtyNorm] = f_normQty(tp1On, tp2On, tp3On, tp1QtyEff, tp2QtyEff, tp3QtyEff)
+
+firstActiveTpIndex = tp1On ? 1 : tp2On ? 2 : 3
+finalActiveTpIndex = tp3On ? 3 : tp2On ? 2 : 1
+
+//====================================================================
+// DAY / SESSION
+//====================================================================
+newDay = ta.change(time("D")) != 0
+
+orbTzEff = orbTimezoneEff == "Exchange" ? syminfo.timezone : orbTimezoneEff
+
+sessionActive = (not useSessionFilterEff) or f_inSession(tradeSessionEff, sessionTimezoneEff)
+sessionJustClosed = useSessionFilterEff and not sessionActive and sessionActive[1]
+
+//====================================================================
+// ORB LOGIC — FIXED / 3 WINDOWS / ROLLING
+// Zone stays active until a new completed zone appears.
+//====================================================================
+inOrb1 = not na(time(timeframe.period, orbSessionEff, orbTzEff))
+inOrb2 = useOrbWindow2Input and not na(time(timeframe.period, orbSession2Input, orbTzEff))
+inOrb3 = useOrbWindow3Input and not na(time(timeframe.period, orbSession3Input, orbTzEff))
+
+rollingTime = time(rollingTfInput, rollingSessionInput, orbTzEff)
+inRolling = not na(rollingTime)
+
+inBuildWindow = orbModeInput == "Rolling Window" ? inRolling : orbModeInput == "3 Fixed Windows" ? (inOrb1 or inOrb2 or inOrb3) : inOrb1
+
+int buildWindowKey = 0
+if inBuildWindow
+    if orbModeInput == "Rolling Window"
+        buildWindowKey := rollingTime
+    else
+        buildWindowKey := inOrb1 ? 1 : inOrb2 ? 2 : inOrb3 ? 3 : 0
+
+newBuildWindow = inBuildWindow and (not inBuildWindow[1] or buildWindowKey != nz(buildWindowKey[1], -1))
+endBuildWindow = not inBuildWindow and inBuildWindow[1]
+
+var float buildOrbHigh = na
+var float buildOrbLow = na
+
+var float orbHigh = na
+var float orbLow = na
+var bool orbLocked = false
+
+if newDay
+    buildOrbHigh := na
+    buildOrbLow := na
+    orbHigh := na
+    orbLow := na
+    orbLocked := false
+
+if newBuildWindow
+    if not na(buildOrbHigh) and not na(buildOrbLow) and not newDay
+        orbHigh := buildOrbHigh
+        orbLow := buildOrbLow
+        orbLocked := true
+
+    buildOrbHigh := high
+    buildOrbLow := low
+
+else if inBuildWindow
+    buildOrbHigh := na(buildOrbHigh) ? high : math.max(buildOrbHigh, high)
+    buildOrbLow := na(buildOrbLow) ? low : math.min(buildOrbLow, low)
+
+if endBuildWindow and not na(buildOrbHigh) and not na(buildOrbLow)
+    orbHigh := buildOrbHigh
+    orbLow := buildOrbLow
+    orbLocked := true
+    buildOrbHigh := na
+    buildOrbLow := na
+
+orbRange = not na(orbHigh) and not na(orbLow) ? math.abs(orbHigh - orbLow) : na
+
+//====================================================================
+// VWAP / RSI / ORDER FLOW
+//====================================================================
+vwapValue = ta.vwap(hlc3)
+
+biasRsi = request.security(syminfo.tickerid, "5", ta.rsi(close, biasRsiLenEff), barmerge.gaps_off, barmerge.lookahead_off)
+entryRsi = request.security(syminfo.tickerid, entryTFEff, ta.rsi(close, entryRsiLenEff), barmerge.gaps_off, barmerge.lookahead_off)
+
+deltaBarRaw = volume * f_sign(close - open)
+deltaBarSmooth = ta.ema(deltaBarRaw, deltaLookbackEff)
+
+var float cvd = 0.0
+if newDay
+    cvd := deltaBarRaw
+else
+    cvd += deltaBarRaw
+
+cvdRising = cvd > cvd[1]
+cvdFalling = cvd < cvd[1]
+
+longOrderFlowOK = (not useOrderFlowEff) or (deltaBarSmooth > minDeltaStrengthEff and cvdRising)
+shortOrderFlowOK = (not useOrderFlowEff) or (deltaBarSmooth < -minDeltaStrengthEff and cvdFalling)
+
+bullBias = biasRsi > biasBullLevelEff
+bearBias = biasRsi < biasBearLevelEff
+
+aboveVWAP = close > vwapValue
+belowVWAP = close < vwapValue
+
+longFilter = (not useBiasRSIFilterEff or bullBias) and (not useVWAPFilterEff or aboveVWAP) and longOrderFlowOK
+shortFilter = (not useBiasRSIFilterEff or bearBias) and (not useVWAPFilterEff or belowVWAP) and shortOrderFlowOK
+
+//====================================================================
+// BREAKOUT / RETEST LOGIC
+//====================================================================
+crossOverOrbHigh = ta.crossover(close, orbHigh)
+crossUnderOrbLow = ta.crossunder(close, orbLow)
+
+longBreak = orbLocked and not na(orbHigh) and crossOverOrbHigh
+shortBreak = orbLocked and not na(orbLow) and crossUnderOrbLow
+
+var bool longArmed = false
+var bool shortArmed = false
+
+if newDay
+    longArmed := false
+    shortArmed := false
+
+if longBreak and longFilter
+    longArmed := true
+    shortArmed := false
+
+if shortBreak and shortFilter
+    shortArmed := true
+    longArmed := false
+
+longRetest = orbLocked and longArmed and not na(orbHigh) and low <= orbHigh and close > orbHigh
+shortRetest = orbLocked and shortArmed and not na(orbLow) and high >= orbLow and close < orbLow
+
+entryRsiLong = entryRsi > entryBullLevelEff
+entryRsiShort = entryRsi < entryBearLevelEff
+
+longSignalNoRetest = longBreak and longFilter and (not useEntryRSIFilterEff or entryRsiLong)
+shortSignalNoRetest = shortBreak and shortFilter and (not useEntryRSIFilterEff or entryRsiShort)
+
+longSignalRetest = longRetest and longFilter and (not useEntryRSIFilterEff or entryRsiLong)
+shortSignalRetest = shortRetest and shortFilter and (not useEntryRSIFilterEff or entryRsiShort)
+
+longSignalRaw = useRetestFilterEff ? longSignalRetest : longSignalNoRetest
+shortSignalRaw = useRetestFilterEff ? shortSignalRetest : shortSignalNoRetest
+
+//====================================================================
+// LIMIT SIGNALS PER DAY
+//====================================================================
+var bool longTriggeredToday = false
+var bool shortTriggeredToday = false
+
+if newDay
+    longTriggeredToday := false
+    shortTriggeredToday := false
+
+allowLong = tradeDirectionEff == "Обе" or tradeDirectionEff == "Только Long"
+allowShort = tradeDirectionEff == "Обе" or tradeDirectionEff == "Только Short"
+
+longSignal = allowLong and sessionActive and longSignalRaw and (not oneSignalPerDirectionEff or not longTriggeredToday)
+shortSignal = allowShort and sessionActive and shortSignalRaw and (not oneSignalPerDirectionEff or not shortTriggeredToday)
+
+if longSignal
+    longTriggeredToday := true
+    longArmed := false
+
+if shortSignal
+    shortTriggeredToday := true
+    shortArmed := false
+
+//====================================================================
+// LEVEL CALCULATIONS
+//====================================================================
+atrStop = ta.atr(atrStopLenEff)
+atrTP = ta.atr(atrTpLenEff)
+slOffset = f_offset(stopOffsetTypeEff, stopOffsetValueEff)
+
+longEntryPrice = close
+shortEntryPrice = close
+
+longStopRaw = f_calcLongStop(stopModeEff, longEntryPrice, low, orbLow, vwapValue, atrStop, orbRange)
+shortStopRaw = f_calcShortStop(stopModeEff, shortEntryPrice, high, orbHigh, vwapValue, atrStop, orbRange)
+
+longStopPrice = not na(longStopRaw) ? longStopRaw - slOffset : na
+shortStopPrice = not na(shortStopRaw) ? shortStopRaw + slOffset : na
+
+longRisk = longSignal and not na(longStopPrice) ? longEntryPrice - longStopPrice : na
+shortRisk = shortSignal and not na(shortStopPrice) ? shortStopPrice - shortEntryPrice : na
+
+validLongRisk = longSignal and not na(longRisk) and longRisk > syminfo.mintick
+validShortRisk = shortSignal and not na(shortRisk) and shortRisk > syminfo.mintick
+
+longTP1 = validLongRisk ? longEntryPrice + f_tpDistance(tpModeEff, longRisk, atrTP, orbRange, tp1REff, tp1AtrMultEff, tp1OrbMultEff, tp1FixedEff) : na
+longTP2 = validLongRisk ? longEntryPrice + f_tpDistance(tpModeEff, longRisk, atrTP, orbRange, tp2REff, tp2AtrMultEff, tp2OrbMultEff, tp2FixedEff) : na
+longTP3 = validLongRisk ? longEntryPrice + f_tpDistance(tpModeEff, longRisk, atrTP, orbRange, tp3REff, tp3AtrMultEff, tp3OrbMultEff, tp3FixedEff) : na
+
+shortTP1 = validShortRisk ? shortEntryPrice - f_tpDistance(tpModeEff, shortRisk, atrTP, orbRange, tp1REff, tp1AtrMultEff, tp1OrbMultEff, tp1FixedEff) : na
+shortTP2 = validShortRisk ? shortEntryPrice - f_tpDistance(tpModeEff, shortRisk, atrTP, orbRange, tp2REff, tp2AtrMultEff, tp2OrbMultEff, tp2FixedEff) : na
+shortTP3 = validShortRisk ? shortEntryPrice - f_tpDistance(tpModeEff, shortRisk, atrTP, orbRange, tp3REff, tp3AtrMultEff, tp3OrbMultEff, tp3FixedEff) : na
+
+//====================================================================
+// TRADE STATE
+//====================================================================
+var bool tradeActive = false
+var bool tradeIsLong = false
+var string tradeOpenSignalId = ""
+var float tradeEntry = na
+var float tradeStopBase = na
+var float tradeTP1 = na
+var float tradeTP2 = na
+var float tradeTP3 = na
+var int tradeMaxTp = 0
+var int tradeOpenedBar = na
+var string pendingOpenAlertJson = ""
+var string pendingCloseAlertJson = ""
+
+pendingOpenAlertJson := ""
+pendingCloseAlertJson := ""
+
+//====================================================================
+// VISUAL OBJECTS
+//====================================================================
+var int visEntryBar = na
+var int visLabelX = na
+
+var line entryLine = na
+var line stopLine = na
+var line tp1Line = na
+var line tp2Line = na
+var line tp3Line = na
+var line entryVertLine = na
+
+var label entryTag = na
+var label stopTag = na
+var label tp1Tag = na
+var label tp2Tag = na
+var label tp3Tag = na
+
+//====================================================================
+// PLOTS
+//====================================================================
+plot(showVWAPEff ? vwapValue : na, title="VWAP", color=vwapColorInput, linewidth=vwapWidthInput, display=display.all - display.status_line - display.price_scale)
+plot(showOrbLinesEff and orbLocked ? orbHigh : na, title="ORB High", color=orbHighColorInput, linewidth=orbWidthInput, style=plot.style_linebr, display=display.all - display.status_line - display.price_scale)
+plot(showOrbLinesEff and orbLocked ? orbLow : na, title="ORB Low", color=orbLowColorInput, linewidth=orbWidthInput, style=plot.style_linebr, display=display.all - display.status_line - display.price_scale)
+
+bgcolor(showBackgroundEff ? bullBias ? color.new(color.green, 90) : bearBias ? color.new(color.red, 90) : na : na, title="Background Color")
+
+plotshape(showSignalsEff and longSignal, title="BUY", style=shape.labelup, location=location.belowbar, color=buyLabelColorInput, text="BUY", textcolor=color.black, size=size.small, display=display.all - display.status_line - display.price_scale)
+plotshape(showSignalsEff and shortSignal, title="SELL", style=shape.labeldown, location=location.abovebar, color=sellLabelColorInput, text="SELL", textcolor=color.white, size=size.small, display=display.all - display.status_line - display.price_scale)
+
+plotshape(showEntryMarkerInput and longSignal, title="Long Entry Marker", style=shape.triangleup, location=location.belowbar, color=longMarkerColorInput, size=size.tiny, display=display.all - display.status_line - display.price_scale)
+plotshape(showEntryMarkerInput and shortSignal, title="Short Entry Marker", style=shape.triangledown, location=location.abovebar, color=shortMarkerColorInput, size=size.tiny, display=display.all - display.status_line - display.price_scale)
+
+plotchar(showPresetInfo and usePreset ? 1 : na, title="Active Auto Preset", char="", display=display.data_window)
+
+//====================================================================
+// OPEN / REVERSE
+//====================================================================
+requestDir = validLongRisk ? 1 : validShortRisk ? -1 : 0
+currentDir = tradeActive ? (tradeIsLong ? 1 : -1) : 0
+
+if requestDir != 0 and currentDir != requestDir
+    if tradeActive
+        string oldSide = tradeIsLong ? "buy" : "sell"
+
+        if tradeOpenSignalId != ""
+            pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, oldSide, "reverse", close)
+
+        strategy.cancel_all()
+
+        if tradeIsLong
+            strategy.close("Long", immediately=true)
+        else
+            strategy.close("Short", immediately=true)
+
+        if showTradeVisualsInput
+            if not na(entryLine)
+                line.set_x2(entryLine, bar_index)
+            if not na(stopLine)
+                line.set_x2(stopLine, bar_index)
+            if not na(tp1Line)
+                line.set_x2(tp1Line, bar_index)
+            if not na(tp2Line)
+                line.set_x2(tp2Line, bar_index)
+            if not na(tp3Line)
+                line.set_x2(tp3Line, bar_index)
+
+            if tradeMaxTp >= 1
+                if tradeMaxTp < 2
+                    f_deleteLine(tp2Line)
+                    f_deleteLabel(tp2Tag)
+                    f_deleteLine(tp3Line)
+                    f_deleteLabel(tp3Tag)
+                    tp2Line := na
+                    tp2Tag := na
+                    tp3Line := na
+                    tp3Tag := na
+                else if tradeMaxTp < 3
+                    f_deleteLine(tp3Line)
+                    f_deleteLabel(tp3Tag)
+                    tp3Line := na
+                    tp3Tag := na
+
+        tradeActive := false
+        tradeIsLong := false
+        tradeOpenSignalId := ""
+        tradeEntry := na
+        tradeStopBase := na
+        tradeTP1 := na
+        tradeTP2 := na
+        tradeTP3 := na
+        tradeMaxTp := 0
+        tradeOpenedBar := na
+
+    if not tradeActive
+        bool openLong = requestDir == 1
+        bool openShort = requestDir == -1
+
+        tradeActive := true
+        tradeIsLong := openLong
+        tradeMaxTp := 0
+        tradeOpenedBar := bar_index
+
+        if openLong
+            tradeEntry := longEntryPrice
+            tradeStopBase := longStopPrice
+            tradeTP1 := longTP1
+            tradeTP2 := longTP2
+            tradeTP3 := longTP3
+            tradeOpenSignalId := f_openSignalId("buy")
+
+            strategy.entry("Long", strategy.long, qty=orderSizeEff)
+
+            if tp1On
+                strategy.exit("Long-TP1", "Long", stop=tradeStopBase, limit=tradeTP1, qty_percent=tp1QtyNorm)
+            if tp2On
+                strategy.exit("Long-TP2", "Long", stop=tradeStopBase, limit=tradeTP2, qty_percent=tp2QtyNorm)
+            if tp3On
+                strategy.exit("Long-TP3", "Long", stop=tradeStopBase, limit=tradeTP3, qty_percent=tp3QtyNorm)
+
+            pendingOpenAlertJson := f_buildOpenJson(tradeOpenSignalId, "buy", tradeEntry, tradeStopBase, tradeTP1, tradeTP2, tradeTP3, tp1On, tp2On, tp3On, tp1QtyNorm, tp2QtyNorm, tp3QtyNorm, firstActiveTpIndex, finalActiveTpIndex)
+
+        if openShort
+            tradeEntry := shortEntryPrice
+            tradeStopBase := shortStopPrice
+            tradeTP1 := shortTP1
+            tradeTP2 := shortTP2
+            tradeTP3 := shortTP3
+            tradeOpenSignalId := f_openSignalId("sell")
+
+            strategy.entry("Short", strategy.short, qty=orderSizeEff)
+
+            if tp1On
+                strategy.exit("Short-TP1", "Short", stop=tradeStopBase, limit=tradeTP1, qty_percent=tp1QtyNorm)
+            if tp2On
+                strategy.exit("Short-TP2", "Short", stop=tradeStopBase, limit=tradeTP2, qty_percent=tp2QtyNorm)
+            if tp3On
+                strategy.exit("Short-TP3", "Short", stop=tradeStopBase, limit=tradeTP3, qty_percent=tp3QtyNorm)
+
+            pendingOpenAlertJson := f_buildOpenJson(tradeOpenSignalId, "sell", tradeEntry, tradeStopBase, tradeTP1, tradeTP2, tradeTP3, tp1On, tp2On, tp3On, tp1QtyNorm, tp2QtyNorm, tp3QtyNorm, firstActiveTpIndex, finalActiveTpIndex)
+
+        if showTradeVisualsInput
+            if displayModeInput == "Только активная сделка"
+                f_deleteLine(entryLine)
+                f_deleteLine(stopLine)
+                f_deleteLine(tp1Line)
+                f_deleteLine(tp2Line)
+                f_deleteLine(tp3Line)
+                f_deleteLine(entryVertLine)
+
+                f_deleteLabel(entryTag)
+                f_deleteLabel(stopTag)
+                f_deleteLabel(tp1Tag)
+                f_deleteLabel(tp2Tag)
+                f_deleteLabel(tp3Tag)
+
+            visEntryBar := bar_index
+            visLabelX := bar_index + labelOffsetBarsInput
+
+            float topY = math.max(tradeEntry, tradeStopBase)
+            float botY = math.min(tradeEntry, tradeStopBase)
+
+            if tp1On and not na(tradeTP1)
+                topY := math.max(topY, tradeTP1)
+                botY := math.min(botY, tradeTP1)
+            if tp2On and not na(tradeTP2)
+                topY := math.max(topY, tradeTP2)
+                botY := math.min(botY, tradeTP2)
+            if tp3On and not na(tradeTP3)
+                topY := math.max(topY, tradeTP3)
+                botY := math.min(botY, tradeTP3)
+
+            entryVertLine := line.new(visEntryBar, topY, visEntryBar, botY, color=verticalLineColorInput, width=verticalLineWidthInput, style=line.style_dotted)
+
+            entryLine := line.new(visEntryBar, tradeEntry, visEntryBar, tradeEntry, color=entryLineColorInput, width=horizontalLineWidthInput, style=line.style_dotted)
+            stopLine := line.new(visEntryBar, tradeStopBase, visEntryBar, tradeStopBase, color=stopLineColorInput, width=horizontalLineWidthInput, style=line.style_dotted)
+
+            if tp1On
+                tp1Line := line.new(visEntryBar, tradeTP1, visEntryBar, tradeTP1, color=tpLineColorInput, width=horizontalLineWidthInput, style=line.style_dotted)
+            else
+                tp1Line := na
+
+            if tp2On
+                tp2Line := line.new(visEntryBar, tradeTP2, visEntryBar, tradeTP2, color=tpLineColorInput, width=horizontalLineWidthInput, style=line.style_dotted)
+            else
+                tp2Line := na
+
+            if tp3On
+                tp3Line := line.new(visEntryBar, tradeTP3, visEntryBar, tradeTP3, color=tpLineColorInput, width=horizontalLineWidthInput, style=line.style_dotted)
+            else
+                tp3Line := na
+
+            entryTag := label.new(visLabelX, tradeEntry, "ENTRY " + f_num(tradeEntry), xloc=xloc.bar_index, style=label.style_label_right, color=plaqueBgColorInput, textcolor=entryTextColorInput, size=f_tagSize(tagSizeOptInput))
+            stopTag := label.new(visLabelX, tradeStopBase, "SL " + f_num(tradeStopBase), xloc=xloc.bar_index, style=label.style_label_right, color=plaqueBgColorInput, textcolor=stopTextColorInput, size=f_tagSize(tagSizeOptInput))
+
+            if tp1On
+                tp1Tag := label.new(visLabelX, tradeTP1, "TP1 " + f_num(tradeTP1), xloc=xloc.bar_index, style=label.style_label_right, color=plaqueBgColorInput, textcolor=tpTextColorInput, size=f_tagSize(tagSizeOptInput))
+            else
+                tp1Tag := na
+
+            if tp2On
+                tp2Tag := label.new(visLabelX, tradeTP2, "TP2 " + f_num(tradeTP2), xloc=xloc.bar_index, style=label.style_label_right, color=plaqueBgColorInput, textcolor=tpTextColorInput, size=f_tagSize(tagSizeOptInput))
+            else
+                tp2Tag := na
+
+            if tp3On
+                tp3Tag := label.new(visLabelX, tradeTP3, "TP3 " + f_num(tradeTP3), xloc=xloc.bar_index, style=label.style_label_right, color=plaqueBgColorInput, textcolor=tpTextColorInput, size=f_tagSize(tagSizeOptInput))
+            else
+                tp3Tag := na
+
+//====================================================================
+// UPDATE ACTIVE TRADE
+//====================================================================
+if tradeActive
+    bool beActive = moveStopToBEAfterFirstTpEff and tradeMaxTp >= firstActiveTpIndex
+    float currentStop = beActive ? tradeEntry : tradeStopBase
+
+    if showTradeVisualsInput
+        int activeX2 = bar_index + lineExtendBarsInput
+
+        if not na(entryLine)
+            line.set_x2(entryLine, activeX2)
+        if not na(stopLine)
+            line.set_x2(stopLine, activeX2)
+            line.set_y1(stopLine, currentStop)
+            line.set_y2(stopLine, currentStop)
+        if not na(tp1Line) and tp1On and tradeMaxTp < 1
+            line.set_x2(tp1Line, activeX2)
+        if not na(tp2Line) and tp2On and tradeMaxTp < 2
+            line.set_x2(tp2Line, activeX2)
+        if not na(tp3Line) and tp3On and tradeMaxTp < 3
+            line.set_x2(tp3Line, activeX2)
+
+        if not na(entryTag)
+            label.set_text(entryTag, beActive ? "ENTRY " + f_num(tradeEntry) + "  BE" : "ENTRY " + f_num(tradeEntry))
+            label.set_textcolor(entryTag, beActive ? beTextColorInput : entryTextColorInput)
+
+        if not na(stopTag) and not beActive
+            label.set_text(stopTag, "SL " + f_num(tradeStopBase))
+            label.set_textcolor(stopTag, stopTextColorInput)
+
+        if beActive and not na(stopTag)
+            label.delete(stopTag)
+            stopTag := na
+
+    if bar_index > tradeOpenedBar
+        bool invalidReturnInsideOrb = useReturnInsideOrbExitEff and ((tradeIsLong and not na(orbHigh) and close < orbHigh) or (not tradeIsLong and not na(orbLow) and close > orbLow))
+        bool invalidVWAP = useVWAPInvalidExitEff and ((tradeIsLong and close < vwapValue) or (not tradeIsLong and close > vwapValue))
+
+        if tradeIsLong
+            if tp1On and tradeMaxTp < 1 and high >= tradeTP1
+                tradeMaxTp := 1
+                if not na(tp1Line)
+                    line.set_x2(tp1Line, bar_index)
+                if not na(tp1Tag)
+                    label.set_text(tp1Tag, f_num(tradeTP1) + "  TP1  ✔")
+                    label.set_textcolor(tp1Tag, tpDoneTextColorInput)
+
+            if tp2On and tradeMaxTp < 2 and high >= tradeTP2
+                tradeMaxTp := 2
+                if not na(tp2Line)
+                    line.set_x2(tp2Line, bar_index)
+                if not na(tp2Tag)
+                    label.set_text(tp2Tag, f_num(tradeTP2) + "  TP2  ✔")
+                    label.set_textcolor(tp2Tag, tpDoneTextColorInput)
+
+            if tp3On and tradeMaxTp < 3 and high >= tradeTP3
+                tradeMaxTp := 3
+                if not na(tp3Line)
+                    line.set_x2(tp3Line, bar_index)
+                if not na(tp3Tag)
+                    label.set_text(tp3Tag, f_num(tradeTP3) + "  TP3  ✔")
+                    label.set_textcolor(tp3Tag, tpDoneTextColorInput)
+
+            beActive := moveStopToBEAfterFirstTpEff and tradeMaxTp >= firstActiveTpIndex
+            currentStop := beActive ? tradeEntry : tradeStopBase
+
+            bool closeByFinalTp = tradeMaxTp == finalActiveTpIndex
+            bool closeByStop = low <= currentStop
+            bool closeByInvalid = invalidReturnInsideOrb or invalidVWAP
+
+            if closeByFinalTp
+                if tradeOpenSignalId != ""
+                    pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, "buy", "tp_final", close)
+
+                strategy.cancel_all()
+                strategy.close("Long", immediately=true)
+                tradeActive := false
+                tradeOpenSignalId := ""
+
+                if showTradeVisualsInput
+                    if not na(entryLine)
+                        line.set_x2(entryLine, bar_index)
+                    if not na(stopLine)
+                        line.set_x2(stopLine, bar_index)
+                    if not na(tp1Line)
+                        line.set_x2(tp1Line, bar_index)
+                    if not na(tp2Line)
+                        line.set_x2(tp2Line, bar_index)
+                    if not na(tp3Line)
+                        line.set_x2(tp3Line, bar_index)
+
+            else if closeByInvalid or closeByStop
+                string closeReason = closeByInvalid ? invalidReturnInsideOrb ? "return_inside_orb" : "vwap_invalid_exit" : beActive ? "breakeven" : "stop_loss"
+
+                if tradeOpenSignalId != ""
+                    pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, "buy", closeReason, close)
+
+                strategy.cancel_all()
+                strategy.close("Long", immediately=true)
+                tradeActive := false
+                tradeOpenSignalId := ""
+
+                if showTradeVisualsInput
+                    if not na(entryLine)
+                        line.set_x2(entryLine, bar_index)
+                    if not na(stopLine)
+                        line.set_x2(stopLine, bar_index)
+                        line.set_y1(stopLine, currentStop)
+                        line.set_y2(stopLine, currentStop)
+
+                    if tradeMaxTp == 0
+                        if not na(stopTag)
+                            label.set_text(stopTag, "SL  " + f_num(currentStop) + "  ✕")
+                            label.set_textcolor(stopTag, stopTextColorInput)
+                    else
+                        if not na(entryTag)
+                            label.set_text(entryTag, "ENTRY " + f_num(tradeEntry) + "  BE ✕")
+                            label.set_textcolor(entryTag, beTextColorInput)
+
+                        if tradeMaxTp < 2
+                            f_deleteLine(tp2Line)
+                            f_deleteLabel(tp2Tag)
+                            f_deleteLine(tp3Line)
+                            f_deleteLabel(tp3Tag)
+                            tp2Line := na
+                            tp2Tag := na
+                            tp3Line := na
+                            tp3Tag := na
+                        else if tradeMaxTp < 3
+                            f_deleteLine(tp3Line)
+                            f_deleteLabel(tp3Tag)
+                            tp3Line := na
+                            tp3Tag := na
+
+        else
+            if tp1On and tradeMaxTp < 1 and low <= tradeTP1
+                tradeMaxTp := 1
+                if not na(tp1Line)
+                    line.set_x2(tp1Line, bar_index)
+                if not na(tp1Tag)
+                    label.set_text(tp1Tag, f_num(tradeTP1) + "  TP1  ✔")
+                    label.set_textcolor(tp1Tag, tpDoneTextColorInput)
+
+            if tp2On and tradeMaxTp < 2 and low <= tradeTP2
+                tradeMaxTp := 2
+                if not na(tp2Line)
+                    line.set_x2(tp2Line, bar_index)
+                if not na(tp2Tag)
+                    label.set_text(tp2Tag, f_num(tradeTP2) + "  TP2  ✔")
+                    label.set_textcolor(tp2Tag, tpDoneTextColorInput)
+
+            if tp3On and tradeMaxTp < 3 and low <= tradeTP3
+                tradeMaxTp := 3
+                if not na(tp3Line)
+                    line.set_x2(tp3Line, bar_index)
+                if not na(tp3Tag)
+                    label.set_text(tp3Tag, f_num(tradeTP3) + "  TP3  ✔")
+                    label.set_textcolor(tp3Tag, tpDoneTextColorInput)
+
+            beActive := moveStopToBEAfterFirstTpEff and tradeMaxTp >= firstActiveTpIndex
+            currentStop := beActive ? tradeEntry : tradeStopBase
+
+            bool closeByFinalTp = tradeMaxTp == finalActiveTpIndex
+            bool closeByStop = high >= currentStop
+            bool closeByInvalid = invalidReturnInsideOrb or invalidVWAP
+
+            if closeByFinalTp
+                if tradeOpenSignalId != ""
+                    pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, "sell", "tp_final", close)
+
+                strategy.cancel_all()
+                strategy.close("Short", immediately=true)
+                tradeActive := false
+                tradeOpenSignalId := ""
+
+                if showTradeVisualsInput
+                    if not na(entryLine)
+                        line.set_x2(entryLine, bar_index)
+                    if not na(stopLine)
+                        line.set_x2(stopLine, bar_index)
+                    if not na(tp1Line)
+                        line.set_x2(tp1Line, bar_index)
+                    if not na(tp2Line)
+                        line.set_x2(tp2Line, bar_index)
+                    if not na(tp3Line)
+                        line.set_x2(tp3Line, bar_index)
+
+            else if closeByInvalid or closeByStop
+                string closeReason = closeByInvalid ? invalidReturnInsideOrb ? "return_inside_orb" : "vwap_invalid_exit" : beActive ? "breakeven" : "stop_loss"
+
+                if tradeOpenSignalId != ""
+                    pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, "sell", closeReason, close)
+
+                strategy.cancel_all()
+                strategy.close("Short", immediately=true)
+                tradeActive := false
+                tradeOpenSignalId := ""
+
+                if showTradeVisualsInput
+                    if not na(entryLine)
+                        line.set_x2(entryLine, bar_index)
+                    if not na(stopLine)
+                        line.set_x2(stopLine, bar_index)
+                        line.set_y1(stopLine, currentStop)
+                        line.set_y2(stopLine, currentStop)
+
+                    if tradeMaxTp == 0
+                        if not na(stopTag)
+                            label.set_text(stopTag, "SL  " + f_num(currentStop) + "  ✕")
+                            label.set_textcolor(stopTag, stopTextColorInput)
+                    else
+                        if not na(entryTag)
+                            label.set_text(entryTag, "ENTRY " + f_num(tradeEntry) + "  BE ✕")
+                            label.set_textcolor(entryTag, beTextColorInput)
+
+                        if tradeMaxTp < 2
+                            f_deleteLine(tp2Line)
+                            f_deleteLabel(tp2Tag)
+                            f_deleteLine(tp3Line)
+                            f_deleteLabel(tp3Tag)
+                            tp2Line := na
+                            tp2Tag := na
+                            tp3Line := na
+                            tp3Tag := na
+                        else if tradeMaxTp < 3
+                            f_deleteLine(tp3Line)
+                            f_deleteLabel(tp3Tag)
+                            tp3Line := na
+                            tp3Tag := na
+
+    if tradeActive and sessionJustClosed and sendCloseAtSessionEndEff
+        string activeSide = tradeIsLong ? "buy" : "sell"
+
+        if tradeOpenSignalId != ""
+            pendingCloseAlertJson := f_buildCloseJson(tradeOpenSignalId, activeSide, "session_close", close)
+
+        strategy.cancel_all()
+
+        if tradeIsLong
+            strategy.close("Long", immediately=true)
+        else
+            strategy.close("Short", immediately=true)
+
+        tradeActive := false
+        tradeOpenSignalId := ""
+
+        if showTradeVisualsInput
+            if not na(entryLine)
+                line.set_x2(entryLine, bar_index)
+            if not na(stopLine)
+                line.set_x2(stopLine, bar_index)
+            if not na(tp1Line)
+                line.set_x2(tp1Line, bar_index)
+            if not na(tp2Line)
+                line.set_x2(tp2Line, bar_index)
+            if not na(tp3Line)
+                line.set_x2(tp3Line, bar_index)
+
+//====================================================================
+// LIVE EXIT ORDERS
+//====================================================================
+if tradeActive and tradeIsLong
+    float liveLongStop = moveStopToBEAfterFirstTpEff and tradeMaxTp >= firstActiveTpIndex ? tradeEntry : tradeStopBase
+
+    if tp1On
+        strategy.exit("Long-TP1", "Long", stop=liveLongStop, limit=tradeTP1, qty_percent=tp1QtyNorm)
+    if tp2On
+        strategy.exit("Long-TP2", "Long", stop=liveLongStop, limit=tradeTP2, qty_percent=tp2QtyNorm)
+    if tp3On
+        strategy.exit("Long-TP3", "Long", stop=liveLongStop, limit=tradeTP3, qty_percent=tp3QtyNorm)
+
+if tradeActive and not tradeIsLong
+    float liveShortStop = moveStopToBEAfterFirstTpEff and tradeMaxTp >= firstActiveTpIndex ? tradeEntry : tradeStopBase
+
+    if tp1On
+        strategy.exit("Short-TP1", "Short", stop=liveShortStop, limit=tradeTP1, qty_percent=tp1QtyNorm)
+    if tp2On
+        strategy.exit("Short-TP2", "Short", stop=liveShortStop, limit=tradeTP2, qty_percent=tp2QtyNorm)
+    if tp3On
+        strategy.exit("Short-TP3", "Short", stop=liveShortStop, limit=tradeTP3, qty_percent=tp3QtyNorm)
+
+//====================================================================
+// CLEAR ONLY ACTIVE MODE
+//====================================================================
+if not tradeActive and displayModeInput == "Только активная сделка"
+    f_deleteLine(entryLine)
+    f_deleteLine(stopLine)
+    f_deleteLine(tp1Line)
+    f_deleteLine(tp2Line)
+    f_deleteLine(tp3Line)
+    f_deleteLine(entryVertLine)
+
+    f_deleteLabel(entryTag)
+    f_deleteLabel(stopTag)
+    f_deleteLabel(tp1Tag)
+    f_deleteLabel(tp2Tag)
+    f_deleteLabel(tp3Tag)
+
+    entryLine := na
+    stopLine := na
+    tp1Line := na
+    tp2Line := na
+    tp3Line := na
+    entryVertLine := na
+
+    entryTag := na
+    stopTag := na
+    tp1Tag := na
+    tp2Tag := na
+    tp3Tag := na
+
+//====================================================================
+// WEBHOOK ALERTS — CLOSE FIRST, THEN OPEN
+//====================================================================
+if pendingCloseAlertJson != ""
+    alert(pendingCloseAlertJson, alert.freq_all)
+
+if pendingOpenAlertJson != ""
+    alert(pendingOpenAlertJson, alert.freq_all)
+
+//====================================================================
+// BASIC ALERTCONDITIONS
+//====================================================================
+alertcondition(longSignal, title="Long Signal", message="Long Signal")
+alertcondition(shortSignal, title="Short Signal", message="Short Signal")
+alertcondition(longBreak, title="ORB Long Breakout", message="ORB Long Breakout")
+alertcondition(shortBreak, title="ORB Short Breakout", message="ORB Short Breakout")
+alertcondition(longRetest, title="ORB Long Retest", message="ORB Long Retest")
+alertcondition(shortRetest, title="ORB Short Retest", message="ORB Short Retest")

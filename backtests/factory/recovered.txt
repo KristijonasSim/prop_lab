@@ -1,0 +1,53 @@
+long|ema24 above ema150&price cross_above ema5&rsi14 above 55|stop1.5|tgt2.5|hold48
+long|ema9 cross_above ema19|stop2|tgt3|hold48
+long|price above ema200&price below sma80&rsi14 below 30|stop2|tgt3|hold48
+long|ema9 cross_above ema21&rsi14 below 70|stop2|tgt3|hold48
+long|ema15 cross_above ema30|stop2|tgt3|hold48
+long|ema34 above ema89&ema89 above ema200&smc_long above 0.5|stop1.6|tgt4.5|hold40
+long|ema21 above ema55&price above ema55 for 2 bars|stop1.8|tgt3.2|hold48
+long|ema34 above ema89 for 8 bars&price above ema34&roc9 above 0|stop1.2|tgt1.8|hold48
+long|ema9 cross_above ema21&price above ema200|stop2|tgt3|hold48
+long|price above highest50|stop2|tgt3|hold80
+long|price above sma40 for 2 bars|stop1.5|tgt3|hold48
+long|price above ema200&price above highest30|stop2|tgt3|hold20
+long|price above ema200&price above ema50|stop2|tgt3|hold48
+long|lowest10 below vwap50&price above vwap50|stop1|tgt10|hold48
+long|ema60 above vwap390&price cross_below vwap390|stop2|tgt4|hold240
+long|price above ema200&swing_buy above 0.5|stop5|tgt10|hold480
+long|rsi14 cross_below 35|stop2|tgt3|hold48
+long|ema34 above ema50&price above ema50&price above vwap70|stop1.5|tgt4.5|hold48
+long|price above ema50&price above vwap100&price cross_above ema21|stop1.5|tgt3|hold48
+long|price cross_above vwap48|stop1.5|tgt3|hold48
+long|price above ema200&price below ema5&roc3 below 0 for 2 bars|stop3|tgt1|hold10
+long|ema9 cross_above vwap78|stop1|tgt3|hold48
+long|price below ema20&roc3 above 0|stop2|tgt3|hold48
+long|ema8 above ema20&price above vwap78&price cross_above ema8|stop2|tgt3|hold48
+long|price above vwap48&roc3 above 0 for 2 bars|stop2|tgt3|hold48
+long|ema12 above ema26&price above ema20 for 4 bars&price above vwap50 for 4 bars|stop2|tgt4|hold48
+long|price above ema200&price below ema40&rsi3 below 15|stop2|tgt1|hold12
+long|ema50 above ema200&price above vwap100&rsi14 above 50|stop2|tgt3|hold48
+long|price above vwap48&price cross_above highest15|stop1.5|tgt7.5|hold48
+long|price above ema50&roc3 above 0|stop2|tgt3|hold48
+long|price cross_above ema60&rsi14 above 50|stop2|tgt2|hold48
+long|price above ema20&price above ema200&rsi14 cross_above 55|stop4|tgt6|hold48
+long|ema20 cross_above ema50|stop3|tgt3|hold48
+long|ema10 cross_above ema20&ema5 above ema10&ema50 above ema200|stop1.2|tgt2|hold48
+long|price above ema200&wpr30 above -10|stop2|tgt4|hold48
+long|wpr20 below -90|stop2|tgt3|hold48
+short|rsi9 cross_below 80|stop2|tgt3|hold48
+long|rsi3 below 40|stop2|tgt3|hold48
+long|ema20 above ema150&price above ema50&price above vwap200|stop2|tgt4|hold30
+long|price cross_below 0.1583|stop5|tgt1|hold480
+long|price above ema50&rsi14 above 50&smc_long above 0.5|stop2|tgt4|hold48
+long|rsi14 below 28|stop5|tgt3|hold480
+long|sma4 cross_above sma30|stop2|tgt3|hold48
+long|price cross_below 0.0991|stop5|tgt1|hold480
+long|roc20 above 0&smc_long above 0.5|stop3|tgt6|hold48
+long|price above ema9|stop3|tgt6|hold48
+long|ema10 above ema20&lowest3 below ema20&price above ema10|stop2|tgt3|hold48
+long|ema11 cross_above ema28&price above ema11&price above ema28|stop2|tgt3|hold48
+long|price cross_below 616.05|stop2|tgt3|hold48
+long|ema9 cross_above ema21&price above ema9&rsi14 above 50|stop2|tgt3|hold48
+long|rsi14 below 44|stop5|tgt3|hold480
+long|rsi14 below 30|stop2|tgt4|hold48
+long|ema21 above ema50&ema50 above ema200&rsi14 above 50|stop1.9|tgt10|hold48

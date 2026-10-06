@@ -74,15 +74,21 @@ def top_up(n: int = BATCH, *, use_agent: bool = True) -> dict:
 
 def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
              cell_list=None, control_seeds: int = check.CONTROL_SEEDS,
-             resamples: int = evaluate.BAND_RESAMPLES) -> dict:
+             resamples: int = evaluate.BAND_RESAMPLES,
+             only_source: str | None = None) -> dict:
     """One full pass. Returns the record that is appended to `runs.jsonl`."""
     t0 = time.time()
     rec: dict = {"started": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     live.clear_counts()
     live.beat(1, "ideas", detail="the model proposes, the enumerator backfills")
-    rec["top_up"] = top_up(batch, use_agent=use_agent)
+    # ONE SOURCE ONLY (the TradingView run): its own loop fills the queue, so
+    # the model and the enumerator are not asked to top anything up.
+    rec["top_up"] = ({} if only_source else top_up(batch, use_agent=use_agent))
+    if only_source:
+        rec["only_source"] = only_source
 
-    ideas = [s for s in (queue.take() for _ in range(batch)) if s is not None]
+    ideas = [s for s in (queue.take(only_source) for _ in range(batch))
+             if s is not None]
     rec["ideas"] = len(ideas)
     # BY SOURCE, from the first run. The comparison this file exists to make -
     # does the model's source survive at a better rate than the enumerator's -
@@ -127,7 +133,10 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
                  "ladder": (ladder_rows(s, best_any.market) if best_any else []),
                  "when": rec["started"], "stop_atr": s.stop_atr,
                  "target_atr": s.target_atr, "max_hold": s.max_hold,
-                 "cells": [_cell_row(c) for c in checks], "repairs": [],
+                 "cells": [_cell_row(c) for c in checks],
+                 # How many cells this run was asked to cover, so a narrowed
+                 # run (`--market X --tf Y`) is not mistaken for a short-circuit.
+                 "cells_run": len(cl), "repairs": [],
                  "outcome": "", "cell": ""}
         stories.append(story)
         won = [c for c in checks if c.verdict == "PASS"]
@@ -277,6 +286,7 @@ def run_once(*, batch: int = BATCH, seeds: int = 5, use_agent: bool = True,
     # call the factory dead every time it rested.
     live.beat(0, "resting", detail=f"pass finished in {rec['seconds']:.0f}s",
               counts={"step3_pass": s3, "step4_repaired": s4, "gates": gates})
+    queue.finish()
     return rec
 
 
@@ -335,21 +345,29 @@ def scorecard(strategy, market: str, tf: str) -> dict:
     }
     # Evaluation pace: the risk ladder is arithmetic on a fixed trade series,
     # so it selects nothing and is always allowed. The rung reported is the
-    # fastest one the project's own constraints permit.
+    # one `riskladder.pick` chooses - NOT the fastest rung. Taking the fastest
+    # put almost every idea at 5% risk, where an 8% target is two winners and
+    # a 6% cap is one loser: Kris, 2026-10-06, on a PF 1.15 rule showing 2.4
+    # days - "how its possible". At that size a losing gold 15m rule (PF 0.89)
+    # also "passed" in 2.7 days. Days measured a coin flip, not the strategy.
     try:
         exit_ts = frame.index[[t.exit_bar for t in trades]]
         daily = pd.Series(r, index=pd.DatetimeIndex(exit_ts)).resample("1D").sum()
         rows = riskladder.ladder(daily, r)
-        best = min((x for x in rows if x.get("expected_days")),
-                   key=lambda x: x["expected_days"], default=None)
+        best = riskladder.pick(rows) if rows else None
+        if best and not best.get("expected_days"):
+            best = None
         if best:
             out.update(risk_pct=round(best["risk"] * 100, 2),
                        pass_pct=round(best["pass_rate"] * 100, 1),
                        eval_days=round(best["expected_days"], 1),
                        median_days=best["median_days"],
                        accounts=round(1 / best["pass_rate"], 2))
-    except Exception:                       # a pace number is never worth a crash
-        pass
+    except Exception as exc:                # noqa: BLE001
+        # A pace number is never worth a crash - but it is never silent either.
+        # A swallowed error here is how the board showed no days at all and
+        # nobody could tell "too slow" from "broken" (2026-10-06).
+        out["pace_error"] = f"{type(exc).__name__}: {exc}"
     return out
 
 
@@ -473,6 +491,9 @@ def _main(argv=None) -> int:
         return 0
 
     cl = cells.all_cells(a.market, tuple(a.tf) if a.tf else None)
+    back = queue.recover()
+    if back:
+        print(f"recovered {back} ideas a killed run was holding")
     rec = run_once(batch=a.batch, seeds=a.seeds, use_agent=not a.no_agent,
                    cell_list=cl, control_seeds=a.control_seeds,
                    resamples=a.resamples)

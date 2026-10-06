@@ -1,0 +1,97 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/OtFXuPmK/
+// id: PUB;637238aa3d2a4e798bc0f54754d5766a  kind: strategy
+// strategy_archetype: ma_crossover_with_regime
+//@version=5
+strategy("Auto-Logger MTF + Calendar Backtest", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, commission_type=strategy.commission.percent, commission_value=0.1, slippage=3)
+
+// --- INPUTS ---
+grp_date = "Backtest Period"
+startYear  = input.int(2020, "Start Year", group=grp_date)
+startMonth = input.int(1, "Start Month", minval=1, maxval=12, group=grp_date)
+startDay   = input.int(1, "Start Day", minval=1, maxval=31, group=grp_date)
+endYear    = input.int(2030, "End Year", group=grp_date)
+endMonth   = input.int(12, "End Month", minval=1, maxval=12, group=grp_date)
+endDay     = input.int(31, "End Day", minval=1, maxval=31, group=grp_date)
+
+grp_strat = "Strategy Parameters"
+fastLen = input.int(9, "Fast EMA", group=grp_strat)
+slowLen = input.int(21, "Slow EMA", group=grp_strat)
+regimeLen = input.int(200, "Regime EMA", group=grp_strat)
+
+// --- LOGIC ---
+inDateRange = time >= timestamp(startYear, startMonth, startDay, 0, 0) and time <= timestamp(endYear, endMonth, endDay, 23, 59)
+
+fastEMA = ta.ema(close, fastLen)
+slowEMA = ta.ema(close, slowLen)
+regimeEMA = ta.ema(close, regimeLen)
+
+longCond = ta.crossover(fastEMA, slowEMA) and close > regimeEMA
+shortCond = ta.crossunder(fastEMA, slowEMA) and close < regimeEMA
+
+if inDateRange
+    if longCond
+        strategy.entry("Long", strategy.long)
+    if shortCond
+        strategy.entry("Short", strategy.short)
+
+// --- CALENDAR LOGIC ---
+var float startEquity = strategy.initial_capital
+var float monthStartEquity = strategy.initial_capital
+var int monthTrades = 0
+var int monthWins = 0
+
+isNewMonth = ta.change(month(time)) != 0
+if isNewMonth
+    monthStartEquity := strategy.equity
+    monthTrades := 0
+    monthWins := 0
+
+if strategy.closedtrades > strategy.closedtrades[1]
+    monthTrades := monthTrades + 1
+    if strategy.closedtrades.profit(strategy.closedtrades - 1) > 0
+        monthWins := monthWins + 1
+
+// --- TABLES ---
+var table mtfTable = table.new(position.top_right, 6, 2, bgcolor=color.new(color.black, 0), border_width=1, border_color=color.gray)
+var table calTable = table.new(position.bottom_right, 5, 2, bgcolor=color.new(color.black, 0), border_width=1, border_color=color.gray)
+
+if barstate.islastconfirmedhistory
+    // MTF Table Header
+    table.cell(mtfTable, 0, 0, "TF", text_color=color.white)
+    table.cell(mtfTable, 1, 0, "Trades", text_color=color.white)
+    table.cell(mtfTable, 2, 0, "Win %", text_color=color.white)
+    table.cell(mtfTable, 3, 0, "Net Profit", text_color=color.white)
+    table.cell(mtfTable, 4, 0, "Max DD", text_color=color.white)
+    
+    // MTF Calculations
+    winRate = strategy.closedtrades > 0 ? (strategy.wintrades / strategy.closedtrades) * 100 : 0
+    netProfitPct = (strategy.netprofit / strategy.initial_capital) * 100
+    
+    table.cell(mtfTable, 0, 1, timeframe.period, text_color=color.yellow)
+    table.cell(mtfTable, 1, 1, str.tostring(strategy.closedtrades), text_color=color.white)
+    table.cell(mtfTable, 2, 1, str.format("{0,number,#.##}%", winRate), text_color=color.white)
+    table.cell(mtfTable, 3, 1, str.format("{0,number,#.##}%", netProfitPct), text_color=netProfitPct >= 0 ? color.green : color.red)
+    table.cell(mtfTable, 4, 1, str.format("{0,number,#.##}%", strategy.max_drawdown / strategy.initial_capital * 100), text_color=color.red)
+
+    // Calendar Table Header
+    table.cell(calTable, 0, 0, "Period", text_color=color.white)
+    table.cell(calTable, 1, 0, "Trades", text_color=color.white)
+    table.cell(calTable, 2, 0, "Win %", text_color=color.white)
+    table.cell(calTable, 3, 0, "P&L %", text_color=color.white)
+    table.cell(calTable, 4, 0, "Cumul.", text_color=color.white)
+
+    // Current Month Data
+    curMonthPL = ((strategy.equity - monthStartEquity) / monthStartEquity) * 100
+    curMonthWR = monthTrades > 0 ? (monthWins / monthTrades) * 100 : 0
+    
+    table.cell(calTable, 0, 1, "Current Month", text_color=color.yellow)
+    table.cell(calTable, 1, 1, str.tostring(monthTrades), text_color=color.white)
+    table.cell(calTable, 2, 1, str.format("{0,number,#.##}%", curMonthWR), text_color=color.white)
+    table.cell(calTable, 3, 1, str.format("{0,number,#.##}%", curMonthPL), text_color=curMonthPL >= 0 ? color.green : color.red)
+    table.cell(calTable, 4, 1, str.format("{0,number,#.##}%", netProfitPct), text_color=color.white)
+
+// --- VISUALS ---
+plot(fastEMA, "Fast EMA", color.blue)
+plot(slowEMA, "Slow EMA", color.orange)
+plot(regimeEMA, "Regime EMA", color.white, 2)

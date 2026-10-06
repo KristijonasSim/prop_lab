@@ -154,23 +154,29 @@ def script_of(name: str | None, fallback: str = "") -> str:
 def _stage(outcome: str) -> float:
     o = outcome or ""
     if "scored" in o: return 7
-    if "held" in o or "repaired at step 6" in o: return 6.5
-    if "step 6" in o: return 6
+    # Stopped at step 6 = passed the last 3 years, weak on older ones. Kris,
+    # 2026-10-06: only the 3 years decide, so it ranks with the holders.
+    if "held" in o or "step 6" in o: return 6.5
     if "passed step 3" in o: return 3.5
     return 3
 
 
+def rank_key(x: dict) -> tuple:
+    """Best first: furthest stage, then clears PF 1.2, then fewest days to pass
+    (among those that clear) or highest PF (among those that do not), then
+    highest pass %. Days are not used to order losers - `expected_days` treats
+    a blown account as free, so a frequent losing rule would rank near the top.
+    """
+    k = x.get("score") or {}
+    pf, days = k.get("pf") or 0, k.get("eval_days")
+    clears = round(pf, 2) >= 1.2
+    second = ((days if days is not None else 1e9) if clears else -pf)
+    return (-_stage(x.get("outcome")), -clears, second, -(k.get("pass_pct") or 0))
+
+
 def best_variant(variants: list[dict]) -> dict:
-    """The variant shown for a script: furthest stage, then makes money, then
-    fewest days to pass, then highest pass %. Kris: show the BEST variant."""
-    def key(x):
-        k = x.get("score") or {}
-        days = k.get("eval_days")
-        # "Makes money" means clears the project's PF 1.2 gate - a PF 1.01
-        # cell won on fewest days and was shown as the best Quadapt variant.
-        return (-_stage(x.get("outcome")), -((k.get("pf") or 0) >= 1.2),
-                days if days is not None else 1e9, -(k.get("pass_pct") or 0))
-    return sorted(variants, key=key)[0]
+    """The variant shown for a script. Kris: show the BEST variant."""
+    return sorted(variants, key=rank_key)[0]
 
 
 def scripts_view(ideas: list[dict]) -> list[dict]:
@@ -186,7 +192,8 @@ def scripts_view(ideas: list[dict]) -> list[dict]:
                     "sent_to_repair": any(v.get("repairs") for v in vs),
                     "fixed": any("repaired" in (v.get("outcome") or "") for v in vs),
                     "repairs_total": sum(len(v.get("repairs") or []) for v in vs)})
-    return out
+    # Kris, 2026-09-30: the table must read best to worst, not in test order.
+    return sorted(out, key=rank_key)
 
 
 def per_source() -> list[dict]:
@@ -314,8 +321,10 @@ def per_source() -> list[dict]:
             # board showed "0 fixed" after eight repairs had been tried.
             "ideas": [x for x in nightly.ideas(500)
                       if x.get("source") == key][-25:][::-1],
+            # Ranked best to worst and NOT cut: the old `[::-1][:25]` meant
+            # newest-first and, on a ranked list, showed only the 25 worst.
             "scripts": scripts_view([x for x in nightly.ideas(500)
-                                     if x.get("source") == key])[::-1][:25],
+                                     if x.get("source") == key]),
             "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested + len(ref),

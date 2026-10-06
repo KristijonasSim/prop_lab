@@ -56,3 +56,8 @@ backtests/factory/queue.jsonl
 backtests/factory/tried.jsonl
 backtests/factory/live.json
 backtests/factory/*.tmp
+
+# TradingView loop runtime state: rewritten every round by the live service
+backtests/factory/inflight.jsonl
+backtests/factory/tvloop_state.json
+backtests/factory/tvloop.log

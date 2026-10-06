@@ -33,10 +33,11 @@ class Source:
 #: The order is Kris's, set 2026-09-21 and reaffirmed 2026-09-23:
 #: TradingView first, then the bot's own ideas, then anything he injects.
 CATALOGUE: tuple[Source, ...] = (
-    Source("tradingview", "TradingView", "Pine scripts read from data/pine/",
-           "needs-input",
-           "Drop .pine files in data/pine/ and they are read on the next pass. "
-           "Bulk downloading is a terms-of-service question and is not built.",
+    Source("tradingview", "TradingView",
+           "open scripts downloaded by factory/sources/tvfetch.py",
+           "ready",
+           "python -m factory.tvloop --hours 24. Automated download is against "
+           "TradingView's terms; Kris accepted the block risk 2026-09-28.",
            0),
     Source("quantpedia", "Quantpedia", "published strategy write-ups",
            "blocked",

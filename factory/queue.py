@@ -37,6 +37,14 @@ DIR = ROOT / "backtests" / "factory"
 QUEUE = DIR / "queue.jsonl"
 TRIED = DIR / "tried.jsonl"
 SURVIVORS = DIR / "survivors.jsonl"
+#: Ideas taken off the queue by a run that has not finished yet. ADDED
+#: 2026-09-30: `take` removes an idea before it is tested, so the 2026-09-28
+#: shutdown at 16:26 lost the eight TradingView ideas that run was holding -
+#: in neither the queue nor the tried log. `recover` puts them back.
+INFLIGHT = DIR / "inflight.jsonl"                     # read via _inflight()
+#: Fingerprints already recovered once. A second recovery means the idea itself
+#: kills the run, and re-queueing it again would loop forever.
+RECOVERED = DIR / "recovered.txt"                     # read via _recovered()
 
 #: The order sources are drained in, DERIVED from the catalogue so the two
 #: cannot disagree. Kris set the first version:
@@ -147,20 +155,79 @@ def add(strategies, *, quiet: bool = False) -> dict:
     return out
 
 
-def take() -> Strategy | None:
+def take(source: str | None = None) -> Strategy | None:
     """The next idea, in the order Kris set. Removes it from the queue.
 
     Returns None when the queue is empty, which is the honest signal that the
     current source is exhausted and the next one should be asked to top it up.
     """
     q = _read(QUEUE)
+    if source is not None:
+        # One source only - the rest of the queue stays exactly as it was.
+        mine = [s for s in q if s.source == source]
+        if not mine:
+            return None
+        nxt = mine[0]
+        rest = [s for s in q if s is not nxt]
+        _hold(nxt)
+        QUEUE.write_text("".join(_to_json(s) + "\n" for s in rest))
+        return nxt
     if not q:
         return None
     rank = {s: i for i, s in enumerate(SOURCE_ORDER)}
     q.sort(key=lambda s: rank.get(s.source, len(rank)))
     nxt, rest = q[0], q[1:]
+    _hold(nxt)
     QUEUE.write_text("".join(_to_json(s) + "\n" for s in rest))
     return nxt
+
+
+def _inflight() -> Path:
+    """Next to QUEUE, whatever QUEUE points at - a test that moves the queue
+    into a temp dir must not write in-flight ideas into the real one."""
+    return QUEUE.with_name(INFLIGHT.name)
+
+
+def _recovered() -> Path:
+    return QUEUE.with_name(RECOVERED.name)
+
+
+def _hold(s: Strategy) -> None:
+    """Written BEFORE the queue drops it, so a kill between the two leaves the
+    idea in both places (recover dedupes) rather than in neither."""
+    QUEUE.parent.mkdir(parents=True, exist_ok=True)
+    with _inflight().open("a") as fh:
+        fh.write(_to_json(s) + "\n")
+
+
+def finish() -> None:
+    """The run that took the in-flight ideas completed. Nothing to recover."""
+    _inflight().unlink(missing_ok=True)
+
+
+def recover() -> int:
+    """Put back ideas a killed run was holding. Returns how many went back.
+
+    The whole batch is re-tested, not only the untested ones: step 5's luck
+    check is made across the batch, so a half-finished batch has no verdict.
+    Ideas the killed run already FAILED are in `tried` and `add` skips them.
+    """
+    held = _read(_inflight())
+    if not held:
+        return 0
+    rec = _recovered()
+    before = set(rec.read_text().splitlines()) if rec.exists() else set()
+    fresh = []
+    for s in held:
+        if s.fingerprint() in before:
+            mark_tried(s, "ERROR", "run killed twice while holding it")
+        else:
+            fresh.append(s)
+    n = add(fresh, quiet=True)["added"]
+    with rec.open("a") as fh:
+        fh.write("".join(s.fingerprint() + "\n" for s in fresh))
+    finish()
+    return n
 
 
 def mark_tried(s: Strategy, verdict: str, note: str = "",

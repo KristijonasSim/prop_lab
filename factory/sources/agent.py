@@ -56,8 +56,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from factory.spec import (COMPARISONS, INDICATORS, SIDES, Condition,  # noqa: E402
-                          Strategy, Term)
+from factory.spec import (COMPARISONS, INDICATORS, MULT, SIDES,  # noqa: E402
+                          ZERO_LENGTH_OK, Condition, Strategy, Term)
+from factory.terms import TERMS  # noqa: E402
 
 #: `claude -p` on the logged-in session, so no API key is needed. Same route
 #: `research/propose.py` uses and for the same reason.
@@ -102,9 +103,19 @@ def _grammar() -> str:
     return (f"indicators: {names}, or a plain number\n"
             f"  wpr = Williams %R, 0 at the top of the n-bar range, -100 at the bottom\n"
             f"  roc = rate of change in BASIS POINTS, not percent\n"
+            f"  vwap = ROLLING n-bar VWAP. There is no session-anchored VWAP: "
+            f"Pine's ta.vwap becomes vwap with a rolling length, and that is a "
+            f"simplification to state\n"
+            f"every indicator's length is {MIN_LENGTH}-{MAX_LENGTH} bars; a "
+            f"1-bar change or 2-bar RSI uses {MIN_LENGTH}\n"
             f"  squeeze_end = 1 on the bar an EMA(n) envelope stops narrowing "
             f"after n bars of narrowing (no wedge), else 0. Compare above 0.5\n"
-            f"comparisons: {', '.join(COMPARISONS)}\n"
+            f"MORE TERMS (length = lookback unless said otherwise; \"value\" "
+            f"only where said):\n"
+            + "".join(f"  {k} = {h}\n" for k, (_f, _n, h) in TERMS.items())
+            + f"ANY term may add \"offset\": k = its value k bars ago (Pine "
+            f"x[k]). 'sma rising' is sma above sma with offset 1.\n"
+            + f"comparisons: {', '.join(COMPARISONS)}\n"
             f'a condition may add "hold": N - it must have been true N bars '
             f"running. Only on above/below; a cross is a one-bar event.\n"
             f"sides: {', '.join(SIDES)}")
@@ -170,10 +181,27 @@ def _term(d: dict, where: str) -> Term:
         raise ProposalError(f"{where}: 'hour' is step 4's, not an entry term")
     needs_n = INDICATORS[kind][1]
     n = int(d.get("length", 0) or 0)
-    if needs_n and not MIN_LENGTH <= n <= MAX_LENGTH:
+    if kind in ZERO_LENGTH_OK:                       # a UTC start hour
+        if not 0 <= n <= 23:
+            raise ProposalError(f"{where}: {kind} length is a UTC start hour 0-23, got {n}")
+    elif needs_n and not MIN_LENGTH <= n <= MAX_LENGTH:
         raise ProposalError(f"{where}: {kind} needs a length "
                             f"{MIN_LENGTH}-{MAX_LENGTH}, got {n}")
-    return Term(kind, n if needs_n else 0, 0.0)
+    v = 0.0
+    if kind in MULT:
+        try:
+            v = float(d.get("value", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            raise ProposalError(f"{where}: {kind} value must be a number")
+        if not 0.0 <= v <= 24.0:
+            raise ProposalError(f"{where}: {kind} value must be 0-24, got {v}")
+    try:
+        off = int(d.get("offset", 0) or 0)
+    except (TypeError, ValueError):
+        raise ProposalError(f"{where}: offset must be a whole number")
+    if not 0 <= off <= 50:
+        raise ProposalError(f"{where}: offset must be 0-50, got {off}")
+    return Term(kind, n if needs_n else 0, v, off)
 
 
 def validate(item: dict) -> Strategy:
@@ -234,9 +262,21 @@ def validate(item: dict) -> Strategy:
                     note=note, **nums)
 
 
+#: TOKEN DIET, 2026-10-06. Kris: the backlog retry used a 5-hour usage window
+#: in ~30 minutes. Each `claude -p` call carried Claude Code's whole system
+#: prompt, every built-in tool and every connected MCP server's tools (Gmail,
+#: Drive, Chrome...) - thousands of tokens of instructions for a job that
+#: needs none of them. This job reads text and returns JSON.
+LEAN = ["--tools", "",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--system-prompt", "You convert trading-rule descriptions into JSON. "
+                           "Reply with the JSON only."]
+
+
 def _call(prompt: str, model: str, timeout: int) -> str:
     try:
-        proc = subprocess.run(["claude", "-p", prompt, "--model", model],
+        proc = subprocess.run(["claude", "-p", prompt, "--model", model, *LEAN],
                               capture_output=True, text=True, timeout=timeout,
                               cwd=NEUTRAL_CWD)
     except FileNotFoundError as exc:
@@ -244,7 +284,10 @@ def _call(prompt: str, model: str, timeout: int) -> str:
     except subprocess.TimeoutExpired as exc:
         raise ProposalError(f"model call timed out after {timeout}s") from exc
     if proc.returncode != 0:
-        raise ProposalError(f"model exited {proc.returncode}: {proc.stderr[:300]}")
+        # stderr was EMPTY on all 234 failures of 2026-09-28/29 - the CLI puts
+        # a usage-limit or auth message on stdout - so both are kept.
+        why = (proc.stderr.strip() or proc.stdout.strip())[:300]
+        raise ProposalError(f"model exited {proc.returncode}: {why}")
     return proc.stdout.strip()
 
 

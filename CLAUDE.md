@@ -6,6 +6,9 @@ Auto-loaded every session. Keep current.
 
 **READ `HOW_TO_ANSWER.md` BEFORE YOUR FIRST REPLY. IT OVERRIDES YOUR DEFAULT STYLE.**
 
+**THE CURRENT TRUTH IS THE `NOW` BLOCK AT THE TOP OF `README.md`.** Anything
+in this file that disagrees with it is stale until checked.
+
 - **SHORT SENTENCES. KEY INFO ONLY. BULLETS, NOT PARAGRAPHS.**
 - **ANSWER IN THE FIRST LINE, THEN STOP.**
 - **MAX 10 LINES OF PROSE PER REPLY. A LONG REPLY IS A BUG.**
@@ -176,6 +179,11 @@ changed, only the spec):
 | Thunderbolt 6/3/6 | 3.0% | 17.0 | 14–25 | 47.2 | 48.6 |
 | **HOUSE 8/3/6** | 4.0% | **19.1** | 14–25 | 42.0 | 54.9 |
 | FundingPips Flex 10/4/12 | 4.0% | 20.5 | 16–30 | 53.6 | 40.1 |
+
+**RE-PICKED 2026-10-06 at 2%, every rung measured** (`strategies/vwapbreak/
+research/house_repick.py`): HOUSE 2% = 54.7% pass, **23.8 days (19–33)**, 1.83
+accounts. The 4% row above was the fastest rung, and its band overlaps 2%'s.
+**The plan is 2%.**
 
 All three bands overlap, so **the spec change is not a real move in pace** — it
 is a change in what we promise, not in what the strategy does.

@@ -95,8 +95,12 @@ def _declared_costs(sid: str):
     the same way a kernel edit does."""
     try:
         mod = __import__(f"strategies.{sid}.manifest", fromlist=["MANIFEST"])
-    except Exception:                                        # noqa: BLE001
-        return None                                          # no manifest yet
+    except ModuleNotFoundError as exc:
+        # No manifest yet is normal. A manifest that EXISTS and fails to import
+        # is a bug, and it used to be read as "no costs declared" (2026-10-06).
+        if exc.name != f"strategies.{sid}.manifest":
+            raise
+        return None
     return mod.MANIFEST.get("costs")
 
 

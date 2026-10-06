@@ -1,0 +1,485 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/1OnkbAiE-HVN-Fade-Break-Volume-Profile-Fade-Breakout-Strategy/
+// id: PUB;dce50c6698c54e2483f633efe2a2866c  kind: strategy
+//@version=6
+// ============================================================================
+// Volume Profile Value-Area Reversion & Breakout Strategy
+//
+// An original strategy assembled from techniques used in three volume-profile
+// scripts:
+//   - a rolling multi-session histogram with peak/prominence HVN-zone
+//     detection (in the spirit of "HVN Zones")
+//   - per-session Point of Control / Value Area via two-sided row expansion,
+//     plus "naked" (untouched) POC tracking that extends right until price
+//     trades back through it (in the spirit of "Market Profile TPO [vault]"
+//     by Edward, MPL-2.0 methodology, reimplemented here)
+//   - a swing-pivot stop reference (in the spirit of "Swing Fibonacci Arcs &
+//     Volume Profile [BigBeluga]")
+//
+// Trade logic
+//   Fade:      price pokes outside the current value area and is rejected
+//              back inside on the same bar -> trade back toward the POC.
+//   Breakout:  price closes outside the value area on above-average volume
+//              -> trade the breakout direction, targeting the next HVN zone
+//              or the nearest naked POC beyond price, falling back to a
+//              fixed R-multiple if neither exists.
+//
+// Educational template only. Not financial advice — backtest, walk-forward
+// and tune before any live use; defaults are illustrative, not optimized for
+// a specific instrument or timeframe.
+// ============================================================================
+
+strategy("VP Value-Area Reversion & Breakout", shorttitle = "VP VA Strategy",
+     overlay = true, max_boxes_count = 200, max_lines_count = 200, max_labels_count = 100,
+     initial_capital = 10000, currency = currency.USD,
+     default_qty_type = strategy.percent_of_equity, default_qty_value = 25,
+     commission_type = strategy.commission.percent, commission_value = 0.02,
+     slippage = 2, calc_on_every_tick = false)
+
+// ─────────────────────────────────────────────────────────────────────────
+// Inputs
+// ─────────────────────────────────────────────────────────────────────────
+G1 = "Profile"
+profileTF       = input.timeframe("D", "Profile period", options = ["D", "W"], group = G1)
+lookbackPeriods = input.int(20, "Rolling lookback (periods)", minval = 5, maxval = 60, group = G1)
+rowsNb          = input.int(60, "Rows per profile", minval = 20, maxval = 200, group = G1)
+vaPct           = input.float(70.0, "Value area %", minval = 10, maxval = 100, group = G1)
+
+G2 = "HVN zones"
+peakPct  = input.float(30, "Peak threshold (% of tallest row)", minval = 1, maxval = 100, group = G2)
+peakWin  = input.int(3, "Peak window (rows each side)", minval = 1, maxval = 20, group = G2)
+minProm  = input.float(15, "Min prominence (% of peak)", minval = 0, maxval = 100, group = G2)
+zonePct  = input.float(50, "Zone width (% of prominence)", minval = 10, maxval = 100, group = G2)
+maxZones = input.int(6, "Max zones kept", minval = 1, maxval = 20, group = G2)
+
+G3 = "Signals"
+tradeMode = input.string("Both", "Trade mode", options = ["Fade only", "Breakout only", "Both"], group = G3)
+volMult   = input.float(1.5, "Breakout volume x (vs avg)", minval = 1.0, step = 0.1, group = G3)
+volAvgLen = input.int(20, "Volume average length", minval = 5, group = G3)
+rsiLen    = input.int(14, "RSI length (fade filter)", minval = 2, group = G3)
+rsiOB     = input.int(60, "RSI overbought (fade short)", minval = 50, maxval = 90, group = G3)
+rsiOS     = input.int(40, "RSI oversold (fade long)", minval = 10, maxval = 50, group = G3)
+pivotLen  = input.int(5, "Swing pivot length (stop reference)", minval = 2, maxval = 30, group = G3)
+
+G4 = "Risk"
+atrLen          = input.int(14, "ATR length", minval = 2, group = G4)
+atrStopMult     = input.float(1.2, "Stop = ATR ×", minval = 0.2, step = 0.1, group = G4)
+rMultiple       = input.float(1.8, "Fallback target (R multiple)", minval = 0.5, step = 0.1, group = G4)
+useNakedPOC     = input.bool(true, "Prefer nearest zone/naked POC as target", group = G4)
+oneTradeAtATime = input.bool(true, "Only one open position at a time", group = G4)
+
+G5 = "Style"
+vaColor   = input.color(color.new(color.blue, 90), "Value area fill", group = G5)
+pocColor  = input.color(color.new(color.yellow, 0), "POC color", group = G5)
+zoneColor = input.color(color.new(color.orange, 82), "HVN zone fill", group = G5)
+nPocColor = input.color(color.new(color.red, 40), "Naked POC color", group = G5)
+showZones = input.bool(true, "Draw HVN zones", group = G5)
+showNaked = input.bool(true, "Draw naked POCs", group = G5)
+
+// ─────────────────────────────────────────────────────────────────────────
+// Global state
+// ─────────────────────────────────────────────────────────────────────────
+var float[] barHi        = array.new_float()
+var float[] barLo        = array.new_float()
+var float[] barVol       = array.new_float()
+var int[]   sessStartIdx = array.new_int()      // offsets into the barHi/barLo/barVol store, not bar_index
+
+var float profPOC = na
+var float profVAH = na
+var float profVAL = na
+var float[] zoneLo  = array.new_float()
+var float[] zoneHi  = array.new_float()
+var float[] zoneVol = array.new_float()
+
+var float[] nPocPrice = array.new_float()
+var line[]  nPocLine  = array.new<line>()
+
+var box   vaBox      = na
+var line  pocLineObj = na
+var box[] zoneBoxes  = array.new<box>()
+
+// ─────────────────────────────────────────────────────────────────────────
+// Helper functions
+// All locals below are declared inside the function body, so := on them is
+// fine. profPOC/profVAH/profVAL are NEVER reassigned inside a function —
+// f_buildProfile returns them as a tuple instead, and the caller (global
+// scope) does the assignment. zoneLo/zoneHi/zoneVol ARE global arrays, but
+// only their contents are mutated (array.clear/array.push), never the
+// variables themselves reassigned — that's allowed from inside a function.
+// ─────────────────────────────────────────────────────────────────────────
+f_pocOnly(int offA, int offB) =>
+    float pl = na
+    float ph = na
+    for i = offA to offB
+        pl := na(pl) ? array.get(barLo, i) : math.min(pl, array.get(barLo, i))
+        ph := na(ph) ? array.get(barHi, i) : math.max(ph, array.get(barHi, i))
+    float step = (ph - pl) / rowsNb
+    if step <= 0
+        step := syminfo.mintick
+    float[] rv = array.new_float(rowsNb, 0.0)
+    for i = offA to offB
+        float bh = array.get(barHi, i)
+        float bl = array.get(barLo, i)
+        float bv = array.get(barVol, i)
+        int r0 = int(math.max(0, math.min(rowsNb - 1, math.floor((bl - pl) / step))))
+        int r1 = int(math.max(0, math.min(rowsNb - 1, math.floor((bh - pl) / step))))
+        float share = bv / (r1 - r0 + 1)
+        for r = r0 to r1
+            array.set(rv, r, array.get(rv, r) + share)
+    int pr = 0
+    float pv = 0.0
+    for r = 0 to rowsNb - 1
+        float v = array.get(rv, r)
+        if v > pv
+            pv := v
+            pr := r
+    pl + (pr + 0.5) * step
+
+// Returns [poc, vah, val] rather than assigning the globals directly — a
+// user function in Pine v6 cannot reassign a plain global with :=.
+f_buildProfile(int offA, int offB) =>
+    float pl = na
+    float ph = na
+    for i = offA to offB
+        pl := na(pl) ? array.get(barLo, i) : math.min(pl, array.get(barLo, i))
+        ph := na(ph) ? array.get(barHi, i) : math.max(ph, array.get(barHi, i))
+    float step = (ph - pl) / rowsNb
+    if step <= 0
+        step := syminfo.mintick
+    float[] rowVolArr = array.new_float(rowsNb, 0.0)
+    for i = offA to offB
+        float bh = array.get(barHi, i)
+        float bl = array.get(barLo, i)
+        float bv = array.get(barVol, i)
+        int r0 = int(math.max(0, math.min(rowsNb - 1, math.floor((bl - pl) / step))))
+        int r1 = int(math.max(0, math.min(rowsNb - 1, math.floor((bh - pl) / step))))
+        float share = bv / (r1 - r0 + 1)
+        for r = r0 to r1
+            array.set(rowVolArr, r, array.get(rowVolArr, r) + share)
+
+    float total = array.sum(rowVolArr)
+    float vmax  = array.max(rowVolArr)
+
+    // ---- POC ----
+    int pocRow = 0
+    float pocV = 0.0
+    for r = 0 to rowsNb - 1
+        float v = array.get(rowVolArr, r)
+        if v > pocV
+            pocV := v
+            pocRow := r
+
+    // ---- value area: two-sided expansion by volume around the POC row ----
+    float target = total * (vaPct / 100.0)
+    float vaSum = pocV
+    int up = pocRow - 1
+    int dn = pocRow + 1
+    while vaSum < target and (up >= 0 or dn < rowsNb)
+        float upV = up >= 0 ? array.get(rowVolArr, up) : -1.0
+        float dnV = dn < rowsNb ? array.get(rowVolArr, dn) : -1.0
+        if upV < 0 and dnV < 0
+            break
+        if upV >= dnV
+            vaSum += upV
+            up -= 1
+        else
+            vaSum += dnV
+            dn += 1
+    int vahRow = math.max(up + 1, 0)
+    int valRow = math.min(dn - 1, rowsNb - 1)
+
+    float outPOC = pl + (pocRow + 0.5) * step
+    float outVAH = pl + (vahRow + 1) * step
+    float outVAL = pl + valRow * step
+
+    // ---- HVN zones: local maxima + prominence + width (mutates the global
+    //      arrays' contents in place — legal; the variables themselves are
+    //      never reassigned here) ----
+    array.clear(zoneLo)
+    array.clear(zoneHi)
+    array.clear(zoneVol)
+    if vmax > 0
+        int[] peaks = array.new_int()
+        for r = 0 to rowsNb - 1
+            float v = array.get(rowVolArr, r)
+            if v >= vmax * peakPct / 100
+                bool isPeak = true
+                int loW = math.max(0, r - peakWin)
+                int hiW = math.min(rowsNb - 1, r + peakWin)
+                for q = loW to hiW
+                    if q != r
+                        float vq = array.get(rowVolArr, q)
+                        if vq > v or (vq == v and q < r)
+                            isPeak := false
+                if isPeak
+                    array.push(peaks, r)
+
+        if array.size(peaks) > 0
+            float[] pkLo  = array.new_float()
+            float[] pkHi  = array.new_float()
+            float[] pkVol = array.new_float()
+            for k = 0 to array.size(peaks) - 1
+                int pr = array.get(peaks, k)
+                float pv = array.get(rowVolArr, pr)
+                float minL = pv
+                int q = pr - 1
+                while q >= 0
+                    float vq = array.get(rowVolArr, q)
+                    if vq > pv
+                        break
+                    minL := math.min(minL, vq)
+                    q -= 1
+                float minR = pv
+                q := pr + 1
+                while q < rowsNb
+                    float vq = array.get(rowVolArr, q)
+                    if vq > pv
+                        break
+                    minR := math.min(minR, vq)
+                    q += 1
+                float baseV = math.max(minL, minR)
+                float prom = pv - baseV
+                if prom >= pv * minProm / 100
+                    float floorV = pv - prom * zonePct / 100
+                    int lo2 = pr
+                    while lo2 - 1 >= 0 and array.get(rowVolArr, lo2 - 1) >= floorV
+                        lo2 -= 1
+                    int hi2 = pr
+                    while hi2 + 1 < rowsNb and array.get(rowVolArr, hi2 + 1) >= floorV
+                        hi2 += 1
+                    array.push(pkLo, pl + lo2 * step)
+                    array.push(pkHi, pl + (hi2 + 1) * step)
+                    array.push(pkVol, pv)
+
+            int nPk = array.size(pkVol)
+            if nPk > 0
+                int[] order = array.new_int()
+                for k = 0 to nPk - 1
+                    array.push(order, k)
+                if array.size(order) > 1
+                    for i = 1 to array.size(order) - 1
+                        int j = i
+                        while j > 0 and array.get(pkVol, array.get(order, j - 1)) < array.get(pkVol, array.get(order, j))
+                            int tmp = array.get(order, j - 1)
+                            array.set(order, j - 1, array.get(order, j))
+                            array.set(order, j, tmp)
+                            j -= 1
+                int keep = math.min(maxZones, nPk)
+                if keep > 0
+                    for k = 0 to keep - 1
+                        int idx = array.get(order, k)
+                        array.push(zoneLo, array.get(pkLo, idx))
+                        array.push(zoneHi, array.get(pkHi, idx))
+                        array.push(zoneVol, array.get(pkVol, idx))
+
+    [outPOC, outVAH, outVAL]
+
+f_pickNearer(float a, float b) =>
+    float r = na
+    if na(a) and na(b)
+        r := na
+    else if na(a)
+        r := b
+    else if na(b)
+        r := a
+    else
+        r := math.abs(a - close) < math.abs(b - close) ? a : b
+    r
+
+f_nearestZoneAbove(float px) =>
+    float best = na
+    if array.size(zoneLo) > 0
+        for i = 0 to array.size(zoneLo) - 1
+            float mid = (array.get(zoneLo, i) + array.get(zoneHi, i)) / 2
+            if mid > px and (na(best) or mid < best)
+                best := mid
+    best
+
+f_nearestZoneBelow(float px) =>
+    float best = na
+    if array.size(zoneLo) > 0
+        for i = 0 to array.size(zoneLo) - 1
+            float mid = (array.get(zoneLo, i) + array.get(zoneHi, i)) / 2
+            if mid < px and (na(best) or mid > best)
+                best := mid
+    best
+
+f_nearestNakedAbove(float px) =>
+    float best = na
+    if array.size(nPocPrice) > 0
+        for i = 0 to array.size(nPocPrice) - 1
+            float p = array.get(nPocPrice, i)
+            if p > px and (na(best) or p < best)
+                best := p
+    best
+
+f_nearestNakedBelow(float px) =>
+    float best = na
+    if array.size(nPocPrice) > 0
+        for i = 0 to array.size(nPocPrice) - 1
+            float p = array.get(nPocPrice, i)
+            if p < px and (na(best) or p > best)
+                best := p
+    best
+
+// ─────────────────────────────────────────────────────────────────────────
+// Rolling per-bar store + per-session profile rebuild + naked-POC bookkeeping
+// All of this runs at global/script scope (not inside a user function), so
+// reassigning profPOC/profVAH/profVAL and the arrays here with := is legal.
+// ─────────────────────────────────────────────────────────────────────────
+bool newSession = timeframe.change(profileTF)
+
+if newSession
+    // 1) finalize the session that just closed and register its POC as "naked"
+    if array.size(sessStartIdx) > 0
+        int lastStart = array.get(sessStartIdx, array.size(sessStartIdx) - 1)
+        int lastEnd   = array.size(barHi) - 1
+        if lastEnd >= lastStart
+            float sessPOC = f_pocOnly(lastStart, lastEnd)
+            if showNaked
+                line ln = line.new(bar_index, sessPOC, bar_index, sessPOC, color = nPocColor, width = 1, style = line.style_dotted)
+                array.push(nPocPrice, sessPOC)
+                array.push(nPocLine, ln)
+                if array.size(nPocLine) > 30
+                    line.delete(array.shift(nPocLine))
+                    array.shift(nPocPrice)
+
+    // 2) rebuild the rolling profile from the last `lookbackPeriods` closed sessions
+    int nSess = array.size(sessStartIdx)
+    if nSess > 0
+        int fromSess = math.max(0, nSess - lookbackPeriods)
+        int offA = array.get(sessStartIdx, fromSess)
+        int offB = array.size(barHi) - 1
+        if offB > offA
+            [p, vh, vl] = f_buildProfile(offA, offB)
+            profPOC := p
+            profVAH := vh
+            profVAL := vl
+
+    // 3) mark the new session's start, then prune the store
+    array.push(sessStartIdx, array.size(barHi))
+    if array.size(sessStartIdx) > lookbackPeriods + 2
+        int nDrop = array.size(sessStartIdx) - (lookbackPeriods + 2)
+        int cut = array.get(sessStartIdx, nDrop)
+        if cut > 0
+            barHi  := array.copy(array.slice(barHi,  cut, array.size(barHi)))
+            barLo  := array.copy(array.slice(barLo,  cut, array.size(barLo)))
+            barVol := array.copy(array.slice(barVol, cut, array.size(barVol)))
+            for i = 0 to array.size(sessStartIdx) - 1
+                array.set(sessStartIdx, i, array.get(sessStartIdx, i) - cut)
+        for d = 1 to nDrop
+            array.shift(sessStartIdx)
+
+    // 4) redraw this session's value area / POC / HVN zones (frozen for the session)
+    if not na(vaBox)
+        box.delete(vaBox)
+    if not na(pocLineObj)
+        line.delete(pocLineObj)
+    if array.size(zoneBoxes) > 0
+        for i = 0 to array.size(zoneBoxes) - 1
+            box.delete(array.get(zoneBoxes, i))
+        array.clear(zoneBoxes)
+    if not na(profPOC)
+        vaBox := box.new(bar_index, profVAH, bar_index + 1, profVAL, border_color = na, bgcolor = vaColor, extend = extend.right)
+        pocLineObj := line.new(bar_index, profPOC, bar_index + 1, profPOC, color = pocColor, width = 2, extend = extend.right)
+        if showZones and array.size(zoneLo) > 0
+            for i = 0 to array.size(zoneLo) - 1
+                array.push(zoneBoxes, box.new(bar_index, array.get(zoneHi, i), bar_index + 1, array.get(zoneLo, i), border_color = zoneColor, bgcolor = zoneColor, extend = extend.right))
+
+array.push(barHi, high)
+array.push(barLo, low)
+array.push(barVol, nz(volume))
+
+// naked POC maintenance: delete once price trades through it, else extend right
+if array.size(nPocLine) > 0
+    for i = array.size(nPocLine) - 1 to 0
+        float p = array.get(nPocPrice, i)
+        line ln = array.get(nPocLine, i)
+        if high >= p and low <= p
+            line.delete(ln)
+            array.remove(nPocLine, i)
+            array.remove(nPocPrice, i)
+        else
+            line.set_x2(ln, bar_index)
+
+// ─────────────────────────────────────────────────────────────────────────
+// Swing pivots (stop reference)
+// ─────────────────────────────────────────────────────────────────────────
+float swingHighVal = ta.pivothigh(high, pivotLen, pivotLen)
+float swingLowVal  = ta.pivotlow(low, pivotLen, pivotLen)
+var float lastSwingHigh = na
+var float lastSwingLow  = na
+if not na(swingHighVal)
+    lastSwingHigh := swingHighVal
+if not na(swingLowVal)
+    lastSwingLow := swingLowVal
+
+// ─────────────────────────────────────────────────────────────────────────
+// Filters and setups
+// ─────────────────────────────────────────────────────────────────────────
+volAvg = ta.sma(volume, volAvgLen)
+rsiVal = ta.rsi(close, rsiLen)
+atrVal = ta.atr(atrLen)
+haveProfile = not na(profPOC) and not na(profVAH) and not na(profVAL)
+
+bool fadeShortSetup = haveProfile and high[1] > profVAH and close < profVAH and close < close[1] and rsiVal >= rsiOB
+bool fadeLongSetup  = haveProfile and low[1]  < profVAL and close > profVAL and close > close[1] and rsiVal <= rsiOS
+
+bool breakoutLongSetup  = haveProfile and ta.crossover(close, profVAH) and volume > volAvg * volMult
+bool breakoutShortSetup = haveProfile and ta.crossunder(close, profVAL) and volume > volAvg * volMult
+
+bool allowFade     = tradeMode != "Breakout only"
+bool allowBreakout = tradeMode != "Fade only"
+
+bool isBreakoutLong  = allowBreakout and breakoutLongSetup
+bool isBreakoutShort = allowBreakout and breakoutShortSetup
+
+bool goLong  = (allowFade and fadeLongSetup) or isBreakoutLong
+bool goShort = (allowFade and fadeShortSetup) or isBreakoutShort
+
+if oneTradeAtATime and strategy.position_size != 0
+    goLong := false
+    goShort := false
+
+// ─────────────────────────────────────────────────────────────────────────
+// Entries / exits
+// ─────────────────────────────────────────────────────────────────────────
+if goLong
+    float stopBreakout = math.min(profVAH - atrStopMult * atrVal, na(lastSwingLow) ? profVAH - atrStopMult * atrVal : lastSwingLow)
+    float stopFade      = math.min(low - atrStopMult * atrVal * 0.5, na(lastSwingLow) ? low - atrStopMult * atrVal * 0.5 : lastSwingLow)
+    float stopPrice = isBreakoutLong ? stopBreakout : stopFade
+    float rDist = close - stopPrice
+    if rDist > 0
+        float fallbackTarget = close + rDist * rMultiple
+        float zoneTarget  = f_nearestZoneAbove(close)
+        float nakedTarget = useNakedPOC ? f_nearestNakedAbove(close) : na
+        float candidate   = f_pickNearer(zoneTarget, nakedTarget)
+        float targetPrice = isBreakoutLong ? (na(candidate) ? fallbackTarget : candidate) : profPOC
+        strategy.entry("Long", strategy.long)
+        strategy.exit("XLong", "Long", stop = stopPrice, limit = targetPrice)
+
+if goShort
+    float stopBreakoutS = math.max(profVAL + atrStopMult * atrVal, na(lastSwingHigh) ? profVAL + atrStopMult * atrVal : lastSwingHigh)
+    float stopFadeS      = math.max(high + atrStopMult * atrVal * 0.5, na(lastSwingHigh) ? high + atrStopMult * atrVal * 0.5 : lastSwingHigh)
+    float stopPriceS = isBreakoutShort ? stopBreakoutS : stopFadeS
+    float rDistS = stopPriceS - close
+    if rDistS > 0
+        float fallbackTargetS = close - rDistS * rMultiple
+        float zoneTargetS  = f_nearestZoneBelow(close)
+        float nakedTargetS = useNakedPOC ? f_nearestNakedBelow(close) : na
+        float candidateS   = f_pickNearer(zoneTargetS, nakedTargetS)
+        float targetPriceS = isBreakoutShort ? (na(candidateS) ? fallbackTargetS : candidateS) : profPOC
+        strategy.entry("Short", strategy.short)
+        strategy.exit("XShort", "Short", stop = stopPriceS, limit = targetPriceS)
+
+// ─────────────────────────────────────────────────────────────────────────
+// Plots / alerts / sanity check
+// ─────────────────────────────────────────────────────────────────────────
+plotshape(goLong, title = "Long signal", style = shape.triangleup, location = location.belowbar, color = color.lime, size = size.tiny)
+plotshape(goShort, title = "Short signal", style = shape.triangledown, location = location.abovebar, color = color.red, size = size.tiny)
+
+alertcondition(goLong, "VP Long Signal", "Long setup (fade or breakout) triggered")
+alertcondition(goShort, "VP Short Signal", "Short setup (fade or breakout) triggered")
+
+if barstate.islast and timeframe.in_seconds() >= timeframe.in_seconds(profileTF)
+    runtime.error("VP VA Strategy: chart timeframe must be lower than the profile period.")

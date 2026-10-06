@@ -1,0 +1,88 @@
+{
+ "rule": "floor 30 / top 5",
+ "spec": "HOUSE 8/3/6",
+ "span": [
+  "2023-08-01 00:00:00+00:00",
+  "2026-08-01 00:00:00+00:00"
+ ],
+ "trades": 813,
+ "ladder": [
+  {
+   "risk_pct": 1.0,
+   "pass_pct": 61.5,
+   "blown_pct": 38.5,
+   "days": 37.4,
+   "days_band": [
+    28.8,
+    59.5
+   ],
+   "accounts": 1.63
+  },
+  {
+   "risk_pct": 1.5,
+   "pass_pct": 59.5,
+   "blown_pct": 40.5,
+   "days": 30.3,
+   "days_band": [
+    23.5,
+    44.9
+   ],
+   "accounts": 1.68
+  },
+  {
+   "risk_pct": 2.0,
+   "pass_pct": 54.7,
+   "blown_pct": 45.3,
+   "days": 23.8,
+   "days_band": [
+    19.0,
+    33.4
+   ],
+   "accounts": 1.83
+  },
+  {
+   "risk_pct": 3.0,
+   "pass_pct": 48.1,
+   "blown_pct": 51.9,
+   "days": 20.8,
+   "days_band": [
+    15.6,
+    27.7
+   ],
+   "accounts": 2.08
+  },
+  {
+   "risk_pct": 4.0,
+   "pass_pct": 43.7,
+   "blown_pct": 56.3,
+   "days": 18.3,
+   "days_band": [
+    14.2,
+    23.6
+   ],
+   "accounts": 2.29
+  },
+  {
+   "risk_pct": 5.0,
+   "pass_pct": 39.3,
+   "blown_pct": 60.7,
+   "days": 17.8,
+   "days_band": [
+    13.7,
+    23.3
+   ],
+   "accounts": 2.55
+  },
+  {
+   "risk_pct": 6.0,
+   "pass_pct": 39.3,
+   "blown_pct": 60.7,
+   "days": 15.3,
+   "days_band": [
+    12.7,
+    21.9
+   ],
+   "accounts": 2.55
+  }
+ ]
+}

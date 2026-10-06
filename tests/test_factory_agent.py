@@ -42,7 +42,7 @@ def test_a_valid_proposal_becomes_a_strategy():
 def test_an_unknown_indicator_is_refused_not_guessed():
     """A guessed rule occupies a test slot, is charged to the ledger, and says
     nothing about what was proposed. Silence is cheap and a guess is not."""
-    bad = _idea(entry=[{"left": {"kind": "supertrend", "length": 10},
+    bad = _idea(entry=[{"left": {"kind": "ichimoku", "length": 10},
                         "op": "above", "right": {"kind": "price"}}])
     with pytest.raises(agent.ProposalError, match="unknown indicator"):
         agent.validate(bad)

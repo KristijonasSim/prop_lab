@@ -1,0 +1,149 @@
+// prop_lab: fetched from TradingView 2026-09-28
+// url: https://www.tradingview.com/script/5zL50iGH-TZ-Gold-Round-Levels-Strategy/
+// id: PUB;9e9691bb9d8c4cb1a0f684c63b08ce79  kind: strategy
+//@version=6
+strategy("TZ_Gold_Round_Levels_Strategy", shorttitle="TZ Gold Round Strategy", overlay=true, pyramiding=0, initial_capital=100000, default_qty_type=strategy.fixed, default_qty_value=1, currency=currency.USD, commission_type=strategy.commission.percent, commission_value=0, slippage=0, margin_long=100, margin_short=100, process_orders_on_close=true, calc_on_every_tick=false, calc_on_order_fills=false, use_bar_magnifier=true, max_lines_count=100, max_labels_count=100)
+
+// Signals use confirmed 15-minute candles. Backtest entries fill at the signal
+// close by default. Configure real commission, slippage and size in Properties.
+float spacing = input.float(50.0, "Round-number spacing", minval=0.01, group="Levels")
+float offset = input.float(10.0, "Green / red offset", minval=0.01, group="Levels")
+float minFinalRR = input.float(1.5, "Minimum final reward / risk", minval=1.5, step=0.1, group="Trade rules")
+
+bool showGrid = input.bool(true, "Show current round-level grid", group="Display")
+int eachSide = input.int(2, "Round levels above and below", minval=0, maxval=10, group="Display")
+bool showGridPrices = input.bool(true, "Show grid price labels", group="Display")
+bool showTradeLevels = input.bool(true, "Show fixed entry, stop and targets", group="Display")
+bool showPanel = input.bool(true, "Show current trade panel", group="Display")
+color blue = color.rgb(41, 98, 255)
+color green = color.rgb(76, 175, 80)
+color red = color.rgb(242, 54, 69)
+
+bool is15m = timeframe.isminutes and timeframe.multiplier == 15
+if barstate.isfirst
+    if not is15m
+        runtime.error("Use this strategy on a 15-minute chart.")
+    if offset >= spacing / 2.0
+        runtime.error("Green / red offset must be less than half the round-number spacing.")
+    if spacing < syminfo.mintick or offset < syminfo.mintick
+        runtime.error("Spacing and offset must each be at least one price tick.")
+
+// Derive each candle's trigger from the fixed price lattice, never from the
+// latest visible grid. Compare the previous close to THAT SAME price level.
+// This avoids false crossovers caused by a moving/recentered series.
+float longBlue = math.round_to_mintick(math.floor((close - offset) / spacing) * spacing)
+float longGreen = math.round_to_mintick(longBlue + offset)
+float longFinal = math.round_to_mintick(longBlue + spacing - offset)
+float longRisk = close - longBlue
+float longReward = longFinal - close
+
+float shortBlue = math.round_to_mintick(math.ceil((close + offset) / spacing) * spacing)
+float shortRed = math.round_to_mintick(shortBlue - offset)
+float shortFinal = math.round_to_mintick(shortBlue - spacing + offset)
+float shortRisk = shortBlue - close
+float shortReward = close - shortFinal
+
+// Include an exact 1.5R setup; tiny tolerance only compensates float arithmetic.
+float tolerance = syminfo.mintick * 0.000001
+bool longCross = not na(close[1]) and close[1] <= longGreen and close > longGreen
+bool shortCross = not na(close[1]) and close[1] >= shortRed and close < shortRed
+bool longRRok = longRisk > 0 and longReward > 0 and longReward + tolerance >= minFinalRR * longRisk
+bool shortRRok = shortRisk > 0 and shortReward > 0 and shortReward + tolerance >= minFinalRR * shortRisk
+
+var float tradeEntry = na
+var float tradeStop = na
+var float tradeTP1 = na
+var float tradeFinal = na
+var float tradeRR = na
+var int tradeDirection = 0
+var int lastSignalBar = na
+
+// Position state blocks BOTH directions until the entire trade exits.
+// TP1 is a visual 1R reference only: no partial exit and no breakeven move.
+bool canEnter = is15m and barstate.isconfirmed and strategy.position_size == 0 and (na(lastSignalBar) or bar_index > lastSignalBar)
+bool buySignal = canEnter and close > open and longCross and longRRok
+bool sellSignal = canEnter and close < open and shortCross and shortRRok
+
+if buySignal
+    tradeEntry := close
+    tradeStop := longBlue
+    tradeTP1 := math.round_to_mintick(close + longRisk)
+    tradeFinal := longFinal
+    tradeRR := longReward / longRisk
+    tradeDirection := 1
+    lastSignalBar := bar_index
+    strategy.entry("Buy", strategy.long, comment="BUY")
+    strategy.exit("Buy exit", from_entry="Buy", stop=tradeStop, limit=tradeFinal, comment_profit="FINAL TARGET", comment_loss="STOP LOSS")
+else if sellSignal
+    tradeEntry := close
+    tradeStop := shortBlue
+    tradeTP1 := math.round_to_mintick(close - shortRisk)
+    tradeFinal := shortFinal
+    tradeRR := shortReward / shortRisk
+    tradeDirection := -1
+    lastSignalBar := bar_index
+    strategy.entry("Sell", strategy.short, comment="SELL")
+    strategy.exit("Sell exit", from_entry="Sell", stop=tradeStop, limit=tradeFinal, comment_profit="FINAL TARGET", comment_loss="STOP LOSS")
+
+// The bracket is placed with the entry and remains active until filled.
+// Reissuing it while open uses only the frozen trade prices, not a new grid.
+if strategy.position_size > 0
+    strategy.exit("Buy exit", from_entry="Buy", stop=tradeStop, limit=tradeFinal, comment_profit="FINAL TARGET", comment_loss="STOP LOSS")
+else if strategy.position_size < 0
+    strategy.exit("Sell exit", from_entry="Sell", stop=tradeStop, limit=tradeFinal, comment_profit="FINAL TARGET", comment_loss="STOP LOSS")
+
+bool tradeActive = strategy.position_size != 0 or buySignal or sellSignal
+bool drawTrade = showTradeLevels and tradeActive
+plot(drawTrade ? tradeEntry : na, "Entry", color=color.gray, linewidth=1, style=plot.style_linebr)
+plot(drawTrade ? tradeStop : na, "Stop - blue level", color=blue, linewidth=3, style=plot.style_linebr)
+plot(drawTrade ? tradeTP1 : na, "TP1 - 1R reference only", color=color.orange, linewidth=2, style=plot.style_linebr)
+plot(drawTrade ? tradeFinal : na, "Final target", color=tradeDirection == 1 ? red : green, linewidth=3, style=plot.style_linebr)
+plotshape(buySignal, title="Buy signal", text="BUY", style=shape.labelup, location=location.belowbar, color=green, textcolor=color.white, size=size.small)
+plotshape(sellSignal, title="Sell signal", text="SELL", style=shape.labeldown, location=location.abovebar, color=red, textcolor=color.white, size=size.small)
+
+// Display-only current grid. Historical entries use the per-bar lattice above.
+int gridCount = (eachSide * 2 + 1) * 3
+var array<line> gridLines = array.new<line>()
+var array<label> gridLabels = array.new<label>()
+if barstate.isfirst and showGrid
+    for i = 0 to gridCount - 1
+        array.push(gridLines, line.new(bar_index, na, bar_index + 1, na, extend=extend.both, width=1))
+        if showGridPrices
+            array.push(gridLabels, label.new(na, na, "", style=label.style_label_left, textcolor=color.white, size=size.tiny))
+
+// Initialize the view on the last confirmed bar while a live candle is open.
+bool updateView = barstate.islast or barstate.islastconfirmedhistory
+if updateView and showGrid and not na(close)
+    float center = math.round(close / spacing) * spacing
+    for levelIndex = 0 to eachSide * 2
+        float base = center + (levelIndex - eachSide) * spacing
+        for band = 0 to 2
+            int objectIndex = levelIndex * 3 + band
+            float price = math.round_to_mintick(base + (band == 1 ? offset : band == 2 ? -offset : 0.0))
+            color levelColor = band == 0 ? blue : band == 1 ? green : red
+            line gridLine = array.get(gridLines, objectIndex)
+            line.set_xy1(gridLine, bar_index, price)
+            line.set_xy2(gridLine, bar_index + 1, price)
+            line.set_color(gridLine, color.new(levelColor, 25))
+            if showGridPrices
+                label gridLabel = array.get(gridLabels, objectIndex)
+                label.set_xy(gridLabel, bar_index + 5, price)
+                label.set_text(gridLabel, str.tostring(price, format.mintick))
+                label.set_color(gridLabel, levelColor)
+
+var table tradePanel = table.new(position.top_right, 2, 6, border_width=1)
+if updateView and showPanel
+    color panelBg = color.new(color.black, 15)
+    string state = tradeActive ? (tradeDirection == 1 ? "BUY active" : "SELL active") : "Flat - waiting"
+    table.cell(tradePanel, 0, 0, "TZ Gold | 15m", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 0, state, text_color=tradeActive ? (tradeDirection == 1 ? green : red) : color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 0, 1, "Entry", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 1, tradeActive ? str.tostring(tradeEntry, format.mintick) : "-", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 0, 2, "Blue stop", text_color=blue, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 2, tradeActive ? str.tostring(tradeStop, format.mintick) : "-", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 0, 3, "TP1 (1R, mark only)", text_color=color.orange, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 3, tradeActive ? str.tostring(tradeTP1, format.mintick) : "-", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 0, 4, "Final target", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 4, tradeActive ? str.tostring(tradeFinal, format.mintick) : "-", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 0, 5, "Final reward / risk", text_color=color.white, bgcolor=panelBg)
+    table.cell(tradePanel, 1, 5, tradeActive ? str.tostring(tradeRR, "#.##") + "R" : "-", text_color=color.white, bgcolor=panelBg)

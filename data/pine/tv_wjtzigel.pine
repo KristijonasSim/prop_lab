@@ -1,0 +1,492 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/WjtzigEl/
+// id: PUB;a41798e2c8244cae816ac237fd602557  kind: strategy
+//@version=6
+strategy("Macro Regime 2EMA Pro Strategy [VIX-DXY]", overlay=true, initial_capital=10000, pyramiding=0, commission_type=strategy.commission.percent, commission_value=0.04, process_orders_on_close=true)
+
+//━━━━━━━━━━━━━━━━━━━
+// INPUTS
+//━━━━━━━━━━━━━━━━━━━
+regimeSource = input.string("MULTI: VIX + DXY + USDT.D", "Regime Source", options=["MULTI: VIX + DXY + USDT.D", "VIX Only", "DXY Only", "USDT.D Only", "VIX + DXY", "VIX + USDT.D", "DXY + USDT.D"])
+
+vixSymbol  = input.symbol("TVC:VIX", "VIX Symbol")
+dxySymbol  = input.symbol("TVC:DXY", "DXY Symbol")
+usdtSymbol = input.symbol("CRYPTOCAP:USDT.D", "USDT Dominance Symbol")
+
+mode = input.string("Main + Confirm", "Regime TF Mode", options=["Main + Confirm", "Main Only", "Confirm Only", "Strict Main + Confirm"])
+
+mainTf    = input.timeframe("240", "Main TF")
+confirmTf = input.timeframe("60", "Confirm TF")
+
+enforceHigherTf = input.bool(false, "Require Regime TF > Chart TF?")
+confirmedOnly   = input.bool(true, "Safe Mode: Confirmed Bar Signals Only?")
+
+maType = input.string("EMA", "Regime MA Type", options=["SMA", "EMA"])
+maLen = input.int(14, "Regime MA Length", minval=1)
+slopeLen = input.int(3, "Regime Slope Lookback", minval=1)
+
+slopeBand = input.float(0.003, "Regime Slope Neutral Band", step=0.001)
+distanceBand = input.float(0.000, "Regime Price/MA Neutral Band", step=0.001)
+
+ema1Len = input.int(50, "EMA 1 Length", minval=1)
+ema2Len = input.int(200, "EMA 2 Length", minval=1)
+
+tradeLong = input.bool(true, "Trade Long")
+tradeShort = input.bool(true, "Trade Short")
+allowWarningTrades = input.bool(false, "Allow Warning Trades?")
+allowReversal = input.bool(false, "Allow Direct Reversal?")
+
+entryMode = input.string("Condition Turns True", "Entry Mode", options=["Condition Turns True", "Every New Flat Opportunity"])
+
+useRiskSizing = input.bool(true, "Use Risk-Based Position Size?")
+riskPct = input.float(1.0, "Risk % Of Equity", minval=0.1, step=0.1)
+
+// Exit engine
+initialStopPercent = input.float(2.0, "Initial Stop Loss %", minval=0.1, step=0.1)
+
+useTrailingStop = input.bool(true, "Use Trailing Stop?")
+useActivation = input.bool(true, "Use Trailing Activation?")
+activationPercent = input.float(3.2, "Trailing Activation %", minval=0.0, step=0.1)
+callbackPercent = input.float(2.2, "Trailing Callback %", minval=0.1, step=0.1)
+
+useBreakEven = input.bool(false, "Use Break-Even?")
+breakEvenTriggerR = input.float(1.0, "Break-Even Trigger R", minval=0.1, step=0.1)
+breakEvenBufferPercent = input.float(0.10, "Break-Even Buffer %", minval=0.0, step=0.05)
+
+usePartialTP = input.bool(false, "Use Partial Take Profit?")
+partialTpR = input.float(1.5, "Partial TP Target R", minval=0.1, step=0.1)
+partialTpQtyPercent = input.float(40.0, "Partial TP Qty %", minval=1.0, maxval=99.0, step=1.0)
+
+useTimeExit = input.bool(false, "Use Time Exit?")
+timeExitBars = input.int(16, "Time Exit Bars", minval=1)
+
+exitOnOppositeRegime = input.bool(true, "Exit On Opposite Regime State?")
+exitOnEmaLoss = input.bool(false, "Exit When Price Loses EMA Filter?")
+
+showPanel = input.bool(true, "Show Panel")
+showMarks = input.bool(true, "Show L/S Marks")
+showEma = input.bool(true, "Show EMA Lines")
+showEmaCloud = input.bool(true, "Show EMA Cloud")
+showStopLine = input.bool(false, "Show Stop Lines")
+
+riskOnColor  = input.color(color.green, "Risk-On Cloud")
+riskOffColor = input.color(color.red, "Risk-Off Cloud")
+warningColor = input.color(color.orange, "Warning Cloud")
+neutralColor = input.color(color.gray, "Neutral Cloud")
+cloudTransp = input.int(75, "Cloud Transparency", minval=0, maxval=100)
+
+//━━━━━━━━━━━━━━━━━━━
+// TIMEFRAME SAFETY
+//━━━━━━━━━━━━━━━━━━━
+chartSec = timeframe.in_seconds(timeframe.period)
+mainSec = timeframe.in_seconds(mainTf)
+confirmSec = timeframe.in_seconds(confirmTf)
+
+usesMain = mode == "Main + Confirm" or mode == "Main Only" or mode == "Strict Main + Confirm"
+usesConfirm = mode == "Main + Confirm" or mode == "Confirm Only" or mode == "Strict Main + Confirm"
+
+if enforceHigherTf
+    if usesMain and mainSec <= chartSec
+        runtime.error("Main TF must be higher than chart TF.")
+    if usesConfirm and confirmSec <= chartSec
+        runtime.error("Confirm TF must be higher than chart TF.")
+
+//━━━━━━━━━━━━━━━━━━━
+// FUNCTIONS
+//━━━━━━━━━━━━━━━━━━━
+f_ma(src, len) =>
+    maType == "EMA" ? ta.ema(src, len) : ta.sma(src, len)
+
+f_packConfirmed() =>
+    ma = f_ma(close, maLen)
+    slope = (ma - ma[slopeLen]) / ma[slopeLen]
+    dist = (close - ma) / ma
+    [close[1], ma[1], slope[1], dist[1]]
+
+f_htfPack(sym, tf) =>
+    request.security(sym, tf, f_packConfirmed(), lookahead=barmerge.lookahead_on)
+
+f_state(_close, _ma, _slope, _dist) =>
+    riskOn  = _dist < -distanceBand and _slope < -slopeBand
+    riskOff = _dist >  distanceBand and _slope >  slopeBand
+    riskOn ? 1 : riskOff ? -1 : 0
+
+f_symbolState(sym, tf) =>
+    [c, m, s, d] = f_htfPack(sym, tf)
+    f_state(c, m, s, d)
+
+f_tfRegime(sym) =>
+    mainState = f_symbolState(sym, mainTf)
+    confState = f_symbolState(sym, confirmTf)
+
+    mainRiskOn = mainState == 1
+    mainRiskOff = mainState == -1
+    confRiskOn = confState == 1
+    confRiskOff = confState == -1
+
+    bool longOk = false
+    bool shortOk = false
+    bool warn = false
+
+    if mode == "Main + Confirm"
+        longOk := mainRiskOn
+        shortOk := mainRiskOff
+        warn := (mainRiskOn and confRiskOff) or (mainRiskOff and confRiskOn)
+    else if mode == "Main Only"
+        longOk := mainRiskOn
+        shortOk := mainRiskOff
+        warn := false
+    else if mode == "Confirm Only"
+        longOk := confRiskOn
+        shortOk := confRiskOff
+        warn := false
+    else
+        longOk := mainRiskOn and confRiskOn
+        shortOk := mainRiskOff and confRiskOff
+        warn := (mainRiskOn and confRiskOff) or (mainRiskOff and confRiskOn)
+
+    state = longOk and not warn ? 1 : shortOk and not warn ? -1 : warn ? 2 : 0
+    [state, mainState, confState]
+
+f_useVix() =>
+    regimeSource == "MULTI: VIX + DXY + USDT.D" or regimeSource == "VIX Only" or regimeSource == "VIX + DXY" or regimeSource == "VIX + USDT.D"
+
+f_useDxy() =>
+    regimeSource == "MULTI: VIX + DXY + USDT.D" or regimeSource == "DXY Only" or regimeSource == "VIX + DXY" or regimeSource == "DXY + USDT.D"
+
+f_useUsdt() =>
+    regimeSource == "MULTI: VIX + DXY + USDT.D" or regimeSource == "USDT.D Only" or regimeSource == "VIX + USDT.D" or regimeSource == "DXY + USDT.D"
+
+//━━━━━━━━━━━━━━━━━━━
+// REGIME ENGINE
+//━━━━━━━━━━━━━━━━━━━
+[vixState, vixMainState, vixConfState] = f_tfRegime(vixSymbol)
+[dxyState, dxyMainState, dxyConfState] = f_tfRegime(dxySymbol)
+[usdtState, usdtMainState, usdtConfState] = f_tfRegime(usdtSymbol)
+
+useVix = f_useVix()
+useDxy = f_useDxy()
+useUsdt = f_useUsdt()
+
+votesOn = 0
+votesOff = 0
+votesWarn = 0
+votesTotal = 0
+
+if useVix
+    votesTotal += 1
+    votesOn += vixState == 1 ? 1 : 0
+    votesOff += vixState == -1 ? 1 : 0
+    votesWarn += vixState == 2 ? 1 : 0
+
+if useDxy
+    votesTotal += 1
+    votesOn += dxyState == 1 ? 1 : 0
+    votesOff += dxyState == -1 ? 1 : 0
+    votesWarn += dxyState == 2 ? 1 : 0
+
+if useUsdt
+    votesTotal += 1
+    votesOn += usdtState == 1 ? 1 : 0
+    votesOff += usdtState == -1 ? 1 : 0
+    votesWarn += usdtState == 2 ? 1 : 0
+
+majority = math.ceil(votesTotal / 2.0)
+
+long_allowed = votesOn >= majority and votesOn > votesOff
+short_allowed = votesOff >= majority and votesOff > votesOn
+warning = votesWarn > 0 or votesOn == votesOff
+
+regimeLongGate = long_allowed and (allowWarningTrades or not warning)
+regimeShortGate = short_allowed and (allowWarningTrades or not warning)
+
+//━━━━━━━━━━━━━━━━━━━
+// PRICE FILTER
+//━━━━━━━━━━━━━━━━━━━
+ema1 = ta.ema(close, ema1Len)
+ema2 = ta.ema(close, ema2Len)
+
+priceAboveBoth = close > ema1 and close > ema2
+priceBelowBoth = close < ema1 and close < ema2
+
+rawLongCondition = tradeLong and priceAboveBoth and regimeLongGate
+rawShortCondition = tradeShort and priceBelowBoth and regimeShortGate
+
+safeCalc = confirmedOnly ? barstate.isconfirmed : true
+
+longCondition = safeCalc and rawLongCondition
+shortCondition = safeCalc and rawShortCondition
+
+longTrigger = entryMode == "Condition Turns True" ? longCondition and not longCondition[1] : longCondition
+shortTrigger = entryMode == "Condition Turns True" ? shortCondition and not shortCondition[1] : shortCondition
+
+canLong = allowReversal ? strategy.position_size <= 0 : strategy.position_size == 0
+canShort = allowReversal ? strategy.position_size >= 0 : strategy.position_size == 0
+
+longEntry = longTrigger and canLong
+shortEntry = shortTrigger and canShort
+
+//━━━━━━━━━━━━━━━━━━━
+// POSITION SIZE
+//━━━━━━━━━━━━━━━━━━━
+riskCash = strategy.equity * riskPct / 100.0
+riskPerUnit = close * initialStopPercent / 100.0
+riskQty = riskPerUnit > 0 ? riskCash / riskPerUnit : na
+
+//━━━━━━━━━━━━━━━━━━━
+// ALERT JSON
+//━━━━━━━━━━━━━━━━━━━
+longJson = '{"signal":"LONG","system":"MULTI_REGIME_2EMA_MASTER","ticker":"{{ticker}}","tf":"{{interval}}"}'
+shortJson = '{"signal":"SHORT","system":"MULTI_REGIME_2EMA_MASTER","ticker":"{{ticker}}","tf":"{{interval}}"}'
+
+//━━━━━━━━━━━━━━━━━━━
+// ENTRIES
+//━━━━━━━━━━━━━━━━━━━
+if longEntry
+    if useRiskSizing
+        strategy.entry("LONG", strategy.long, qty=riskQty, alert_message=longJson)
+    else
+        strategy.entry("LONG", strategy.long, alert_message=longJson)
+
+if shortEntry
+    if useRiskSizing
+        strategy.entry("SHORT", strategy.short, qty=riskQty, alert_message=shortJson)
+    else
+        strategy.entry("SHORT", strategy.short, alert_message=shortJson)
+
+//━━━━━━━━━━━━━━━━━━━
+// EXIT ENGINE
+//━━━━━━━━━━━━━━━━━━━
+var float longEntryPrice = na
+var float shortEntryPrice = na
+var float longHigh = na
+var float shortLow = na
+var bool longTrailActive = false
+var bool shortTrailActive = false
+var bool longBreakEvenActive = false
+var bool shortBreakEvenActive = false
+var int entryBar = na
+var float longStop = na
+var float shortStop = na
+
+if strategy.position_size > 0 and strategy.position_size[1] <= 0
+    longEntryPrice := strategy.position_avg_price
+    longHigh := high
+    longTrailActive := not useActivation
+    longBreakEvenActive := false
+    entryBar := bar_index
+    longStop := longEntryPrice * (1 - initialStopPercent / 100)
+
+if strategy.position_size < 0 and strategy.position_size[1] >= 0
+    shortEntryPrice := strategy.position_avg_price
+    shortLow := low
+    shortTrailActive := not useActivation
+    shortBreakEvenActive := false
+    entryBar := bar_index
+    shortStop := shortEntryPrice * (1 + initialStopPercent / 100)
+
+// Long management
+if strategy.position_size > 0
+    longHigh := math.max(nz(longHigh, high), high)
+
+    initialLongStop = longEntryPrice * (1 - initialStopPercent / 100)
+    longStopCandidate = initialLongStop
+
+    longBeTriggerPrice = longEntryPrice * (1 + initialStopPercent * breakEvenTriggerR / 100)
+    longBeStop = longEntryPrice * (1 + breakEvenBufferPercent / 100)
+
+    if useBreakEven and not longBreakEvenActive and high >= longBeTriggerPrice
+        longBreakEvenActive := true
+
+    if useBreakEven and longBreakEvenActive
+        longStopCandidate := math.max(longStopCandidate, longBeStop)
+
+    longActivationPrice = longEntryPrice * (1 + activationPercent / 100)
+
+    if useTrailingStop
+        if useActivation and not longTrailActive and high >= longActivationPrice
+            longTrailActive := true
+
+        trailingLongStop = longHigh * (1 - callbackPercent / 100)
+
+        if longTrailActive
+            longStopCandidate := math.max(longStopCandidate, trailingLongStop)
+
+    longStop := longStopCandidate
+
+    partialLongTarget = longEntryPrice * (1 + initialStopPercent * partialTpR / 100)
+
+    if usePartialTP
+        strategy.exit("LONG PARTIAL TP", from_entry="LONG", limit=partialLongTarget, qty_percent=partialTpQtyPercent)
+
+    strategy.exit("LONG EXIT", from_entry="LONG", stop=longStop)
+
+// Short management
+if strategy.position_size < 0
+    shortLow := math.min(nz(shortLow, low), low)
+
+    initialShortStop = shortEntryPrice * (1 + initialStopPercent / 100)
+    shortStopCandidate = initialShortStop
+
+    shortBeTriggerPrice = shortEntryPrice * (1 - initialStopPercent * breakEvenTriggerR / 100)
+    shortBeStop = shortEntryPrice * (1 - breakEvenBufferPercent / 100)
+
+    if useBreakEven and not shortBreakEvenActive and low <= shortBeTriggerPrice
+        shortBreakEvenActive := true
+
+    if useBreakEven and shortBreakEvenActive
+        shortStopCandidate := math.min(shortStopCandidate, shortBeStop)
+
+    shortActivationPrice = shortEntryPrice * (1 - activationPercent / 100)
+
+    if useTrailingStop
+        if useActivation and not shortTrailActive and low <= shortActivationPrice
+            shortTrailActive := true
+
+        trailingShortStop = shortLow * (1 + callbackPercent / 100)
+
+        if shortTrailActive
+            shortStopCandidate := math.min(shortStopCandidate, trailingShortStop)
+
+    shortStop := shortStopCandidate
+
+    partialShortTarget = shortEntryPrice * (1 - initialStopPercent * partialTpR / 100)
+
+    if usePartialTP
+        strategy.exit("SHORT PARTIAL TP", from_entry="SHORT", limit=partialShortTarget, qty_percent=partialTpQtyPercent)
+
+    strategy.exit("SHORT EXIT", from_entry="SHORT", stop=shortStop)
+
+// Optional hard exits
+longOppositeExit = strategy.position_size > 0 and exitOnOppositeRegime and regimeShortGate and safeCalc
+shortOppositeExit = strategy.position_size < 0 and exitOnOppositeRegime and regimeLongGate and safeCalc
+
+longEmaExit = strategy.position_size > 0 and exitOnEmaLoss and not priceAboveBoth and safeCalc
+shortEmaExit = strategy.position_size < 0 and exitOnEmaLoss and not priceBelowBoth and safeCalc
+
+longTimeExit = strategy.position_size > 0 and useTimeExit and not na(entryBar) and bar_index - entryBar >= timeExitBars and safeCalc
+shortTimeExit = strategy.position_size < 0 and useTimeExit and not na(entryBar) and bar_index - entryBar >= timeExitBars and safeCalc
+
+if longOppositeExit or longEmaExit or longTimeExit
+    strategy.close("LONG", comment=longOppositeExit ? "Regime Opposite Exit" : longEmaExit ? "EMA Loss Exit" : "Time Exit")
+
+if shortOppositeExit or shortEmaExit or shortTimeExit
+    strategy.close("SHORT", comment=shortOppositeExit ? "Regime Opposite Exit" : shortEmaExit ? "EMA Loss Exit" : "Time Exit")
+
+if strategy.position_size == 0
+    longEntryPrice := na
+    shortEntryPrice := na
+    longHigh := na
+    shortLow := na
+    longTrailActive := false
+    shortTrailActive := false
+    longBreakEvenActive := false
+    shortBreakEvenActive := false
+    entryBar := na
+    longStop := na
+    shortStop := na
+
+//━━━━━━━━━━━━━━━━━━━
+// VISUAL STATE
+//━━━━━━━━━━━━━━━━━━━
+state = long_allowed and not warning ? 1 :
+     short_allowed and not warning ? -1 :
+     long_allowed and warning ? 2 :
+     short_allowed and warning ? -2 :
+     0
+
+statusText = state == 1 ? "REGIME LONG OK" :
+     state == -1 ? "REGIME SHORT OK" :
+     state == 2 ? "REGIME WARNING" :
+     state == -2 ? "REGIME WARNING" :
+     "REGIME NO TRADE"
+
+cloudBaseColor = state == 1 ? riskOnColor :
+     state == -1 ? riskOffColor :
+     state == 2 or state == -2 ? warningColor :
+     neutralColor
+
+cloudColor = color.new(cloudBaseColor, cloudTransp)
+
+//━━━━━━━━━━━━━━━━━━━
+// PLOTS
+//━━━━━━━━━━━━━━━━━━━
+ema1Plot = plot(showEma ? ema1 : na, title="EMA 1", color=color.red, linewidth=4)
+ema2Plot = plot(showEma ? ema2 : na, title="EMA 2", color=color.green, linewidth=4)
+
+fill(ema1Plot, ema2Plot, color=showEmaCloud ? cloudColor : na, title="EMA Cloud")
+
+plot(showStopLine and strategy.position_size > 0 ? longStop : na, title="Long Stop", color=color.new(color.green, 0), linewidth=2, style=plot.style_linebr)
+plot(showStopLine and strategy.position_size < 0 ? shortStop : na, title="Short Stop", color=color.new(color.red, 0), linewidth=2, style=plot.style_linebr)
+
+plotchar(showMarks and longEntry, title="Long Mark", char="L", location=location.belowbar, color=color.green, size=size.small)
+plotchar(showMarks and shortEntry, title="Short Mark", char="S", location=location.abovebar, color=color.red, size=size.small)
+
+//━━━━━━━━━━━━━━━━━━━
+// PANEL
+//━━━━━━━━━━━━━━━━━━━
+f_stateTxt(st) =>
+    st == 1 ? "ON" : st == -1 ? "OFF" : st == 2 ? "WARN" : "NEUTRAL"
+
+f_stateCol(st) =>
+    st == 1 ? color.green : st == -1 ? color.red : st == 2 ? color.orange : color.gray
+
+var table panel = table.new(position.top_right, 2, 17, border_width=1)
+
+if barstate.islast and showPanel
+    table.cell(panel, 0, 0, "Regime Source", text_color=color.white)
+    table.cell(panel, 1, 0, regimeSource, text_color=color.white)
+
+    table.cell(panel, 0, 1, "TF Mode", text_color=color.white)
+    table.cell(panel, 1, 1, mode, text_color=color.white)
+
+    table.cell(panel, 0, 2, "Main / Confirm", text_color=color.white)
+    table.cell(panel, 1, 2, mainTf + " / " + confirmTf, text_color=color.white)
+
+    table.cell(panel, 0, 3, "Votes ON/OFF", text_color=color.white)
+    table.cell(panel, 1, 3, str.tostring(votesOn) + " / " + str.tostring(votesOff), text_color=state == 1 ? color.green : state == -1 ? color.red : color.orange)
+
+    table.cell(panel, 0, 4, "VIX", text_color=color.white)
+    table.cell(panel, 1, 4, useVix ? f_stateTxt(vixState) : "OFF", text_color=useVix ? f_stateCol(vixState) : color.gray)
+
+    table.cell(panel, 0, 5, "DXY", text_color=color.white)
+    table.cell(panel, 1, 5, useDxy ? f_stateTxt(dxyState) : "OFF", text_color=useDxy ? f_stateCol(dxyState) : color.gray)
+
+    table.cell(panel, 0, 6, "USDT.D", text_color=color.white)
+    table.cell(panel, 1, 6, useUsdt ? f_stateTxt(usdtState) : "OFF", text_color=useUsdt ? f_stateCol(usdtState) : color.gray)
+
+    table.cell(panel, 0, 7, "Price vs EMA", text_color=color.white)
+    table.cell(panel, 1, 7, priceAboveBoth ? "Above Both" : priceBelowBoth ? "Below Both" : "Between", text_color=priceAboveBoth ? color.green : priceBelowBoth ? color.red : color.gray)
+
+    table.cell(panel, 0, 8, "Regime Gate", text_color=color.white)
+    table.cell(panel, 1, 8, regimeLongGate ? "Long Gate" : regimeShortGate ? "Short Gate" : "Blocked", text_color=regimeLongGate ? color.green : regimeShortGate ? color.red : color.gray)
+
+    table.cell(panel, 0, 9, "State", text_color=color.white)
+    table.cell(panel, 1, 9, statusText, text_color=state == 1 ? color.green : state == -1 ? color.red : state == 0 ? color.gray : color.orange)
+
+    table.cell(panel, 0, 10, "Stop %", text_color=color.white)
+    table.cell(panel, 1, 10, str.tostring(initialStopPercent) + "%", text_color=color.white)
+
+    table.cell(panel, 0, 11, "Trail", text_color=color.white)
+    table.cell(panel, 1, 11, useTrailingStop ? "ON " + str.tostring(activationPercent) + "/" + str.tostring(callbackPercent) : "OFF", text_color=useTrailingStop ? color.orange : color.gray)
+
+    table.cell(panel, 0, 12, "Break-Even", text_color=color.white)
+    table.cell(panel, 1, 12, useBreakEven ? "ON " + str.tostring(breakEvenTriggerR) + "R" : "OFF", text_color=useBreakEven ? color.green : color.gray)
+
+    table.cell(panel, 0, 13, "Partial TP", text_color=color.white)
+    table.cell(panel, 1, 13, usePartialTP ? "ON " + str.tostring(partialTpR) + "R / " + str.tostring(partialTpQtyPercent) + "%" : "OFF", text_color=usePartialTP ? color.green : color.gray)
+
+    table.cell(panel, 0, 14, "Time Exit", text_color=color.white)
+    table.cell(panel, 1, 14, useTimeExit ? "ON " + str.tostring(timeExitBars) + " bars" : "OFF", text_color=useTimeExit ? color.orange : color.gray)
+
+    table.cell(panel, 0, 15, "Position", text_color=color.white)
+    table.cell(panel, 1, 15, strategy.position_size > 0 ? "LONG" : strategy.position_size < 0 ? "SHORT" : "FLAT", text_color=color.white)
+
+    table.cell(panel, 0, 16, "BE / Trail Active", text_color=color.white)
+    table.cell(panel, 1, 16, (longBreakEvenActive or shortBreakEvenActive ? "BE " : "") + (longTrailActive or shortTrailActive ? "TRAIL" : ""), text_color=color.white)
+
+//━━━━━━━━━━━━━━━━━━━
+// ALERTS
+//━━━━━━━━━━━━━━━━━━━
+alertcondition(longEntry, title="MULTI REGIME 2EMA Long Entry", message="MULTI REGIME 2EMA Long Entry. Use strategy order fills for JSON alert_message.")
+alertcondition(shortEntry, title="MULTI REGIME 2EMA Short Entry", message="MULTI REGIME 2EMA Short Entry. Use strategy order fills for JSON alert_message.")

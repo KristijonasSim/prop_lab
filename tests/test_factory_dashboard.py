@@ -278,6 +278,22 @@ def test_the_same_script_is_not_recorded_twice(tmp_path):
     f = tmp_path / "skipped.jsonl"
     tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f)
     assert tradingview.record_skips([("squeeze", "grammar gap: bands")], path=f) == 0
+    assert len(f.read_text().splitlines()) == 1
+
+
+def test_a_retried_script_replaces_its_old_refusal(tmp_path):
+    """234 refusals were model crashes; a retry must overwrite the crash."""
+    from factory.sources import tradingview
+
+    f = tmp_path / "skipped.jsonl"
+    tradingview.record_skips([("a", "model call failed: model exited 1: "),
+                              ("b", "grammar gap: x")], path=f)
+    tradingview.record_skips([("a", "grammar gap: y")], path=f)
+    rows = [json.loads(l) for l in f.read_text().splitlines()]
+    assert {r["script"]: r["why"] for r in rows} == {"a": "grammar gap: y",
+                                                     "b": "grammar gap: x"}
+    tradingview.record_skips([], path=f, translated={"a"})
+    assert [json.loads(l)["script"] for l in f.read_text().splitlines()] == ["b"]
 
 
 def test_one_idea_counts_once_even_when_it_is_in_two_files():
@@ -399,7 +415,8 @@ def test_an_idea_records_every_cell_not_just_the_winner():
 
     for x in nightly.ideas():
         if x["cells"]:
-            assert len(x["cells"]) >= 20
+            # A run narrowed to fewer cells says so; a full run covers 24.
+            assert len(x["cells"]) >= min(x.get("cells_run", 24), 20)
             assert all(c["trades"] >= 0 for c in x["cells"])
 
 

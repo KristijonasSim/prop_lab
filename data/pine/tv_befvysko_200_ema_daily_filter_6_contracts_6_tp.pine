@@ -1,0 +1,549 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/BeFvYSkO-200-EMA-Daily-Filter-6-Contracts-6-TP/
+// id: PUB;adb6bc3d62ed4da19b68cfc260a049a7  kind: strategy
+//@version=6
+strategy("200 EMA Daily Filter - 6 Contracts / 6 TP",
+     overlay=true,
+     initial_capital=100000,
+     currency=currency.USD,
+     default_qty_type=strategy.fixed,
+     default_qty_value=6,
+     pyramiding=0,
+     commission_type=strategy.commission.cash_per_contract,
+     commission_value=0,
+     slippage=0,
+     process_orders_on_close=true,
+     calc_on_order_fills=true,
+     margin_long=10,
+     margin_short=10)
+
+// =====================================================
+// 1. DIRECTION
+// =====================================================
+
+groupDirection = "1. Direction"
+
+enableLong = input.bool(true, "Enable Long", group=groupDirection)
+enableShort = input.bool(true, "Enable Short", group=groupDirection)
+
+// =====================================================
+// 2. POSITION
+// =====================================================
+
+groupPosition = "2. Position"
+
+contracts = input.int(
+     6,
+     "Contracts",
+     minval=6,
+     maxval=6,
+     group=groupPosition)
+
+// =====================================================
+// 3. EMA
+// =====================================================
+
+groupEMA = "3. EMA"
+
+emaLength = input.int(
+     200,
+     "EMA Length",
+     minval=1,
+     group=groupEMA)
+
+// =====================================================
+// 4. PREVIOUS DAILY CANDLE FILTER
+// =====================================================
+
+groupDaily = "4. Previous Daily Candle Filter"
+
+useDailyFilter = input.bool(
+     true,
+     "Use Previous Daily Candle Filter",
+     group=groupDaily)
+
+// =====================================================
+// 5. INITIAL STOP
+// =====================================================
+
+groupSL = "5. Initial Stop"
+
+useInitialStop = input.bool(
+     true,
+     "Use Entry Candle High/Low Stop",
+     group=groupSL)
+
+// =====================================================
+// 6. 200 EMA STOP ACTIVATION
+// =====================================================
+
+groupEMAStop = "6. 200 EMA Stop"
+
+emaStopActivation = input.float(
+     100,
+     "Activate 200 EMA Stop After Profit (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupEMAStop)
+
+// =====================================================
+// 7. TP1
+// =====================================================
+
+groupTP1 = "7. TP1"
+
+enableTP1 = input.bool(
+     true,
+     "Enable TP1",
+     group=groupTP1)
+
+tp1Points = input.float(
+     50,
+     "TP1 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP1)
+
+// =====================================================
+// 8. TP2
+// =====================================================
+
+groupTP2 = "8. TP2"
+
+enableTP2 = input.bool(
+     true,
+     "Enable TP2",
+     group=groupTP2)
+
+tp2Points = input.float(
+     100,
+     "TP2 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP2)
+
+// =====================================================
+// 9. TP3
+// =====================================================
+
+groupTP3 = "9. TP3"
+
+enableTP3 = input.bool(
+     true,
+     "Enable TP3",
+     group=groupTP3)
+
+tp3Points = input.float(
+     150,
+     "TP3 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP3)
+
+// =====================================================
+// 10. TP4
+// =====================================================
+
+groupTP4 = "10. TP4"
+
+enableTP4 = input.bool(
+     true,
+     "Enable TP4",
+     group=groupTP4)
+
+tp4Points = input.float(
+     200,
+     "TP4 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP4)
+
+// =====================================================
+// 11. TP5
+// =====================================================
+
+groupTP5 = "11. TP5"
+
+enableTP5 = input.bool(
+     true,
+     "Enable TP5",
+     group=groupTP5)
+
+tp5Points = input.float(
+     250,
+     "TP5 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP5)
+
+// =====================================================
+// 12. TP6
+// =====================================================
+
+groupTP6 = "12. TP6"
+
+enableTP6 = input.bool(
+     true,
+     "Enable TP6",
+     group=groupTP6)
+
+tp6Points = input.float(
+     300,
+     "TP6 Distance (Points)",
+     minval=0.25,
+     step=0.25,
+     group=groupTP6)
+
+// =====================================================
+// 13. BACKTEST DATE
+// =====================================================
+
+groupDate = "13. Backtest Date"
+
+startDate = input.time(
+     timestamp("01 Jan 2020 00:00 +0000"),
+     "Start Date",
+     group=groupDate)
+
+endDate = input.time(
+     timestamp("31 Dec 2099 23:59 +0000"),
+     "End Date",
+     group=groupDate)
+
+inDateRange = time >= startDate and time <= endDate
+
+// =====================================================
+// EMA
+// =====================================================
+
+ema200 = ta.ema(close, emaLength)
+
+// Calculate crosses on EVERY bar
+crossAboveEMA = ta.crossover(close, ema200)
+crossBelowEMA = ta.crossunder(close, ema200)
+
+// Entry signals
+longSignal = crossAboveEMA
+shortSignal = crossBelowEMA
+
+// =====================================================
+// PREVIOUS COMPLETED DAILY CANDLE
+// =====================================================
+
+prevDailyOpen = request.security(
+     syminfo.tickerid,
+     "D",
+     open[1],
+     lookahead=barmerge.lookahead_on)
+
+prevDailyClose = request.security(
+     syminfo.tickerid,
+     "D",
+     close[1],
+     lookahead=barmerge.lookahead_on)
+
+previousDayGreen = prevDailyClose > prevDailyOpen
+previousDayRed = prevDailyClose < prevDailyOpen
+
+longAllowed = not useDailyFilter or previousDayGreen
+shortAllowed = not useDailyFilter or previousDayRed
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
+var float initialLongStop = na
+var float initialShortStop = na
+
+var float highestSinceEntry = na
+var float lowestSinceEntry = na
+
+var bool emaStopActive = false
+
+// =====================================================
+// ENTRY CONDITIONS
+// =====================================================
+
+newLong = enableLong and longAllowed and longSignal and inDateRange and strategy.position_size == 0
+
+newShort = enableShort and shortAllowed and shortSignal and inDateRange and strategy.position_size == 0
+
+// =====================================================
+// LONG ENTRY
+// =====================================================
+
+if newLong
+    initialLongStop := useInitialStop ? low : na
+    initialShortStop := na
+
+    highestSinceEntry := high
+    lowestSinceEntry := na
+
+    emaStopActive := false
+
+    strategy.entry(
+         "LONG",
+         strategy.long,
+         qty=contracts)
+
+// =====================================================
+// SHORT ENTRY
+// =====================================================
+
+if newShort
+    initialShortStop := useInitialStop ? high : na
+    initialLongStop := na
+
+    lowestSinceEntry := low
+    highestSinceEntry := na
+
+    emaStopActive := false
+
+    strategy.entry(
+         "SHORT",
+         strategy.short,
+         qty=contracts)
+
+// =====================================================
+// LONG POSITION MANAGEMENT
+// =====================================================
+
+if strategy.position_size > 0
+
+    entryPrice = strategy.position_avg_price
+
+    // Track maximum favorable excursion.
+    highestSinceEntry := math.max(
+         nz(highestSinceEntry, high),
+         high)
+
+    // Once price has EVER reached the activation amount,
+    // EMA mode remains active for the rest of this trade.
+    if highestSinceEntry >= entryPrice + emaStopActivation
+        emaStopActive := true
+
+    // BEFORE activation:
+    // use entry candle LOW.
+    //
+    // AFTER activation:
+    // remove initial stop and use EMA cross exit instead.
+    activeLongStop = emaStopActive ? na : initialLongStop
+
+    // TP1
+    if enableTP1
+        strategy.exit(
+             "LONG TP1",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp1Points,
+             stop=activeLongStop)
+
+    // TP2
+    if enableTP2
+        strategy.exit(
+             "LONG TP2",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp2Points,
+             stop=activeLongStop)
+
+    // TP3
+    if enableTP3
+        strategy.exit(
+             "LONG TP3",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp3Points,
+             stop=activeLongStop)
+
+    // TP4
+    if enableTP4
+        strategy.exit(
+             "LONG TP4",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp4Points,
+             stop=activeLongStop)
+
+    // TP5
+    if enableTP5
+        strategy.exit(
+             "LONG TP5",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp5Points,
+             stop=activeLongStop)
+
+    // TP6
+    if enableTP6
+        strategy.exit(
+             "LONG TP6",
+             from_entry="LONG",
+             qty=1,
+             limit=entryPrice + tp6Points,
+             stop=activeLongStop)
+
+// =====================================================
+// SHORT POSITION MANAGEMENT
+// =====================================================
+
+if strategy.position_size < 0
+
+    entryPrice = strategy.position_avg_price
+
+    // Track maximum favorable excursion.
+    lowestSinceEntry := math.min(
+         nz(lowestSinceEntry, low),
+         low)
+
+    // Once price has EVER reached the activation amount,
+    // EMA mode remains active for the rest of this trade.
+    if lowestSinceEntry <= entryPrice - emaStopActivation
+        emaStopActive := true
+
+    // BEFORE activation:
+    // use entry candle HIGH.
+    //
+    // AFTER activation:
+    // remove initial stop and use EMA cross exit instead.
+    activeShortStop = emaStopActive ? na : initialShortStop
+
+    // TP1
+    if enableTP1
+        strategy.exit(
+             "SHORT TP1",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp1Points,
+             stop=activeShortStop)
+
+    // TP2
+    if enableTP2
+        strategy.exit(
+             "SHORT TP2",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp2Points,
+             stop=activeShortStop)
+
+    // TP3
+    if enableTP3
+        strategy.exit(
+             "SHORT TP3",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp3Points,
+             stop=activeShortStop)
+
+    // TP4
+    if enableTP4
+        strategy.exit(
+             "SHORT TP4",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp4Points,
+             stop=activeShortStop)
+
+    // TP5
+    if enableTP5
+        strategy.exit(
+             "SHORT TP5",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp5Points,
+             stop=activeShortStop)
+
+    // TP6
+    if enableTP6
+        strategy.exit(
+             "SHORT TP6",
+             from_entry="SHORT",
+             qty=1,
+             limit=entryPrice - tp6Points,
+             stop=activeShortStop)
+
+// =====================================================
+// EMA STOP AFTER ACTIVATION
+// =====================================================
+
+// Once activation has occurred:
+//
+// LONG  -> crossing BELOW 200 EMA closes remainder.
+// SHORT -> crossing ABOVE 200 EMA closes remainder.
+
+longEMAExit = strategy.position_size > 0 and emaStopActive and crossBelowEMA
+
+shortEMAExit = strategy.position_size < 0 and emaStopActive and crossAboveEMA
+
+if longEMAExit or shortEMAExit
+    strategy.cancel_all()
+    strategy.close_all(
+         comment="200 EMA Stop",
+         immediately=true)
+
+// =====================================================
+// END OF BACKTEST
+// =====================================================
+
+if time > endDate and strategy.position_size != 0
+    strategy.cancel_all()
+    strategy.close_all(
+         comment="End of Backtest",
+         immediately=true)
+
+// =====================================================
+// RESET AFTER ENTIRE POSITION CLOSES
+// =====================================================
+
+tradeJustClosed = strategy.position_size == 0 and strategy.position_size[1] != 0
+
+if tradeJustClosed
+    initialLongStop := na
+    initialShortStop := na
+
+    highestSinceEntry := na
+    lowestSinceEntry := na
+
+    emaStopActive := false
+
+// =====================================================
+// PLOTS
+// =====================================================
+
+plot(
+     ema200,
+     title="200 EMA",
+     color=color.orange,
+     linewidth=2)
+
+// Initial LONG stop is shown only before EMA mode activates.
+plot(
+     strategy.position_size > 0 and not emaStopActive ? initialLongStop : na,
+     title="Long Initial Stop",
+     color=color.red,
+     style=plot.style_linebr,
+     linewidth=2)
+
+// Initial SHORT stop is shown only before EMA mode activates.
+plot(
+     strategy.position_size < 0 and not emaStopActive ? initialShortStop : na,
+     title="Short Initial Stop",
+     color=color.red,
+     style=plot.style_linebr,
+     linewidth=2)
+
+// Highlight EMA after it becomes the active stop.
+plot(
+     strategy.position_size != 0 and emaStopActive ? ema200 : na,
+     title="Active EMA Stop",
+     color=color.yellow,
+     style=plot.style_linebr,
+     linewidth=3)
+
+// =====================================================
+// DAILY FILTER BACKGROUND
+// =====================================================
+
+bgcolor(
+     useDailyFilter ? previousDayGreen ? color.new(color.green, 94) : previousDayRed ? color.new(color.red, 94) : na : na,
+     title="Previous Daily Candle Direction")

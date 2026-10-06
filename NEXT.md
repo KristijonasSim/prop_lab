@@ -8,6 +8,45 @@ tested. It is kept at `docs/archive/NEXT_2026-09-14.md`.
 
 ---
 
+## 2026-10-06 — honest days, sortable board, translation backlog cleared
+
+* **Eval days were a coin flip.** The scorecard took the fastest risk rung -
+  5% - where 2 winners pass and 1 loser blows. Now `riskladder.pick` (2% floor).
+  "MA slope turn-up" 2.4 -> 20.8 days. All 126 ideas re-priced (`factory.rescore`).
+* Board: best-first combined rank, click any column to sort. PF 1.20 = pass.
+* **Older years are a note, not a death** (Kris): step-6 stops show
+  "passed · valid last 3 years, issues on older years".
+* Grammar +39 terms (`factory/terms.py`: Supertrend, BB/Keltner, MACD, ADX,
+  stoch, pivots, candles, clock ranges...). Refused list 293 -> 79.
+* **Token diet done** (`agent.LEAN`, `tradingview.lean_pine`): per-call overhead
+  19,761 -> ~820 tokens, scripts 32% shorter. Testing the queue now runs with
+  `--fetch 0` (no model calls): unit `proplab-testqueue`.
+* 260 TradingView ideas queued, testing started 2026-10-06. Loop PAUSED - translation burned
+  a 5h usage window in ~30 min. Before restarting: `claude -p --bare` with a
+  short system prompt, strip Pine comments/plots, Haiku (check 20 vs Sonnet).
+
+## 2026-09-30 — TradingView loop now survives a reboot
+
+* The 9-28 24h run died after 2 rounds: **the PC was shut down at 16:26**, not a
+  code crash. The 8 ideas mid-test were lost (`take()` drops them before testing).
+* Fixed: the deadline is saved, in-flight ideas go back on the queue after a kill,
+  and it runs as a systemd user service (restarts on crash and comes back after
+  a reboot). `./factory/tvloop.sh start 24 | status | stop | resume | log`.
+* New 24h run started 2026-09-30 06:05 UTC. The lost round was re-translated and
+  re-queued (11 ideas).
+
+---
+
+## 2026-09-28 — TradingView runs by itself, 24h run started on this PC
+
+* `factory/sources/tvfetch.py` downloads open scripts (strategies first,
+  ~1,000+ reachable, one request / 5 s, stops on a block).
+* `python -m factory.tvloop --hours 24` - fetch 20, AI-translate, test
+  steps 3-7 on TradingView ideas only, repeat. Log `backtests/factory/tvloop.jsonl`.
+* `python -m factory.tvloop --status` - totals so far.
+
+---
+
 ## 2026-09-24 — VM armed for the weekend
 
 * 12 TradingView scripts through all 7 steps. Luck check: 17 real survivors vs
