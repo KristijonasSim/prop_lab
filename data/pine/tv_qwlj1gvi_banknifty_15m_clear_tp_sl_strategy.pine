@@ -1,0 +1,89 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/QwLj1gvi-BankNifty-15m-Clear-TP-SL-Strategy/
+// id: PUB;a4948486f6ee4fce88b8e502fd06107a  kind: strategy
+//@version=6
+strategy("BankNifty 15m Clear TP/SL Strategy", overlay=true,
+     initial_capital=200000,
+     default_qty_type=strategy.fixed,
+     default_qty_value=1,
+     pyramiding=1)
+
+// INPUTS
+emaFastLen = input.int(20)
+emaSlowLen = input.int(50)
+rsiLen = input.int(14)
+adxLen = input.int(14)
+atrLen = input.int(14)
+
+rr = input.float(2.0, "Risk Reward (TP multiple)")
+atrMult = input.float(1.2, "SL ATR Multiplier")
+
+// INDICATORS
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+rsi = ta.rsi(close, rsiLen)
+atr = ta.atr(atrLen)
+[_, _, adx] = ta.dmi(adxLen, adxLen)
+
+// TREND
+trendBull = emaFast > emaSlow and close > emaFast
+trendBear = emaFast < emaSlow and close < emaFast
+
+// TIME FILTER
+totalMin = hour(time) * 60 + minute(time)
+tradeWindow = totalMin >= 570 and totalMin <= 735  // 9:30–12:15
+
+// FILTER
+noTradeZone = adx < 12
+
+// ENTRY
+longCondition = tradeWindow and not noTradeZone and trendBull and close > high[1]
+shortCondition = tradeWindow and not noTradeZone and trendBear and close < low[1]
+
+// STORE LEVELS
+var float longSL = na
+var float longTP = na
+var float shortSL = na
+var float shortTP = na
+
+// LONG ENTRY
+if longCondition and strategy.position_size <= 0
+    strategy.entry("Long", strategy.long)
+    longSL := close - atr * atrMult
+    longTP := close + (atr * atrMult * rr)
+    label.new(bar_index, low, "BUY", color=color.green, style=label.style_label_up)
+
+// SHORT ENTRY
+if shortCondition and strategy.position_size >= 0
+    strategy.entry("Short", strategy.short)
+    shortSL := close + atr * atrMult
+    shortTP := close - (atr * atrMult * rr)
+    label.new(bar_index, high, "SELL", color=color.red, style=label.style_label_down)
+
+// EXIT LOGIC
+if strategy.position_size > 0
+    if close <= longSL
+        strategy.close("Long")
+        label.new(bar_index, high, "SL", color=color.red)
+    else if close >= longTP
+        strategy.close("Long")
+        label.new(bar_index, high, "TP", color=color.green)
+
+if strategy.position_size < 0
+    if close >= shortSL
+        strategy.close("Short")
+        label.new(bar_index, low, "SL", color=color.red)
+    else if close <= shortTP
+        strategy.close("Short")
+        label.new(bar_index, low, "TP", color=color.green)
+
+// PLOT TP/SL LINES
+plot(strategy.position_size > 0 ? longSL : na, color=color.red, style=plot.style_linebr)
+plot(strategy.position_size > 0 ? longTP : na, color=color.green, style=plot.style_linebr)
+
+plot(strategy.position_size < 0 ? shortSL : na, color=color.red, style=plot.style_linebr)
+plot(strategy.position_size < 0 ? shortTP : na, color=color.green, style=plot.style_linebr)
+
+// EMAs
+plot(emaFast, color=color.green)
+plot(emaSlow, color=color.red)

@@ -1,0 +1,456 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/A8gB4ha7/
+// id: PUB;c2dda7059d6e44848478184f602abbfa  kind: strategy
+//@version=6
+strategy(shorttitle="3.4 Gann Fan v15 [Phases + Signals]", title="3.4 Gann Fan v15 [Phases + Signals]", overlay=true, initial_capital=100, calc_on_every_tick=true, calc_on_order_fills=true, process_orders_on_close=false, pyramiding=0, max_bars_back=500, max_lines_count=100, max_labels_count=100)
+
+// Fan color settings
+c_12 = input.color(color.red,    "1/2", inline="c1", group="Fan Colors")
+c_13 = input.color(color.green,  "1/3", inline="c1", group="Fan Colors")
+c_14 = input.color(#0097a7,      "1/4", inline="c1", group="Fan Colors")
+c_18 = input.color(color.olive,  "1/8", inline="c1", group="Fan Colors")
+c_21 = input.color(color.teal,   "2/1", inline="c2", group="Fan Colors")
+c_31 = input.color(#9598a1,      "3/1", inline="c2", group="Fan Colors")
+c_41 = input.color(color.yellow, "4/1", inline="c2", group="Fan Colors")
+c_81 = input.color(#a5d6a7,      "8/1", inline="c2", group="Fan Colors")
+c_11 = input.color(color.blue,   "1/1", inline="c3", group="Fan Colors")
+fanTransparency = input.int(100, "Fan Transparency", minval=0, maxval=100, group="Fan Colors")
+showFanLabels = input.bool(true, "Fan Labels", group="Fan Colors")
+labelOffsetBars = input.int(50, "Label Offset", minval=1, maxval=300, group="Fan Colors")
+fanLookbackBars = input.int(280, "Fan Lookback Bars", minval=50, maxval=1000, group="Fan Colors")
+fanPivotPeriod = input.int(5, "Fan Pivot Period", minval=2, maxval=50, group="Fan Colors")
+
+// Angle and phase settings
+anglePivotPeriod = input.int(10, "Angle Pivot Period", minval=3, maxval=50, group="Angles")
+atrMultiplier = input.float(0.5, "ATR Sensitivity", minval=0.1, maxval=10.0, group="Angles")
+weakAngleThreshold = input.float(30.0, "Weak ACCUM Threshold", minval=5.0, maxval=89.0, group="Angles")
+strongAngleThreshold = input.float(55.0, "Strong EXPAN Threshold", minval=5.0, maxval=89.0, group="Angles")
+extremeAngleThreshold = input.float(75.0, "Extreme ACCEL Threshold", minval=5.0, maxval=89.0, group="Angles")
+entryMode = input.int(3, "Mode 1=Strict 2=Medium 3=Easy", minval=1, maxval=3, group="Angles")
+
+showAccum = input.bool(true, "Show ACCUM Gray", group="Visual Phases")
+showModer = input.bool(true, "Show MODER Yellow", group="Visual Phases")
+showExpan = input.bool(true, "Show EXPAN Green/Red", group="Visual Phases")
+showAccel = input.bool(true, "Show ACCEL Bright", group="Visual Phases")
+showEma = input.bool(true, "Show EMAs 8 and 21", group="Visual Phases")
+showAngleLabels = input.bool(true, "Show Angle on Pivots", group="Visual Phases")
+
+// Strategy risk settings
+botActive = input.bool(false, title="Bot Strategy", group="TPSL")
+showStrategyBackground = input.bool(true, title="Show Strategy Background", group="TPSL")
+stopLossPercent = input.float(4.5, "Stop Loss Percentage", minval=0, group="TPSL")
+takeProfitPercent = input.float(1.5, "Take Profit Percentage", minval=0, group="TPSL")
+trailingStopEnabled = input.bool(true, "Trailing Stop", group="TPSL")
+trailingStopPercent = input.float(0.05, "Trailing Stop Percentage of Entry Price", minval=0, step=0.01, group="TPSL")
+protectProfitEnabled = input.bool(false, title="Protect Open Profit", group="TPSL")
+protectProfitValue = input.float(1.5, title="Protect Profit Value", minval=0.1, step=0.1, group="TPSL")
+protectAfterBars = input.int(1, title="Protect Profit After Bars", minval=1, group="TPSL")
+entryBackgroundEnabled = input.bool(true, title="Show Entry Background", group="TPSL")
+
+float atr14 = ta.atr(14)
+float ema8 = ta.ema(close, 8)
+float ema21 = ta.ema(close, 21)
+
+float lowestRange = ta.lowest(292)
+float highestRange = ta.highest(292)
+float rangeStep = (highestRange - lowestRange) / 82.0
+float fanHighBase = highestRange + rangeStep * 10.0
+float fanLowBase = lowestRange - rangeStep * 8.0
+float fanUnit = (fanHighBase - fanLowBase) / 131.0
+
+var float[] pivotHighValues = array.new_float(0)
+var int[] pivotHighBars = array.new_int(0)
+var float[] pivotLowValues = array.new_float(0)
+var int[] pivotLowBars = array.new_int(0)
+
+float fanPivotHigh = ta.pivothigh(fanPivotPeriod, fanPivotPeriod)
+float fanPivotLow = ta.pivotlow(fanPivotPeriod, fanPivotPeriod)
+
+if array.size(pivotHighBars) > 0
+    for x = array.size(pivotHighBars) - 1 to 0
+        if bar_index - array.get(pivotHighBars, x) > fanLookbackBars
+            array.pop(pivotHighBars)
+            array.pop(pivotHighValues)
+
+if array.size(pivotLowBars) > 0
+    for x = array.size(pivotLowBars) - 1 to 0
+        if bar_index - array.get(pivotLowBars, x) > fanLookbackBars
+            array.pop(pivotLowBars)
+            array.pop(pivotLowValues)
+
+if not na(fanPivotHigh)
+    array.unshift(pivotHighBars, bar_index - fanPivotPeriod)
+    array.unshift(pivotHighValues, fanPivotHigh)
+
+if not na(fanPivotLow)
+    array.unshift(pivotLowBars, bar_index - fanPivotPeriod)
+    array.unshift(pivotLowValues, fanPivotLow)
+
+int fanLowBar = array.size(pivotLowBars) > 0 ? array.get(pivotLowBars, array.lastindexof(pivotLowValues, array.min(pivotLowValues))) : na
+int fanHighBar = array.size(pivotHighBars) > 0 ? array.get(pivotHighBars, array.lastindexof(pivotHighValues, array.max(pivotHighValues))) : na
+float fanLowPrice = not na(fanLowBar) ? low[bar_index - fanLowBar] : na
+float fanHighPrice = not na(fanHighBar) ? high[bar_index - fanHighBar] : na
+
+float anglePivotHigh = ta.pivothigh(high, anglePivotPeriod, anglePivotPeriod)
+float anglePivotLow = ta.pivotlow(low, anglePivotPeriod, anglePivotPeriod)
+var float lastHighValue = na
+var int lastHighBar = na
+var float lastLowValue = na
+var int lastLowBar = na
+
+if not na(anglePivotHigh)
+    lastHighValue := anglePivotHigh
+    lastHighBar := bar_index - anglePivotPeriod
+
+if not na(anglePivotLow)
+    lastLowValue := anglePivotLow
+    lastLowBar := bar_index - anglePivotPeriod
+
+angleFromAtr(float price1, float price2, int bar1, int bar2) =>
+    float priceDistance = math.abs(price2 - price1)
+    float barDistance = math.abs(bar2 - bar1)
+    float atrUnit = atr14 * atrMultiplier
+    float slope = (barDistance > 0.0 and atrUnit > 0.0) ? (priceDistance / barDistance) / atrUnit : 0.0
+    math.atan(slope) * (180.0 / math.pi)
+
+bool isUpSwing = not na(lastHighBar) and not na(lastLowBar) and lastHighBar > lastLowBar
+bool isDownSwing = not na(lastHighBar) and not na(lastLowBar) and lastLowBar > lastHighBar
+
+float swingAngle = na
+if isUpSwing and not na(lastLowValue) and not na(lastHighValue)
+    swingAngle := angleFromAtr(lastLowValue, lastHighValue, lastLowBar, lastHighBar)
+if isDownSwing and not na(lastHighValue) and not na(lastLowValue)
+    swingAngle := angleFromAtr(lastHighValue, lastLowValue, lastHighBar, lastLowBar)
+
+float liveAngle = na
+if isUpSwing and not na(lastLowValue)
+    liveAngle := angleFromAtr(lastLowValue, close, lastLowBar, bar_index)
+if isDownSwing and not na(lastHighValue)
+    liveAngle := angleFromAtr(lastHighValue, close, lastHighBar, bar_index)
+
+float currentAngle = na(liveAngle) ? swingAngle : liveAngle
+
+float bullishFanAngle = na
+float bearishFanAngle = na
+if not na(fanLowBar) and not na(fanLowPrice) and not na(fanHighBar) and not na(fanHighPrice)
+    bullishFanAngle := angleFromAtr(fanLowPrice, fanHighPrice, fanLowBar, fanHighBar)
+    bearishFanAngle := angleFromAtr(fanHighPrice, fanLowPrice, fanHighBar, fanLowBar)
+
+string PHASE_ACCUM = "ACCUM"
+string PHASE_MODER = "MODER"
+string PHASE_EXPAN = "EXPAN"
+string PHASE_ACCEL = "ACCEL"
+
+getPhase(float angleValue) =>
+    string phase = PHASE_ACCUM
+    if not na(angleValue)
+        if angleValue >= extremeAngleThreshold
+            phase := PHASE_ACCEL
+        else if angleValue >= strongAngleThreshold
+            phase := PHASE_EXPAN
+        else if angleValue >= weakAngleThreshold
+            phase := PHASE_MODER
+    phase
+
+string currentPhase = getPhase(currentAngle)
+string previousPhase = getPhase(currentAngle[1])
+
+phaseColor(string phase, bool bullish) =>
+    color result = color.new(#546e7a, 0)
+    if phase == PHASE_ACCEL
+        result := bullish ? color.new(#00e676, 0) : color.new(#ff1744, 0)
+    else if phase == PHASE_EXPAN
+        result := bullish ? color.new(#69f0ae, 0) : color.new(#ff5252, 0)
+    else if phase == PHASE_MODER
+        result := color.new(#ffd740, 0)
+    result
+
+color phaseBackground = color.new(color.gray, 100)
+if currentPhase == PHASE_ACCEL and showAccel
+    phaseBackground := isUpSwing ? color.new(#00e676, 87) : color.new(#ff1744, 87)
+else if currentPhase == PHASE_EXPAN and showExpan
+    phaseBackground := isUpSwing ? color.new(#69f0ae, 91) : color.new(#ff5252, 91)
+else if currentPhase == PHASE_MODER and showModer
+    phaseBackground := color.new(#ffd740, 93)
+else if currentPhase == PHASE_ACCUM and showAccum
+    phaseBackground := color.new(#546e7a, 94)
+bgcolor(phaseBackground, title="Phase Background")
+
+color[] fanColors = array.from(c_12, c_13, c_14, c_18, c_21, c_31, c_41, c_81, c_11)
+float[] fanDivisors = array.from(2.0, 3.0, 4.0, 8.0)
+
+var line[] upFanLines = array.new_line(9, na)
+var line[] downFanLines = array.new_line(9, na)
+var label[] upFanLabels = array.new_label(9, na)
+var label[] downFanLabels = array.new_label(9, na)
+var linefill[] upFanFills = array.new_linefill(8, na)
+var linefill[] downFanFills = array.new_linefill(8, na)
+
+if not na(fanLowBar) and fanLowBar > 0 and fanLowBar < bar_index
+    for x = 0 to 8
+        line.delete(array.get(upFanLines, x))
+        label.delete(array.get(upFanLabels, x))
+    for x = 0 to 7
+        linefill.delete(array.get(upFanFills, x))
+
+    line baseUpLine = line.new(fanLowBar, fanLowPrice, fanLowBar + 1, fanLowPrice + fanUnit, extend=extend.right, color=array.get(fanColors, 8), width=2)
+    array.set(upFanLines, 0, baseUpLine)
+    int upLabelBar = fanLowBar + labelOffsetBars
+    float upBaseLabelPrice = line.get_price(baseUpLine, upLabelBar)
+
+    if showFanLabels
+        array.set(upFanLabels, 0, label.new(upLabelBar, upBaseLabelPrice, "1/1  45", textcolor=array.get(fanColors, 8), style=label.style_none, size=size.small))
+
+    for x = 0 to 3
+        float slowFanPrice = fanLowPrice + (line.get_price(baseUpLine, bar_index) - fanLowPrice) / array.get(fanDivisors, x)
+        line slowFanLine = line.new(fanLowBar, fanLowPrice, bar_index, slowFanPrice, extend=extend.right, color=array.get(fanColors, x), width=1)
+        array.set(upFanLines, x + 1, slowFanLine)
+        array.set(upFanFills, x, linefill.new(slowFanLine, array.get(upFanLines, x), color.new(array.get(fanColors, x), fanTransparency)))
+
+        if showFanLabels
+            string slowLabel = x == 0 ? "1/2  26.6" : x == 1 ? "1/3  18.4" : x == 2 ? "1/4  14" : "1/8  7.1"
+            array.set(upFanLabels, x + 1, label.new(upLabelBar, line.get_price(slowFanLine, upLabelBar), slowLabel, textcolor=array.get(fanColors, x), style=label.style_none, size=size.small))
+
+        line fastFanLine = line.new(fanLowBar, fanLowPrice, fanLowBar + 1, fanLowPrice + fanUnit * array.get(fanDivisors, x), extend=extend.right, color=array.get(fanColors, x + 4), width=1)
+        array.set(upFanLines, x + 5, fastFanLine)
+        linefill fastFill = x == 0 ? linefill.new(fastFanLine, baseUpLine, color.new(array.get(fanColors, x + 4), fanTransparency)) : linefill.new(fastFanLine, array.get(upFanLines, x + 4), color.new(array.get(fanColors, x + 4), fanTransparency))
+        array.set(upFanFills, x + 4, fastFill)
+
+        if showFanLabels
+            string fastLabel = x == 0 ? "2/1  63.4" : x == 1 ? "3/1  71.6" : x == 2 ? "4/1  76" : "8/1  82.9"
+            array.set(upFanLabels, x + 5, label.new(upLabelBar, line.get_price(fastFanLine, upLabelBar), fastLabel, textcolor=array.get(fanColors, x + 4), style=label.style_none, size=size.small))
+
+if not na(fanHighBar) and fanHighBar > 0 and fanHighBar < bar_index
+    for x = 0 to 8
+        line.delete(array.get(downFanLines, x))
+        label.delete(array.get(downFanLabels, x))
+    for x = 0 to 7
+        linefill.delete(array.get(downFanFills, x))
+
+    line baseDownLine = line.new(fanHighBar, fanHighPrice, fanHighBar + 1, fanHighPrice - fanUnit, extend=extend.right, color=array.get(fanColors, 8), width=2)
+    array.set(downFanLines, 0, baseDownLine)
+    int downLabelBar = fanHighBar + labelOffsetBars
+    float downBaseLabelPrice = line.get_price(baseDownLine, downLabelBar)
+
+    if showFanLabels
+        array.set(downFanLabels, 0, label.new(downLabelBar, downBaseLabelPrice, "1/1  45", textcolor=array.get(fanColors, 8), style=label.style_none, size=size.small))
+
+    for x = 0 to 3
+        float slowDownPrice = fanHighPrice - (fanHighPrice - line.get_price(baseDownLine, bar_index)) / array.get(fanDivisors, x)
+        line slowDownLine = line.new(fanHighBar, fanHighPrice, bar_index, slowDownPrice, extend=extend.right, color=array.get(fanColors, x + 4), width=1)
+        array.set(downFanLines, x + 1, slowDownLine)
+        array.set(downFanFills, x, linefill.new(slowDownLine, array.get(downFanLines, x), color.new(array.get(fanColors, x + 4), fanTransparency)))
+
+        if showFanLabels
+            string slowDownLabel = x == 0 ? "1/2  26.6" : x == 1 ? "1/3  18.4" : x == 2 ? "1/4  14" : "1/8  7.1"
+            array.set(downFanLabels, x + 1, label.new(downLabelBar, line.get_price(slowDownLine, downLabelBar), slowDownLabel, textcolor=array.get(fanColors, x + 4), style=label.style_none, size=size.small))
+
+        line fastDownLine = line.new(fanHighBar, fanHighPrice, fanHighBar + 1, fanHighPrice - fanUnit * array.get(fanDivisors, x), extend=extend.right, color=array.get(fanColors, x), width=1)
+        array.set(downFanLines, x + 5, fastDownLine)
+        linefill fastDownFill = x == 0 ? linefill.new(fastDownLine, baseDownLine, color.new(array.get(fanColors, x), fanTransparency)) : linefill.new(fastDownLine, array.get(downFanLines, x + 4), color.new(array.get(fanColors, x), fanTransparency))
+        array.set(downFanFills, x + 4, fastDownFill)
+
+        if showFanLabels
+            string fastDownLabel = x == 0 ? "2/1  63.4" : x == 1 ? "3/1  71.6" : x == 2 ? "4/1  76" : "8/1  82.9"
+            array.set(downFanLabels, x + 5, label.new(downLabelBar, line.get_price(fastDownLine, downLabelBar), fastDownLabel, textcolor=array.get(fanColors, x), style=label.style_none, size=size.small))
+
+if showAngleLabels and not na(anglePivotHigh) and not na(lastLowBar) and not na(lastLowValue)
+    float pivotHighAngle = angleFromAtr(lastLowValue, anglePivotHigh, lastLowBar, bar_index - anglePivotPeriod)
+    label.new(bar_index - anglePivotPeriod, anglePivotHigh, str.tostring(math.round(pivotHighAngle, 1)) + "  " + getPhase(pivotHighAngle), color=phaseColor(getPhase(pivotHighAngle), true), textcolor=color.black, style=label.style_label_down, size=size.small)
+
+if showAngleLabels and not na(anglePivotLow) and not na(lastHighBar) and not na(lastHighValue)
+    float pivotLowAngle = angleFromAtr(lastHighValue, anglePivotLow, lastHighBar, bar_index - anglePivotPeriod)
+    label.new(bar_index - anglePivotPeriod, anglePivotLow, str.tostring(math.round(pivotLowAngle, 1)) + "  " + getPhase(pivotLowAngle), color=phaseColor(getPhase(pivotLowAngle), false), textcolor=color.black, style=label.style_label_up, size=size.small)
+
+var label liveAngleLabel = na
+if barstate.islast and not na(currentAngle)
+    label.delete(liveAngleLabel)
+    string liveDirection = isUpSwing ? "BULL" : "BEAR"
+    color liveColor = phaseColor(currentPhase, isUpSwing)
+    liveAngleLabel := label.new(bar_index, high, liveDirection + "  " + str.tostring(math.round(currentAngle, 1)) + "  [" + currentPhase + "]", color=liveColor, textcolor=color.black, style=label.style_label_left, size=size.normal)
+
+bool bullishCandle = close > open
+bool bearishCandle = close < open
+bool longSignal = false
+bool shortSignal = false
+
+if entryMode == 1
+    bool phaseExpanding = (previousPhase == PHASE_ACCUM or previousPhase == PHASE_MODER) and (currentPhase == PHASE_EXPAN or currentPhase == PHASE_ACCEL)
+    longSignal := phaseExpanding and isUpSwing and ema8 > ema21 and bullishCandle
+    shortSignal := phaseExpanding and isDownSwing and ema8 < ema21 and bearishCandle
+else if entryMode == 2
+    bool phaseAllowed = currentPhase == PHASE_MODER or currentPhase == PHASE_EXPAN or currentPhase == PHASE_ACCEL
+    longSignal := phaseAllowed and isUpSwing and ema8 > ema21 and bullishCandle and not longSignal[1]
+    shortSignal := phaseAllowed and isDownSwing and ema8 < ema21 and bearishCandle and not shortSignal[1]
+else
+    bool angleAllowed = not na(currentAngle) and currentAngle >= weakAngleThreshold
+    longSignal := angleAllowed and isUpSwing and close > ema8 and bullishCandle and not longSignal[1]
+    shortSignal := angleAllowed and isDownSwing and close < ema8 and bearishCandle and not shortSignal[1]
+
+plotshape(longSignal, "LONG", shape.labelup, location.belowbar, color.new(#00e676, 0), size=size.large, text="L", textcolor=color.black)
+plotshape(shortSignal, "SHORT", shape.labeldown, location.abovebar, color.new(#ff1744, 0), size=size.large, text="S", textcolor=color.white)
+
+if longSignal
+    line.new(bar_index, close, bar_index + 8, close, color=color.new(#00e676, 50), width=1, style=line.style_dotted)
+if shortSignal
+    line.new(bar_index, close, bar_index + 8, close, color=color.new(#ff1744, 50), width=1, style=line.style_dotted)
+
+plot(showEma ? ema8 : na, "EMA 8", color.new(#ffd740, 15), 1)
+plot(showEma ? ema21 : na, "EMA 21", color.new(color.white, 35), 2)
+
+var table dashboard = table.new(position.top_right, 2, 12, bgcolor=color.new(color.black, 10), border_color=color.new(color.gray, 50), border_width=1, frame_color=color.gray, frame_width=1)
+
+if barstate.islast
+    color headerBg = color.new(color.navy, 20)
+    color rowBg = color.new(color.black, 30)
+    color smallRowBg = color.new(color.black, 55)
+    string swingDirectionText = isUpSwing ? "BULL UP" : isDownSwing ? "BEAR DOWN" : "-"
+    color swingDirectionColor = isUpSwing ? color.new(#69f0ae, 0) : color.new(#ff5252, 0)
+    string liveAngleText = not na(currentAngle) ? str.tostring(math.round(currentAngle, 1)) + " deg" : "-"
+    color currentPhaseColor = phaseColor(currentPhase, isUpSwing)
+    string bullishFanAngleText = not na(bullishFanAngle) ? str.tostring(math.round(bullishFanAngle, 1)) + " deg" : "-"
+    string bearishFanAngleText = not na(bearishFanAngle) ? str.tostring(math.round(bearishFanAngle, 1)) + " deg" : "-"
+    string bullishFanPhase = not na(bullishFanAngle) ? getPhase(bullishFanAngle) : "-"
+    string bearishFanPhase = not na(bearishFanAngle) ? getPhase(bearishFanAngle) : "-"
+    color bullishFanColor = not na(bullishFanAngle) ? phaseColor(getPhase(bullishFanAngle), true) : color.gray
+    color bearishFanColor = not na(bearishFanAngle) ? phaseColor(getPhase(bearishFanAngle), false) : color.gray
+    string modeText = entryMode == 1 ? "STRICT" : entryMode == 2 ? "MEDIUM" : "EASY"
+
+    table.cell(dashboard, 0, 0, "GANN FAN v15", text_color=color.white, bgcolor=headerBg, text_size=size.small)
+    table.cell(dashboard, 1, 0, "MODE: " + modeText, text_color=color.yellow, bgcolor=headerBg, text_size=size.small)
+    table.cell(dashboard, 0, 1, "Current Swing", text_color=color.silver, bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 1, 1, swingDirectionText, text_color=swingDirectionColor, bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 0, 2, "Live Angle", text_color=color.silver, bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 1, 2, liveAngleText, text_color=color.yellow, bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 0, 3, "Current Phase", text_color=color.silver, bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 1, 3, currentPhase, text_color=color.black, bgcolor=currentPhaseColor, text_size=size.small)
+    table.cell(dashboard, 0, 4, "Bullish Fan Degrees", text_color=color.new(#69f0ae, 0), bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 1, 4, bullishFanAngleText + " [" + bullishFanPhase + "]", text_color=color.black, bgcolor=bullishFanColor, text_size=size.small)
+    table.cell(dashboard, 0, 5, "Bearish Fan Degrees", text_color=color.new(#ff5252, 0), bgcolor=rowBg, text_size=size.small)
+    table.cell(dashboard, 1, 5, bearishFanAngleText + " [" + bearishFanPhase + "]", text_color=color.black, bgcolor=bearishFanColor, text_size=size.small)
+    table.cell(dashboard, 0, 6, "ACCUM <" + str.tostring(int(weakAngleThreshold)) + " deg", text_color=showAccum ? color.new(#546e7a, 0) : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 6, showAccum ? "ON" : "OFF", text_color=showAccum ? color.white : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 0, 7, "MODER " + str.tostring(int(weakAngleThreshold)) + "-" + str.tostring(int(strongAngleThreshold)) + " deg", text_color=showModer ? color.yellow : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 7, showModer ? "ON" : "OFF", text_color=showModer ? color.white : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 0, 8, "EXPAN " + str.tostring(int(strongAngleThreshold)) + "-" + str.tostring(int(extremeAngleThreshold)) + " deg", text_color=showExpan ? color.green : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 8, showExpan ? "ON" : "OFF", text_color=showExpan ? color.white : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 0, 9, "ACCEL >" + str.tostring(int(extremeAngleThreshold)) + " deg", text_color=showAccel ? color.red : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 9, showAccel ? "ON" : "OFF", text_color=showAccel ? color.white : color.gray, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 0, 10, "1/1=45  2/1=63  4/1=76", text_color=color.blue, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 10, "1/2=27  1/4=14  1/8=7", text_color=color.silver, bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 0, 11, "L=LONG  S=SHORT", text_color=color.new(#00e676, 0), bgcolor=smallRowBg, text_size=size.tiny)
+    table.cell(dashboard, 1, 11, "Lookback: " + str.tostring(fanLookbackBars), text_color=color.silver, bgcolor=smallRowBg, text_size=size.tiny)
+
+alertcondition(longSignal, "LONG", "Gann Fan v15: LONG")
+alertcondition(shortSignal, "SHORT", "Gann Fan v15: SHORT")
+
+isLong() =>
+    strategy.position_size > 0
+
+isShort() =>
+    strategy.position_size < 0
+
+isFlat() =>
+    strategy.position_size == 0
+
+barsSinceFirstEntry() =>
+    bar_index - strategy.opentrades.entry_bar_index(0)
+
+bool longConfirm = longSignal
+bool shortConfirm = shortSignal
+string entryReasonAlert = longSignal or shortSignal ? "Five" : "None"
+
+// Prevent immediate re-entry after a trade closes.
+bool tradeClosedOnThisBar = strategy.closedtrades > strategy.closedtrades[1]
+var int lastPositionBar = na
+int barsSinceLastPosition = na(lastPositionBar) ? 0 : bar_index - lastPositionBar
+bool canOpenNewPosition = na(lastPositionBar) or barsSinceLastPosition >= 2
+
+if not isFlat() or tradeClosedOnThisBar
+    lastPositionBar := bar_index
+
+bool isEntryBlocked = tradeClosedOnThisBar or not canOpenNewPosition
+
+if longConfirm and isFlat() and barstate.isconfirmed and not isEntryBlocked
+    strategy.entry("long", strategy.long, comment="Buy " + entryReasonAlert, alert_message="ok buy")
+    if not botActive
+        alert("- Long on -" + entryReasonAlert + syminfo.basecurrency + "-SL -" + str.tostring(stopLossPercent) + "-TP -" + str.tostring(takeProfitPercent), alert.freq_once_per_bar_close)
+    if botActive
+        alert("Long on4", alert.freq_once_per_bar_close)
+
+if shortConfirm and isFlat() and barstate.isconfirmed and not isEntryBlocked
+    strategy.entry("short", strategy.short, comment="Short " + entryReasonAlert, alert_message="ok sell")
+    if not botActive
+        alert("- Short on -" + entryReasonAlert + syminfo.basecurrency + "-SL -" + str.tostring(stopLossPercent) + "-TP -" + str.tostring(takeProfitPercent), alert.freq_once_per_bar_close)
+    if botActive
+        alert("Short on4", alert.freq_once_per_bar_close)
+
+bgcolor(isFlat() and longConfirm and entryBackgroundEnabled ? color.new(#ffffff, 31) : na)
+bgcolor(isFlat() and shortConfirm and entryBackgroundEnabled ? color.new(#000000, 23) : na)
+
+float averageEntryPrice = strategy.position_avg_price
+bool closedLong = strategy.position_size[1] > 0 and strategy.position_size == 0
+bool closedShort = strategy.position_size[1] < 0 and strategy.position_size == 0
+
+bgcolor(showStrategyBackground and not isFlat() and barsSinceFirstEntry() > 0 and isLong() and entryBackgroundEnabled ? color.new(#fff82b, 72) : na)
+bgcolor(showStrategyBackground and not isFlat() and barsSinceFirstEntry() > 0 and isShort() and entryBackgroundEnabled ? color.new(#ff2877, 73) : na)
+bgcolor(closedLong and entryBackgroundEnabled ? color.new(#5fff2a, 58) : na)
+bgcolor(closedShort and entryBackgroundEnabled ? color.new(#ff2a2a, 27) : na)
+
+// Single stop loss and take profit block.
+if strategy.position_size != 0
+    bool longPosition = strategy.position_size > 0
+    averageEntryPrice := strategy.position_avg_price
+
+    float stopLossPrice = longPosition ? averageEntryPrice * (1 - stopLossPercent / 100) : averageEntryPrice * (1 + stopLossPercent / 100)
+    float takeProfitPrice = longPosition ? averageEntryPrice * (1 + takeProfitPercent / 100) : averageEntryPrice * (1 - takeProfitPercent / 100)
+
+    if trailingStopEnabled
+        strategy.exit(longPosition ? "exit_buy" : "exit_sell", longPosition ? "long" : "short", stop=stopLossPrice, trail_price=takeProfitPrice, trail_offset=averageEntryPrice * (trailingStopPercent / 100) / syminfo.mintick, comment=longPosition ? "exit_buy" : "exit_sell", alert_message=longPosition ? "exit_buy" : "exit_sell")
+    else
+        strategy.exit(longPosition ? "exit_buy" : "exit_sell", longPosition ? "long" : "short", stop=stopLossPrice, limit=takeProfitPrice, comment=longPosition ? "exit_buy" : "exit_sell", alert_message=longPosition ? "exit_buy" : "exit_sell")
+else
+    averageEntryPrice := 0.0
+
+bool protectTrade = protectProfitEnabled and not isFlat() and strategy.openprofit >= protectProfitValue and barsSinceFirstEntry() > protectAfterBars
+
+if protectTrade and isShort()
+    strategy.close("short", qty_percent=100, comment="TP Short Stop")
+    alert("TP Short Stop4", alert.freq_once_per_bar_close)
+
+if protectTrade and isLong()
+    strategy.close("long", qty_percent=100, comment="TP Long Stop")
+    alert("TP Long Stop4", alert.freq_once_per_bar_close)
+
+// Draw current take profit and stop loss levels.
+var float takeProfitLinePrice = na
+var float stopLossLinePrice = na
+int lineExtensionBars = 25
+var line takeProfitLine = na
+var line stopLossLine = na
+var label takeProfitLabel = na
+var label stopLossLabel = na
+
+if isLong()
+    takeProfitLinePrice := averageEntryPrice + averageEntryPrice * takeProfitPercent / 100
+    stopLossLinePrice := averageEntryPrice - averageEntryPrice * stopLossPercent / 100
+else if isShort()
+    takeProfitLinePrice := averageEntryPrice - averageEntryPrice * takeProfitPercent / 100
+    stopLossLinePrice := averageEntryPrice + averageEntryPrice * stopLossPercent / 100
+else
+    takeProfitLinePrice := na
+    stopLossLinePrice := na
+
+if bar_index != bar_index[1]
+    line.delete(takeProfitLine)
+    line.delete(stopLossLine)
+    label.delete(takeProfitLabel)
+    label.delete(stopLossLabel)
+
+if not na(takeProfitLinePrice)
+    takeProfitLine := line.new(bar_index, takeProfitLinePrice, bar_index + lineExtensionBars, takeProfitLinePrice, color=color.green, width=2)
+    takeProfitLabel := label.new(bar_index + lineExtensionBars, takeProfitLinePrice, text="TP", style=label.style_label_up, color=color.green, size=size.small)
+
+if not na(stopLossLinePrice)
+    stopLossLine := line.new(bar_index, stopLossLinePrice, bar_index + lineExtensionBars, stopLossLinePrice, color=color.red, width=2)
+    stopLossLabel := label.new(bar_index + lineExtensionBars, stopLossLinePrice, text="SL", style=label.style_label_down, color=color.red, size=size.small)

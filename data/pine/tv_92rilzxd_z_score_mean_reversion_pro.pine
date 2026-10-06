@@ -1,0 +1,241 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/92rilzXd-Z-Score-Mean-Reversion-Pro/
+// id: PUB;02d0cbc67f464106b9939866e7e837c7  kind: strategy
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Z-Score Mean Reversion Strategy
+
+//@version=6
+strategy("Z-Score Mean Reversion Pro", shorttitle="ZS MeanRev Pro", overlay=false, max_lines_count=500, max_boxes_count=100, max_labels_count=500, initial_capital=10000, currency=currency.USD, commission_type=strategy.commission.percent, commission_value=0.04, default_qty_type=strategy.percent_of_equity, default_qty_value=20, pyramiding=1)
+
+// ==========================================================================
+// INPUTS
+// ==========================================================================
+
+// --- Z-Score Parameters ---
+grp_zs = "Z-Score Settings"
+rolling_window = input.int(defval=80, title="Rolling Window", minval=10, maxval=500, step=1, group=grp_zs)
+z_thresh = input.float(defval=2.5, title="Z-Score Threshold", minval=1.0, maxval=4.0, step=0.1, group=grp_zs, tooltip="Enter long below -threshold, short above +threshold")
+z_exit_thresh = input.float(defval=0.5, title="Z-Score Exit Threshold", minval=0.0, maxval=2.0, step=0.1, group=grp_zs, tooltip="Exit long when z-score rises above this, exit short when drops below -this")
+
+// --- RSI Confirmation ---
+grp_rsi = "RSI Confirmation"
+rsi_length = input.int(defval=14, title="RSI Length", minval=2, maxval=50, group=grp_rsi)
+rsi_ob = input.int(defval=70, title="RSI Overbought", minval=50, maxval=95, group=grp_rsi)
+rsi_os = input.int(defval=30, title="RSI Oversold", minval=5, maxval=50, group=grp_rsi)
+use_rsi_filter = input.bool(defval=true, title="Use RSI Confirmation", group=grp_rsi, tooltip="Require RSI confirmation before entry")
+
+// --- Bollinger Band Width Filter ---
+grp_bb = "Volatility Filter"
+bb_length = input.int(defval=20, title="BB Length", minval=5, maxval=100, group=grp_bb)
+bb_mult = input.float(defval=2.0, title="BB Multiplier", minval=1.0, maxval=4.0, step=0.1, group=grp_bb)
+bb_width_min = input.float(defval=0.02, title="Min BB Width %", minval=0.005, maxval=0.1, step=0.005, group=grp_bb, tooltip="Skip entries when BB width is below this - avoids low volatility chop")
+use_bb_filter = input.bool(defval=true, title="Use BB Width Filter", group=grp_bb)
+
+// --- EMA Trend Filter ---
+grp_ema = "Trend Filter"
+ema_length = input.int(defval=200, title="EMA Trend Length", minval=50, maxval=500, group=grp_ema)
+use_ema_filter = input.bool(defval=true, title="Use EMA Trend Filter", group=grp_ema, tooltip="Long only above EMA, Short only below EMA")
+
+// --- ATR Risk Management ---
+grp_atr = "Risk Management"
+atr_length = input.int(defval=14, title="ATR Length", minval=5, maxval=50, group=grp_atr)
+sl_atr_mult = input.float(defval=2.0, title="Stop Loss ATR Multiplier", minval=0.5, maxval=5.0, step=0.1, group=grp_atr)
+tp_atr_mult = input.float(defval=3.0, title="Take Profit ATR Multiplier", minval=0.5, maxval=10.0, step=0.1, group=grp_atr)
+use_atr_exit = input.bool(defval=true, title="Use ATR Stop/TP", group=grp_atr, tooltip="If off, exit on z-score mean reversion only")
+
+// --- Signal Cooldown ---
+grp_cd = "Cooldown"
+cool_down = input.int(defval=5, title="Signal Cooldown Period", minval=1, maxval=20, group=grp_cd, tooltip="Bars to wait between signals")
+
+// --- Backtest Control ---
+grp_bt = "Backtest"
+enable_backtest = input.bool(defval=true, title="Enable Backtest", group=grp_bt)
+
+// ==========================================================================
+// CORE CALCULATIONS
+// ==========================================================================
+
+// Z-Score calculation (from KB TradeDots pattern)
+rolling_stdev = ta.stdev(close, rolling_window, false)
+rolling_mean = ta.sma(close, rolling_window)
+z_score = rolling_stdev > 0 ? (close - rolling_mean) / rolling_stdev : 0.0
+
+// RSI calculation
+rsi_val = ta.rsi(close, rsi_length)
+
+// Bollinger Band Width calculation
+bb_basis = ta.sma(close, bb_length)
+bb_dev = bb_mult * ta.stdev(close, bb_length)
+bb_upper = bb_basis + bb_dev
+bb_lower = bb_basis - bb_dev
+bb_width = bb_basis > 0 ? (bb_upper - bb_lower) / bb_basis : 0.0
+
+// EMA trend filter
+ema_trend = ta.ema(close, ema_length)
+
+// ATR calculation
+atr_val = ta.atr(atr_length)
+
+// ==========================================================================
+// SIGNAL CONDITIONS
+// ==========================================================================
+
+// Z-Score extreme conditions
+z_oversold = z_score < -z_thresh
+z_overbought = z_score > z_thresh
+
+// Z-Score mean reversion exit conditions
+z_long_exit = z_score > z_exit_thresh
+z_short_exit = z_score < -z_exit_thresh
+
+// RSI confirmation filters
+rsi_long_ok = use_rsi_filter ? rsi_val < rsi_os : true
+rsi_short_ok = use_rsi_filter ? rsi_val > rsi_ob : true
+
+// BB Width volatility filter (avoid choppy low-vol environments)
+bb_wide_enough = use_bb_filter ? bb_width > bb_width_min : true
+
+// EMA trend filter (long only above EMA, short only below EMA)
+ema_long_ok = use_ema_filter ? close > ema_trend : true
+ema_short_ok = use_ema_filter ? close < ema_trend : true
+
+// Combined entry signals
+long_signal = z_oversold and rsi_long_ok and bb_wide_enough and ema_long_ok
+short_signal = z_overbought and rsi_short_ok and bb_wide_enough and ema_short_ok
+
+// ==========================================================================
+// COOLDOWN LOGIC (from KB TradeDots pattern)
+// ==========================================================================
+
+var int buy_cool_down_counter = cool_down
+var int sell_cool_down_counter = cool_down
+
+// Increment cooldowns each bar
+buy_cool_down_counter := buy_cool_down_counter + 1
+sell_cool_down_counter := sell_cool_down_counter + 1
+
+// ==========================================================================
+// STRATEGY EXECUTION - LONG
+// ==========================================================================
+
+if long_signal and enable_backtest
+    if buy_cool_down_counter >= cool_down
+        // Close any existing short position before going long
+        if strategy.position_size < 0
+            strategy.close("Short", comment="Close Short for Long")
+        // Enter long
+        strategy.entry("Long", strategy.long, comment="Z-Score Long Entry")
+        // Label on chart
+        label.new(bar_index, z_score, text="Buy", style=label.style_label_up, color=#9cff87, textcolor=color.white, size=size.small)
+        // Reset cooldowns
+        buy_cool_down_counter := 0
+        sell_cool_down_counter := cool_down
+
+// ==========================================================================
+// STRATEGY EXECUTION - SHORT
+// ==========================================================================
+
+if short_signal and enable_backtest
+    if sell_cool_down_counter >= cool_down
+        // Close any existing long position before going short
+        if strategy.position_size > 0
+            strategy.close("Long", comment="Close Long for Short")
+        // Enter short
+        strategy.entry("Short", strategy.short, comment="Z-Score Short Entry")
+        // Label on chart
+        label.new(bar_index, z_score, text="Sell", style=label.style_label_down, color=#f9396a, textcolor=color.white, size=size.small)
+        // Reset cooldowns
+        sell_cool_down_counter := 0
+        buy_cool_down_counter := cool_down
+
+// ==========================================================================
+// ATR-BASED STOP LOSS / TAKE PROFIT (from KB risk management pattern)
+// ==========================================================================
+
+var float sl_price = na
+var float tp_price = na
+
+// Calculate SL/TP on entry bar
+if strategy.position_size != 0 and strategy.position_size[1] == 0
+    if strategy.position_size > 0
+        sl_price := close - atr_val * sl_atr_mult
+        tp_price := close + atr_val * tp_atr_mult
+    else if strategy.position_size < 0
+        sl_price := close + atr_val * sl_atr_mult
+        tp_price := close - atr_val * tp_atr_mult
+
+// Apply ATR-based exits
+if use_atr_exit and strategy.position_size != 0
+    if strategy.position_size > 0
+        strategy.exit("ATR Exit Long", from_entry="Long", stop=sl_price, limit=tp_price, comment_loss="SL Hit", comment_profit="TP Hit")
+    else if strategy.position_size < 0
+        strategy.exit("ATR Exit Short", from_entry="Short", stop=sl_price, limit=tp_price, comment_loss="SL Hit", comment_profit="TP Hit")
+
+// ==========================================================================
+// Z-SCORE MEAN REVERSION EXITS (exit when z-score reverts to mean)
+// ==========================================================================
+
+if enable_backtest
+    // Exit long when z-score rises above exit threshold (mean reversion complete)
+    if strategy.position_size > 0 and z_long_exit and not use_atr_exit
+        strategy.close("Long", comment="Z-Score Mean Reversion Exit")
+    // Exit short when z-score drops below exit threshold (mean reversion complete)
+    if strategy.position_size < 0 and z_short_exit and not use_atr_exit
+        strategy.close("Short", comment="Z-Score Mean Reversion Exit")
+    // Also close on z-score mean reversion even with ATR exits (as extra safety)
+    if strategy.position_size > 0 and z_score > 0 and not use_atr_exit
+        strategy.close("Long", comment="Z-Score Cross Zero Exit")
+    if strategy.position_size < 0 and z_score < 0 and not use_atr_exit
+        strategy.close("Short", comment="Z-Score Cross Zero Exit")
+
+// ==========================================================================
+// VISUALIZATION - Z-SCORE PANEL (from KB TradeDots pattern)
+// ==========================================================================
+
+// Z-Score plot with gradient coloring
+line_opacity = z_score > 0 and z_score > z_score[1] or z_score < 0 and z_score < z_score[1] ? 20 : 60
+plot(z_score, "Z-Score", z_score > 0 ? color.new(#9cff87, line_opacity) : color.new(#f9396a, line_opacity), linewidth=2)
+
+// Threshold lines
+plot(z_thresh, "Sell Threshold", color=color.from_gradient(z_score, 0, z_thresh, color.new(color.gray, 70), color.new(#f9396a, 0)), linewidth=2)
+plot(-z_thresh, "Buy Threshold", color=color.from_gradient(z_score, -z_thresh, 0, color.new(#9cff87, 0), color.new(color.gray, 70)), linewidth=2)
+plot(z_exit_thresh, "Long Exit Level", color=color.new(color.orange, 50), linewidth=1, style=plot.style_stepline)
+plot(-z_exit_thresh, "Short Exit Level", color=color.new(color.orange, 50), linewidth=1, style=plot.style_stepline)
+hline(0, title="Z-Score Zero Level", color=color.new(color.gray, 50), linestyle=hline.style_dotted)
+
+// RSI sub-indicator on panel
+plot(rsi_val / 14.0 - 3.6, "RSI (rescaled)", color=color.new(#5BC0BE, 60), linewidth=1, display=display.none)
+
+// BB Width sub-indicator
+plot(bb_width * 20 - 3, "BB Width (rescaled)", color=color.new(color.yellow, 60), linewidth=1, display=display.none)
+
+// ==========================================================================
+// BACKGROUND HIGHLIGHTS
+// ==========================================================================
+
+// Highlight extreme z-score zones
+bgcolor(z_score > z_thresh ? color.new(#f9396a, 92) : na, title="Overbought Zone")
+bgcolor(z_score < -z_thresh ? color.new(#9cff87, 92) : na, title="Oversold Zone")
+
+// ==========================================================================
+// INFO TABLE - Strategy Dashboard
+// ==========================================================================
+
+var table dashboard = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 80), border_width=1, border_color=color.new(color.gray, 70))
+
+if barstate.islastconfirmedhistory
+    table.cell(dashboard, 0, 0, "Z-Score", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 0, str.tostring(z_score, "#.##"), text_color=z_score > 0 ? #9cff87 : #f9396a, text_size=size.small)
+    table.cell(dashboard, 0, 1, "RSI", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 1, str.tostring(rsi_val, "#.#"), text_color=rsi_val > rsi_ob ? #f9396a : rsi_val < rsi_os ? #9cff87 : color.white, text_size=size.small)
+    table.cell(dashboard, 0, 2, "BB Width", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 2, str.tostring(bb_width * 100, "#.##") + "%", text_color=bb_width > bb_width_min ? #9cff87 : #f9396a, text_size=size.small)
+    table.cell(dashboard, 0, 3, "ATR", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 3, str.tostring(atr_val, "#.##"), text_color=color.orange, text_size=size.small)
+    table.cell(dashboard, 0, 4, "Position", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 4, strategy.position_size > 0 ? "LONG" : strategy.position_size < 0 ? "SHORT" : "FLAT", text_color=strategy.position_size > 0 ? #9cff87 : strategy.position_size < 0 ? #f9396a : color.gray, text_size=size.small)
+    table.cell(dashboard, 0, 5, "SL Price", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 5, strategy.position_size != 0 ? str.tostring(sl_price, "#.##") : "---", text_color=color.red, text_size=size.small)
+    table.cell(dashboard, 0, 6, "TP Price", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 6, strategy.position_size != 0 ? str.tostring(tp_price, "#.##") : "---", text_color=color.green, text_size=size.small)
+

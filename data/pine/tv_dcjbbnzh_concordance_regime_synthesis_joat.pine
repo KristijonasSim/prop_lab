@@ -1,0 +1,325 @@
+// prop_lab: fetched from TradingView 2026-09-30
+// url: https://www.tradingview.com/script/DcjBbnzh-Concordance-Regime-Synthesis-JOAT/
+// id: PUB;f26356a84c814bf4814cef2c94a04b7a  kind: strategy
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © officialjackofalltrades
+//@version=6
+strategy("Concordance Regime Synthesis [JOAT]", overlay = true, initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 10, pyramiding = 0, commission_type = strategy.commission.percent, commission_value = 0.06, slippage = 1, process_orders_on_close = true, calc_on_every_tick = false)
+
+//------------------------------------------------------------------------------
+// Concordance Regime Synthesis
+// Combines regime state, pressure, participation, structure, HTF bias,
+// session gating, and ATR risk management into a non-repainting strategy.
+//------------------------------------------------------------------------------
+
+string groupRegime = "Regime"
+string groupPressure = "Pressure"
+string groupStructure = "Structure"
+string groupSession = "Session"
+string groupRisk = "Risk"
+string groupDisplay = "Display"
+string groupAlerts = "Alerts"
+
+int regimeSwingLength = input.int(10, "Regime Swing Length", minval = 2, group = groupRegime)
+float regimeBandMult = input.float(2.0, "Regime Band Multiplier", minval = 0.5, step = 0.1, group = groupRegime)
+int regimeCenterSmooth = input.int(10, "Regime Center Smooth", minval = 2, group = groupRegime)
+int regimeBandSmooth = input.int(20, "Regime Band Smooth", minval = 2, group = groupRegime)
+int regimeHoldBars = input.int(2, "Regime Hold Bars", minval = 0, maxval = 10, group = groupRegime)
+
+string maType = input.string("EMA", "Pressure MA Type", options = ["SMA", "EMA", "RMA", "WMA", "VWMA"], group = groupPressure)
+int maLength = input.int(55, "Pressure MA Length", minval = 2, group = groupPressure)
+int pressureNormalize = input.int(80, "Pressure Normalize Length", minval = 20, group = groupPressure)
+int pressureSignalLength = input.int(8, "Pressure Signal Length", minval = 1, group = groupPressure)
+int deltaWaveLength = input.int(20, "Delta Wave Length", minval = 5, group = groupPressure)
+int deltaSmoothLength = input.int(5, "Delta Wave Smooth", minval = 1, group = groupPressure)
+int latticeLookback = input.int(120, "Participation Lookback", minval = 20, maxval = 300, group = groupPressure)
+int latticeRows = input.int(40, "Participation Rows", minval = 10, maxval = 80, group = groupPressure)
+int confluenceThreshold = input.int(6, "Confluence Threshold", minval = 3, maxval = 10, group = groupPressure)
+
+float structureImpulse = input.float(1.0, "Structure Impulse ATR", minval = 0.2, step = 0.1, group = groupStructure)
+int structureLookback = input.int(20, "Structure Validity Bars", minval = 2, maxval = 100, group = groupStructure)
+string htfInput = input.timeframe("240", "HTF Bias Timeframe", group = groupStructure)
+bool useHtfBias = input.bool(true, "Use HTF Bias Filter", group = groupStructure)
+
+bool useSessionFilter = input.bool(false, "Use Session Filter", group = groupSession)
+string tradeSession = input.session("0930-1600", "Trade Session", group = groupSession)
+int cooldownBars = input.int(3, "Cooldown Bars After Entry", minval = 0, maxval = 50, group = groupSession)
+
+float stopAtrMult = input.float(1.8, "Stop ATR Multiplier", minval = 0.5, step = 0.1, group = groupRisk)
+float targetAtrMult = input.float(3.2, "Target ATR Multiplier", minval = 0.5, step = 0.1, group = groupRisk)
+float trailAtrMult = input.float(1.2, "Trail ATR Multiplier", minval = 0.5, step = 0.1, group = groupRisk)
+bool useTrailing = input.bool(true, "Use Trailing Stop", group = groupRisk)
+
+bool showDashboard = input.bool(true, "Show Dashboard", group = groupDisplay)
+bool recolorCandles = input.bool(true, "Recolor Candles", group = groupDisplay)
+bool showBandCloud = input.bool(true, "Show Band Cloud", group = groupDisplay)
+bool showScoreHeat = input.bool(true, "Show Score Heat", group = groupDisplay)
+string dashSize = input.string("Small", "Dashboard Text Size", options = ["Tiny", "Small", "Normal"], group = groupDisplay)
+
+bool enableAlerts = input.bool(true, "Enable Alerts", group = groupAlerts)
+
+f_ma(float source, int length, string kind) =>
+    switch kind
+        "SMA" => ta.sma(source, length)
+        "RMA" => ta.rma(source, length)
+        "WMA" => ta.wma(source, length)
+        "VWMA" => ta.vwma(source, length)
+        => ta.ema(source, length)
+
+f_size(string kind) =>
+    switch kind
+        "Tiny" => size.tiny
+        "Normal" => size.normal
+        => size.small
+
+// Regime engine
+float ph = ta.pivothigh(high, regimeSwingLength, regimeSwingLength)
+float pl = ta.pivotlow(low, regimeSwingLength, regimeSwingLength)
+var float lastPivotHigh = na
+var float lastPivotLow = na
+if not na(ph)
+    lastPivotHigh := high[regimeSwingLength]
+if not na(pl)
+    lastPivotLow := low[regimeSwingLength]
+
+float atrBase = ta.atr(55)
+float regimeCenter = ta.sma(math.avg(nz(lastPivotHigh, high), nz(lastPivotLow, low)), regimeCenterSmooth)
+float regimeUpper = ta.sma(regimeCenter + atrBase * regimeBandMult, regimeBandSmooth)
+float regimeLower = ta.sma(regimeCenter - atrBase * regimeBandMult, regimeBandSmooth)
+
+var int regimeState = 0
+var int pendingState = 0
+var int pendingSince = na
+if ta.crossover(close, regimeUpper)
+    pendingState := 1
+    pendingSince := bar_index
+if ta.crossunder(close, regimeLower)
+    pendingState := -1
+    pendingSince := bar_index
+bool pendingReady = pendingState != 0 and bar_index - nz(pendingSince, bar_index) >= regimeHoldBars and barstate.isconfirmed
+if pendingReady
+    regimeState := pendingState
+    pendingState := 0
+    pendingSince := na
+if regimeState == 0 and barstate.isconfirmed
+    regimeState := close >= regimeCenter ? 1 : -1
+
+bool bullRegime = regimeState == 1
+bool bearRegime = regimeState == -1
+bool regimeFlipBull = bullRegime and nz(regimeState[1], 0) != 1
+bool regimeFlipBear = bearRegime and nz(regimeState[1], 0) != -1
+int regimeAge = nz(ta.barssince(regimeFlipBull or regimeFlipBear), 0)
+float regimeNormalized = (close - regimeCenter) / math.max(atrBase, syminfo.mintick)
+float regimeStrength = math.abs(regimeNormalized)
+
+// Pressure engine
+float refMa = f_ma(close, maLength, maType)
+float rawDistance = close - refMa
+float maxDistance = math.max(ta.highest(math.abs(rawDistance), pressureNormalize), syminfo.mintick)
+float pressureOsc = rawDistance / maxDistance * 100.0
+float pressureSignal = ta.ema(pressureOsc, pressureSignalLength)
+
+// Participation axis
+float rangeHigh = ta.highest(high, latticeLookback)
+float rangeLow = ta.lowest(low, latticeLookback)
+float step = math.max((rangeHigh - rangeLow) / latticeRows, syminfo.mintick)
+array<float> lattice = array.new_float(latticeRows, 0.0)
+for i = 0 to latticeRows - 1
+    array.set(lattice, i, 0.0)
+for i = 0 to latticeLookback - 1
+    float samplePrice = close[i]
+    if not na(samplePrice)
+        int idx = int(math.floor((samplePrice - rangeLow) / step))
+        idx := math.min(math.max(idx, 0), latticeRows - 1)
+        array.set(lattice, idx, array.get(lattice, idx) + volume[i])
+float maxVolume = 0.0
+int pocIndex = 0
+for i = 0 to latticeRows - 1
+    float binVol = array.get(lattice, i)
+    if binVol > maxVolume
+        maxVolume := binVol
+        pocIndex := i
+float coreAxis = rangeLow + step * (pocIndex + 0.5)
+float deviationAxis = (close - coreAxis) / math.max(atrBase, syminfo.mintick)
+
+// Delta wave
+float buyVolume = close > open ? volume : 0.0
+float sellVolume = close < open ? volume : 0.0
+float smoothBuy = ta.ema(buyVolume, deltaWaveLength)
+float smoothSell = ta.ema(sellVolume, deltaWaveLength)
+float smoothTotal = ta.ema(math.max(volume, 1.0), deltaWaveLength)
+float deltaWave = ta.ema((smoothBuy - smoothSell) / smoothTotal * 100.0, deltaSmoothLength)
+float deltaSlope = deltaWave - nz(deltaWave[1])
+
+// Structure engine
+bool baseBear = close[2] < open[2]
+bool baseBull = close[2] > open[2]
+float impulseBody = math.abs(close[1] - open[1])
+float impulseAtr = ta.atr(14)[1] * structureImpulse
+bool demandImpulse = barstate.isconfirmed and baseBear and close[1] > open[1] and impulseBody >= impulseAtr
+bool supplyImpulse = barstate.isconfirmed and baseBull and close[1] < open[1] and impulseBody >= impulseAtr
+bool chartBullGap = barstate.isconfirmed and low > high[2] and close[1] > high[2]
+bool chartBearGap = barstate.isconfirmed and high < low[2] and close[1] < low[2]
+int bullStructureAge = nz(ta.barssince(demandImpulse or chartBullGap), 100000)
+int bearStructureAge = nz(ta.barssince(supplyImpulse or chartBearGap), 100000)
+bool recentBullStructure = bullStructureAge <= structureLookback
+bool recentBearStructure = bearStructureAge <= structureLookback
+
+// Higher timeframe bias
+bool htfValid = timeframe.in_seconds(htfInput) >= timeframe.in_seconds(timeframe.period)
+float htfFast = request.security(syminfo.tickerid, htfInput, ta.ema(close, 21)[1], lookahead = barmerge.lookahead_on)
+float htfSlow = request.security(syminfo.tickerid, htfInput, ta.ema(close, 55)[1], lookahead = barmerge.lookahead_on)
+float htfClose = request.security(syminfo.tickerid, htfInput, close[1], lookahead = barmerge.lookahead_on)
+bool htfBullBias = htfValid and htfFast > htfSlow and htfClose > htfSlow
+bool htfBearBias = htfValid and htfFast < htfSlow and htfClose < htfSlow
+
+// Session and cooldown
+bool sessionOk = not useSessionFilter or not na(time(timeframe.period, tradeSession))
+var int lastEntryBar = na
+bool cooldownOk = na(lastEntryBar) or bar_index - lastEntryBar >= cooldownBars
+
+// Shared payload helper for alert() calls
+f_payload(string side, string reason, int score) =>
+    '{"ticker":"' + syminfo.ticker + '","tf":"' + timeframe.period + '","side":"' + side + '","reason":"' + reason + '","score":' + str.tostring(score) + ',"regime":"' + (bullRegime ? "bull" : "bear") + '","pressure":' + str.tostring(pressureSignal, "#.0") + ',"delta":' + str.tostring(deltaWave, "#.0") + ',"axis":' + str.tostring(deviationAxis, "#.##") + '}'
+
+// Confluence scoring
+int longScore = 0
+longScore += bullRegime ? 2 : 0
+longScore += regimeNormalized >= 0 ? 1 : 0
+longScore += regimeStrength >= 0.50 ? 1 : 0
+longScore += pressureSignal > 0 ? 1 : 0
+longScore += deltaWave > 0 ? 1 : 0
+longScore += deltaSlope >= 0 ? 1 : 0
+longScore += recentBullStructure ? 1 : 0
+longScore += close > coreAxis ? 1 : 0
+longScore += deviationAxis > 0 ? 1 : 0
+longScore += (not useHtfBias or not htfValid or htfBullBias) ? 1 : 0
+
+int shortScore = 0
+shortScore += bearRegime ? 2 : 0
+shortScore += regimeNormalized <= 0 ? 1 : 0
+shortScore += regimeStrength >= 0.50 ? 1 : 0
+shortScore += pressureSignal < 0 ? 1 : 0
+shortScore += deltaWave < 0 ? 1 : 0
+shortScore += deltaSlope <= 0 ? 1 : 0
+shortScore += recentBearStructure ? 1 : 0
+shortScore += close < coreAxis ? 1 : 0
+shortScore += deviationAxis < 0 ? 1 : 0
+shortScore += (not useHtfBias or not htfValid or htfBearBias) ? 1 : 0
+
+int scoreSpread = longScore - shortScore
+bool longSetup = barstate.isconfirmed and sessionOk and cooldownOk and longScore >= confluenceThreshold and scoreSpread >= 2 and strategy.position_size <= 0
+bool shortSetup = barstate.isconfirmed and sessionOk and cooldownOk and shortScore >= confluenceThreshold and scoreSpread <= -2 and strategy.position_size >= 0
+
+// Position state
+var float longStop = na
+var float longTarget = na
+var float shortStop = na
+var float shortTarget = na
+
+if strategy.position_size == 0 and nz(strategy.position_size[1]) != 0
+    longStop := na
+    longTarget := na
+    shortStop := na
+    shortTarget := na
+
+if longSetup
+    longStop := math.min(close - atrBase * stopAtrMult, regimeCenter - atrBase * 0.25)
+    longTarget := close + atrBase * targetAtrMult
+    shortStop := na
+    shortTarget := na
+    lastEntryBar := bar_index
+    strategy.close("Short", comment = "Short Exit")
+    strategy.entry("Long", strategy.long, comment = "Long")
+    if enableAlerts
+        alert(f_payload("long", "confluence", longScore), alert.freq_once_per_bar_close)
+
+if shortSetup
+    shortStop := math.max(close + atrBase * stopAtrMult, regimeCenter + atrBase * 0.25)
+    shortTarget := close - atrBase * targetAtrMult
+    longStop := na
+    longTarget := na
+    lastEntryBar := bar_index
+    strategy.close("Long", comment = "Long Exit")
+    strategy.entry("Short", strategy.short, comment = "Short")
+    if enableAlerts
+        alert(f_payload("short", "confluence", shortScore), alert.freq_once_per_bar_close)
+
+if strategy.position_size > 0
+    longStop := math.max(nz(longStop, close - atrBase * stopAtrMult), useTrailing ? close - atrBase * trailAtrMult : nz(longStop, close - atrBase * stopAtrMult))
+    strategy.exit("Long Risk", "Long", stop = longStop, limit = longTarget)
+    bool longRiskExit = bearRegime or scoreSpread <= 0 or pressureSignal < 0 or close < regimeCenter
+    if longRiskExit
+        strategy.close("Long", comment = "Regime Exit")
+        if enableAlerts
+            alert(f_payload("flat", "long-exit", longScore), alert.freq_once_per_bar_close)
+
+if strategy.position_size < 0
+    shortStop := math.min(nz(shortStop, close + atrBase * stopAtrMult), useTrailing ? close + atrBase * trailAtrMult : nz(shortStop, close + atrBase * stopAtrMult))
+    strategy.exit("Short Risk", "Short", stop = shortStop, limit = shortTarget)
+    bool shortRiskExit = bullRegime or scoreSpread >= 0 or pressureSignal > 0 or close > regimeCenter
+    if shortRiskExit
+        strategy.close("Short", comment = "Regime Exit")
+        if enableAlerts
+            alert(f_payload("flat", "short-exit", shortScore), alert.freq_once_per_bar_close)
+
+// Visuals
+color regimeColor = bullRegime ? color.rgb(43, 203, 164) : color.rgb(232, 96, 132)
+color bandColor = bullRegime ? color.new(color.rgb(43, 203, 164), 0) : color.new(color.rgb(232, 96, 132), 0)
+plotCenter = plot(regimeCenter, "Regime Center", color = color.new(color.rgb(126, 138, 165), 0), linewidth = 2)
+plotUpper = plot(regimeUpper, "Regime Upper", color = bandColor, linewidth = 1)
+plotLower = plot(regimeLower, "Regime Lower", color = bandColor, linewidth = 1)
+fill(plotUpper, plotLower, color = showBandCloud ? color.new(regimeColor, 90) : na, title = "Regime Cloud")
+plot(bullRegime ? regimeLower : na, "Bull Floor", color = color.new(color.rgb(43, 203, 164), 0), style = plot.style_linebr)
+plot(bearRegime ? regimeUpper : na, "Bear Ceiling", color = color.new(color.rgb(232, 96, 132), 0), style = plot.style_linebr)
+plot(coreAxis, "Participation Axis", color = color.new(color.rgb(255, 185, 58), 0), linewidth = 2)
+plot(refMa, "Pressure MA", color = color.new(chart.fg_color, 25), linewidth = 2)
+plot(strategy.position_size > 0 ? longStop : na, "Long Stop", color = color.new(color.red, 0), style = plot.style_linebr)
+plot(strategy.position_size > 0 ? longTarget : na, "Long Target", color = color.new(color.green, 0), style = plot.style_linebr)
+plot(strategy.position_size < 0 ? shortStop : na, "Short Stop", color = color.new(color.red, 0), style = plot.style_linebr)
+plot(strategy.position_size < 0 ? shortTarget : na, "Short Target", color = color.new(color.green, 0), style = plot.style_linebr)
+bgcolor(showScoreHeat and longScore >= confluenceThreshold ? color.new(color.rgb(43, 203, 164), 92) : showScoreHeat and shortScore >= confluenceThreshold ? color.new(color.rgb(232, 96, 132), 92) : na, title = "Score Heat")
+
+color candleColor = recolorCandles ? regimeColor : na
+barcolor(candleColor)
+plotcandle(recolorCandles ? open : na, recolorCandles ? high : na, recolorCandles ? low : na, recolorCandles ? close : na, color = candleColor, wickcolor = candleColor, bordercolor = candleColor)
+
+// Dashboard
+string regimeText = bullRegime ? "Bull Regime" : "Bear Regime"
+string sessionText = sessionOk ? "Open" : "Closed"
+string htfText = not useHtfBias ? "Off" : not htfValid ? "Invalid TF" : htfBullBias ? "Bull" : htfBearBias ? "Bear" : "Neutral"
+string posText = strategy.position_size > 0 ? "Long" : strategy.position_size < 0 ? "Short" : "Flat"
+string cooldownText = cooldownOk ? "Ready" : "Waiting"
+
+var table dash = table.new(position.top_right, 2, 10, bgcolor = color.new(color.rgb(8, 10, 17), 0), frame_color = color.new(chart.fg_color, 75), frame_width = 1, border_color = color.new(chart.fg_color, 90), border_width = 1)
+if showDashboard and barstate.islast
+    table.cell(dash, 0, 0, "Concordance", text_color = chart.fg_color, bgcolor = color.new(color.rgb(25, 30, 44), 0), text_size = f_size(dashSize))
+    table.cell(dash, 1, 0, regimeText, text_color = regimeColor, bgcolor = color.new(color.rgb(25, 30, 44), 0), text_size = f_size(dashSize))
+    table.cell(dash, 0, 1, "Long Score", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 1, str.tostring(longScore), text_color = color.rgb(43, 203, 164), text_size = f_size(dashSize))
+    table.cell(dash, 0, 2, "Short Score", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 2, str.tostring(shortScore), text_color = color.rgb(232, 96, 132), text_size = f_size(dashSize))
+    table.cell(dash, 0, 3, "Spread", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 3, str.tostring(scoreSpread), text_color = scoreSpread >= 0 ? color.rgb(43, 203, 164) : color.rgb(232, 96, 132), text_size = f_size(dashSize))
+    table.cell(dash, 0, 4, "Pressure", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 4, str.tostring(pressureSignal, "#.0"), text_color = pressureSignal > 0 ? color.rgb(43, 203, 164) : color.rgb(232, 96, 132), text_size = f_size(dashSize))
+    table.cell(dash, 0, 5, "Delta", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 5, str.tostring(deltaWave, "#.0"), text_color = deltaWave > 0 ? color.rgb(43, 203, 164) : color.rgb(232, 96, 132), text_size = f_size(dashSize))
+    table.cell(dash, 0, 6, "Axis Dev", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 6, str.tostring(deviationAxis, "#.##") + " ATR", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 0, 7, "HTF Bias", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 7, htfText, text_color = htfBullBias ? color.rgb(43, 203, 164) : htfBearBias ? color.rgb(232, 96, 132) : chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 0, 8, "Session", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 8, sessionText + " / " + cooldownText, text_color = sessionOk ? chart.fg_color : color.new(chart.fg_color, 25), text_size = f_size(dashSize))
+    table.cell(dash, 0, 9, "Position", text_color = chart.fg_color, text_size = f_size(dashSize))
+    table.cell(dash, 1, 9, posText, text_color = strategy.position_size > 0 ? color.rgb(43, 203, 164) : strategy.position_size < 0 ? color.rgb(232, 96, 132) : chart.fg_color, text_size = f_size(dashSize))
+
+// Alerts
+alertcondition(enableAlerts and longSetup, "Concordance Long Setup", "A bullish concordance setup has been confirmed.")
+alertcondition(enableAlerts and shortSetup, "Concordance Short Setup", "A bearish concordance setup has been confirmed.")
+alertcondition(enableAlerts and regimeFlipBull, "Concordance Bull Regime", "The regime has flipped bullish.")
+alertcondition(enableAlerts and regimeFlipBear, "Concordance Bear Regime", "The regime has flipped bearish.")
+alertcondition(enableAlerts and useHtfBias and htfBullBias, "Concordance HTF Bull", "Higher-timeframe bias is bullish.")
+alertcondition(enableAlerts and useHtfBias and htfBearBias, "Concordance HTF Bear", "Higher-timeframe bias is bearish.")
+alertcondition(enableAlerts and longScore >= confluenceThreshold and scoreSpread >= 3, "Concordance Long Strong", "Bullish confluence is expanding.")
+alertcondition(enableAlerts and shortScore >= confluenceThreshold and scoreSpread <= -3, "Concordance Short Strong", "Bearish confluence is expanding.")
