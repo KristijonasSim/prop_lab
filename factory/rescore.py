@@ -32,6 +32,10 @@ def _specs() -> dict:
 
 
 def _term(tok: str) -> Term:
+    m = re.fullmatch(r"(.+)\[(\d+)\]", tok)
+    if m:
+        from dataclasses import replace
+        return replace(_term(m.group(1)), offset=int(m.group(2)))
     try:
         return Term("const", 0, float(tok))
     except ValueError:

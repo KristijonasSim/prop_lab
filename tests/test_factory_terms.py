@@ -70,3 +70,19 @@ def test_translator_accepts_new_terms():
          "right": {"kind": "range_high", "length": 0, "value": 7}}],
         "note": "breakout of the upper band above the Asia range high"})
     assert "bb_upper20x2" in s.label() and "range_high0x7" in s.label()
+
+
+def test_offset_is_the_value_k_bars_ago():
+    f = _frame(300)
+    cols = guard.columns(f)
+    for kind, n in (("sma", 20), ("bb_upper", 20), ("price", 0)):
+        t0, t1 = spec.Term(kind, n), spec.Term(kind, n, offset=3)
+        for t in (100, 250):
+            assert t1.at(guard.Window(cols, t)) == pytest.approx(t0.at(guard.Window(cols, t - 3)))
+    s = spec.Strategy("rising", "long", (spec.Condition(
+        spec.Term("sma", 20), "above", spec.Term("sma", 20, offset=1)),))
+    fire, _ = build.series(s, f)
+    ref = [spec.Term("sma", 20).at(guard.Window(cols, t)) >
+           spec.Term("sma", 20, offset=1).at(guard.Window(cols, t)) for t in range(300)]
+    assert list(fire) == ref
+    assert s.label() == "long when sma20 above sma20[1]"

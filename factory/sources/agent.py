@@ -113,6 +113,8 @@ def _grammar() -> str:
             f"MORE TERMS (length = lookback unless said otherwise; \"value\" "
             f"only where said):\n"
             + "".join(f"  {k} = {h}\n" for k, (_f, _n, h) in TERMS.items())
+            + f"ANY term may add \"offset\": k = its value k bars ago (Pine "
+            f"x[k]). 'sma rising' is sma above sma with offset 1.\n"
             + f"comparisons: {', '.join(COMPARISONS)}\n"
             f'a condition may add "hold": N - it must have been true N bars '
             f"running. Only on above/below; a cross is a one-bar event.\n"
@@ -193,7 +195,13 @@ def _term(d: dict, where: str) -> Term:
             raise ProposalError(f"{where}: {kind} value must be a number")
         if not 0.0 <= v <= 24.0:
             raise ProposalError(f"{where}: {kind} value must be 0-24, got {v}")
-    return Term(kind, n if needs_n else 0, v)
+    try:
+        off = int(d.get("offset", 0) or 0)
+    except (TypeError, ValueError):
+        raise ProposalError(f"{where}: offset must be a whole number")
+    if not 0 <= off <= 50:
+        raise ProposalError(f"{where}: offset must be 0-50, got {off}")
+    return Term(kind, n if needs_n else 0, v, off)
 
 
 def validate(item: dict) -> Strategy:

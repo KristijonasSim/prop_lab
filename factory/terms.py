@@ -149,6 +149,66 @@ def t_ema_slope(cols, n, m=0.0):
         return (e - pe) / pe * 1e4
 
 
+def _rma_plain(x, n):
+    return rma(x, n)
+
+
+def t_rma(cols, n, m=0.0):  return _rma_plain(_hlc(cols)[3], n)
+
+
+def t_dema(cols, n, m=0.0):
+    e = _ema(_hlc(cols)[3], n)
+    return 2 * e - _ema_nan(e, n)
+
+
+def t_tema(cols, n, m=0.0):
+    e1 = _ema(_hlc(cols)[3], n)
+    e2 = _ema_nan(e1, n)
+    return 3 * e1 - 3 * e2 + _ema_nan(e2, n)
+
+
+def t_vwma(cols, n, m=0.0):
+    c = _hlc(cols)[3]
+    v = np.asarray(cols["volume"], float)
+    num, den = sma(c * v, n), sma(v, n)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(den > 0, num / den, sma(c, n))
+
+
+def t_alma(cols, n, m=0.0):
+    """Pine ta.alma(close, n, offset=0.85, sigma=6); `value` overrides offset."""
+    c = _hlc(cols)[3]
+    off = m or 0.85
+    mu, sig = off * (n - 1), n / 6.0
+    w = np.exp(-((np.arange(n) - mu) ** 2) / (2 * sig * sig))
+    w /= w.sum()
+    out = _nan(len(c))
+    for i in range(n - 1, len(c)):
+        out[i] = float(c[i - n + 1:i + 1] @ w)
+    return out
+
+
+def t_kama(cols, n, m=0.0):
+    """Kaufman adaptive MA, efficiency over n bars, fast 2 / slow 30."""
+    c = _hlc(cols)[3]
+    fast, slow = 2 / 3, 2 / 31
+    out = _nan(len(c))
+    if len(c) <= n:
+        return out
+    out[n] = c[n]
+    for i in range(n + 1, len(c)):
+        ch = abs(c[i] - c[i - n])
+        vol = np.sum(np.abs(np.diff(c[i - n:i + 1])))
+        er = ch / vol if vol > 0 else 0.0
+        sc = (er * (fast - slow) + slow) ** 2
+        out[i] = out[i - 1] + sc * (c[i] - out[i - 1])
+    return out
+
+
+def t_volume(cols, n=0, m=0.0):    return np.asarray(cols["volume"], float).copy()
+def t_vol_sma(cols, n, m=0.0):     return sma(np.asarray(cols["volume"], float), n)
+
+
 # ----------------------------------------------------------- bands
 def t_bb_upper(cols, n, m=0.0):
     c = _hlc(cols)[3]
@@ -399,6 +459,14 @@ TERMS = {
     "body_pct":   (t_body_pct, False, "(close-open)/(high-low)*100, signed, -100..100"),
     "wma":        (t_wma, True, "weighted MA of close"),
     "hma":        (t_hma, True, "Hull MA of close"),
+    "rma":        (t_rma, True, "Wilder MA / SMMA of close (Pine ta.rma)"),
+    "dema":       (t_dema, True, "double EMA of close"),
+    "tema":       (t_tema, True, "triple EMA of close"),
+    "vwma":       (t_vwma, True, "volume-weighted MA of close"),
+    "alma":       (t_alma, True, "ALMA of close, sigma 6; value = offset (default 0.85)"),
+    "kama":       (t_kama, True, "Kaufman adaptive MA, efficiency length n, fast 2 slow 30"),
+    "volume":     (t_volume, False, "this bar's volume"),
+    "vol_sma":    (t_vol_sma, True, "mean volume over n bars including this one"),
     "ema_slope":  (t_ema_slope, True, "one-bar change of EMA(n) in basis points; >0 rising"),
     "bb_upper":   (t_bb_upper, True, "Bollinger upper: sma(n) + value*stdev(n), value default 2"),
     "bb_lower":   (t_bb_lower, True, "Bollinger lower: sma(n) - value*stdev(n)"),
@@ -436,7 +504,7 @@ TERMS = {
 }
 
 #: Kinds that read `Term.value` as a multiplier / factor / window length.
-MULT = {"bb_upper", "bb_lower", "kc_upper", "kc_lower", "supertrend",
+MULT = {"alma", "bb_upper", "bb_lower", "kc_upper", "kc_lower", "supertrend",
         "supertrend_line", "range_high", "range_low"}
 #: Kinds whose `length` may be 0 (an hour of day).
 ZERO_LENGTH_OK = {"range_high", "range_low"}
