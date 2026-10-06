@@ -5,6 +5,27 @@ every AI agent and every human who opens this repository.**
 
 ---
 
+## NOW — the current truth, one screen. Updated 2026-10-06.
+
+**Rewrite this block whenever a line in it changes. If anything below this
+block or in another file disagrees with it, this block wins until checked.**
+
+| | |
+|---|---|
+| **Focus** | H-027 VWAP band breakout, gold. No new hypotheses unless Kris asks. |
+| **Shipped rule** | `core/chosen.py`: XAUUSD 1h, floor 30 / top 5, 2% risk. 59.8% pass, 21.7 days (band 16.8–31.4), measured on the old Thunderbolt 6/3/6 card. |
+| **Open conflict** | `CLAUDE.md` quotes the HOUSE 8/3/6 card at 4% risk (19.1 days). `chosen.py` was never re-picked on HOUSE. Which one is the plan is **unresolved**. |
+| **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
+| **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
+| **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
+| **Factory** | TradingView scripts → grammar → 7 steps. 260 ideas queued, untested. Loop **paused**: translation used a 5h usage window in ~30 min; fix listed in `NEXT.md`. |
+| **Factory verdicts** | Only the last 3 years decide. Older years are a note. Nothing has yet beaten its luck check. |
+| **Eval days** | Always at the `riskladder.pick` rung (2% floor), never the fastest rung. Report accounts used (1/pass) beside days. |
+| **Test window** | 3 years, 5 max. Six markets always: BTC, gold, silver, EURUSD, GBPUSD, USDJPY. |
+| **Data** | Committed to Git on purpose (see `.gitignore`). `data/feeds/` is rewritten every 15 min by cron. |
+
+---
+
 ## 0. Where everything lives, and the order to read it
 
 Six files sit at the root. They are the ones that are kept current; everything

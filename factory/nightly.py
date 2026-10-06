@@ -363,8 +363,11 @@ def scorecard(strategy, market: str, tf: str) -> dict:
                        eval_days=round(best["expected_days"], 1),
                        median_days=best["median_days"],
                        accounts=round(1 / best["pass_rate"], 2))
-    except Exception:                       # a pace number is never worth a crash
-        pass
+    except Exception as exc:                # noqa: BLE001
+        # A pace number is never worth a crash - but it is never silent either.
+        # A swallowed error here is how the board showed no days at all and
+        # nobody could tell "too slow" from "broken" (2026-10-06).
+        out["pace_error"] = f"{type(exc).__name__}: {exc}"
     return out
 
 

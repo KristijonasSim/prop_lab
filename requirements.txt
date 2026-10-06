@@ -12,6 +12,7 @@ ccxt>=4.5
 numpy
 pyarrow
 python-dotenv
+scipy
 
 # Test frame, added by item 2 of STEPS_1_2_4.md. `hypothesis` is not optional
 # decoration: it GENERATES the degenerate inputs (zero volume, flat OHLC, one

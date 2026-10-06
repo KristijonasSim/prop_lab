@@ -749,7 +749,8 @@ function ideasTable(){
             ${k.mean_r == null ? '—' : k.mean_r.toFixed(2)}</td>
           <td class="mono">${k.max_dd_r == null ? '—' : k.max_dd_r + 'R'}</td>
           <td class="mono">${k.pass_pct ?? '—'}</td>
-          <td class="mono">${k.eval_days ?? '—'}</td>
+          <td class="mono">${k.eval_days ?? (k.pace_error
+            ? `<span class="bad" title="${esc(k.pace_error)}">error</span>` : '—')}</td>
           <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome, x))}</td>
           <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
         </tr>` + (open ? `<tr class="detail"><td colspan="13">${ideaDetail(x)}</td></tr>` : '');

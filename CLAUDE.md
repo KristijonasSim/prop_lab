@@ -6,6 +6,9 @@ Auto-loaded every session. Keep current.
 
 **READ `HOW_TO_ANSWER.md` BEFORE YOUR FIRST REPLY. IT OVERRIDES YOUR DEFAULT STYLE.**
 
+**THE CURRENT TRUTH IS THE `NOW` BLOCK AT THE TOP OF `README.md`.** Anything
+in this file that disagrees with it is stale until checked.
+
 - **SHORT SENTENCES. KEY INFO ONLY. BULLETS, NOT PARAGRAPHS.**
 - **ANSWER IN THE FIRST LINE, THEN STOP.**
 - **MAX 10 LINES OF PROSE PER REPLY. A LONG REPLY IS A BUG.**
