@@ -45,6 +45,11 @@ LOG = queue.DIR / "tvloop.jsonl"
 STATE = queue.DIR / "tvloop_state.json"
 FETCH = 20
 BATCH = 20
+#: The model's own words when the account is out of calls. Kris, 2026-10-02:
+#: on 2026-09-30 the limit hit at ~09:14 UTC and the loop kept fetching and
+#: "refusing" 128 scripts for an hour, testing nothing. Now it waits instead.
+LIMIT = ("session limit", "usage limit", "rate limit", "hit your limit")
+PAUSE = 1800                                    # seconds to wait before asking again
 
 
 def _now() -> str:
@@ -55,9 +60,34 @@ def waiting() -> int:
     return queue.status().get("waiting_by_source", {}).get("tradingview", 0)
 
 
+_retried: set[str] = set()
+
+
+def _limited(skipped) -> bool:
+    return any(w in str(why).lower() for _, why in skipped for w in LIMIT)
+
+
 def intake(n: int) -> dict:
-    """Steps 1-2: download n new scripts, translate them, queue the readable."""
+    """Steps 1-2: download n new scripts, translate them, queue the readable.
+
+    Old refusals that were the model's fault go first (`tradingview.retry`),
+    and nothing new is downloaded while the model is out of calls.
+    """
     out = {"fetched": 0, "translated": 0, "skipped": 0, "queued": 0}
+    got, skipped = tradingview.retry(limit=n, exclude=_retried)
+    # A script the model refuses twice for its own reasons is not asked a
+    # third time this run - only a limit puts it back in line.
+    _retried.update(name for name, why in skipped if not _limited([(name, why)]))
+    if got or skipped:
+        out["retried"] = len(got) + len(skipped)
+        out["translated"], out["skipped"] = len(got), len(skipped)
+        if got:
+            out["queued"] = queue.add(got, quiet=True)["added"]
+    if _limited(skipped):
+        out["limited"] = True
+        return out
+    if got or skipped:
+        return out
     try:
         files = tvfetch.fetch(n)
     except tvfetch.Blocked as exc:
@@ -72,6 +102,8 @@ def intake(n: int) -> dict:
     out["translated"], out["skipped"] = len(got), len(skipped)
     if got:
         out["queued"] = queue.add(got, quiet=True)["added"]
+    if _limited(skipped):
+        out["limited"] = True
     return out
 
 
@@ -109,18 +141,23 @@ def run(hours: float | None = 24.0, fetch_n: int = FETCH, batch: int = BATCH,
     if back:
         _log({"run": st["run"], "note": f"recovered {back} ideas a killed round was holding",
               "started": _now()})
-    blocked = False
+    blocked, paused_until = False, 0.0
     while time.time() < st["end"]:
         st["rounds"] = rnd = st.get("rounds", 0) + 1
         st["beat"] = _now()
         _save(st)
         rec, t0 = {"run": st["run"], "round": rnd, "started": _now()}, time.time()
         try:
-            if not blocked and waiting() < batch:
+            paused = time.time() < paused_until
+            if not blocked and not paused and waiting() < batch:
                 rec["intake"] = intake(fetch_n)
                 blocked = "blocked" in rec["intake"]
+                if rec["intake"].get("limited"):
+                    paused_until = time.time() + PAUSE
+                    paused = True
             if waiting() == 0:
-                rec["note"] = "nothing to test" + (" - TradingView blocked" if blocked else "")
+                rec["note"] = ("nothing to test" + (" - TradingView blocked" if blocked else "")
+                               + (" - model out of calls, waiting" if paused else ""))
                 _log(rec)
                 if blocked:
                     break

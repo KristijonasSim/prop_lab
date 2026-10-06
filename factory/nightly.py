@@ -345,13 +345,18 @@ def scorecard(strategy, market: str, tf: str) -> dict:
     }
     # Evaluation pace: the risk ladder is arithmetic on a fixed trade series,
     # so it selects nothing and is always allowed. The rung reported is the
-    # fastest one the project's own constraints permit.
+    # one `riskladder.pick` chooses - NOT the fastest rung. Taking the fastest
+    # put almost every idea at 5% risk, where an 8% target is two winners and
+    # a 6% cap is one loser: Kris, 2026-10-06, on a PF 1.15 rule showing 2.4
+    # days - "how its possible". At that size a losing gold 15m rule (PF 0.89)
+    # also "passed" in 2.7 days. Days measured a coin flip, not the strategy.
     try:
         exit_ts = frame.index[[t.exit_bar for t in trades]]
         daily = pd.Series(r, index=pd.DatetimeIndex(exit_ts)).resample("1D").sum()
         rows = riskladder.ladder(daily, r)
-        best = min((x for x in rows if x.get("expected_days")),
-                   key=lambda x: x["expected_days"], default=None)
+        best = riskladder.pick(rows) if rows else None
+        if best and not best.get("expected_days"):
+            best = None
         if best:
             out.update(risk_pct=round(best["risk"] * 100, 2),
                        pass_pct=round(best["pass_rate"] * 100, 1),

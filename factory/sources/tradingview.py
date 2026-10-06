@@ -172,8 +172,13 @@ before we signal". Only on above/below.
 
 GRAMMAR - nothing outside it exists:
 {grammar}
-kind "const" carries its number in "value". Others carry a lookback in "length".
+kind "const" carries its number in "value". Others carry a lookback in "length";
+band / supertrend / range terms also read "value" as described above.
+A script's ATR trailing stop, UT Bot, HalfTrend or Chandelier flip is a
+Supertrend flip - translate it as one and list the difference as a simplification.
 ALL entry conditions must hold on the same bar. 1-3 conditions.
+stop_atr 0.5-5.0, target_atr 0.5-10.0, max_hold 4-480 bars. A script value
+outside these is clamped to the nearest end and listed as a simplification.
 
 THREE OUTCOMES, NOT TWO. Choose honestly:
 
@@ -274,13 +279,26 @@ def load(folder: Path | None = None, *, ai: bool = False, model: str | None = No
     folder = folder or PINE_DIR
     if paths is None and not folder.exists():
         return [], [("(folder)", f"{folder} does not exist - nothing to read")]
-    out, skipped = [], []
-    for p in (sorted(paths) if paths is not None else sorted(folder.glob("*.pine"))):
-        body = p.read_text(errors="ignore")
-        s, why = translate(body, p.stem)
-        if s is None and ai:
-            s, why = translate_ai(body, p.stem, model=model)
-        (out.append(s) if s else skipped.append((p.stem, why)))
+    files = sorted(paths) if paths is not None else sorted(folder.glob("*.pine"))
+    return _read_all(files, ai=ai, model=model)
+
+
+def _read_one(p: Path, ai: bool, model: str | None):
+    body = p.read_text(errors="ignore")
+    s, why = translate(body, p.stem)
+    if s is None and ai:
+        s, why = translate_ai(body, p.stem, model=model)
+    return p.stem, s, why
+
+
+def _read_all(files, *, ai: bool, model: str | None, workers: int = 1):
+    """Order is kept whatever `workers` is: results come back in `files` order."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max(1, workers)) as ex:
+        res = list(ex.map(lambda q: _read_one(q, ai, model), files))
+    out = [s for _, s, _ in res if s]
+    skipped = [(n, why) for n, s, why in res if not s]
     return out, skipped
 
 
@@ -304,7 +322,10 @@ def record_skips(skipped, path=None, translated=()) -> int:
 
     p = path or (_queue.DIR / "skipped.jsonl")
     p.parent.mkdir(parents=True, exist_ok=True)
-    seen, keep = set(), []
+    # A script read again REPLACES its old row, refused or not: a retry after
+    # a model crash has a new reason, and the stale crash must not stand.
+    redo = set(translated) | {n for n, _ in skipped}
+    keep, dropped, before = [], False, set()
     if p.exists():
         for line in p.read_text().splitlines():
             if line.strip():
@@ -312,20 +333,57 @@ def record_skips(skipped, path=None, translated=()) -> int:
                     row = _json.loads(line)
                 except ValueError:
                     continue
-                if row.get("script") in translated:
+                before.add(row.get("script"))
+                if row.get("script") in redo:
+                    dropped = True
                     continue
-                seen.add(row.get("script"))
                 keep.append(line)
-        if translated:
+        if dropped:
             p.write_text("".join(l + "\n" for l in keep))
     new = [{"source": "tradingview", "script": n, "why": w,
             "gap": w.startswith("grammar gap")}
-           for n, w in skipped if n not in seen]
+           for n, w in dict(skipped).items()]
     if new:
         with p.open("a") as fh:
             for r in new:
                 fh.write(_json.dumps(r, separators=(",", ":")) + "\n")
-    return len(new)
+    return sum(r["script"] not in before for r in new)     # scripts new to the file
+
+
+#: Refusals worth another model call. A crash says nothing about the script;
+#: an invalid translation may pass now the prompt states the ranges. A grammar
+#: gap is the model's considered answer and is NOT re-asked.
+RETRYABLE = ("model call failed", "invalid translation", "no JSON", "bad JSON")
+
+
+def retry(limit: int | None = None, model: str | None = None, workers: int = 4,
+          exclude=(), gaps: bool = False) -> tuple[list[Strategy], list[tuple[str, str]]]:
+    """Re-translate refused scripts whose refusal was not the script's fault.
+
+    Kris, 2026-09-30: 234 of 373 refusals were `model exited 1` with nothing
+    said - the model was unreachable, not the script unreadable - and the loop
+    only ever reads FRESH downloads, so they were never tried again.
+    """
+    import json as _json
+    from factory import queue as _queue
+
+    p = _queue.DIR / "skipped.jsonl"
+    rows = [_json.loads(l) for l in p.read_text().splitlines()
+            if l.strip()] if p.exists() else []
+    # `gaps`: also re-ask scripts refused for a GRAMMAR gap - worth doing once
+    # each time the grammar grows (2026-10-06: factory/terms.py).
+    names = [r["script"] for r in rows
+             if (str(r.get("why", "")).startswith(RETRYABLE)
+                 or (gaps and r.get("gap")))
+             and r["script"] not in exclude]
+    paths = [PINE_DIR / f"{n}.pine" for n in names[:limit]]
+    paths = [q for q in paths if q.exists()]
+    if not paths:
+        return [], []
+    got, skipped = _read_all(paths, ai=True, model=model, workers=workers)
+    record_skips(skipped, translated={q.stem for q in paths}
+                 - {n for n, _ in skipped})
+    return got, skipped
 
 
 def _main(argv=None) -> int:
@@ -339,7 +397,22 @@ def _main(argv=None) -> int:
                     help="send what the regex cannot read to a model")
     ap.add_argument("--folder", type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--retry", action="store_true",
+                    help="re-ask the model only for refusals that were not the "
+                         "script's fault (crashes, invalid output)")
+    ap.add_argument("--retry-gaps", action="store_true",
+                    help="--retry, plus scripts refused for a grammar gap "
+                         "(run after the grammar grows)")
     a = ap.parse_args(argv)
+
+    if a.retry or a.retry_gaps:
+        got, skipped = retry(gaps=a.retry_gaps)
+        print(f"{len(got)} translated, {len(skipped)} still refused")
+        for n, w in skipped:
+            print(f"  SKIP {n}: {w[:120]}")
+        if not a.dry_run and got:
+            print(queue.add(got, quiet=True))
+        return 0
 
     got, skipped = load(a.folder, ai=a.ai)
     for s in got:

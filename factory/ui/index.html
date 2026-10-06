@@ -145,6 +145,7 @@ tr.detail>td{padding:0;border-bottom:1px solid var(--line)}
 .sw{width:9px;height:9px;border-radius:2px;flex:none}
 
 table{width:100%;border-collapse:collapse;font-size:12.5px}
+th.sortable{cursor:pointer;user-select:none}th.sortable:hover,th.sortable.on{color:var(--ink)}
 th{text-align:left;font-weight:500;color:var(--ink-3);padding:5px 8px 7px;
   border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.06em;
   text-transform:uppercase;white-space:nowrap}
@@ -271,11 +272,13 @@ const STOP_WHY = {
   '3:concentration': ['step 3', 'Profit from a few lucky trades', ''],
   '3:drift':         ['step 3', 'Random entries did better', ''],
   '3:other':         ['step 3', 'No usable trades', ''],
-  '6:trades':        ['step 6', 'Too few trades on older years', ''],
-  '6:cost':          ['step 6', 'Lost money on older years', ''],
-  '6:concentration': ['step 6', 'Older years: profit from a few trades', ''],
-  '6:drift':         ['step 6', 'Older years: random did better', ''],
-  '6:other':         ['step 6', 'No older data', ''],
+  // NOT DEATHS. Kris, 2026-10-06: "we care only about 3 years ... we
+  // shouldnt just throw away those strategies". Step 6 is information.
+  '6:trades':        ['step 6', 'Passed 3 years · older years: too few trades', ''],
+  '6:cost':          ['step 6', 'Passed 3 years · older years: lost money', ''],
+  '6:concentration': ['step 6', 'Passed 3 years · older years: a few lucky trades', ''],
+  '6:drift':         ['step 6', 'Passed 3 years · older years: random did better', ''],
+  '6:other':         ['step 6', 'Passed 3 years · no older data', ''],
   scored: ['step 7', 'Passed everything', ''],
   alive:  ['-', 'Passed step 3, waiting', ''],
   other:  ['-', 'No usable trades', ''],
@@ -506,6 +509,9 @@ function srcTable(){
 }
 
 const OPEN = new Set();
+// PF 1.2 is the gate and 1.2 passes it. A 1.196 printed as "1.20" in red
+// read as "1.2 fails" (Kris, 2026-10-06), so judge the number as shown.
+const pfOk = pf => pf != null && Math.round(pf * 100) >= 120;
 const num = (v, d=3) => (v === null || v === undefined || Number.isNaN(v))
   ? '<span class="dim">—</span>' : `<span class="mono">${Number(v).toFixed(d)}</span>`;
 
@@ -589,7 +595,7 @@ function ideaDetail(x){
         <td class="mono">${esc(k.tf)}${k.cell === shown ? '  ◂' : ''}</td>
         <td class="mono">${k.trades}</td>
         <td class="mono">${Number(k.per_day).toFixed(2)}</td>
-        <td class="mono ${(k.pf||0) >= 1.2 ? 'good' : 'bad'}">${k.pf == null ? '—' : k.pf.toFixed(2)}</td>
+        <td class="mono ${pfOk(k.pf) ? 'good' : 'bad'}">${k.pf == null ? '—' : k.pf.toFixed(2)}</td>
         <td class="mono ${(k.mean_r||0) > 0 ? 'good' : 'bad'}">${Number(k.mean_r).toFixed(3)}</td>
         <td class="mono">${k.max_dd_r}R</td>
         <td class="mono">${k.pass_pct ?? '—'}</td>
@@ -644,8 +650,9 @@ const cellWhy = (x) => {
 const plainOutcome = (o, x) => {
   o = o || '';
   if (x && /step 3/.test(o)) { const w = cellWhy(x); if (w) return `died · ${w}`; }
+  // Kris, 2026-10-06: only the last 3 years decide. Older years are a note.
   if (x && /step 6/.test(o) && !/repaired/.test(o))
-    return `died · older years${x.cell && x.cell !== (x.score||{}).cell ? ' (' + x.cell.split(' ')[1] + ')' : ''}`;
+    return `passed · valid last 3 years, issues on older years${x.cell && x.cell !== (x.score||{}).cell ? ' (' + x.cell.split(' ')[1] + ')' : ''}`;
   const m = o.match(/step (\d)/);
   if (/NOT holdout-clean/.test(o)) return 'passed · but fixed on older years';
   if (/scored|held/.test(o)) return 'passed';
@@ -654,28 +661,88 @@ const plainOutcome = (o, x) => {
   return m ? `died · step ${m[1]}` : (o || '—');
 };
 
+// SORTING. Kris, 2026-10-06: "at the top always must be best strategy ...
+// press on win rate and it should show me best win rate". Each column is
+// [value, higher is better]. Clicking a header sorts best-first on it,
+// clicking again flips it; "#" goes back to the combined ranking.
+const COLS = {
+  per_day: [x => (x.score||{}).per_day, true],
+  pf:      [x => (x.score||{}).pf, true],
+  win:     [x => (x.score||{}).win_pct, true],
+  r:       [x => (x.score||{}).mean_r, true],
+  dd:      [x => (x.score||{}).max_dd_r, false],
+  pass:    [x => (x.score||{}).pass_pct, true],
+  days:    [x => (x.score||{}).eval_days, false],
+};
+let SORT = (() => { try { return JSON.parse(localStorage.getItem('factory.sort'))
+                          || {key:'best', flip:false}; }
+                    catch(e) { return {key:'best', flip:false}; } })();
+// THE COMBINED RANK. Survivors always sit above the dead, whatever their
+// numbers: a script that failed the 3-year checks is not "best" because one
+// number is high. Inside each group, every column is turned into a
+// 0-1 position against the other rows (1 = best) and the positions are
+// averaged, so no single number - days, which rewards trading more, least
+// of all - can carry a row to the top on its own. Blank counts as worst.
+function bestRank(list){
+  const group = x => {
+    const o = plainOutcome(x.outcome, x);
+    return /^passed$/.test(o) ? 0 : /^passed/.test(o) ? 1 : /^fixed/.test(o) ? 2
+         : /^waiting/.test(o) ? 3 : 4;
+  };
+  const pos = {};
+  for (const [k, [get, hi]] of Object.entries(COLS)) {
+    const vals = list.map(get).filter(v => v != null).sort((a, b) => a - b);
+    pos[k] = list.map(x => {
+      const v = get(x);
+      if (v == null || vals.length < 2) return 0;
+      const below = vals.filter(w => w < v).length, same = vals.filter(w => w === v).length;
+      const p = (below + (same - 1) / 2) / (vals.length - 1);
+      return hi ? p : 1 - p;
+    });
+  }
+  const score = list.map((x, i) =>
+    Object.keys(COLS).reduce((t, k) => t + pos[k][i], 0) / Object.keys(COLS).length);
+  const idx = list.map((x, i) => i).sort((a, b) =>
+    group(list[a]) - group(list[b]) || score[b] - score[a]);
+  const rank = [];
+  idx.forEach((i, r) => rank[i] = r);
+  return rank;
+}
+
 function ideasTable(){
   const r = row();
   // ONE ROW PER SCRIPT, its best variant. Kris, 2026-09-24.
   const list = r ? (r.scripts || []) : [];
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
+  const rank = bestRank(list);
+  const order = list.map((x, i) => i).sort((a, b) => {
+    if (SORT.key === 'best') return rank[a] - rank[b];
+    const [get, hi] = COLS[SORT.key];
+    const va = get(list[a]), vb = get(list[b]);
+    if (va == null) return vb == null ? rank[a] - rank[b] : 1;   // blanks last
+    if (vb == null) return -1;
+    return ((hi ? vb - va : va - vb) * (SORT.flip ? -1 : 1)) || rank[a] - rank[b];
+  });
+  const th = (k, label) => `<th class="sortable${SORT.key === k ? ' on' : ''}" data-k="${k}">${label}${
+    SORT.key === k ? (SORT.flip ? ' ▲' : ' ▼') : ''}</th>`;
   $('ideas').innerHTML =
-    `<tr><th>strategy</th><th>market</th><th>tf</th><th>trades/day</th>
-       <th>PF</th><th>win %</th><th>R/trade</th><th>max DD</th>
-       <th>pass %</th><th>days</th><th>result</th><th>repairs</th></tr>` +
-    list.map((x, i) => {
-      const good = /passed|held|scored|repaired/.test(x.outcome || '');
+    `<tr>${th('best','#')}<th>strategy</th><th>market</th><th>tf</th>${th('per_day','trades/day')}
+       ${th('pf','PF')}${th('win','win %')}${th('r','R/trade')}${th('dd','max DD')}
+       ${th('pass','pass %')}${th('days','days')}<th>result</th><th>repairs</th></tr>` +
+    order.map(i => { const x = list[i];
+      const good = /^(passed|fixed)/.test(plainOutcome(x.outcome, x));
       const open = OPEN.has(i);
       const k = x.score || {};
       const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
+          <td class="mono dim">${rank[i] + 1}</td>
           <td class="wide">${esc(x.script || shortName(x))}${x.variants > 1
             ? `<span class="dim" style="display:block;font-size:11.5px">best of ${x.variants}: ${esc((x.name || '').split(' - ')[1] || '')}</span>` : ''}</td>
           <td class="mono">${esc(k.market || '—')}</td>
           <td class="mono">${esc(k.tf || '—')}</td>
           <td class="mono">${k.per_day == null ? '—' : k.per_day.toFixed(2)}</td>
-          <td class="mono ${pf == null ? '' : (pf >= 1.2 ? 'good' : 'bad')}">
+          <td class="mono ${pf == null ? '' : (pfOk(pf) ? 'good' : 'bad')}">
             ${pf == null ? '—' : pf.toFixed(2)}</td>
           <td class="mono">${k.win_pct ?? '—'}</td>
           <td class="mono ${(k.mean_r ?? 0) > 0 ? 'good' : 'bad'}">
@@ -685,8 +752,14 @@ function ideasTable(){
           <td class="mono">${k.eval_days ?? '—'}</td>
           <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome, x))}</td>
           <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
-        </tr>` + (open ? `<tr class="detail"><td colspan="12">${ideaDetail(x)}</td></tr>` : '');
+        </tr>` + (open ? `<tr class="detail"><td colspan="13">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
+  $('ideas').querySelectorAll('th.sortable').forEach(h => h.onclick = () => {
+    const k = h.dataset.k;
+    SORT = SORT.key === k ? {key: k, flip: !SORT.flip} : {key: k, flip: false};
+    try { localStorage.setItem('factory.sort', JSON.stringify(SORT)); } catch(e) {}
+    ideasTable();
+  });
   $('ideas').querySelectorAll('tr.idea').forEach(tr => tr.onclick = () => {
     const i = Number(tr.dataset.i);
     OPEN.has(i) ? OPEN.delete(i) : OPEN.add(i);

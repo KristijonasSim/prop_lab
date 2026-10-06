@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 from factory.guard import Window, columns
-from factory.spec import SERIES, Strategy
+from factory.spec import MULT, SERIES, Strategy
 
 ATR_LEN = 14
 
@@ -77,7 +77,9 @@ def series(strategy: Strategy, frame: pd.DataFrame) -> tuple[np.ndarray, np.ndar
     for i, c in enumerate(strategy.entry):
         for side, term in (("l", c.left), ("r", c.right)):
             if term.kind in SERIES:
-                pre[(i, side)] = SERIES[term.kind](cols, term.length)
+                pre[(i, side)] = (SERIES[term.kind](cols, term.length, term.value)
+                                  if term.kind in MULT else
+                                  SERIES[term.kind](cols, term.length))
     for t in range(n):
         w = Window(cols, t)
         atr[t] = _atr_at(w)
