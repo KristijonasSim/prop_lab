@@ -444,6 +444,241 @@ def t_prev_day_high(cols, n=0, m=0.0):  return _day_hl(cols, True)[0]
 def t_prev_day_low(cols, n=0, m=0.0):   return _day_hl(cols, True)[1]
 
 
+
+# ----------------------------------------------------------- 2026-10-06 (b)
+# The second backlog pass. `factory.gapsort` sorted the 77 still-refused
+# scripts by what was missing; after the 28 that can never be expressed, the
+# biggest groups were a REMEMBERED zone or event (16), HIGHER-TIMEFRAME data
+# (11), and pivot events / divergence / fib (8). Each term below is still a
+# forward walk over bars 0..t - `tests/test_factory_terms.py` covers them.
+
+# --- higher timeframe: Pine request.security(tf) with the PREVIOUS completed
+# higher bar, i.e. the non-repainting form `request.security(..., x[1],
+# lookahead_on)`. A higher bar is H UTC hours (value), cut on the clock and at
+# each new UTC day. Lower timeframes than the chart cannot exist here.
+def _htf_groups(cols, hours):
+    hr = np.asarray(cols["hour"], float)
+    h = max(1, int(hours or 4))
+    day = np.cumsum(_new_day(hr))
+    gid = day * 100 + (hr // h).astype(int)
+    new = np.ones(len(hr), dtype=bool)
+    new[1:] = gid[1:] != gid[:-1]
+    return np.cumsum(new) - 1                      # 0,0,0,1,1,1,...
+
+
+def _htf_bars(cols, hours):
+    """(group id per chart bar, htf o/h/l/c of each COMPLETED group)."""
+    o, h, l, c = _hlc(cols)
+    g = _htf_groups(cols, hours)
+    k = int(g[-1]) + 1 if len(g) else 0
+    ho, hh, hl, hc = (np.full(k, np.nan) for _ in range(4))
+    for j in range(k):
+        idx = np.flatnonzero(g == j)
+        ho[j], hh[j], hl[j], hc[j] = o[idx[0]], h[idx].max(), l[idx].min(), c[idx[-1]]
+    return g, ho, hh, hl, hc
+
+
+def _htf_map(g, per_group):
+    """Value of the last COMPLETED higher bar at each chart bar."""
+    out = _nan(len(g))
+    ok = g >= 1
+    out[ok] = per_group[g[ok] - 1]
+    return out
+
+
+def t_htf_open(cols, n=0, m=0.0):   g, o, *_ = _htf_bars(cols, m); return _htf_map(g, o)
+def t_htf_high(cols, n=0, m=0.0):   g, _, h, _, _ = _htf_bars(cols, m); return _htf_map(g, h)
+def t_htf_low(cols, n=0, m=0.0):    g, _, _, l, _ = _htf_bars(cols, m); return _htf_map(g, l)
+def t_htf_close(cols, n=0, m=0.0):  g, *_, c = _htf_bars(cols, m); return _htf_map(g, c)
+
+
+def t_htf_ema(cols, n, m=0.0):
+    g, *_, c = _htf_bars(cols, m)
+    return _htf_map(g, _ema(c, n))
+
+
+def t_htf_sma(cols, n, m=0.0):
+    g, *_, c = _htf_bars(cols, m)
+    return _htf_map(g, sma(c, n))
+
+
+def t_htf_rsi(cols, n, m=0.0):
+    g, *_, c = _htf_bars(cols, m)
+    return _htf_map(g, _rsi_series(c, n))
+
+
+# --- remembered zones: the latest fair value gap, held until it is filled or
+# n bars old. A bullish FVG is low > high[2]; its zone is [high[2], low]. It
+# dies when a close goes through the far side. nan when no live gap.
+def _fvg(cols, n, bull):
+    o, h, l, c = _hlc(cols)
+    top, bot = _nan(len(c)), _nan(len(c))
+    zt = zb = np.nan
+    born = -1
+    for t in range(len(c)):
+        if not np.isnan(zt):
+            if (bull and c[t] < zb) or (not bull and c[t] > zt) or t - born > n:
+                zt = zb = np.nan
+        if t >= 2:
+            if bull and l[t] > h[t - 2]:
+                zt, zb, born = l[t], h[t - 2], t
+            elif not bull and h[t] < l[t - 2]:
+                zt, zb, born = l[t - 2], h[t], t
+        top[t], bot[t] = zt, zb
+    return top, bot
+
+
+def t_fvg_bull_top(cols, n, m=0.0):  return _fvg(cols, n, True)[0]
+def t_fvg_bull_bot(cols, n, m=0.0):  return _fvg(cols, n, True)[1]
+def t_fvg_bear_top(cols, n, m=0.0):  return _fvg(cols, n, False)[0]
+def t_fvg_bear_bot(cols, n, m=0.0):  return _fvg(cols, n, False)[1]
+
+
+# --- events remembered as an age: bars since the last liquidity sweep, i.e.
+# a low under the lowest low of the n bars before it. 0 on the sweep bar.
+def _since(flag):
+    out = _nan(len(flag))
+    last = -1
+    for t in range(len(flag)):
+        if flag[t]:
+            last = t
+        if last >= 0:
+            out[t] = t - last
+    return out
+
+
+def t_since_sweep_low(cols, n, m=0.0):
+    l = _hlc(cols)[2]
+    prior = _shift(rolling_min(l, n))
+    with np.errstate(invalid="ignore"):
+        return _since(l < prior)
+
+
+def t_since_sweep_high(cols, n, m=0.0):
+    h = _hlc(cols)[1]
+    prior = _shift(rolling_max(h, n))
+    with np.errstate(invalid="ignore"):
+        return _since(h > prior)
+
+
+# --- pivot events: 1 on the bar a pivot is CONFIRMED (n bars after it), else 0.
+def t_pivot_low_new(cols, n, m=0.0):
+    return (~np.isnan(pivot_low(_hlc(cols)[2], n, n))).astype(float)
+
+
+def t_pivot_high_new(cols, n, m=0.0):
+    return (~np.isnan(pivot_high(_hlc(cols)[1], n, n))).astype(float)
+
+
+def t_fib_pivot(cols, n, m=0.0):
+    """pivot_low + value * (pivot_high - pivot_low), last confirmed n-pivots.
+    value 0.618 is the 61.8% level measured up from the low."""
+    lo, hi = t_pivot_low(cols, n), t_pivot_high(cols, n)
+    return lo + (m if m else 0.5) * (hi - lo)
+
+
+def _div(cols, n, bull):
+    """1 on the bar a pivot is confirmed that makes a lower price low (higher
+    high) than the previous pivot while RSI(14) at it is higher (lower)."""
+    o, h, l, c = _hlc(cols)
+    rsi = _rsi_series(c, 14)
+    src = l if bull else h
+    piv = pivot_low(l, n, n) if bull else pivot_high(h, n, n)
+    out = np.zeros(len(c))
+    prev_p = prev_r = np.nan
+    for t in np.flatnonzero(~np.isnan(piv)):
+        p, r = src[t - n], rsi[t - n]
+        if not np.isnan(prev_p):
+            if bull and p < prev_p and r > prev_r:
+                out[t] = 1.0
+            if not bull and p > prev_p and r < prev_r:
+                out[t] = 1.0
+        prev_p, prev_r = p, r
+    return out
+
+
+def t_rsi_bull_div(cols, n, m=0.0):  return _div(cols, n, True)
+def t_rsi_bear_div(cols, n, m=0.0):  return _div(cols, n, False)
+
+
+# --- indicator on indicator (third backlog pass, 2026-10-06) ---------------
+def _ha(cols):
+    """Heikin Ashi (open, close). ha_open is recursive, walked forward."""
+    o, h, l, c = _hlc(cols)
+    hc = (o + h + l + c) / 4.0
+    ho = np.empty(len(c))
+    if len(c):
+        ho[0] = (o[0] + c[0]) / 2.0
+    for i in range(1, len(c)):
+        ho[i] = (ho[i - 1] + hc[i - 1]) / 2.0
+    return ho, hc
+
+
+def t_ha_open(cols, n=0, m=0.0):   return _ha(cols)[0]
+def t_ha_close(cols, n=0, m=0.0):  return _ha(cols)[1]
+
+
+def t_ha_bull_run(cols, n=0, m=0.0):
+    """Consecutive green Heikin Ashi candles ending on this bar (0 on a red one)."""
+    ho, hc = _ha(cols)
+    out = np.zeros(len(hc))
+    for i in range(len(hc)):
+        out[i] = (out[i - 1] + 1 if i else 1) if hc[i] > ho[i] else 0
+    return out
+
+
+def _wavetrend(cols, n):
+    """LazyBear WaveTrend: channel n, average 2n+? -> fixed 21, signal sma 4."""
+    o, h, l, c = _hlc(cols)
+    ap = (h + l + c) / 3.0
+    esa = _ema(ap, n)
+    d = _ema_nan(np.abs(ap - esa), n)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ci = (ap - esa) / (0.015 * d)
+    wt1 = _ema_nan(ci, 21)
+    return wt1, _sma_nan(wt1, 4)
+
+
+def t_wt1(cols, n, m=0.0):  return _wavetrend(cols, n)[0]
+def t_wt2(cols, n, m=0.0):  return _wavetrend(cols, n)[1]
+
+
+def _mid(cols, n):
+    _, h, l, _ = _hlc(cols)
+    return (rolling_max(h, n) + rolling_min(l, n)) / 2.0
+
+
+def t_ichi_tenkan(cols, n=0, m=0.0):  return _mid(cols, n or 9)
+def t_ichi_kijun(cols, n=0, m=0.0):   return _mid(cols, n or 26)
+
+
+def t_ichi_span_a(cols, n=0, m=0.0):
+    """Senkou A as seen on THIS bar: (tenkan+kijun)/2 from 26 bars ago."""
+    return _shift((_mid(cols, 9) + _mid(cols, 26)) / 2.0, 26)
+
+
+def t_ichi_span_b(cols, n=0, m=0.0):
+    return _shift(_mid(cols, 52), 26)
+
+
+def t_tmo(cols, n, m=0.0):
+    """True Momentum Oscillator: sum of sign(close - open[i]) for i<n,
+    smoothed ema5 then ema3. Range about -n..n."""
+    o, _, _, c = _hlc(cols)
+    raw = _nan(len(c))
+    for t in range(n, len(c)):
+        raw[t] = np.sign(c[t] - o[t - n + 1:t + 1]).sum()
+    return _ema_nan(_ema_nan(raw, 5), 3)
+
+
+def t_rsi_highest(cols, n, m=0.0):
+    """Highest RSI(14) over the n bars BEFORE this one (ta.highest(rsi,n)[1])."""
+    return _shift(rolling_max(_rsi_series(_hlc(cols)[3], 14), n))
+
+
+def t_rsi_lowest(cols, n, m=0.0):
+    return _shift(rolling_min(_rsi_series(_hlc(cols)[3], 14), n))
+
 #: name -> (function, needs a length?, help line for the translator)
 TERMS = {
     "open":       (t_open, False, "this bar's open"),
@@ -501,10 +736,61 @@ TERMS = {
     "day_low":    (t_day_low, False, "today's UTC low so far, before this bar"),
     "prev_day_high": (t_prev_day_high, False, "yesterday's UTC high"),
     "prev_day_low":  (t_prev_day_low, False, "yesterday's UTC low"),
+    # higher timeframe (request.security): value = higher bar in UTC hours
+    "htf_open":   (t_htf_open, False, "open of the last COMPLETED higher-timeframe bar; "
+                                      "value = its size in hours (1, 2, 4, 8, 12, 24). "
+                                      "Pine request.security(tf, open). A timeframe "
+                                      "LOWER than the chart cannot be expressed"),
+    "htf_high":   (t_htf_high, False, "high of the last completed higher bar (value = hours)"),
+    "htf_low":    (t_htf_low, False, "low of the last completed higher bar (value = hours)"),
+    "htf_close":  (t_htf_close, False, "close of the last completed higher bar (value = hours)"),
+    "htf_ema":    (t_htf_ema, True, "EMA(n) of higher-timeframe closes (value = hours)"),
+    "htf_sma":    (t_htf_sma, True, "SMA(n) of higher-timeframe closes (value = hours)"),
+    "htf_rsi":    (t_htf_rsi, True, "RSI(n) of higher-timeframe closes (value = hours)"),
+    # remembered zones / events (var state)
+    "fvg_bull_top": (t_fvg_bull_top, True, "top of the latest live bullish fair value gap "
+                                           "(low > high[2]); dies when a close goes below its "
+                                           "bottom or after n bars. A retest is 'low below "
+                                           "fvg_bull_top' with 'price above fvg_bull_bot'"),
+    "fvg_bull_bot": (t_fvg_bull_bot, True, "bottom of that bullish gap (the high two bars before)"),
+    "fvg_bear_top": (t_fvg_bear_top, True, "top of the latest live bearish gap (high < low[2]); "
+                                           "dies on a close above it or after n bars"),
+    "fvg_bear_bot": (t_fvg_bear_bot, True, "bottom of that bearish gap"),
+    "since_sweep_low":  (t_since_sweep_low, True, "bars since a low broke the lowest low of the "
+                                                  "n bars before it (liquidity sweep); 0 on "
+                                                  "the sweep bar. 'swept within 10 bars' is "
+                                                  "since_sweep_low below 10"),
+    "since_sweep_high": (t_since_sweep_high, True, "bars since a high broke the n-bar high"),
+    # pivot events
+    "pivot_low_new":  (t_pivot_low_new, True, "1 on the bar a pivot low (n each side) is "
+                                              "confirmed, else 0 (Pine not na(ta.pivotlow))"),
+    "pivot_high_new": (t_pivot_high_new, True, "1 on the bar a pivot high is confirmed"),
+    "fib_pivot":  (t_fib_pivot, True, "pivot_low + value*(pivot_high - pivot_low) over the "
+                                      "last confirmed n-pivots; value 0-1, e.g. 0.618"),
+    "rsi_bull_div": (t_rsi_bull_div, True, "1 on the bar a pivot low (n each side) is "
+                                           "confirmed below the previous pivot low while "
+                                           "RSI(14) there is higher: regular bullish divergence"),
+    "rsi_bear_div": (t_rsi_bear_div, True, "1 on a confirmed pivot high above the previous "
+                                           "one with lower RSI(14): bearish divergence"),
+    # indicator on indicator
+    "ha_open":    (t_ha_open, False, "Heikin Ashi open"),
+    "ha_close":   (t_ha_close, False, "Heikin Ashi close; a green HA candle is ha_close above ha_open"),
+    "ha_bull_run": (t_ha_bull_run, False, "consecutive green Heikin Ashi candles ending on this bar"),
+    "wt1":        (t_wt1, True, "WaveTrend wt1 (LazyBear), channel length n, average 21"),
+    "wt2":        (t_wt2, True, "WaveTrend wt2 = sma4 of wt1. Signal: wt1 cross_above wt2"),
+    "ichi_tenkan": (t_ichi_tenkan, True, "Ichimoku conversion line (highest+lowest)/2 over n (9)"),
+    "ichi_kijun": (t_ichi_kijun, True, "Ichimoku base line over n (26)"),
+    "ichi_span_a": (t_ichi_span_a, False, "Ichimoku leading span A as plotted on this bar (9/26, shifted 26)"),
+    "ichi_span_b": (t_ichi_span_b, False, "Ichimoku leading span B as plotted on this bar (52, shifted 26)"),
+    "tmo":        (t_tmo, True, "True Momentum Oscillator: sum of sign(close-open[i]) over n, ema5 then ema3"),
+    "rsi_highest": (t_rsi_highest, True, "highest RSI(14) of the n bars before this one"),
+    "rsi_lowest": (t_rsi_lowest, True, "lowest RSI(14) of the n bars before this one"),
 }
 
 #: Kinds that read `Term.value` as a multiplier / factor / window length.
 MULT = {"alma", "bb_upper", "bb_lower", "kc_upper", "kc_lower", "supertrend",
-        "supertrend_line", "range_high", "range_low"}
+        "supertrend_line", "range_high", "range_low",
+        "htf_open", "htf_high", "htf_low", "htf_close", "htf_ema", "htf_sma",
+        "htf_rsi", "fib_pivot"}
 #: Kinds whose `length` may be 0 (an hour of day).
 ZERO_LENGTH_OK = {"range_high", "range_low"}

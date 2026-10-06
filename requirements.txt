@@ -21,6 +21,11 @@ scipy
 pytest
 hypothesis
 
+# JIT for the per-bar engines (strategies/vwap, ribbon, liqflush) and the
+# shared test fixtures. tests/conftest.py imports it, so a box without it
+# cannot collect the suite at all.
+numba
+
 # FX/Gold — MetaTrader5 is a Windows-only package. This box is Linux with a wine
 # MT5 at ~/.mt5, so it needs an mt5linux-style RPC bridge. Not set up; crypto first.
 # MetaTrader5

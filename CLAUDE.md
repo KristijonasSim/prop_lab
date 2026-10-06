@@ -723,6 +723,126 @@ From `~/trading-bots/RESEARCH_LOG.md` (prior project, same trader):
   futures from 9.0bps to 4.0. **Do not read it as a pace fix** - H-023 stage 14
   priced a whole book to ZERO cost and moved it 57 days to 32.
 
+- **THE FOOTPRINT FAMILY** (H-049, 2026-09-16, `strategies/footprint/`). Kris
+  asked for research on footprint charts, heatmaps and liquidity; the write-up
+  is `docs/RESEARCH_FOOTPRINT_LIQUIDITY.md`. A footprint is either **how much**
+  aggression a bar carried — that is `delta`, already dead three times over
+  (H-006 flat, H-021 5x too small, H-022 6.55bps against 8) — or **where inside
+  the bar's range** it sat, which is the only thing it adds to a feed this repo
+  already owns and is the entire reason the data costs money. Five named
+  patterns measured on **154,250,485 aggTrades**, 117 days, 15m and 5m, ten
+  price levels a bar: absorption at the extreme, unfinished auction, stacked
+  3:1 diagonal imbalance, flow location, POC-versus-close. **0 of 35 cells
+  clear 14bps unconditionally, 0 of 35 clear it inside delta terciles, 0 of 35
+  beat their own best-of-200 null**, largest reading anywhere **3.90bps**.
+  **It is not a power problem** — the q5−q1 standard error is 0.71bps at
+  5m/1h, so a 14bps effect would have read at **10–40 sigma**. The scout is
+  blind to an H-022-sized 2.5bps effect and cannot miss a tradeable one.
+  **Do not buy footprint data.** Scope: one market, one regime, ten levels
+  rather than one per tick — this kills the family as a purchase decision, not
+  as a universal claim, and the scout runs on any aggTrades archive.
+
+- **COST-TIMING IS DEAD AND THE COST *LEVEL* IS WRONG BY 40%** (H-049 stage 0,
+  `strategies/costmap/stage0_dispersion.py`, 2026-09-16).
+  * **A retraction inside the same study, and the lesson is general.** The first
+    estimator priced a bar at `vwap(aggressive buys) − vwap(aggressive sells)`
+    and reported **21x dispersion**. Over fifteen minutes that quantity is
+    separated by the bar's own **DRIFT** as much as by the spread; it reads
+    negative on falling bars, and the run dropped those — **39% of the sample,
+    all of it falling bars.** **NEVER SEPARATE TWO SIDES OF A SPREAD OVER A
+    WINDOW LONG ENOUGH TO TREND.** The fix is the bid-ask bounce on adjacent
+    trades: consecutive aggTrades whose aggressor sign flips, buy price minus
+    sell price, milliseconds apart.
+  * **Corrected: BTCUSDT's round trip is 0.02bps — one to two ticks — with a
+    p90/p10 of 1.28x.** There is nothing to time, and the cheap cost quartile is
+    1.04–1.06x better per unit of cost at 15m/1h and **0.97x, worse, at 4h.**
+    **Do not propose trading only the cheap bars.**
+  * **What it exposes.** `core/markets.py` charges BTCUSDT a `half_spread` of
+    2.0bps/side, labelled *"the weakest number in this table"*. The quoted
+    spread is **0.01bps/side**. The 2.0 is an unmeasured SLIPPAGE allowance, and
+    `BTCUSDT_depth_5m.parquet` prices the order it belongs to: median **$69.7M**
+    resting within 0.2% of mid, so 2.0bps/side is the cost of a **$10,000,000**
+    order. **The live book trades $877 legs.** True round trip **14.0 → 10.0bps.**
+  * Revives nothing alone — H-024's 7.9bps is still under 10.0 — **but with
+    H-048's maker path (9.0 → 4.0bps) H-024 clears comfortably.** Not a pace
+    fix (H-023 stage 14).
+  * **STAGE 1 RAN AND THE TABLE IS NOW MEASURED** (`stage1_table.py`). Kill
+    criterion, set first: within 30% on 3 of 5 coins and nothing gets edited.
+    **0 of 5.** half_spread bps/side, measured against assumed: BTC
+    **0.027** vs 2.00 (**74.7x**), ETH **0.070** vs 2.00 (28.6x), SOL **0.465**
+    vs 3.00 (6.4x), XRP **0.662** vs 3.00 (4.5x), BNB **0.516** vs 3.00 (5.8x).
+    `core/markets.py` now carries **2x the measured value** — a disclosed
+    safety factor, not a hidden one. **Taker round trip 14.00 → 10.10 on BTC;
+    mixed, the default `EXEC_MODE`, 9.00 → 7.05.**
+  * **THE OLD NUMBERS WERE NOT NONSENSE, THEY WERE SIZED FOR AN ORDER THIS
+    PROJECT DOES NOT PLACE**, and they come back as the account grows.
+    Break-even leg size, where the old number becomes correct: BTC $9.7M, ETH
+    $3.8M, SOL $1.5M, XRP $0.7M, BNB $0.7M. **Re-run stage 1 before trading
+    legs anywhere near those.**
+  * **The overcharge is a MAJORS-ONLY story.** The other six panel coins were
+    also measured and had no table entry at all: ADA 2.962, LINK 2.309, LTC
+    2.570 against the 3.00 charged by hand — about right — and **AVAX 3.628 and
+    DOT 4.458 were charged TOO LITTLE.** Small caps are not cheap to reach; that
+    also answers `strategies/depth/stage2_cost.py`'s "move down the cap curve".
+  * **No board number moves** — H-027 is gold-only and gold's cost was already
+    measured from Dukascopy ticks.
+
+- **AND FIXING THE COST MODEL REVIVES NOTHING — THE COST SIDE IS NOW EXHAUSTED**
+  (H-049 stage 2, `strategies/costmap/stage2_rescore.py`). H-024's 935 cells
+  re-scored against the corrected per-coin bars, nothing re-measured or
+  re-fitted. **Cells clearing with H-024's own quality gates: taker1x 0,
+  taker2x 0, mixed 1, maker1x 35.** The lone `mixed` survivor is 1 of 935
+  against **~47 false passes expected from the search**, monotone 0.75, and
+  1/1 years — noise.
+  * **THE FAMILY TEST IS THE ONE THAT SETTLES IT, and it cuts against the
+    cells.** 935 cells are not 935 questions; they are 17 features x 5 horizons
+    = **85 families** asked of 11 coins, so sign agreement across the panel is a
+    binomial test with a known null. **21 of 85 are nominal at p<0.05 against
+    4.2 expected** — there IS collective signal — but **every family with
+    perfect 11/11 agreement has a median of 0.57-1.01bps and ZERO cells above
+    4bps**, while the cells reading >4bps have no panel-wide consistency. The
+    consistent part of this feed is real and about **one basis point**.
+  * **AND THE PANEL CANNOT RESOLVE ITS OWN SEARCH.** With 11 coins the smallest
+    attainable p is 0.00098; Bonferroni over 85 families needs 0.00059. **0 of
+    85 survive and none can.** That is `core/search_cost.resolvable()` as a
+    structural fact about the panel, not a result about the feed. More coins,
+    not more features, is the only thing that would change it.
+  * **CONCLUSION, AND IT CLOSES A DIRECTION RATHER THAN OPENING ONE.** The cost
+    model really was wrong and fixing it changes no verdict. **The 2.7-10.9bps
+    band that six signals in this repo occupy is a property of the market, not
+    an artefact of a bad cost assumption.** Do not re-propose a microstructure
+    signal on the argument that the costs were unfair.
+
+- **THE TOP-N SPEEDUP IS MOSTLY THE RISK RUNG** (H-050, 2026-09-16,
+  `strategies/vwapbreak/research/topn_null.py`, `TOPN_NULL.md`). `TOPN_WIDE.md`'s
+  **8.9 expected days on gold** was the fastest number this project had and the
+  only one inside the 5-14 day target.
+  * **The rebuild is faithful** — trade counts match row for row (305/1570/
+    3149/6657) and floor30/top5 returns **21.7 days**, exactly `core/chosen.py`.
+    The disagreement is about how the ladder was READ, not what it contains.
+  * **EVERY ROW OF THAT TABLE IS AT A DIFFERENT RISK RUNG** — 6.0 / **3.0** /
+    6.0 / 6.0 / **4.0**% against the **2%** actually traded. Held at 2%: 27.7 →
+    17.1 → 17.4 → **18.9** → 16.7 → 15.2. **Not monotone.** The file names
+    monotonicity as its own reason to be believed; the trend was the rung.
+    **This is the H-041 error in the fastest number on the board.**
+  * **What survives is 21.7 → 15.2 at 2%, rung-matched — a real 30% gain**, and
+    **15.2 is outside the 5-14 target.** The 8.9 needs 6% risk; H-044 priced
+    that ladder at 43.5% → 58.3% blow-ups.
+  * **Decomposition first, null second, and this is the general rule.**
+    `pipeline.py` divides every leg's R by N, so N enters `days = maxDD_R /
+    R_per_day` twice and a falling `days` is what portfolio arithmetic gives
+    from ANY imperfectly correlated legs, **edge or no edge**. Measured: R/day
+    ×1.28 against maxDD ×0.50 — about three quarters of the gain is a smoother
+    curve, not more captured signal.
+  * **Null**: floor30 dead (5 of 12 shuffled seeds cut drawdown as hard,
+    p=0.462); floor100 1 of 12, p=0.154, and **under-powered by construction —
+    12 seeds floor at 1/13 = 0.077 and cannot reach 0.05.** Never size a
+    permutation null without checking the p it can attain.
+  * **THE PRODUCING SCRIPT WAS NOT IN THE REPO.** Nothing referenced
+    `topn_wide.json` or `topn_universe.json`; only the log and the write-up
+    survived. **A headline with no code behind it is not a result.** `topn_null.py`
+    rebuilds the ladder, so it has code again.
+
 Standing pattern from that repo: **every leg that ever worked came from a data feed
 (funding, open interest, taker delta, long/short ratio), not from a price pattern.**
 As of 2026-09-06 that pattern is stronger, not weaker: twelve price hypotheses have

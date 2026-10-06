@@ -25,6 +25,8 @@ days on a VM and survive a reboot, so nothing important lives in RAM.
 """
 from __future__ import annotations
 
+import contextlib
+
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -129,6 +131,11 @@ def fingerprints() -> set[str]:
 
 
 def add(strategies, *, quiet: bool = False) -> dict:
+    with _locked():
+        return _add(strategies, quiet=quiet)
+
+
+def _add(strategies, *, quiet: bool = False) -> dict:
     """Queue what is new. Returns a count of what happened, by source.
 
     Deduping happens against the queue AND the tried log, so an idea that was
@@ -155,7 +162,27 @@ def add(strategies, *, quiet: bool = False) -> dict:
     return out
 
 
+@contextlib.contextmanager
+def _locked():
+    """One process at a time on the queue files. `factory.drain` runs several
+    workers, and take() is read-modify-write: two at once would hand both the
+    same idea or drop one. flock is released if the process dies."""
+    import fcntl
+    QUEUE.parent.mkdir(parents=True, exist_ok=True)
+    with QUEUE.with_name("queue.lock").open("a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
 def take(source: str | None = None) -> Strategy | None:
+    with _locked():
+        return _take(source)
+
+
+def _take(source: str | None = None) -> Strategy | None:
     """The next idea, in the order Kris set. Removes it from the queue.
 
     Returns None when the queue is empty, which is the honest signal that the

@@ -808,6 +808,81 @@ priced a whole book to zero cost and moved it 57 days to 32 — so it is worth
 running for what it makes tradeable, and Kris should say whether that is worth a
 session while the demo test runs to 2026-09-28.
 
+## ADDED 2026-09-16 — the footprint/heatmap/liquidity research, and what it found
+
+Kris asked for a big piece of research on the next hypothesis, naming footprint
+charts, heatmaps and liquidity. **`docs/RESEARCH_FOOTPRINT_LIQUIDITY.md`** is it.
+Three of its numbers were measured rather than argued.
+
+* **The footprint family is dead and should not be bought.** 154,250,485 real
+  trades, 117 days, five named footprint patterns, **0 of 35 cells clear any
+  cost bar and 0 of 35 beat their own null**, largest reading 3.90bps. Not a
+  power problem — a 14bps effect would have read at 10–40 sigma.
+* **The heatmap's free half is already on disk** (`data/feeds/*_depth_5m.parquet`)
+  and H-024 killed it, 0 of 935 cells. The paid half — per-level resting size —
+  should not be bought until the two items below report.
+* **The real finding is the pattern.** Six independent microstructure signals
+  measured here land between 2.7 and 10.9bps and every round trip is 8–14bps.
+  Six deaths, one cause. **The remaining room is on the cost side of the
+  inequality, not the signal side.**
+* **Cost-timing was nominated, measured and killed in the same session.** The
+  first estimator said the round trip varies 21x; it was measuring the bar's
+  drift. Corrected, BTCUSDT's spread is **1–2 ticks and varies 1.28x** — there
+  is nothing to select on. Retraction kept in the log on purpose.
+* **H-049 RAN AND THE COST TABLE IS NOW MEASURED, not assumed.** The kill
+  criterion was within 30% on 3 of 5 coins; it came back **0 of 5**. half_spread
+  measured vs assumed: BTC **0.027** vs 2.00 (74.7x), ETH 0.070 vs 2.00, SOL
+  0.465 vs 3.00, XRP 0.662 vs 3.00, BNB 0.516 vs 3.00. `core/markets.py` now
+  carries 2x measured. **Taker round trip 14.00 → 10.10; mixed 9.00 → 7.05.**
+* **No board number moves** — H-027 is gold-only. But every crypto result here
+  predating 2026-09-16 was overcharged 4.5-75x on the spread component.
+* **IT RAN, AND THE ANSWER IS NO.** H-024's 935 cells re-scored at the
+  corrected per-coin bars: **taker 0 cells, mixed 1, maker1x 35.** The lone
+  mixed survivor is 1 of 935 against ~47 false passes expected — noise.
+* **The family test settles it.** 85 families (17 features x 5 horizons) across
+  11 coins: 21 nominal at p<0.05 against 4.2 expected, so signal exists — but
+  **every family with perfect 11/11 sign agreement medians 0.57-1.01bps with
+  zero cells above 4bps.** The consistent part is worth about one basis point.
+* **The panel cannot resolve its own search**: 11 coins bottom out at p=0.00098,
+  85 families need 0.00059. 0 survive and none can. More COINS would change
+  that; more features would not.
+* **THE COST SIDE IS CLOSED.** The model was wrong, fixing it changed no
+  verdict, and the 2.7-10.9bps band is a property of the market. Do not
+  re-propose a microstructure signal on the argument that costs were unfair.
+* **It expires with account size.** Break-even leg size, where the old number
+  becomes right: BTC $9.7M, ETH $3.8M, SOL $1.5M, XRP $0.7M, BNB $0.7M.
+* **It is not a pace fix and is not proposed as one.** H-023 stage 14 priced a
+  whole book to zero and moved it 57 days to 32.
+
+## ADDED 2026-09-16 (second pass) — H-050, the top-N headline audited
+
+Kris asked for the best next angle, tested. The best angle was the fastest number
+this project has: `TOPN_WIDE.md`'s **8.9 expected days on gold**, the only figure
+ever recorded inside the 5-14 day target, and the one thing it had never had was
+a paired null. Full write-up `strategies/vwapbreak/research/TOPN_NULL.md`.
+
+* **The rebuild is faithful** — trade counts match the original row for row, and
+  the shipped floor30/top5 returns **21.7 days**, exactly `core/chosen.py`.
+* **Every row of that table is at a different risk rung** — 6.0/**3.0**/6.0/6.0/
+  **4.0**% against the **2%** actually traded. Held at 2% the ladder reads 27.7 →
+  17.1 → 17.4 → **18.9** → 16.7 → 15.2: **not monotone.** The file cites
+  monotonicity as its reason to be believed. **The trend was the rung.**
+* **What survives: 21.7 → 15.2 at 2%, rung-matched — a real 30% gain.** But
+  **15.2 is outside the 5-14 target**, and the 8.9 needs 6% risk, which H-044
+  already priced at 43.5% → 58.3% blow-ups.
+* **Three quarters of the gain is a smoother curve, not more signal** — R/day
+  ×1.28 against maxDD ×0.50.
+* **The null is not settled.** floor30 is dead (p=0.462); floor100 is 1 of 12
+  (p=0.154) and 12 seeds cannot reach 0.05 at all. A 30-seed run is in flight.
+* **The producing script was missing from the repo.** It exists again as
+  `topn_null.py`.
+
+**The decision this puts in front of Kris**: floor100/top20 at 2% is a
+configuration change worth 30% of the pace, bought mostly with variance
+reduction, and it needs the operational rebuild — twenty settings is twenty
+positions at a twentieth risk each, and `live/bybit_demo.py` was built for five
+against one netted Bybit position. **Do not quote 8.9 without the 6% next to it.**
+
 ## The state in seven lines
 
 * **One hypothesis: H-027, the VWAP band breakout on gold.** Set by Kris

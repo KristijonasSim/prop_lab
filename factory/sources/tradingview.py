@@ -34,6 +34,7 @@ every pattern added later has to earn a test.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 from dataclasses import replace
@@ -198,6 +199,11 @@ THREE OUTCOMES, NOT TWO. Choose honestly:
    translation would merely be approximate. Naming the missing feature is
    useful on its own - it is how the grammar gets extended.
 
+OR-LOGIC. If the script enters on ANY of several separate rules (an if/else
+chain, a list of patterns, long OR short setups), return
+{{"any_of": [<object>, <object>, ...]}} with one full object per rule, up to 6.
+Each is tested as its own strategy. Do not refuse a script for OR-logic.
+
 A silent wrong translation occupies a test slot and tells us nothing about the
 original. A translation that SAYS what it dropped does not have that problem,
 which is why 2 exists.
@@ -211,6 +217,20 @@ SCRIPT:
 #: states its buy signal only there.
 _DRAW = re.compile(r"^\s*(plot|plotcandle|plotbar|bgcolor|barcolor|fill|hline|"
                    r"label\.\w+|line\.\w+|box\.\w+|table\.\w+)\s*\(")
+
+
+#: Appended in --force mode: the last pass over scripts already refused once.
+#: Kris, 2026-10-06: "everything must be tested, we cant have something not
+#: translated". So CANNOT is off the table, and the honesty moves into the
+#: note: the result is tagged PROXY and says what the original really does.
+_FORCE = """
+
+FORCE MODE - outcome 3 (CANNOT) IS NOT ALLOWED for this script. It was already
+refused once for: {why}
+Return the CLOSEST TESTABLE PROXY of its entry inside the grammar: the filter
+the script applies, the price behaviour its signal usually coincides with, or
+for a bot with no entry rule (DCA / grid / always-in) a rule that is true on
+most bars. Put everything the proxy does NOT capture in "simplified"."""
 
 
 def lean_pine(pine: str) -> str:
@@ -249,8 +269,8 @@ def lean_pine(pine: str) -> str:
 
 
 def translate_ai(pine: str, name: str, *, model: str | None = None,
-                 timeout: int | None = None, text: str | None = None
-                 ) -> tuple[Strategy | None, str]:
+                 timeout: int | None = None, text: str | None = None,
+                 force: str | None = None):
     """The model's reading of one script, validated as hard as a proposal is.
 
     WHY A MODEL AT ALL. The regex above understands four patterns and skips
@@ -270,6 +290,8 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
     from factory.sources import agent
 
     prompt = _AI_PROMPT.format(grammar=agent._grammar(), pine=lean_pine(pine)[:40000])
+    if force:
+        prompt += _FORCE.format(why=force[:400])
     try:
         out = text if text is not None else agent._call(
             prompt, model or agent.CLI_MODEL, timeout or agent.TIMEOUT)
@@ -288,6 +310,26 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
         # NOT a failure. The model naming the missing Pine feature is the
         # signal that widens the grammar, so it is reported in those words.
         return None, f"grammar gap: {item['cannot']}"
+    if isinstance(item.get("any_of"), list) and item["any_of"]:
+        # OR-logic: one strategy per branch, each tested on its own.
+        out, errs = [], []
+        for k, sub in enumerate(item["any_of"][:6], 1):
+            if not isinstance(sub, dict):
+                continue
+            sub = {**sub, "name": f"{sub.get('name') or name} (rule {k})"}
+            got, why = _one_ai(sub, name, force)
+            (out.append(got) if got else errs.append(why))
+        if not out:
+            return None, errs[0] if errs else "invalid translation: empty any_of"
+        return (out[0] if len(out) == 1 else out), ""
+    return _one_ai(item, name, force)
+
+
+def _one_ai(item: dict, name: str, force: str | None):
+    """One translated object -> Strategy, clamping out-of-range numbers."""
+    from factory.sources import agent
+
+    item, clamped = _clamp(item)
     try:
         s = agent.validate({**item, "name": item.get("name") or name})
     except agent.ProposalError as exc:
@@ -301,10 +343,59 @@ def translate_ai(pine: str, name: str, *, model: str | None = None,
     dropped = item.get("simplified") or []
     if isinstance(dropped, str):
         dropped = [dropped]
-    note = s.note
+    dropped = list(dropped) + clamped
+    note = ("PROXY - not the original entry. " if force else "") + s.note
     if dropped:
         note = (note + "  SIMPLIFIED: " + "; ".join(str(d) for d in dropped))[:600]
     return replace(s, source="tradingview", note=note), ""
+
+
+def _clamp(item: dict) -> tuple[dict, list[str]]:
+    """Pull out-of-range numbers to the nearest legal value, and SAY so.
+
+    The model kept answering `kc_lower value 30` and `fib_pivot length 2`;
+    the prompt already says out-of-range values are clamped, so the clamp is
+    done here, deterministically, instead of paying for another call.
+    """
+    import copy
+
+    from factory.sources import agent
+    from factory.spec import INDICATORS, MULT, ZERO_LENGTH_OK
+
+    item, said = copy.deepcopy(item), []
+
+    def fix(d, lo, hi, key, where, cast=float):
+        try:
+            v = cast(d.get(key))
+        except (TypeError, ValueError):
+            return
+        c = min(max(v, lo), hi)
+        if c != v:
+            d[key] = c
+            said.append(f"{where} {key} {v:g} clamped to {c:g}")
+
+    for c in item.get("entry") or []:
+        if not isinstance(c, dict):
+            continue
+        for side in ("left", "right"):
+            t = c.get(side)
+            if not isinstance(t, dict) or t.get("kind") not in INDICATORS:
+                continue
+            k = t["kind"]
+            if INDICATORS[k][1] and k not in ZERO_LENGTH_OK and t.get("length") is not None:
+                fix(t, agent.MIN_LENGTH, agent.MAX_LENGTH, "length", k, int)
+            if k in MULT and t.get("value") is not None:
+                fix(t, 0.0, 24.0, "value", k)
+            if t.get("offset") is not None:
+                fix(t, 0, 50, "offset", k, int)
+        if c.get("hold") is not None:
+            fix(c, 1, agent.MAX_HOLD, "hold", "condition", int)
+    for key, (lo, hi) in (("stop_atr", agent.STOP_RANGE),
+                          ("target_atr", agent.TARGET_RANGE),
+                          ("max_hold", agent.HOLD_RANGE)):
+        if item.get(key) is not None:
+            fix(item, lo, hi, key, "exit", int if key == "max_hold" else float)
+    return item, said
 
 
 def load(folder: Path | None = None, *, ai: bool = False, model: str | None = None,
@@ -325,12 +416,16 @@ def load(folder: Path | None = None, *, ai: bool = False, model: str | None = No
     return _read_all(files, ai=ai, model=model)
 
 
-def _read_one(p: Path, ai: bool, model: str | None):
+def _read_one(p: Path, ai: bool, model: str | None, force: str | None = None):
     body = p.read_text(errors="ignore")
-    s, why = translate(body, p.stem)
+    s, why = (None, "") if force else translate(body, p.stem)
     if s is None and ai:
-        s, why = translate_ai(body, p.stem, model=model)
+        s, why = translate_ai(body, p.stem, model=model, force=force)
     return p.stem, s, why
+
+
+def _flat(s):
+    return s if isinstance(s, list) else [s] if s else []
 
 
 def _read_all(files, *, ai: bool, model: str | None, workers: int = 1):
@@ -339,7 +434,7 @@ def _read_all(files, *, ai: bool, model: str | None, workers: int = 1):
 
     with ThreadPoolExecutor(max(1, workers)) as ex:
         res = list(ex.map(lambda q: _read_one(q, ai, model), files))
-    out = [s for _, s, _ in res if s]
+    out = [x for _, s, _ in res for x in _flat(s)]
     skipped = [(n, why) for n, s, why in res if not s]
     return out, skipped
 
@@ -398,8 +493,9 @@ def record_skips(skipped, path=None, translated=()) -> int:
 RETRYABLE = ("model call failed", "invalid translation", "no JSON", "bad JSON")
 
 
-def retry(limit: int | None = None, model: str | None = None, workers: int = 4,
-          exclude=(), gaps: bool = False) -> tuple[list[Strategy], list[tuple[str, str]]]:
+def retry(limit: int | None = None, model: str | None = None, workers: int = 1,
+          exclude=(), gaps: bool = False, buckets=("retry",), force: bool = False
+          ) -> tuple[list[Strategy], list[tuple[str, str]]]:
     """Re-translate refused scripts whose refusal was not the script's fault.
 
     Kris, 2026-09-30: 234 of 373 refusals were `model exited 1` with nothing
@@ -414,17 +510,62 @@ def retry(limit: int | None = None, model: str | None = None, workers: int = 4,
             if l.strip()] if p.exists() else []
     # `gaps`: also re-ask scripts refused for a GRAMMAR gap - worth doing once
     # each time the grammar grows (2026-10-06: factory/terms.py).
+    #
+    # TOKEN BUDGET, 2026-10-06: re-asking all 78 gaps burned a 5-hour window
+    # for 5 scripts. A gap is re-asked only when `factory.gapsort` files its
+    # reason under one of `buckets` - by default "retry", the gaps the grammar
+    # has since grown to cover. "never" is never re-asked whatever is passed.
+    from factory import gapsort
+    if force:
+        # The last pass: every refused script, CANNOT forbidden (`_FORCE`).
+        buckets = tuple({gapsort.bucket(r.get("why", ""))[0] for r in rows})
+    why_of = {r["script"]: str(r.get("why", "")) for r in rows}
     names = [r["script"] for r in rows
-             if (str(r.get("why", "")).startswith(RETRYABLE)
-                 or (gaps and r.get("gap")))
+             if (force or str(r.get("why", "")).startswith(RETRYABLE)
+                 or (gaps and r.get("gap")
+                     and gapsort.bucket(r.get("why", ""))[0] in buckets
+                     and gapsort.bucket(r.get("why", ""))[0] != "never"))
              and r["script"] not in exclude]
     paths = [PINE_DIR / f"{n}.pine" for n in names[:limit]]
     paths = [q for q in paths if q.exists()]
     if not paths:
         return [], []
-    got, skipped = _read_all(paths, ai=True, model=model, workers=workers)
+    if workers > 1:
+        got, skipped = _read_all(paths, ai=True, model=model, workers=workers)
+    else:
+        got, skipped = _read_until_limit(
+            paths, model, {n: why_of[n] for n in names} if force else None)
     record_skips(skipped, translated={q.stem for q in paths}
                  - {n for n, _ in skipped})
+    return got, skipped
+
+
+#: A model refusal that means the ACCOUNT is out, not the script unreadable.
+_OUT_OF_USAGE = ("usage limit", "rate limit", "limit reached", "credit balance",
+                 "overloaded")
+
+
+def _read_until_limit(paths, model, force=None):
+    """One script at a time; stop at the first usage-limit error.
+
+    Four workers kept firing into an exhausted account and filed every
+    script as `model call failed`. Serial and stopping costs a little speed
+    and nothing else: the rest stay in the list for the next window.
+    """
+    got, skipped = [], []
+    for i, q in enumerate(paths, 1):
+        name, s, why = _read_one(q, True, model, (force or {}).get(q.stem))
+        if s:
+            got.extend(_flat(s))
+        elif why.startswith("model call failed") and any(
+                k in why.lower() for k in _OUT_OF_USAGE):
+            print(f"[retry] usage limit after {i - 1}/{len(paths)} - stopping; "
+                  f"the rest stay queued", file=sys.stderr)
+            break
+        else:
+            skipped.append((name, why))
+        print(f"[retry] {i}/{len(paths)} {name}: "
+              f"{'translated' if s else why[:80]}", file=sys.stderr)
     return got, skipped
 
 
@@ -443,12 +584,20 @@ def _main(argv=None) -> int:
                     help="re-ask the model only for refusals that were not the "
                          "script's fault (crashes, invalid output)")
     ap.add_argument("--retry-gaps", action="store_true",
-                    help="--retry, plus scripts refused for a grammar gap "
-                         "(run after the grammar grows)")
+                    help="--retry, plus grammar gaps in --bucket "
+                         "(see `python -m factory.gapsort`)")
+    ap.add_argument("--bucket", action="append",
+                    help="gap bucket(s) to re-ask, default 'retry'; e.g. "
+                         "--bucket mtf after the grammar gains timeframes")
+    ap.add_argument("--limit", type=int, help="at most this many model calls")
+    ap.add_argument("--force", action="store_true",
+                    help="every refused script, CANNOT forbidden: the closest "
+                         "testable proxy, tagged PROXY in its note")
     a = ap.parse_args(argv)
 
-    if a.retry or a.retry_gaps:
-        got, skipped = retry(gaps=a.retry_gaps)
+    if a.retry or a.retry_gaps or a.force:
+        got, skipped = retry(gaps=a.retry_gaps, limit=a.limit, force=a.force,
+                             buckets=tuple(a.bucket or ("retry",)))
         print(f"{len(got)} translated, {len(skipped)} still refused")
         for n, w in skipped:
             print(f"  SKIP {n}: {w[:120]}")

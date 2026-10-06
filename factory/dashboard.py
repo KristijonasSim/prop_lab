@@ -356,7 +356,8 @@ def gaps() -> list[dict]:
     rather than adding to it, and these come from scripts people actually
     trade. They were being printed to a terminal and lost.
     """
-    return queue.rows(queue.DIR / "skipped.jsonl")
+    from factory import gapsort
+    return gapsort.tag(queue.rows(queue.DIR / "skipped.jsonl"))
 
 
 def state() -> dict:

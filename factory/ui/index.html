@@ -239,7 +239,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c12" id="gapsCard">
-    <h2>Could not translate</h2>
+    <h2>Could not translate <span class="dim" id="gapsCount"></span></h2>
     <div class="scroll"><table id="gapsTable"></table></div>
     
   </div>
@@ -784,11 +784,33 @@ function gapsTable(){
   const g = (S.gaps || []).filter(x => !SRC || x.source === SRC);
   $('gapsCard').style.display = g.length ? '' : 'none';
   if (!g.length) return;
+  // Grouped by WHAT IS MISSING (factory/gapsort.py), biggest first: one
+  // grammar feature unlocks a whole group. "never" sinks to the bottom.
+  const groups = {};
+  g.forEach(x => (groups[x.bucket || 'other'] ||= []).push(x));
+  const order = Object.keys(groups).sort((a, b) =>
+    (a === 'never') - (b === 'never') || (b === 'retry') - (a === 'retry')
+    || groups[b].length - groups[a].length);
+  const cls = b => b === 'never' ? 'bad' : b === 'retry' ? 'good' : 'warn';
+  const never = (groups.never || []).length, todo = g.length - never;
+  $('gapsCount').textContent = `· ${todo} need a grammar feature · ${never} never translatable`;
   $('gapsTable').innerHTML =
-    `<tr><th>script</th><th>what is missing</th></tr>` +
-    g.map(x => `<tr><td class="mono">${esc(x.script)}</td>
-      <td class="wide dim">${esc(String(x.why).replace(/^grammar gap:\s*/,''))}</td></tr>`).join('');
+    `<tr><th>missing feature</th><th style="text-align:right">scripts</th><th>scripts</th></tr>` +
+    order.filter(b => b !== 'never' || SHOW_NEVER).map(b => {
+      const xs = groups[b];
+      const labels = [...new Set(xs.map(x => x.label || b))].join(' · ');
+      return `<tr class="gap" title="${esc(xs.map(x => x.script + ': ' +
+          String(x.why).replace(/^grammar gap:\s*/,'').slice(0, 160)).join('\n'))}">
+        <td><span class="${cls(b)}">${esc(b === 'never' ? 'never: ' + labels : labels)}</span></td>
+        <td class="mono" style="text-align:right">${xs.length}</td>
+        <td class="wide dim mono">${esc(xs.map(x => x.script.replace(/^tv_[a-z0-9]+_?/, '') || x.script).join(', '))}</td></tr>`;
+    }).join('') +
+    (never ? `<tr><td colspan="3" class="dim" style="cursor:pointer" id="neverToggle">
+      ${SHOW_NEVER ? '▾ hide' : '▸ show'} ${never} never-translatable (DCA/grid bots, ML, other symbols, calendar)</td></tr>` : '');
+  const t = $('neverToggle');
+  if (t) t.onclick = () => { SHOW_NEVER = !SHOW_NEVER; gapsTable(); };
 }
+let SHOW_NEVER = false;
 
 function queueTable(){
   const by = S.queue.waiting_by_source || {};
