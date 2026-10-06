@@ -509,6 +509,16 @@ function srcTable(){
 }
 
 const OPEN = new Set();
+// NOT THE SCRIPT. Kris, 2026-10-06: the translator often swaps in something
+// simpler ("MA slope turn-up" ran as "price crosses EMA9"), and the row still
+// carried the script's name. A result on the stand-in is not the script's.
+const approx = x => {
+  // Replacing the script's EXITS is by design for every idea, so only
+  // dropped or swapped ENTRY parts earn the tag.
+  const m = String(x.note || '').split('SIMPLIFIED:')[1] || '';
+  const items = m.split(';').map(t => t.trim()).filter(t => t && !/exit/i.test(t));
+  return items.length ? ` <span class="bad" style="font-size:11px" title="${esc(items.join('; '))}">≈ approx</span>` : '';
+};
 // PF 1.2 is the gate and 1.2 passes it. A 1.196 printed as "1.20" in red
 // read as "1.2 fails" (Kris, 2026-10-06), so judge the number as shown.
 const pfOk = pf => pf != null && Math.round(pf * 100) >= 120;
@@ -673,6 +683,7 @@ const COLS = {
   dd:      [x => (x.score||{}).max_dd_r, false],
   pass:    [x => (x.score||{}).pass_pct, true],
   days:    [x => (x.score||{}).eval_days, false],
+  acc:     [x => (x.score||{}).accounts, false],
 };
 let SORT = (() => { try { return JSON.parse(localStorage.getItem('factory.sort'))
                           || {key:'best', flip:false}; }
@@ -729,7 +740,7 @@ function ideasTable(){
   $('ideas').innerHTML =
     `<tr>${th('best','#')}<th>strategy</th><th>market</th><th>tf</th>${th('per_day','trades/day')}
        ${th('pf','PF')}${th('win','win %')}${th('r','R/trade')}${th('dd','max DD')}
-       ${th('pass','pass %')}${th('days','days')}<th>result</th><th>repairs</th></tr>` +
+       ${th('pass','pass %')}${th('days','days')}${th('acc','accounts')}<th>result</th><th>repairs</th></tr>` +
     order.map(i => { const x = list[i];
       const good = /^(passed|fixed)/.test(plainOutcome(x.outcome, x));
       const open = OPEN.has(i);
@@ -737,7 +748,7 @@ function ideasTable(){
       const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
           <td class="mono dim">${rank[i] + 1}</td>
-          <td class="wide">${esc(x.script || shortName(x))}${x.variants > 1
+          <td class="wide">${esc(x.script || shortName(x))}${approx(x)}${x.variants > 1
             ? `<span class="dim" style="display:block;font-size:11.5px">best of ${x.variants}: ${esc((x.name || '').split(' - ')[1] || '')}</span>` : ''}</td>
           <td class="mono">${esc(k.market || '—')}</td>
           <td class="mono">${esc(k.tf || '—')}</td>
@@ -751,9 +762,10 @@ function ideasTable(){
           <td class="mono">${k.pass_pct ?? '—'}</td>
           <td class="mono">${k.eval_days ?? (k.pace_error
             ? `<span class="bad" title="${esc(k.pace_error)}">error</span>` : '—')}</td>
+          <td class="mono" title="accounts bought per funded account (1 / pass rate)">${k.accounts ?? '—'}</td>
           <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome, x))}</td>
           <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
-        </tr>` + (open ? `<tr class="detail"><td colspan="13">${ideaDetail(x)}</td></tr>` : '');
+        </tr>` + (open ? `<tr class="detail"><td colspan="14">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
   $('ideas').querySelectorAll('th.sortable').forEach(h => h.onclick = () => {
     const k = h.dataset.k;

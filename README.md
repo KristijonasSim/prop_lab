@@ -14,7 +14,7 @@ block or in another file disagrees with it, this block wins until checked.**
 |---|---|
 | **Focus** | H-027 VWAP band breakout, gold. No new hypotheses unless Kris asks. |
 | **Shipped rule** | `core/chosen.py`: XAUUSD 1h, floor 30 / top 5, 2% risk. 59.8% pass, 21.7 days (band 16.8–31.4), measured on the old Thunderbolt 6/3/6 card. |
-| **Open conflict** | `CLAUDE.md` quotes the HOUSE 8/3/6 card at 4% risk (19.1 days). `chosen.py` was never re-picked on HOUSE. Which one is the plan is **unresolved**. |
+| **On the HOUSE card** | Settled 2026-10-06 (`research/house_repick.py`): at **2% risk** 54.7% pass, **23.8 days (band 19–33)**, 1.83 accounts per funded one. 4% is 18.3 days (14–24) at 2.29 accounts; the bands overlap, so 4% is not really faster. **2% stays.** |
 | **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
 | **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
 | **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
