@@ -106,7 +106,9 @@ def beat(step: int = 0, label: str = "", *, detail: str = "", idea: str = "",
              counts={**prev.counts, **(counts or {})} if counts is not None
                     else prev.counts)
     p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".json.tmp")
+    # Per-process name: drain runs several workers and a shared tmp file let
+    # one worker rename away the file another was about to rename (2026-10-07).
+    tmp = p.with_suffix(f".json.{os.getpid()}.tmp")
     tmp.write_text(json.dumps(b.to_dict(), separators=(",", ":")))
     os.replace(tmp, p)
     return b

@@ -18,8 +18,8 @@ block or in another file disagrees with it, this block wins until checked.**
 | **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
 | **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
 | **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
-| **Factory** | TradingView scripts → grammar → 7 steps. 260 ideas queued, untested. Desktop loop and VM factory **stopped 2026-10-07** by Kris to work with what we have. |
-| **Factory verdicts** | Only the last 3 years decide. Older years are a note. Nothing has yet beaten its luck check. |
+| **Factory** | TradingView scripts → grammar → 7 steps. Queue empty: all 278 tested 2026-10-07, total failures archived (`factory/prune.py`), 1-10 score on the board. Desktop loop and VM factory **stopped** by Kris. |
+| **Factory verdicts** | Only the last 3 years decide. Nothing has beaten its luck check. **Pools 1-3** (`factory/pools.py`, 2026-10-07): 31-38% pass on unseen data, same as random pools; VWAP is 55%. |
 | **Eval days** | Always at the `riskladder.pick` rung (2% floor), never the fastest rung. Report accounts used (1/pass) beside days. |
 | **Test window** | 3 years, 5 max. Six markets always: BTC, gold, silver, EURUSD, GBPUSD, USDJPY. |
 | **Data** | Committed to Git on purpose (see `.gitignore`). `data/feeds/` is rewritten every 15 min by cron. |

@@ -174,6 +174,62 @@ def rank_key(x: dict) -> tuple:
     return (-_stage(x.get("outcome")), -clears, second, -(k.get("pass_pct") or 0))
 
 
+def score10(x: dict) -> float:
+    """ONE NUMBER, 1 to 10. Kris, 2026-10-07: *"rank all of the strategies
+    with score from 1 to 10"*. Four parts, each 0-1, weighted:
+
+        speed     30%  expected days: 14 or less = 1, 100 or more = 0 (log)
+        accounts  25%  accounts per funded one: 1.5 or less = 1, 4+ = 0
+        profit    25%  profit factor: 1.0 = 0, 1.6 or more = 1
+        checks    20%  passed everything clean 1, passed after repair 0.8,
+                       passed 3 years but weak on older 0.5, else 0.2
+
+    Caps: under 30 trades scores 2 at most, under 100 trades 4. PF under 1.2 can't score above 5, a losing rule (PF under 1.0)
+    above 3, and no pace number at all means 2 at most. It ranks what is on
+    the board against itself; it is not a verdict that anything is good.
+    """
+    import math
+    k = x.get("score") or {}
+    o = x.get("outcome") or ""
+    g = (1.0 if "scored" in o and "NOT" not in o else 0.8 if "scored" in o
+         else 0.5 if "step 6" in o else 0.2)
+    pf, days, acc = k.get("pf"), k.get("eval_days"), k.get("accounts")
+    if pf is None or not days or not acc:
+        return round(1 + g, 1)
+    cl = lambda v: max(0.0, min(1.0, v))
+    sp = cl((math.log(100) - math.log(days)) / (math.log(100) - math.log(14)))
+    ac = cl((4 - acc) / 2.5)
+    pr = cl((pf - 1.0) / 0.6)
+    v = 1 + 9 * (0.30 * sp + 0.25 * ac + 0.25 * pr + 0.20 * g)
+    # A handful of trades is an anecdote: 2 trades scored 9.1 before this cap.
+    n = k.get("trades") or 0
+    if n < 30:
+        v = min(v, 2.0)
+    elif n < 100:
+        v = min(v, 4.0)
+    if pf < 1.0:
+        v = min(v, 3.0)
+    elif pf < 1.2:
+        v = min(v, 5.0)
+    return round(v, 1)
+
+
+def _pools() -> dict | None:
+    """`factory/pools.py`'s output, each pool scored 1-10 on its HELD-OUT half
+    with the same `score10` the single strategies get."""
+    p = queue.DIR / "pools.json"
+    if not p.exists():
+        return None
+    try:
+        d = json.loads(p.read_text())
+    except ValueError:
+        return None
+    for x in d.get("pools", []):
+        h = x.get("held_out") or {}
+        x["score10"] = score10({"outcome": "scored", "score": h})
+    return d
+
+
 def best_variant(variants: list[dict]) -> dict:
     """The variant shown for a script. Kris: show the BEST variant."""
     return sorted(variants, key=rank_key)[0]
@@ -188,7 +244,7 @@ def scripts_view(ideas: list[dict]) -> list[dict]:
     out = []
     for name, vs in groups.items():
         b = best_variant(vs)
-        out.append({**b, "script": name, "variants": len(vs),
+        out.append({**b, "script": name, "variants": len(vs), "score10": score10(b),
                     "sent_to_repair": any(v.get("repairs") for v in vs),
                     "fixed": any("repaired" in (v.get("outcome") or "") for v in vs),
                     "repairs_total": sum(len(v.get("repairs") or []) for v in vs)})
@@ -378,6 +434,7 @@ def state() -> dict:
         "gaps": gaps(),
         "step5": _last_null(),
         "survivors": _survivors(),
+        "pools": _pools(),
         "candidates": _candidates(),
         "runs": [{"started": r.get("started"), "ideas": r.get("ideas", 0),
                   "step3": r.get("step3_pass", 0),

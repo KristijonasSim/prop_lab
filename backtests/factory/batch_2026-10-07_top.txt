@@ -1,0 +1,26 @@
+scored 128 pf>=1.2 30 beat 23.8d & pf>=1.2 0
+  24.1d pass 33.2 acc 3.01 pf1.20 n  708 0.92/d XAUUSD 1h   tradi Concordance long: bias up + stochastic m | long when price above ema55 and wpr20 above -40
+  25.6d pass 35.2 acc 2.84 pf1.23 n  769 1.00/d XAUUSD 1h   tradi TURKS 200-SMA trend gate | long when price above sma200 for 5 bars
+  26.3d pass 41.8 acc 2.39 pf1.48 n  296 0.38/d XAUUSD 4h   tradi EMA50/200 trend + breadth proxy | long when ema50 above ema200 and price above ema200 for 13 bars
+  28.5d pass 38.6 acc 2.59 pf1.37 n  337 0.44/d XAUUSD 1h   tradi Hemant gold liquidity sweep long | long when low below lowest10 and price above lowest10 and price above ema200
+  29.4d pass 34.1 acc 2.94 pf1.22 n  674 0.87/d XAUUSD 1h   tradi Harmonic D proxy: pivot low confirmed (r | long when pivot_low_new4 above 0.5
+  31.9d pass 32.9 acc 3.04 pf1.24 n  533 0.68/d XAUUSD 4h   tradi VWAP + zero-lag trend pullback long | long when price above ema34 and price above vwap50
+  32.0d pass 40.7 acc 2.46 pf1.23 n  857 1.11/d XAUUSD 15m  tradi Descending trendline breakout long (rule | long when low cross_above pivot_high6
+  34.9d pass 37.3 acc 2.68 pf1.23 n  605 0.78/d XAUUSD 1h   tradi UPF pivot-low demand bounce long | long when pivot_low_new3 above 0.5 and rsi14 above 40 and price above open
+  38.8d pass 28.4 acc 3.53 pf1.21 n  466 0.60/d XAUUSD 1h   tradi Bullish engulfing above EMA200 | long when bull_engulf above 0.5 and price above ema200
+  39.1d pass 35.8 acc 2.79 pf1.21 n  485 0.63/d XAUUSD 1h   tradi NDX close crosses above SMA10, above EMA | long when price cross_above sma10 and price above ema200
+  41.5d pass 98.8 acc 1.01 pf15.47 n    2 0.00/d XAUUSD 1d   agent bounce to range top in downtrend | short when price below ema100 and wpr10 above -10
+  42.2d pass 33.2 acc 3.01 pf1.25 n  418 0.54/d XAUUSD 1h   tradi Narrow-state trend reversal bar (long) | long when price above sma200 and price above prev_high and prev_close below prev_open
+  47.0d pass 42.5 acc 2.35 pf1.21 n  304 0.39/d XAUUSD 1h   tradi HTF trend cloud flip (long, approximated | long when price cross_above ema13 and ema8 above ema21 and ema21 above ema34
+  51.0d pass 31.4 acc 3.19 pf1.24 n  337 0.44/d XAUUSD 1h   tradi 20/200 SMA trend pullback | long when sma20 above sma200 and price cross_above sma20
+  59.5d pass 35.3 acc 2.83 pf1.29 n  409 0.52/d XAUUSD 4h   tradi SMMA high-band two-bar breakout | long when price above ema39 for 2 bars
+  62.5d pass 34.4 acc 2.91 pf1.26 n  265 0.34/d XAUUSD 4h   tradi Tight-cluster breakout | long when price cross_above highest10
+  66.9d pass 35.9 acc 2.79 pf1.28 n  261 0.33/d XAUUSD 4h   tradi BB Power long proxy (rule 1) | long when price cross_above bb_upper14x1
+  70.6d pass 32.6 acc 3.07 pf1.31 n  231 0.30/d XAUUSD 1h   agent pullback turn in uptrend | long when price above sma200 and price below ema20 for 4 bars and roc3 cross_above 0
+  70.9d pass 53.6 acc 1.86 pf1.30 n  245 0.31/d EURUSD 1h   agent short wpr5 top of range in downtrend | short when price below sma200 and wpr5 above -5
+  82.0d pass 48.8 acc 2.05 pf1.24 n  257 0.33/d USDJPY 4h   tradi L_COIL (rule 3) | long when price above highest8[1] and body_pct above 28 and hma8 above hma21
+  83.2d pass 46.9 acc 2.13 pf1.27 n  241 0.31/d EURUSD 1h   agent downtrend top of 5-bar range | short when price below ema200 and wpr5 above -5
+  93.2d pass 39.7 acc 2.52 pf1.40 n  142 0.13/d BTCUSDT 4h  tradi TMO zero-line cross down (rule 2) | short when tmo14 cross_below 0
+ 131.5d pass 60.9 acc 1.64 pf1.37 n  181 0.23/d EURUSD 1h   tradi EMA 20/50 golden cross | long when ema20 cross_above ema50
+ 154.6d pass 56.9 acc 1.76 pf1.40 n   59 0.07/d USDJPY 4h   agent bear roc5 pop fade | short when price below ema200 and roc5 above 60
+ 171.4d pass 44.3 acc 2.26 pf44.74 n    4 0.01/d XAUUSD 1d   agent range top in downtrend | short when price below ema100 and wpr10 above -12

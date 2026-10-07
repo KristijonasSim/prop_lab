@@ -219,7 +219,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   </div>
 
   <div class="card c7" id="gatesCard">
-    <h2>Why ideas died</h2>
+    <h2>Where ideas stopped</h2>
     <p class="lede" id="gatesLede"></p>
     <div class="gates" id="gates"></div>
     <div class="legend" id="gatesLegend"></div>
@@ -230,6 +230,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
   <div class="card c5" id="nullCard">
     <h2>Luck check</h2>
     <div id="null"></div>
+  </div>
+
+  <div class="card c12" id="poolsCard" style="display:none">
+    <h2>Pools · several strategies on one account</h2>
+    <p class="lede" id="poolsLede"></p>
+    <div class="scroll"><table id="poolsTable"></table></div>
   </div>
 
   <div class="card c12" id="ideasCard">
@@ -283,8 +289,21 @@ const STOP_WHY = {
   alive:  ['-', 'Passed step 3, waiting', ''],
   other:  ['-', 'No usable trades', ''],
 };
-const STOP_COL = k => ({'3':'#8ab4f8','6':'#e879a0'}[String(k).split(':')[0]]
-                        || (k === 'scored' ? '#4ade80' : '#4b5563'));
+// COLOUR SAYS HOW BAD, NOT WHICH STEP. Kris, 2026-10-07: "its impossible to
+// understand where actual problems is". Green = passed, amber = passed 3 years
+// with a note about older years (not a death), red = died on the 3 years that
+// decide, grey = never had enough trades to judge. Each reason has its own shade.
+const STOP_COLS = {
+  scored: '#22c55e', alive: '#86efac',
+  '6:cost': '#f59e0b', '6:drift': '#fbbf24', '6:concentration': '#fcd34d',
+  '6:trades': '#fde68a', '6:other': '#a8a29e',
+  '3:cost': '#dc2626', '3:drift': '#f97316', '3:concentration': '#f472b6',
+  '3:trades': '#6b7280', '3:other': '#4b5563', other: '#4b5563',
+};
+const STOP_COL = k => STOP_COLS[k] || '#4b5563';
+const STOP_ORDER = Object.keys(STOP_COLS);
+const byOrder = ([a],[b]) => (STOP_ORDER.indexOf(a)+99*(STOP_ORDER.indexOf(a)<0))
+                           - (STOP_ORDER.indexOf(b)+99*(STOP_ORDER.indexOf(b)<0));
 let S = null, tick = 0;
 // Which source the page is looking at. Kris, 2026-09-23: the source is the
 // thing you pick first, so it is remembered between reloads.
@@ -435,9 +454,9 @@ function gates(){
   // made a single script look like 46 tests.
   $('gatesLede').textContent = `${tot} idea${tot===1?'':'s'} · each tested on 6 markets × 4 timeframes`;
   const nice = k => STOP_WHY[k] ? STOP_WHY[k][1] : String(k).split(':').pop();
-  $('gates').innerHTML = Object.entries(g).filter(([,v])=>v)
+  $('gates').innerHTML = Object.entries(g).filter(([,v])=>v).sort(byOrder)
     .map(([k,v]) => `<i style="width:${100*v/tot}%;background:${STOP_COL(k)}"></i>`).join('');
-  $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v)
+  $('gatesLegend').innerHTML = Object.entries(g).filter(([,v])=>v).sort(byOrder)
     .map(([k,v]) => `<span><i class="sw" style="background:${STOP_COL(k)}"></i>
        ${esc(nice(k))} ${Math.round(100*v/tot)}%</span>`).join('');
   $('gatesTable').innerHTML =
@@ -449,7 +468,7 @@ function gates(){
           <i class="sw" style="background:${STOP_COL(k)}"></i>${esc(step)}</span></td>
         <td class="wide">${esc(why)}
           ${means ? `<div class="means">${esc(means)}</div>` : ''}</td>
-        <td class="mono ${k==='scored'?'good':'bad'}" style="text-align:right">${v}</td>
+        <td class="mono ${k==='scored'||k==='alive'?'good':k.startsWith('6:')?'warn':'bad'}" style="text-align:right">${v}</td>
         <td class="mono dim" style="text-align:right">${Math.round(100*v/tot)}%</td></tr>`;
     }).join('');
   const t = (g['3:trades'] || 0) + (g['6:trades'] || 0);
@@ -676,6 +695,7 @@ const plainOutcome = (o, x) => {
 // [value, higher is better]. Clicking a header sorts best-first on it,
 // clicking again flips it; "#" goes back to the combined ranking.
 const COLS = {
+  score:   [x => x.score10, true],
   per_day: [x => (x.score||{}).per_day, true],
   pf:      [x => (x.score||{}).pf, true],
   win:     [x => (x.score||{}).win_pct, true],
@@ -720,6 +740,57 @@ function bestRank(list){
   return rank;
 }
 
+// POOLS. Kris, 2026-10-07: "POOL 1 POOL 2 and POOL 3 ... pass evaluation
+// faster and safer". Every number is the HELD-OUT half: the legs were chosen on
+// the first half and never saw these days. "vs random" is the share of 300
+// random pools of the same size that this pool beat; near 50% means the
+// choosing added nothing.
+let POOL_OPEN = new Set();
+function poolsTable(){
+  const P = S.pools;
+  $('poolsCard').style.display = P && (P.pools || []).length ? '' : 'none';
+  if (!P || !(P.pools || []).length) return;
+  $('poolsLede').textContent = `Picked on ${P.window[0]} → ${P.split}. Numbers are ${P.split} → ${P.window[1]}, not seen when picking. Click a pool for its strategies.`;
+  const b = P.bench;
+  const cls = v => v >= 7 ? 'good' : v >= 5 ? 'warn' : 'bad';
+  const luck = v => v == null ? '—' : `<span class="${v >= 80 ? 'good' : v >= 60 ? 'warn' : 'bad'}">${Math.round(v)}%</span>`;
+  const MK = {XAUUSD:'gold', XAGUSD:'silver', BTCUSDT:'BTC'};
+  // One short line instead of every leg: "5 · gold ×4, EURUSD".
+  const mix = legs => { const c = {};
+    legs.forEach(l => { const m = l.cell.split(' ')[0]; c[MK[m] || m] = (c[MK[m] || m] || 0) + 1; });
+    return Object.entries(c).sort((a, b) => b[1] - a[1])
+      .map(([m, n]) => n > 1 ? `${m} ×${n}` : m).join(', '); };
+  const rng = h => h.band ? `<span class="dim"> (${h.band.split('-').map(v => Math.round(+v)).join('–')})</span>` : '';
+  $('poolsTable').innerHTML =
+    `<tr><th>pool</th><th>score</th><th>goal</th><th>strategies</th><th>risk</th>
+       <th>trades/day</th><th>days</th><th>pass %</th><th>blown %</th><th>accounts</th>
+       <th title="share of 300 random pools this one beat on days / pass rate">vs random</th></tr>` +
+    P.pools.map((x, i) => { const h = x.held_out, open = POOL_OPEN.has(i);
+      return `<tr class="idea pool${open ? ' open' : ''}" data-i="${i}" style="cursor:pointer">
+        <td class="mono"><b>${esc(x.id.replace('POOL ', 'Pool '))}</b></td>
+        <td class="mono ${cls(x.score10)}"><b>${x.score10}</b></td>
+        <td>${esc(x.kind.toLowerCase())}</td>
+        <td>${x.legs.length} <span class="dim">· ${esc(mix(x.legs))}</span></td>
+        <td class="mono">${x.leg_risk_pct}%</td>
+        <td class="mono">${h.trades_per_day ?? '—'}</td>
+        <td class="mono">${Math.round(h.eval_days ?? 0) || '—'}${rng(h)}</td>
+        <td class="mono">${Math.round(h.pass_pct)}</td>
+        <td class="mono ${h.blown_pct > 50 ? 'bad' : ''}">${Math.round(h.blown_pct)}</td>
+        <td class="mono">${h.accounts ?? '—'}</td>
+        <td class="mono">${luck(x.luck.beats_random_days_pct)} / ${luck(x.luck.beats_random_pass_pct)}</td></tr>` +
+        (open ? `<tr class="detail"><td colspan="11">${x.legs.map(l =>
+          `${esc(l.name)} <span class="dim">· ${esc(l.cell)} · ${esc(l.side)}</span>`).join('<br>')}</td></tr>` : '');
+    }).join('') +
+    `<tr class="dim"><td class="mono">VWAP</td><td></td><td>shipped</td><td>1 <span class="dim">· gold</span></td>
+       <td class="mono">2%</td><td></td><td class="mono">${Math.round(b.eval_days)} <span class="dim">(${b.band.replace('-', '–')})</span></td>
+       <td class="mono">${Math.round(b.pass_pct)}</td><td></td><td class="mono">${b.accounts}</td><td></td></tr>`;
+  $('poolsTable').querySelectorAll('tr.pool').forEach(tr => tr.onclick = () => {
+    const i = Number(tr.dataset.i);
+    POOL_OPEN.has(i) ? POOL_OPEN.delete(i) : POOL_OPEN.add(i);
+    poolsTable();
+  });
+}
+
 function ideasTable(){
   const r = row();
   // ONE ROW PER SCRIPT, its best variant. Kris, 2026-09-24.
@@ -738,7 +809,7 @@ function ideasTable(){
   const th = (k, label) => `<th class="sortable${SORT.key === k ? ' on' : ''}" data-k="${k}">${label}${
     SORT.key === k ? (SORT.flip ? ' ▲' : ' ▼') : ''}</th>`;
   $('ideas').innerHTML =
-    `<tr>${th('best','#')}<th>strategy</th><th>market</th><th>tf</th>${th('per_day','trades/day')}
+    `<tr>${th('best','#')}${th('score','score')}<th>strategy</th><th>market</th><th>tf</th>${th('per_day','trades/day')}
        ${th('pf','PF')}${th('win','win %')}${th('r','R/trade')}${th('dd','max DD')}
        ${th('pass','pass %')}${th('days','days')}${th('acc','accounts')}<th>result</th><th>repairs</th></tr>` +
     order.map(i => { const x = list[i];
@@ -748,6 +819,7 @@ function ideasTable(){
       const pf = k.pf;
       return `<tr class="idea ${open?'open':''}" data-i="${i}">
           <td class="mono dim">${rank[i] + 1}</td>
+          <td class="mono ${x.score10 >= 7 ? 'good' : x.score10 >= 5 ? 'warn' : 'bad'}" title="1-10: speed 30%, accounts 25%, profit factor 25%, checks passed 20%"><b>${x.score10 ?? '—'}</b></td>
           <td class="wide">${esc(x.script || shortName(x))}${approx(x)}${x.variants > 1
             ? `<span class="dim" style="display:block;font-size:11.5px">best of ${x.variants}: ${esc((x.name || '').split(' - ')[1] || '')}</span>` : ''}</td>
           <td class="mono">${esc(k.market || '—')}</td>
@@ -765,7 +837,7 @@ function ideasTable(){
           <td class="mono" title="accounts bought per funded account (1 / pass rate)">${k.accounts ?? '—'}</td>
           <td class="${good?'good':'bad'}">${esc(plainOutcome(x.outcome, x))}</td>
           <td class="mono">${x.repairs_total ?? (x.repairs||[]).length}</td>
-        </tr>` + (open ? `<tr class="detail"><td colspan="14">${ideaDetail(x)}</td></tr>` : '');
+        </tr>` + (open ? `<tr class="detail"><td colspan="15">${ideaDetail(x)}</td></tr>` : '');
     }).join('');
   $('ideas').querySelectorAll('th.sortable').forEach(h => h.onclick = () => {
     const k = h.dataset.k;
@@ -848,7 +920,7 @@ function paint(){
   $('status').textContent = S.live ? 'running' : 'idle';
   $('passes').textContent = S.passes + (S.passes === 1 ? ' pass' : ' passes');
   sourceBar(); stations(); now(); funnel(); gates(); nullPanel();
-  ideasTable(); gapsTable(); srcTable();
+  poolsTable(); ideasTable(); gapsTable(); srcTable();
 }
 
 async function pull(){
