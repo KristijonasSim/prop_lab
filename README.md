@@ -18,7 +18,7 @@ block or in another file disagrees with it, this block wins until checked.**
 | **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
 | **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
 | **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
-| **Factory** | TradingView scripts → grammar → 7 steps. 260 ideas queued, untested. Loop **paused**: translation used a 5h usage window in ~30 min; fix listed in `NEXT.md`. |
+| **Factory** | TradingView scripts → grammar → 7 steps. 260 ideas queued, untested. Desktop loop and VM factory **stopped 2026-10-07** by Kris to work with what we have. |
 | **Factory verdicts** | Only the last 3 years decide. Older years are a note. Nothing has yet beaten its luck check. |
 | **Eval days** | Always at the `riskladder.pick` rung (2% floor), never the fastest rung. Report accounts used (1/pass) beside days. |
 | **Test window** | 3 years, 5 max. Six markets always: BTC, gold, silver, EURUSD, GBPUSD, USDJPY. |
