@@ -25,6 +25,7 @@ def test_listing_reads_every_card(monkeypatch):
 def test_protected_scripts_are_recorded_not_saved(tmp_path, monkeypatch):
     """A script with no source is marked seen, so it is never asked for again."""
     monkeypatch.setattr(tvfetch, "SEEN", tmp_path / "seen.jsonl")
+    monkeypatch.setattr(tvfetch, "MODE", "listing")
     monkeypatch.setattr(tvfetch, "listing",
                         lambda kind, page: [] if page > 1 else
                         [{"id": "PUB;1", "url": "https://x/script/a-B/", "kind": "strategy"},
@@ -49,3 +50,17 @@ def test_take_by_source_leaves_the_rest_of_the_queue(tmp_path, monkeypatch):
     assert queue.take("tradingview").source == "tradingview"
     assert queue.take("tradingview") is None
     assert queue.status()["waiting"] == 2
+
+
+def test_popular_mode_fetches_most_liked_first(tmp_path, monkeypatch):
+    monkeypatch.setattr(tvfetch, "SEEN", tmp_path / "seen.jsonl")
+    monkeypatch.setattr(tvfetch, "MODE", "popular")
+    monkeypatch.setattr(tvfetch, "ranked", lambda log=None: [
+        {"id": "PUB;9", "url": "https://x/script/top-A/", "kind": "strategy", "likes": 900},
+        {"id": "PUB;1", "url": "https://x/script/low-B/", "kind": "strategy", "likes": 5}])
+    monkeypatch.setattr(tvfetch, "source", lambda pid: {
+        "source": "//@version=6\nstrategy('x')", "scriptAccess": "open_no_auth",
+        "scriptName": pid})
+    got = tvfetch.fetch(1, folder=tmp_path, log=lambda *_: None)
+    assert [p.name for p in got] == ["tv_top_a.pine"]
+    assert [p.name for p in tvfetch.fetch(1, folder=tmp_path, log=lambda *_: None)] == ["tv_low_b.pine"]
