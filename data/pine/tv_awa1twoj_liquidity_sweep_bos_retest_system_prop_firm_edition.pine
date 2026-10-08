@@ -1,0 +1,180 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/AWa1tWoJ-Liquidity-Sweep-BOS-Retest-System-Prop-Firm-Edition/
+// id: PUB;d95b1754ecbe41808318385f220101d3  kind: strategy  likes: 96
+//@version=5
+strategy("Prop Firm Liquidity Sweep + BOS Retest Model",
+     overlay          = true,
+     initial_capital  = 100000,
+     commission_type  = strategy.commission.cash_per_contract,
+     commission_value = 2.0,
+     pyramiding       = 0,
+     margin_long      = 100,
+     margin_short     = 100,
+     process_orders_on_close = true)
+
+//──────────────────────────────────────────────────────────────────────────────
+// INPUTS
+//──────────────────────────────────────────────────────────────────────────────
+leftBars  = input.int(2, "Pivot Left Bars",  minval = 1)
+rightBars = input.int(2, "Pivot Right Bars", minval = 1)
+
+sessionIn = input.session("0630-0800", "Trading Session (exchange time)")
+useSessionFilter = input.bool(true, "Use Session Filter")
+
+rr         = input.float(2.0, "Reward : Risk (R)", minval = 0.5, step = 0.25)
+contracts  = input.float(1.0, "Contracts", minval = 0.1, step = 0.1)
+
+plotSweeps = input.bool(true, "Show Liquidity Sweeps")
+plotBOS    = input.bool(true, "Show BOS Labels")
+plotLevels = input.bool(true, "Show Structure Levels")
+
+//──────────────────────────────────────────────────────────────────────────────
+// SESSION FILTER
+//──────────────────────────────────────────────────────────────────────────────
+inSession = not na(time(timeframe.period, sessionIn))
+tradeAllowed = useSessionFilter ? inSession : true
+
+bgcolor(useSessionFilter and inSession ? color.new(color.teal, 92) : na)
+
+//──────────────────────────────────────────────────────────────────────────────
+// PIVOTS (STRUCTURE LEVELS)
+//──────────────────────────────────────────────────────────────────────────────
+pivotHigh = ta.pivothigh(high, leftBars, rightBars)  // value on pivot bar
+pivotLow  = ta.pivotlow(low,  leftBars, rightBars)
+
+var float lastSwingHigh = na
+var float lastSwingLow  = na
+
+if not na(pivotHigh)
+    lastSwingHigh := pivotHigh
+
+if not na(pivotLow)
+    lastSwingLow := pivotLow
+
+//──────────────────────────────────────────────────────────────────────────────
+// LIQUIDITY SWEEPS
+//  - Long side sweep: price breaks below last swing low and closes back above it
+//  - Short side sweep: price breaks above last swing high and closes back below it
+//──────────────────────────────────────────────────────────────────────────────
+liqSweepLong  = not na(lastSwingLow)  and low  < lastSwingLow and close > lastSwingLow
+liqSweepShort = not na(lastSwingHigh) and high > lastSwingHigh and close < lastSwingHigh
+
+var bool  haveLiqSweepLong  = false
+var bool  haveLiqSweepShort = false
+var float sweptLow          = na
+var float sweptHigh         = na
+
+if liqSweepLong
+    haveLiqSweepLong := true
+    sweptLow         := low
+
+if liqSweepShort
+    haveLiqSweepShort := true
+    sweptHigh         := high
+
+// Plot sweeps
+if plotSweeps and liqSweepLong
+    label.new(bar_index, low, "Sweep ⬇️", style = label.style_label_down,
+              textcolor = color.white, color = color.new(color.green, 0), size = size.tiny)
+
+if plotSweeps and liqSweepShort
+    label.new(bar_index, high, "Sweep ⬆️", style = label.style_label_up,
+              textcolor = color.white, color = color.new(color.red, 0), size = size.tiny)
+
+//──────────────────────────────────────────────────────────────────────────────
+// BREAK OF STRUCTURE (BOS)
+//  - Long BOS: after a downside sweep, close > last swing high
+//  - Short BOS: after an upside sweep, close < last swing low
+//──────────────────────────────────────────────────────────────────────────────
+bosLong  = haveLiqSweepLong  and not na(lastSwingHigh) and close > lastSwingHigh
+bosShort = haveLiqSweepShort and not na(lastSwingLow)  and close < lastSwingLow
+
+var bool  bosLongActive   = false
+var bool  bosShortActive  = false
+var float bosLongLevel    = na
+var float bosShortLevel   = na
+
+if bosLong
+    bosLongActive := true
+    bosLongLevel  := lastSwingHigh
+    if plotBOS
+        label.new(bar_index, close, "BOS Long",
+                  style = label.style_label_up,
+                  textcolor = color.white,
+                  color = color.new(color.green, 0),
+                  size = size.tiny)
+
+if bosShort
+    bosShortActive := true
+    bosShortLevel  := lastSwingLow
+    if plotBOS
+        label.new(bar_index, close, "BOS Short",
+                  style = label.style_label_down,
+                  textcolor = color.white,
+                  color = color.new(color.red, 0),
+                  size = size.tiny)
+
+// Visual structure levels
+plot(plotLevels and not na(bosLongLevel)  ? bosLongLevel  : na, "BOS Long Level",  color.new(color.green, 60), style = plot.style_linebr)
+plot(plotLevels and not na(bosShortLevel) ? bosShortLevel : na, "BOS Short Level", color.new(color.red,   60), style = plot.style_linebr)
+
+//──────────────────────────────────────────────────────────────────────────────
+// ENTRY LOGIC: RETEST OF BROKEN STRUCTURE
+//  - Long: after BOS long, wait for retest into/through BOS level & bounce
+//  - Short: after BOS short, wait for retest into/through BOS level & rejection
+//  - SL at swept liquidity, TP by R:R
+//──────────────────────────────────────────────────────────────────────────────
+flat = strategy.position_size == 0
+
+// LONG RETEST:
+// Price trades back to/through bosLongLevel, then closes back above it
+longRetest = bosLongActive and haveLiqSweepLong and not na(bosLongLevel) and flat and tradeAllowed and low <= bosLongLevel and close > bosLongLevel
+
+if longRetest and not na(sweptLow)
+    longEntryPrice = close
+    longStopPrice  = sweptLow - syminfo.mintick * 2.0
+    riskPerUnit    = longEntryPrice - longStopPrice
+    
+    // Guard: only valid if risk distance > 0
+    if riskPerUnit > 0
+        longTPPrice = longEntryPrice + riskPerUnit * rr
+
+        strategy.entry("Long", strategy.long, qty = contracts)
+
+        strategy.exit("Long TP/SL", "Long",
+                      stop  = longStopPrice,
+                      limit = longTPPrice)
+
+        // Reset state after creating a valid trade
+        bosLongActive    := false
+        haveLiqSweepLong := false
+
+// SHORT RETEST:
+// Price trades back to/through bosShortLevel, then closes back below it
+shortRetest = bosShortActive and haveLiqSweepShort and not na(bosShortLevel) and flat and tradeAllowed and high >= bosShortLevel and close < bosShortLevel
+
+if shortRetest and not na(sweptHigh)
+    shortEntryPrice = close
+    shortStopPrice  = sweptHigh + syminfo.mintick * 2.0
+    riskPerUnit     = shortStopPrice - shortEntryPrice
+    
+    if riskPerUnit > 0
+        shortTPPrice = shortEntryPrice - riskPerUnit * rr
+
+        strategy.entry("Short", strategy.short, qty = contracts)
+
+        strategy.exit("Short TP/SL", "Short",
+                      stop  = shortStopPrice,
+                      limit = shortTPPrice)
+
+        bosShortActive     := false
+        haveLiqSweepShort  := false
+
+//──────────────────────────────────────────────────────────────────────────────
+// SAFETY: RESET STATES IF POSITION IS OPEN (DON'T STACK LOGIC)
+//──────────────────────────────────────────────────────────────────────────────
+if not flat
+    bosLongActive    := false
+    bosShortActive   := false
+    haveLiqSweepLong := haveLiqSweepLong  and strategy.position_size > 0 ? haveLiqSweepLong  : haveLiqSweepLong
+    haveLiqSweepShort:= haveLiqSweepShort and strategy.position_size > 0 ? haveLiqSweepShort : haveLiqSweepShort

@@ -1,0 +1,596 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/teYPT1m0/
+// id: PUB;6a7f6744f1474fe0a3fdbea6199b1914  kind: strategy  likes: 72
+//@version=6
+strategy("NORN WEAVE ᚠ FEHU", overlay=true, initial_capital = 16600, commission_type=strategy.commission.percent, commission_value=0.055, margin_long = 0.001, margin_short = 0.001, precision = 4, default_qty_type=strategy.percent_of_equity, default_qty_value=3)
+import TradingView/ta/7
+
+// =====================
+// 🌐 言語設定 / Language
+// =====================
+langJP = input.bool(true, "日本語表示 / Japanese", group="[ LANGUAGE ]",
+     tooltip="ON = 日本語\nOFF = English")
+
+// =====================
+// ✅ 基本設定 / Settings
+// =====================
+emaLen       = input.int(58,    "EMA Period (EMA期間)",                      group="[ SETTINGS ]")
+atrFactor    = input.float(3.8, "ATR Factor - TP Distance (ATR倍率・TP距離)", group="[ SETTINGS ]", step=0.1)
+stopLoss     = input.float(-10.0,"Stop Loss % (損切り%)",                      group="[ SETTINGS ]", step=0.5)
+adxThreshold = input.float(20.5,"ADX Threshold (ADXしきい値)",                group="[ SETTINGS ]", step=0.5)
+swingLen     = input.int(13,    "Swing Length (スイング検出期間)",              group="[ SETTINGS ]", minval=1)
+
+// =====================================================================
+// ✅ ファンダメンタル・フィルター / Fundamental Filter
+// =====================================================================
+
+fltEnabled = input.bool(true, "Enable Footprint Delta Filter / フットプリント・デルタフィルターを使う",
+     group="[ FUNDAMENTAL FILTER ]",
+     tooltip="EN: Filter entries using footprint delta (buy vol - sell vol) of BTC or ETH.\nPositive delta SMA → buyers in control → Long favored ✅\nNegative delta SMA → sellers in control → Short favored ✅\nRequires Premium+ plan.\n\nJP: BTCまたはETHのフットプリント・デルタ（買い出来高-売り出来高）でエントリーをフィルタリング。\nデルタSMAプラス → 買い優勢 → ロングに有利 ✅\nデルタSMAマイナス → 売り優勢 → ショートに有利 ✅\nPremium以上プラン必須。")
+
+fltFpSymChoice = input.string("BTC / BTCUSD", "Footprint Symbol / 参照銘柄",
+     group="[ FUNDAMENTAL FILTER ]",
+     options=["BTC / BTCUSD", "ETH / ETHUSD"],
+     tooltip="EN: Which symbol to use for footprint delta. BTC recommended for most altcoins including DOGE.\nJP: フットプリントを取得する銘柄。DOGE含むアルトコイン全般にはBTCが推奨。")
+
+fltFpLookback = input.int(21, "Delta SMA Period / デルタSMA期間",
+     group="[ FUNDAMENTAL FILTER ]", minval=1, maxval=50,
+     tooltip="EN: SMA period applied to delta to smooth noise. Lower = more reactive, higher = more stable.\nJP: デルタを平滑化するSMA期間。小さいほど敏感、大きいほど安定。")
+
+
+// ✅ ブレークイーブンストップ / Break Even Stop
+// =====================
+beEnabled = input.bool(true,  "Enable BE Stop (BEストップを有効にする)", group="[ BREAK EVEN STOP ]")
+beThresh  = input.float(5.5,  "BE Trigger % (BE発動しきい値%)",         group="[ BREAK EVEN STOP ]", step=0.5, minval=0.5,
+     tooltip="EN: Move stop to break-even when profit reaches this %.\nRecommended: 6.0-9.0%\n\nJP: 含み益がこの%に達したら損切りラインを建値に移動する。\n推奨: 6.0〜9.0%")
+
+var float BE_BUFFER = 0.1
+
+// =====================
+// ✅ 表示設定 / Display
+// =====================
+showEma       = input.bool(true,  "EMA Line (EMAライン)",              group="[ DISPLAY ]")
+showDowZone   = input.bool(true,  "Dow Zone / ダウゾーン",              group="[ DISPLAY ]")
+showSwingLine = input.bool(true,  "Swing Line / スイングライン",         group="[ DISPLAY ]")
+showTP        = input.bool(true,  "TP Lines / TPライン",                group="[ DISPLAY ]")
+showBE        = input.bool(true,  "BE Stop Line / BEストップライン",     group="[ DISPLAY ]")
+showHTF       = input.bool(true,  "Higher TF Swing / 上位足スイング",    group="[ DISPLAY ]")
+showLabels    = input.bool(true,  "Trade Labels / トレードラベル",       group="[ DISPLAY ]")
+showBG        = input.bool(true,  "Background / 背景色",                group="[ DISPLAY ]")
+showTable     = input.bool(true,  "Status Table / ステータステーブル",   group="[ DISPLAY ]")
+tablePos      = input.string("Top Right / 右上", "Table Position / テーブル位置",
+     group="[ DISPLAY ]",
+     options=["Top Right / 右上", "Top Left / 左上", "Bottom Right / 右下", "Bottom Left / 左下"])
+
+
+// =====================
+// フットプリント・デルタ計算
+// =====================
+
+// 選択シンボルのみ1回だけ取得
+fltFpSymbol = fltFpSymChoice == "BTC / BTCUSD" ? "BITSTAMP:BTCUSD" : "BITSTAMP:ETHUSD"
+
+footprint fpData    = request.security(fltFpSymbol, timeframe.period, request.footprint(100, 70))
+float fltFpDelta    = not na(fpData) ? fpData.delta() : na
+float fltFpDeltaSma = ta.sma(fltFpDelta, fltFpLookback)
+
+// デルタSMAの方向でフィルター判定
+// ロング時：デルタSMA > 0（買い優勢）
+// ショート時：デルタSMA < 0（売り優勢）
+// na時：データ取得不可 → スキップ（通過扱い）
+fpBullish  = not na(fltFpDeltaSma) and fltFpDeltaSma > 0
+fpBearish  = not na(fltFpDeltaSma) and fltFpDeltaSma < 0
+
+// エントリー方向とデルタ方向が一致するかチェック
+// （ポジションなし時はどちらかがONなら通過）
+fltPass = not fltEnabled or na(fltFpDeltaSma) or fpBullish or fpBearish
+
+// ロング・ショート別の通過判定（goLong/goShortで使用）
+fltPassLong  = not fltEnabled or na(fltFpDeltaSma) or fpBullish
+fltPassShort = not fltEnabled or na(fltFpDeltaSma) or fpBearish
+
+// =====================
+// EMA計算
+// =====================
+ema = ta.ema(close, emaLen)
+emaUp   = ema > ema[1]
+emaDown = ema < ema[1]
+
+// =====================
+// ADX
+// =====================
+[_, _, adxValue] = ta.dmi(14, 14)
+isTrending = adxValue > adxThreshold
+
+// =====================
+// スイング検出
+// =====================
+isSwingHigh = high[swingLen] == ta.highest(high, swingLen * 2 + 1)
+isSwingLow  = low[swingLen]  == ta.lowest(low,  swingLen * 2 + 1)
+
+var float lastSwingHigh = na
+var float lastSwingLow  = na
+lastSwingHigh := isSwingHigh ? high[swingLen] : lastSwingHigh
+lastSwingLow  := isSwingLow  ? low[swingLen]  : lastSwingLow
+
+// =====================
+// ダウ理論トレンド判定
+// =====================
+var int trend = 0
+if not na(lastSwingHigh) and close > lastSwingHigh and trend != 1
+    trend := 1
+if not na(lastSwingLow)  and close < lastSwingLow  and trend != -1
+    trend := -1
+
+// =====================
+// エントリー条件
+// =====================
+goLong  = emaUp   and trend == 1  and isTrending and fltPassLong
+goShort = emaDown and trend == -1 and isTrending and fltPassShort
+
+// =====================
+// ATR / TP計算
+// =====================
+atr = ta.atr(50) * atrFactor
+
+var float tp1  = na
+var float tp2  = na
+var float tp3  = na
+var float tp11 = na
+var float tp22 = na
+var float tp33 = na
+var float entr = na
+
+// =====================
+// ブレークイーブン管理
+// =====================
+var bool  beActivated = false
+var float bePrice     = na
+
+// =====================
+// PnL計算
+// =====================
+var float PnL = 0.
+LastTriggeredPrice = strategy.opentrades.entry_price(strategy.opentrades - 1)
+if strategy.position_size > 0.0 and LastTriggeredPrice != 0.0
+    PnL := ((close - LastTriggeredPrice) / LastTriggeredPrice) * 100.0
+else if strategy.position_size < 0.0 and LastTriggeredPrice != 0.0
+    PnL := ((LastTriggeredPrice - close) / LastTriggeredPrice) * 100.0
+
+var float TruePnL = na
+var float Equity_AtStartTrade = na
+TruePnL := na(Equity_AtStartTrade) ? na : ((strategy.equity / Equity_AtStartTrade) - 1.0) * 100.0
+
+// =====================
+// 現在の損益金額計算（トレード開始時からの増減）
+// =====================
+float PnLAmount = na
+if strategy.position_size != 0.0 and not na(Equity_AtStartTrade)
+    PnLAmount := strategy.equity - Equity_AtStartTrade
+
+// BEストップ発動チェック
+// =====================
+if beEnabled and strategy.position_size != 0.0 and not beActivated
+    if strategy.position_size > 0.0 and PnL >= beThresh
+        beActivated := true
+        bePrice     := LastTriggeredPrice * (1 + BE_BUFFER / 100)
+    else if strategy.position_size < 0.0 and PnL >= beThresh
+        beActivated := true
+        bePrice     := LastTriggeredPrice * (1 - BE_BUFFER / 100)
+
+// =====================
+// 損切り（通常SL）
+if PnL < stopLoss and strategy.position_size > 0.
+    strategy.close("Long", "SL Long")
+    beActivated := false
+    bePrice     := na
+    alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+
+if PnL < stopLoss and strategy.position_size < 0.
+    strategy.close("Short", "SL Short")
+    beActivated := false
+    bePrice     := na
+    alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+
+// =====================
+// BEストップ
+// =====================
+if beEnabled and beActivated and not na(bePrice)
+    if strategy.position_size > 0.0 and low <= bePrice
+        strategy.close("Long", "BE Long")
+        beActivated  := false
+        bePrice      := na
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+    else if strategy.position_size < 0.0 and high >= bePrice
+        strategy.close("Short", "BE Short")
+        beActivated  := false
+        bePrice      := na
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+
+// =====================
+// トレンド反転クローズ
+// =====================
+if trend == 1 and strategy.position_size < 0
+    strategy.close("Short", "trendChange→Long")
+    beActivated := false
+    bePrice     := na
+    alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+
+if trend == -1 and strategy.position_size > 0
+    strategy.close("Long", "trendChange→Short")
+    beActivated := false
+    bePrice     := na
+    alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+
+// =====================
+// ロングエントリー
+// =====================
+if strategy.position_size <= 0. and goLong
+    if strategy.position_size < 0
+        strategy.close("Short", comment="Exit Short→Long")
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+    if strategy.position_size == 0
+        Equity_AtStartTrade := strategy.equity
+        beActivated         := false
+        bePrice             := na
+        strategy.entry("Long", strategy.long)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":false,"HalfExit":false, "Vertion":"7","Stop":'+str.tostring(0)+'}', alert.freq_once_per_bar_close)
+        tp1  := close + atr
+        tp2  := close + atr * 2
+        tp3  := close + atr * 3
+        tp11 := na
+        tp22 := na
+        tp33 := na
+        entr := close
+
+// =====================
+// ショートエントリー
+// =====================
+if strategy.position_size >= 0. and goShort
+    if strategy.position_size > 0
+        strategy.close("Long", comment="Exit Long→Short")
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"HalfExit":false, "Vertion":"7"}', alert.freq_once_per_bar)
+    if strategy.position_size == 0
+        Equity_AtStartTrade := strategy.equity
+        beActivated         := false
+        bePrice             := na
+        strategy.entry("Short", strategy.short)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":false,"HalfExit":false, "Vertion":"7","Stop":'+str.tostring(0)+'}', alert.freq_once_per_bar_close)
+        tp11 := close - atr
+        tp22 := close - atr * 2
+        tp33 := close - atr * 3
+        tp1  := na
+        tp2  := na
+        tp3  := na
+        entr := close
+
+// =====================
+// TP処理
+// =====================
+if strategy.position_size > 0
+    if high > tp1
+        strategy.close('Long', 'Long TP1', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP1"}', alert.freq_once_per_bar)
+        tp1 := na
+    if high > tp2
+        strategy.close('Long', 'Long TP2', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP2"}', alert.freq_once_per_bar)
+        tp2 := na
+    if high > tp3
+        strategy.close('Long', 'Long TP3', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Buy","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP3"}', alert.freq_once_per_bar)
+        tp3  := na
+        entr := na
+
+if strategy.position_size < 0
+    if low < tp11
+        strategy.close('Short', 'Short TP1', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP1"}', alert.freq_once_per_bar)
+        tp11 := na
+    if low < tp22
+        strategy.close('Short', 'Short TP2', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP2"}', alert.freq_once_per_bar)
+        tp22 := na
+    if low < tp33
+        strategy.close('Short', 'Short TP3', qty_percent=30)
+        alert('{"Symbol":"' + syminfo.ticker + '","Side":"Sell","Price":' + str.tostring(close) + ',"Exit":true,"halfExit":true, "vertion":"TP3"}', alert.freq_once_per_bar)
+        tp33 := na
+        entr := na
+
+
+// =====================================================================
+// 🎨 NORN WEAVE — ビジュアル
+// =====================================================================
+
+C_BULL     = #e8eaf0
+C_BEAR     = #c0152a
+C_BE_COL   = #c9a84c
+C_ENTRY    = #6b7280
+C_HTF_BULL = #8ab4c2
+C_HTF_BEAR = #9b3a4a
+C_FLAT_BG  = #1a0a2e
+
+barPrice = close
+
+// 1. ダウゾーン
+sh_b  = trend == -1 ? lastSwingHigh : na
+sh_q1 = trend == -1 ? lastSwingHigh - (lastSwingHigh - barPrice) * 0.22 : na
+sh_q2 = trend == -1 ? lastSwingHigh - (lastSwingHigh - barPrice) * 0.50 : na
+sh_q3 = trend == -1 ? lastSwingHigh - (lastSwingHigh - barPrice) * 0.78 : na
+sh_e  = trend == -1 ? barPrice : na
+
+p_shb  = plot(showDowZone ? sh_b  : na, display=display.none)
+p_shq1 = plot(showDowZone ? sh_q1 : na, display=display.none)
+p_shq2 = plot(showDowZone ? sh_q2 : na, display=display.none)
+p_shq3 = plot(showDowZone ? sh_q3 : na, display=display.none)
+p_she  = plot(showDowZone ? sh_e  : na, display=display.none)
+fill(p_shb,  p_shq1, color.new(C_BEAR, 40))
+fill(p_shq1, p_shq2, color.new(C_BEAR, 60))
+fill(p_shq2, p_shq3, color.new(C_BEAR, 78))
+fill(p_shq3, p_she,  color.new(C_BEAR, 90))
+
+sl_b  = trend ==  1 ? lastSwingLow : na
+sl_q1 = trend ==  1 ? lastSwingLow + (barPrice - lastSwingLow) * 0.22 : na
+sl_q2 = trend ==  1 ? lastSwingLow + (barPrice - lastSwingLow) * 0.50 : na
+sl_q3 = trend ==  1 ? lastSwingLow + (barPrice - lastSwingLow) * 0.78 : na
+sl_e  = trend ==  1 ? barPrice : na
+
+p_slb  = plot(showDowZone ? sl_b  : na, display=display.none)
+p_slq1 = plot(showDowZone ? sl_q1 : na, display=display.none)
+p_slq2 = plot(showDowZone ? sl_q2 : na, display=display.none)
+p_slq3 = plot(showDowZone ? sl_q3 : na, display=display.none)
+p_sle  = plot(showDowZone ? sl_e  : na, display=display.none)
+fill(p_slb,  p_slq1, color.new(C_BULL, 40))
+fill(p_slq1, p_slq2, color.new(C_BULL, 60))
+fill(p_slq2, p_slq3, color.new(C_BULL, 78))
+fill(p_slq3, p_sle,  color.new(C_BULL, 90))
+
+// 2. スイングライン
+plot(showSwingLine and trend == -1 ? lastSwingHigh : na, "Resist Outer", color=color.new(C_BEAR, 55), linewidth=3, style=plot.style_linebr)
+plot(showSwingLine and trend == -1 ? lastSwingHigh : na, "Resist Core",  color=color.new(C_BEAR,  5), linewidth=1, style=plot.style_linebr)
+plot(showSwingLine and trend ==  1 ? lastSwingLow  : na, "Support Outer",color=color.new(C_BULL, 55), linewidth=3, style=plot.style_linebr)
+plot(showSwingLine and trend ==  1 ? lastSwingLow  : na, "Support Core", color=color.new(C_BULL,  5), linewidth=1, style=plot.style_linebr)
+
+// 3. EMA
+emaC_outer2 = emaUp ? color.new(C_BULL, 88) : color.new(C_BEAR, 88)
+emaC_outer1 = emaUp ? color.new(C_BULL, 68) : color.new(C_BEAR, 68)
+emaC_mid    = emaUp ? color.new(C_BULL, 40) : color.new(C_BEAR, 40)
+emaC_core   = emaUp ? color.new(C_BULL,  5) : color.new(C_BEAR,  5)
+plot(ema, "EMA Fog2", color=showEma ? emaC_outer2 : na, linewidth=14)
+plot(ema, "EMA Fog1", color=showEma ? emaC_outer1 : na, linewidth=7)
+plot(ema, "EMA Mid",  color=showEma ? emaC_mid    : na, linewidth=3)
+plot(ema, "EMA Core", color=showEma ? emaC_core   : na, linewidth=1)
+
+// 4. TPライン
+plot(showTP ? (entr != entr[1] ? na : entr) : na, "Entry", color=color.new(C_ENTRY, 50), linewidth=1, style=plot.style_linebr)
+
+tp1_plot  = showTP and strategy.position_size > 0 ? tp1  : na
+tp2_plot  = showTP and strategy.position_size > 0 ? tp2  : na
+tp3_plot  = showTP and strategy.position_size > 0 ? tp3  : na
+tp11_plot = showTP and strategy.position_size < 0 ? tp11 : na
+tp22_plot = showTP and strategy.position_size < 0 ? tp22 : na
+tp33_plot = showTP and strategy.position_size < 0 ? tp33 : na
+
+plot(tp1_plot,  "TP1 Glow",  color=color.new(C_BULL, 70), linewidth=3, style=plot.style_linebr)
+plot(tp1_plot,  "TP1 Core",  color=color.new(C_BULL, 30), linewidth=1, style=plot.style_linebr)
+plot(tp2_plot,  "TP2 Glow",  color=color.new(C_BULL, 55), linewidth=4, style=plot.style_linebr)
+plot(tp2_plot,  "TP2 Core",  color=color.new(C_BULL, 10), linewidth=1, style=plot.style_linebr)
+plot(tp3_plot,  "TP3 Glow",  color=color.new(C_BULL, 35), linewidth=6, style=plot.style_linebr)
+plot(tp3_plot,  "TP3 Core",  color=color.new(C_BULL,  0), linewidth=2, style=plot.style_linebr)
+plot(tp11_plot, "TP1S Glow", color=color.new(C_BEAR, 70), linewidth=3, style=plot.style_linebr)
+plot(tp11_plot, "TP1S Core", color=color.new(C_BEAR, 30), linewidth=1, style=plot.style_linebr)
+plot(tp22_plot, "TP2S Glow", color=color.new(C_BEAR, 55), linewidth=4, style=plot.style_linebr)
+plot(tp22_plot, "TP2S Core", color=color.new(C_BEAR, 10), linewidth=1, style=plot.style_linebr)
+plot(tp33_plot, "TP3S Glow", color=color.new(C_BEAR, 35), linewidth=6, style=plot.style_linebr)
+plot(tp33_plot, "TP3S Core", color=color.new(C_BEAR,  0), linewidth=2, style=plot.style_linebr)
+
+isLongEntry  = strategy.position_size > 0 and strategy.position_size[1] <= 0
+isShortEntry = strategy.position_size < 0 and strategy.position_size[1] >= 0
+if showTP and isLongEntry and not na(tp1)
+    label.new(bar_index, tp1, "ᚠ TP1", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BULL, 10), style=label.style_label_left, size=size.tiny)
+    label.new(bar_index, tp2, "ᚢ TP2", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BULL,  5), style=label.style_label_left, size=size.tiny)
+    label.new(bar_index, tp3, "ᚦ TP3", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BULL,  0), style=label.style_label_left, size=size.tiny)
+if showTP and isShortEntry and not na(tp11)
+    label.new(bar_index, tp11, "ᚠ TP1", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BEAR, 10), style=label.style_label_left, size=size.tiny)
+    label.new(bar_index, tp22, "ᚢ TP2", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BEAR,  5), style=label.style_label_left, size=size.tiny)
+    label.new(bar_index, tp33, "ᚦ TP3", color=color.new(#1a0a2e, 20), textcolor=color.new(C_BEAR,  0), style=label.style_label_left, size=size.tiny)
+
+// 5. BEストップライン
+bePricePlot = showBE and beActivated and strategy.position_size != 0 ? bePrice : na
+plot(bePricePlot, "BE Fog",  color=color.new(C_BE_COL, 70), linewidth=6, style=plot.style_linebr)
+plot(bePricePlot, "BE Mid",  color=color.new(C_BE_COL, 35), linewidth=2, style=plot.style_linebr)
+plot(bePricePlot, "BE Core", color=color.new(C_BE_COL,  0), linewidth=1, style=plot.style_linebr)
+
+beJustActivated = beActivated and not beActivated[1]
+if showBE and beJustActivated and not na(bePrice)
+    label.new(bar_index, bePrice, "ᚷ WEAVE",
+         color=color.new(#1a0a2e, 10), textcolor=color.new(C_BE_COL, 5),
+         style=label.style_label_right, size=size.small)
+
+// 6. 上位足スイング
+htfSwingHigh = request.security(syminfo.tickerid, "240", ta.pivothigh(high, swingLen, swingLen)[1], lookahead=barmerge.lookahead_off)
+htfSwingLow  = request.security(syminfo.tickerid, "240", ta.pivotlow(low,  swingLen, swingLen)[1], lookahead=barmerge.lookahead_off)
+
+var float lastHTFSwingHigh = na
+var float lastHTFSwingLow  = na
+lastHTFSwingHigh := na(htfSwingHigh) ? lastHTFSwingHigh : htfSwingHigh
+lastHTFSwingLow  := na(htfSwingLow)  ? lastHTFSwingLow  : htfSwingLow
+
+htfClose = request.security(syminfo.tickerid, "240", close[1], lookahead=barmerge.lookahead_off)
+
+var int htfTrend = 0
+if not na(lastHTFSwingHigh) and htfClose > lastHTFSwingHigh and htfTrend != 1
+    htfTrend := 1
+if not na(lastHTFSwingLow)  and htfClose < lastHTFSwingLow  and htfTrend != -1
+    htfTrend := -1
+
+plot(showHTF and htfTrend == -1 ? lastHTFSwingHigh : na, "HTF Res", color=color.new(C_HTF_BEAR, 45), linewidth=1, style=plot.style_linebr)
+plot(showHTF and htfTrend ==  1 ? lastHTFSwingLow  : na, "HTF Sup", color=color.new(C_HTF_BULL, 45), linewidth=1, style=plot.style_linebr)
+
+// 7. 背景色
+bgcolor(showBG and not isTrending  ? color.new(C_FLAT_BG, 90) : na, title="横ばいゾーン / Flat Zone")
+bgcolor(beActivated                ? color.new(C_BE_COL,  94) : na, title="BEストップ発動中 / BE Active")
+bgcolor(fltEnabled and not fltPass ? color.new(#ff6b35,   93) : na, title="ファンダメンタルフィルターブロック中 / Flt Blocked")
+
+// 8. トレードラベル
+rangeR    = high - low
+avgRangeR = ta.sma(rangeR, 20)
+var float TruePnLToDisplay = PnL
+
+if strategy.closedtrades > 0
+    lastTradeIndex     = strategy.closedtrades - 1
+    lastTradeEntryBar  = strategy.closedtrades.exit_bar_index(lastTradeIndex)
+    lastTradeDirection = strategy.closedtrades.size(lastTradeIndex)
+
+    if lastTradeEntryBar == bar_index
+        uscitaFinale = strategy.position_size == 0. or
+             lastTradeDirection > 0.0 and strategy.position_size < 0. or
+             lastTradeDirection < 0.0 and strategy.position_size > 0.
+
+        if uscitaFinale and showLabels
+            isWin      = TruePnLToDisplay > 0
+            labelTxtC  = isWin ? color.new(C_BULL, 5) : color.new(C_BEAR, 5)
+            labelY     = isWin ? high + avgRangeR * 3.0 : low - avgRangeR * 3.0
+            labelStyle = isWin ? label.style_label_down : label.style_label_up
+            labelText  = (isWin ? "ᚢ +" : "ᚦ ") + str.tostring(math.round(TruePnLToDisplay, 1)) + "%"
+            label.new(x=bar_index, y=labelY, text=labelText,
+                 color=color.new(#1a0a2e, 5), textcolor=labelTxtC,
+                 style=labelStyle, size=size.normal)
+    else
+        TruePnLToDisplay := TruePnL
+
+// 9. ステータステーブル
+tPos = tablePos == "Top Right / 右上"    ? position.top_right    :
+       tablePos == "Top Left / 左上"     ? position.top_left     :
+       tablePos == "Bottom Right / 右下" ? position.bottom_right :
+                                           position.bottom_left
+
+var table t = na
+if showTable
+    if na(t)
+        t := table.new(tPos, 2, 9,
+             bgcolor=color.new(#0d0520, 8), border_color=color.new(C_BE_COL, 60),
+             border_width=1, frame_color=color.new(C_BE_COL, 40), frame_width=1)
+
+    C_ON   = color.new(C_BULL,  5)
+    C_OFF  = color.new(C_BEAR,  5)
+    C_NEU  = color.new(#8892a4, 0)
+    C_BG   = color.new(#0d0520, 20)
+    C_HEAD = color.new(#1c0f3a, 10)
+
+    // ヘッダー
+    table.cell(t, 0, 0, langJP ? "ᚾ 条件" : "ᚾ Condition",
+         text_color=color.new(C_BE_COL, 10), text_size=size.small, bgcolor=C_HEAD, text_halign=text.align_center)
+    table.cell(t, 1, 0, langJP ? "状態" : "Status",
+         text_color=color.new(C_BE_COL, 10), text_size=size.small, bgcolor=C_HEAD, text_halign=text.align_center)
+
+    // EMA
+    table.cell(t, 0, 1, langJP ? "ᚢ EMA方向" : "ᚢ EMA", text_color=C_NEU, text_size=size.small, bgcolor=C_BG)
+    table.cell(t, 1, 1, emaUp ? (langJP ? "▲ 上昇" : "▲ Rising") : (langJP ? "▼ 下降" : "▼ Falling"),
+         text_color=emaUp ? C_ON : C_OFF, text_size=size.small, bgcolor=C_BG, text_halign=text.align_center)
+
+    // ダウ理論
+    table.cell(t, 0, 2, langJP ? "ᚦ ダウ理論" : "ᚦ Dow Theory", text_color=C_NEU, text_size=size.small, bgcolor=C_BG)
+    table.cell(t, 1, 2,
+         trend == 1 ? (langJP ? "▲ ブル" : "▲ Bull") : trend == -1 ? (langJP ? "▼ ベア" : "▼ Bear") : (langJP ? "─ 中立" : "─ Neutral"),
+         text_color=trend == 1 ? C_ON : trend == -1 ? C_OFF : C_NEU,
+         text_size=size.small, bgcolor=C_BG, text_halign=text.align_center)
+
+    // ADX
+    adxVal = str.tostring(math.round(adxValue, 1))
+    table.cell(t, 0, 3, "ᚠ ADX", text_color=C_NEU, text_size=size.small, bgcolor=C_BG)
+    table.cell(t, 1, 3,
+         isTrending ? "● " + adxVal + (langJP ? "  強" : "  Strong") : "○ " + adxVal + (langJP ? "  弱" : "  Weak"),
+         text_color=isTrending ? C_ON : C_OFF, text_size=size.small, bgcolor=C_BG, text_halign=text.align_center)
+
+    // フットプリント・デルタフィルター表示
+    fltFpSymShort = fltFpSymChoice == "BTC / BTCUSD" ? "BTC" : "ETH"
+    var string fltStatus = ""
+    var color  fltColor  = color.gray
+    if not fltEnabled
+        fltStatus := langJP ? "─ 無効" : "─ Off"
+        fltColor  := C_NEU
+    else if na(fltFpDeltaSma)
+        fltStatus := langJP ? "○ データ待ち" : "○ No Data"
+        fltColor  := C_NEU
+    else if fpBullish
+        fltStatus := langJP ? "▲ 買い優勢 ✓" : "▲ Bull ✓"
+        fltColor  := C_ON
+    else if fpBearish
+        fltStatus := langJP ? "▼ 売り優勢 ✓" : "▼ Bear ✓"
+        fltColor  := C_OFF
+    else
+        fltStatus := langJP ? "─ 中立" : "─ Neutral"
+        fltColor  := C_NEU
+
+    fltBG = fltEnabled and (not fltPassLong and not fltPassShort) ? color.new(#ff6b35, 75) : C_BG
+    table.cell(t, 0, 4, "ᚱ FP Δ " + fltFpSymShort, text_color=C_NEU, text_size=size.small, bgcolor=fltBG)
+    table.cell(t, 1, 4, fltStatus, text_color=fltColor, text_size=size.small, bgcolor=fltBG, text_halign=text.align_center)
+
+    // ポジション
+    longOK  = emaUp   and trend == 1  and isTrending and fltPassLong
+    shortOK = emaDown and trend == -1 and isTrending and fltPassShort
+    var string posStatus = ""
+    var color  posColor  = color.gray
+    var color  posBG     = color.gray
+    if strategy.position_size > 0
+        posStatus := langJP ? "▲ ロング中"   : "▲ Long"
+        posColor  := C_ON
+        posBG     := color.new(#e8eaf0, 82)
+    else if strategy.position_size < 0
+        posStatus := langJP ? "▼ ショート中" : "▼ Short"
+        posColor  := C_OFF
+        posBG     := color.new(#c0152a, 82)
+    else if longOK
+        posStatus := langJP ? "▲ ロング可"   : "▲ Long Ready"
+        posColor  := C_ON
+        posBG     := color.new(#e8eaf0, 90)
+    else if shortOK
+        posStatus := langJP ? "▼ ショート可" : "▼ Short Ready"
+        posColor  := C_OFF
+        posBG     := color.new(#c0152a, 90)
+    else
+        posStatus := langJP ? "─ 待機中" : "─ Waiting"
+        posColor  := C_NEU
+        posBG     := C_BG
+    table.cell(t, 0, 5, langJP ? "ᚷ ポジション" : "ᚷ Position", text_color=C_NEU, text_size=size.small, bgcolor=posBG)
+    table.cell(t, 1, 5, posStatus, text_color=posColor, text_size=size.small, bgcolor=posBG, text_halign=text.align_center)
+
+    // BEストップ
+    var string beStatus      = ""
+    var color  beStatusColor = color.gray
+    if not beEnabled
+        beStatus      := langJP ? "─ 無効"   : "─ Off"
+        beStatusColor := C_NEU
+    else if beActivated
+        beStatus      := langJP ? "ᚷ 発動中" : "ᚷ Active"
+        beStatusColor := color.new(C_BE_COL, 0)
+    else
+        beStatus      := langJP ? "○ 待機"   : "○ Standby"
+        beStatusColor := C_NEU
+    table.cell(t, 0, 6, langJP ? "ᚷ BEストップ" : "ᚷ BE Stop", text_color=C_NEU, text_size=size.small, bgcolor=C_BG)
+    table.cell(t, 1, 6, beStatus, text_color=beStatusColor, text_size=size.small, bgcolor=C_BG, text_halign=text.align_center)
+
+    // フィルター詳細（デルタ値表示）
+    fltDetailStr = fltEnabled and not na(fltFpDeltaSma) ?
+         "Δ " + str.tostring(math.round(fltFpDeltaSma, 0), format.volume) +
+         (fpBullish ? " ▲" : fpBearish ? " ▼" : " ─") : "─"
+    table.cell(t, 0, 7, langJP ? "  詳細" : "  Detail", text_color=C_NEU, text_size=size.tiny, bgcolor=C_BG)
+    table.cell(t, 1, 7, fltDetailStr, text_color=C_NEU, text_size=size.tiny, bgcolor=C_BG, text_halign=text.align_center)
+
+    // =====================
+    // 損益金額（追加行）
+    // =====================
+    var string pnlAmtStr   = "─"
+    var color  pnlAmtColor = C_NEU
+    var color  pnlAmtBG    = C_BG
+    if strategy.position_size != 0.0 and not na(PnLAmount)
+        pnlAmtStr   := (PnLAmount >= 0 ? "+" : "") + str.tostring(math.round(PnLAmount, 2)) + " $"
+        pnlAmtColor := PnLAmount >= 0 ? C_ON : C_OFF
+        pnlAmtBG    := PnLAmount >= 0 ? color.new(#e8eaf0, 88) : color.new(#c0152a, 88)
+    else
+        pnlAmtStr   := "─"
+        pnlAmtColor := C_NEU
+        pnlAmtBG    := C_BG
+    table.cell(t, 0, 8, langJP ? "💰 損益金額" : "💰 P&L ($)", text_color=C_NEU, text_size=size.small, bgcolor=pnlAmtBG)
+    table.cell(t, 1, 8, pnlAmtStr, text_color=pnlAmtColor, text_size=size.small, bgcolor=pnlAmtBG, text_halign=text.align_center)

@@ -1,0 +1,203 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/sf4Hf10r/
+// id: PUB;5c62c7dd1bc24f109e9f3ff39caaa28a  kind: strategy
+// @version=6
+strategy("8PM MGC 5M - $445 Risk $1000 Reward - DEFAULT", shorttitle="8PM MGC $445/$1000 DEFAULT V6", overlay=true, initial_capital=100000, currency=currency.USD, pyramiding=1, calc_on_every_tick=false, calc_on_order_fills=true, max_boxes_count=500, max_lines_count=500, max_labels_count=500)
+
+// --- TIME & RISK - MGC - DEFAULTS FROM YOUR SCREENSHOTS ---
+grp_time = "TIME & RISK - MGC"
+rangeTime = input.session("2000-2005", title="Range Candle Time (NY)", group=grp_time)
+endTime = input.session("2135-2140", title="Expiration Time (NY)", group=grp_time)
+riskDollars = input.float(445, title="Risk Per Trade $ (MGC)", step=5, group=grp_time)
+rewardDollars = input.float(1000, title="Reward Per Trade $ (MGC)", step=50, group=grp_time)
+tpBufferPoints = input.float(0.8, title="TP Buffer - נקודות לפני ה-TP (WR Boost)", step=0.1, minval=0, group=grp_time)
+slBufferPoints = input.float(0, title="SL Buffer - נקודות מעבר ל-SL", step=0.1, minval=0, group=grp_time)
+pointValueMGC = input.float(10, title="MGC Point Value $ (1$ = 10$)", group=grp_time)
+maxTrades = input.int(3, title="Max Trades Per Day", minval=1, group=grp_time)
+skipTradesInput = input.string("0 - Do not skip", title="Skip First Trades?", options=["0 - Do not skip", "1 - Skip 1st Trade", "2 - Skip 1st and 2nd Trades"], group=grp_time)
+
+// --- ALLOWED DAYS NY - DEFAULTS FROM YOUR SCREENSHOTS ---
+grp_days = "ALLOWED DAYS NY"
+tradeSun = input.bool(true, title="Sunday", group=grp_days)
+tradeMon = input.bool(true, title="Monday", group=grp_days)
+tradeTue = input.bool(true, title="Tuesday", group=grp_days)
+tradeWed = input.bool(true, title="Wednesday", group=grp_days)
+tradeThu = input.bool(false, title="Thursday", group=grp_days)
+tradeFri = input.bool(false, title="Friday", group=grp_days)
+tradeSat = input.bool(false, title="Saturday", group=grp_days)
+
+groupVis = "VISUALS PREMIUM"
+enablePremiumVisuals = input.bool(true, title="Enable Premium Visuals", group=groupVis)
+
+// --- TRAILING STOP ---
+grp_trail = "TRAILING STOP"
+use_tp_extend = input.bool(false, title="Enable TP Extension (Native Trailing)", group=grp_trail)
+sl_trail_dist = input.float(1.0, title="Trail Distance (Points)", step=0.5, group=grp_trail)
+float sl_trail_ticks = sl_trail_dist / syminfo.mintick
+
+skipCount = skipTradesInput == "1 - Skip 1st Trade"? 1 : skipTradesInput == "2 - Skip 1st and 2nd Trades"? 2 : 0
+currentDayNY = dayofweek(time, "America/New_York")
+isAllowedDay = (currentDayNY == dayofweek.sunday and tradeSun) or (currentDayNY == dayofweek.monday and tradeMon) or (currentDayNY == dayofweek.tuesday and tradeTue) or (currentDayNY == dayofweek.wednesday and tradeWed) or (currentDayNY == dayofweek.thursday and tradeThu) or (currentDayNY == dayofweek.friday and tradeFri) or (currentDayNY == dayofweek.saturday and tradeSat)
+isRangeCandle = not na(time("5", rangeTime, "America/New_York")) and isAllowedDay
+isExpCandle = not na(time("5", endTime, "America/New_York"))
+
+var float rangeHigh = na
+var float rangeLow = na
+var float breakoutHigh = na
+var float breakoutLow = na
+var bool lookingForFirstBreakout = false
+var bool lookingForSecondBreakoutLong = false
+var bool lookingForSecondBreakoutShort = false
+var int tradesToday = 0
+var int skippedTradesToday = 0
+
+var line lineHigh = na
+var line lineLow = na
+var line lineBO = na
+var box rangeBox = na
+var label rangeLabel = na
+var box boBox = na
+var label boLabel = na
+var line tpLine = na
+var line slLine = na
+var box tpBox = na
+var box slBox = na
+var label tpLabel = na
+var label slLabel = na
+var label entryLabel = na
+
+if isRangeCandle
+    rangeHigh := high
+    rangeLow := low
+    lookingForFirstBreakout := true
+    lookingForSecondBreakoutLong := false
+    lookingForSecondBreakoutShort := false
+    tradesToday := 0
+    skippedTradesToday := 0
+    line.delete(lineHigh)
+    line.delete(lineLow)
+    line.delete(lineBO)
+    if not na(rangeBox)
+        box.delete(rangeBox), label.delete(rangeLabel)
+    if not na(boBox)
+        box.delete(boBox), label.delete(boLabel)
+    lineHigh := line.new(bar_index, rangeHigh, bar_index, rangeHigh, color=color.blue, width=2)
+    lineLow := line.new(bar_index, rangeLow, bar_index, rangeLow, color=color.blue, width=2)
+    if enablePremiumVisuals
+        rangeBox := box.new(left=bar_index, top=rangeHigh, right=bar_index+1, bottom=rangeLow, xloc=xloc.bar_index, bgcolor=color.new(#2962FF, 85), border_color=#2962FF, border_width=2)
+        rangeLabel := label.new(x=bar_index, y=rangeHigh, text="RANGE MGC " + str.tostring(rangeHigh) + " - " + str.tostring(rangeLow), style=label.style_label_down, color=color.new(#2962FF,0), textcolor=color.white, size=size.tiny)
+
+if isExpCandle
+    lookingForFirstBreakout := false
+    lookingForSecondBreakoutLong := false
+    lookingForSecondBreakoutShort := false
+
+if lookingForFirstBreakout or lookingForSecondBreakoutLong or lookingForSecondBreakoutShort
+    if not na(lineHigh)
+        line.set_x2(lineHigh, bar_index)
+    if not na(lineLow)
+        line.set_x2(lineLow, bar_index)
+    if not na(lineBO)
+        line.set_x2(lineBO, bar_index)
+    if not na(rangeBox)
+        box.set_right(rangeBox, bar_index+5)
+
+if lookingForFirstBreakout and not isRangeCandle and tradesToday < maxTrades and strategy.opentrades == 0
+    if close > rangeHigh
+        breakoutHigh := high
+        lookingForSecondBreakoutLong := true
+        lookingForFirstBreakout := false
+        line.delete(lineBO)
+        lineBO := line.new(bar_index, breakoutHigh, bar_index, breakoutHigh, color=color.green, width=2, style=line.style_dashed)
+        if enablePremiumVisuals
+            if not na(boBox)
+                box.delete(boBox), label.delete(boLabel)
+            boBox := box.new(left=bar_index, top=breakoutHigh, right=bar_index+10, bottom=breakoutHigh - 0.5, xloc=xloc.bar_index, bgcolor=color.new(#00E676, 85), border_color=#00E676, border_style=line.style_dashed)
+            boLabel := label.new(x=bar_index, y=breakoutHigh, text="BO HIGH", style=label.style_label_left, color=color.new(#00E676,0), textcolor=color.white, size=size.tiny)
+    else if close < rangeLow
+        breakoutLow := low
+        lookingForSecondBreakoutShort := true
+        lookingForFirstBreakout := false
+        line.delete(lineBO)
+        lineBO := line.new(bar_index, breakoutLow, bar_index, breakoutLow, color=color.red, width=2, style=line.style_dashed)
+        if enablePremiumVisuals
+            if not na(boBox)
+                box.delete(boBox), label.delete(boLabel)
+            boBox := box.new(left=bar_index, top=breakoutLow + 0.5, right=bar_index+10, bottom=breakoutLow, xloc=xloc.bar_index, bgcolor=color.new(#FF5252, 85), border_color=#FF5252, border_style=line.style_dashed)
+            boLabel := label.new(x=bar_index, y=breakoutLow, text="BO LOW", style=label.style_label_left, color=color.new(#FF5252,0), textcolor=color.white, size=size.tiny)
+
+if lookingForSecondBreakoutLong and not isRangeCandle
+    if close > breakoutHigh
+        if skippedTradesToday < skipCount
+            skippedTradesToday += 1
+            lookingForFirstBreakout := true
+            lookingForSecondBreakoutLong := false
+        else
+            float slFinal = rangeLow - slBufferPoints
+            float riskDist = close - slFinal
+            float qtyFloat = riskDollars / (riskDist * pointValueMGC)
+            int qty = math.max(1, int(math.floor(qtyFloat)))
+            float tpOrig = close + riskDist * (rewardDollars / riskDollars)
+            float tpFinal = tpOrig - tpBufferPoints
+            tradesToday += 1
+            string longId = "Long " + str.tostring(tradesToday + skippedTradesToday)
+            strategy.entry(longId, strategy.long, qty=qty)
+            
+            if use_tp_extend
+                strategy.exit("Exit " + longId, from_entry=longId, stop=slFinal, trail_price=tpFinal, trail_offset=sl_trail_ticks)
+            else
+                strategy.exit("Exit " + longId, from_entry=longId, stop=slFinal, limit=tpFinal)
+                
+            if enablePremiumVisuals
+                if not na(tpLine)
+                    line.delete(tpLine), line.delete(slLine), box.delete(tpBox), box.delete(slBox), label.delete(tpLabel), label.delete(slLabel), label.delete(entryLabel)
+                tpLine := line.new(x1=bar_index, y1=tpFinal, x2=bar_index+20, y2=tpFinal, xloc=xloc.bar_index, color=#089981, width=2)
+                slLine := line.new(x1=bar_index, y1=slFinal, x2=bar_index+20, y2=slFinal, xloc=xloc.bar_index, color=#F23645, width=2)
+                tpBox := box.new(left=bar_index, top=tpFinal, right=bar_index+20, bottom=close, xloc=xloc.bar_index, bgcolor=color.new(#089981, 80), border_color=#089981)
+                slBox := box.new(left=bar_index, top=close, right=bar_index+20, bottom=slFinal, xloc=xloc.bar_index, bgcolor=color.new(#F23645, 80), border_color=#F23645)
+                tpLabel := label.new(x=bar_index+2, y=tpFinal, text="TP $1000: " + str.tostring(tpFinal) + " | x" + str.tostring(qty), style=label.style_label_left, color=color.new(#089981,0), textcolor=color.white, size=size.tiny)
+                slLabel := label.new(x=bar_index+2, y=slFinal, text="SL $445: " + str.tostring(slFinal) + " | x" + str.tostring(qty), style=label.style_label_left, color=color.new(#F23645,0), textcolor=color.white, size=size.tiny)
+                entryLabel := label.new(x=bar_index, y=close, text="◍ LONG MGC x" + str.tostring(qty) + " 445$->1000$", style=label.style_label_up, color=color.new(#00E676,0), textcolor=color.white, size=size.small)
+            lookingForFirstBreakout := true
+            lookingForSecondBreakoutLong := false
+
+if lookingForSecondBreakoutShort and not isRangeCandle
+    if close < breakoutLow
+        if skippedTradesToday < skipCount
+            skippedTradesToday += 1
+            lookingForFirstBreakout := true
+            lookingForSecondBreakoutShort := false
+        else
+            float slFinal = rangeHigh + slBufferPoints
+            float riskDist = slFinal - close
+            float qtyFloat = riskDollars / (riskDist * pointValueMGC)
+            int qty = math.max(1, int(math.floor(qtyFloat)))
+            float tpOrig = close - riskDist * (rewardDollars / riskDollars)
+            float tpFinal = tpOrig + tpBufferPoints
+            tradesToday += 1
+            string shortId = "Short " + str.tostring(tradesToday + skippedTradesToday)
+            strategy.entry(shortId, strategy.short, qty=qty)
+            
+            if use_tp_extend
+                strategy.exit("Exit " + shortId, from_entry=shortId, stop=slFinal, trail_price=tpFinal, trail_offset=sl_trail_ticks)
+            else
+                strategy.exit("Exit " + shortId, from_entry=shortId, stop=slFinal, limit=tpFinal)
+                
+            if enablePremiumVisuals
+                if not na(tpLine)
+                    line.delete(tpLine), line.delete(slLine), box.delete(tpBox), box.delete(slBox), label.delete(tpLabel), label.delete(slLabel), label.delete(entryLabel)
+                tpLine := line.new(x1=bar_index, y1=tpFinal, x2=bar_index+20, y2=tpFinal, xloc=xloc.bar_index, color=#089981, width=2)
+                slLine := line.new(x1=bar_index, y1=slFinal, x2=bar_index+20, y2=slFinal, xloc=xloc.bar_index, color=#F23645, width=2)
+                tpBox := box.new(left=bar_index, top=close, right=bar_index+20, bottom=tpFinal, xloc=xloc.bar_index, bgcolor=color.new(#089981, 80), border_color=#089981)
+                slBox := box.new(left=bar_index, top=slFinal, right=bar_index+20, bottom=close, xloc=xloc.bar_index, bgcolor=color.new(#F23645, 80), border_color=#F23645)
+                tpLabel := label.new(x=bar_index+2, y=tpFinal, text="TP $1000: " + str.tostring(tpFinal) + " | x" + str.tostring(qty), style=label.style_label_left, color=color.new(#089981,0), textcolor=color.white, size=size.tiny)
+                slLabel := label.new(x=bar_index+2, y=slFinal, text="SL $445: " + str.tostring(slFinal) + " | x" + str.tostring(qty), style=label.style_label_left, color=color.new(#F23645,0), textcolor=color.white, size=size.tiny)
+                entryLabel := label.new(x=bar_index, y=close, text="◍ SHORT MGC x" + str.tostring(qty) + " 445$->1000$", style=label.style_label_down, color=color.new(#FF5252,0), textcolor=color.white, size=size.small)
+            lookingForFirstBreakout := true
+            lookingForSecondBreakoutShort := false
+
+if strategy.opentrades > 0 and not na(tpBox)
+    box.set_right(tpBox, bar_index+5)
+    box.set_right(slBox, bar_index+5)
+    line.set_x2(tpLine, bar_index+5)
+    line.set_x2(slLine, bar_index+5)

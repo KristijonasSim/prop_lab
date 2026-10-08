@@ -1,0 +1,33 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/wGdhnxdr-MACD-RSI-TS/
+// id: PUB;8EJClJ5BOCGt7qqPz6RwEOiA3rE0yXnT  kind: strategy  likes: 422
+//@version=2
+strategy("MACD + RSI", overlay=true)
+
+src = input(close,"Source")
+
+//MACD
+len1 = input(8, title="MACD Fast Length")
+len2 = input(24, title="MACD Slow Length")
+ema1 = ema(src,len1)
+ema2 = ema(src,len2)
+div = ema1-ema2
+long_macd = div>div[1]
+short_macd = div<div[1]
+
+//RSI
+len = input(7, minval=1, title="RSI Length")
+rsi_threshold = input(0.2,minval=0,maxval=0.5, title="RSI Threshold")
+rsi = rsi(src,len)
+long_rsi = rsi<30*(1+rsi_threshold)
+short_rsi = rsi>70*(1-rsi_threshold)
+
+
+//POSITIONING
+if (long_macd)
+    if(long_rsi)
+        strategy.entry("Long", strategy.long)
+
+if (short_macd)
+    if(short_rsi)
+        strategy.entry("Short", strategy.short)

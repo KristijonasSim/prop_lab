@@ -1,0 +1,24 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/YAhttDtq-Understanding-contract-sizes-in-a-strategy/
+// id: PUB;PoG28Kxl56A3UkojbcPc9tryAERaUGte  kind: strategy  likes: 135
+//@version=2
+strategy("BarUpDn time limited", overlay=true, pyramiding=1, default_qty_type = strategy.fixed, default_qty_value = 1 )
+
+//input boxes for the limit date
+yearLimit = input(2016,title="year") 
+monthLimit = input(9, title="month")
+dayLimit = input(1, title="day")
+
+//function that checks if the current date is more recent than the limit
+dateOk(yl,ml,dl) =>
+    ok = timestamp(yl,ml,dl,0,1) < time
+    
+checkDate = dateOk(yearLimit,monthLimit,dayLimit)
+conditionUp = close > open ? true : false
+conditionDown = close < open ? true : false
+if ( checkDate  )
+    strategy.entry("BarUp", strategy.long, when = conditionUp)
+    strategy.entry("BarDn", strategy.short, when = conditionDown)
+
+
+

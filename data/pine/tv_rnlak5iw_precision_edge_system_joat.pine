@@ -1,0 +1,971 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/rNLAk5IW-Precision-Edge-System-JOAT/
+// id: PUB;24075d3165ac40579296350132cd3687  kind: strategy  likes: 305
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © officialjackofalltrades
+//@version=6
+strategy("Precision Edge System [JOAT]", 
+     shorttitle="PES [JOAT]",
+     overlay=true, 
+     initial_capital=10000, 
+     default_qty_type=strategy.percent_of_equity, 
+     default_qty_value=100, 
+     commission_type=strategy.commission.percent, 
+     commission_value=0.075,
+     pyramiding=3,
+     calc_on_every_tick=false,
+     calc_on_order_fills=false,
+     max_bars_back=5000,
+     max_boxes_count=500,
+     max_lines_count=500,
+     max_labels_count=500)
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ────────────────────────────────────────────────────────────────────────────────
+// Trade Frequency Optimization
+confluenceMode = input.string("Flexible", "Entry Mode", options=["Strict", "Moderate", "Flexible", "Aggressive"], group="Trade Frequency")
+minConfluenceScore = input.int(3, "Min Confluence Score", minval=1, maxval=10, tooltip="Lower = More Trades", group="Trade Frequency")
+allowPartialSetups = input.bool(true, "Allow Partial Setups", tooltip="Trade with 2/3 conditions met", group="Trade Frequency")
+
+// Opening Range
+orSession = input.session("0930-1000", "Opening Range Session", group="Opening Range")
+orEnabled = input.bool(true, "ORB Filter", group="Opening Range")
+orExtensions = input.bool(true, "Fibonacci Extensions", group="Opening Range")
+orBreakoutOnly = input.bool(false, "Breakout Required", tooltip="If false, trades inside OR", group="Opening Range")
+
+// Market Structure
+swingLength = input.int(5, "Fractal Period", minval=3, maxval=15, group="Market Structure")
+requireBOS = input.bool(false, "Require BOS/CHoCH", tooltip="If false, trades without structure confirmation", group="Market Structure")
+structureConfluence = input.bool(true, "Multi-TF Confluence", group="Market Structure")
+showInternalStructure = input.bool(true, "Internal Structure", group="Market Structure")
+internalSwingLen = input.int(3, "Internal Period", minval=2, maxval=10, group="Market Structure")
+
+// Order Blocks
+obEnabled = input.bool(true, "Order Block Filter", group="Order Blocks")
+obAtrMult = input.float(1.2, "Volatility Threshold", minval=0.8, maxval=3.0, tooltip="Lower = More OBs", group="Order Blocks")
+obVolMult = input.float(1.1, "Volume Threshold", minval=0.8, maxval=2.0, tooltip="Lower = More OBs", group="Order Blocks")
+obStrength = input.string("All", "Block Quality", options=["All", "Strong", "Extreme"], group="Order Blocks")
+showBreakers = input.bool(true, "Breaker Blocks", group="Order Blocks")
+showMitigation = input.bool(true, "Mitigation Blocks", group="Order Blocks")
+
+// Fair Value Gaps
+fvgEnabled = input.bool(true, "FVG Entry", group="Fair Value Gaps")
+fvgMinSize = input.float(0.2, "Min Imbalance (%)", minval=0.1, maxval=1.0, tooltip="Lower = More FVGs", group="Fair Value Gaps")
+fvgQuality = input.string("All", "Zone Quality", options=["All", "Strong", "Extreme"], group="Fair Value Gaps")
+fvgAutoFill = input.bool(true, "Auto-Fill Detection", group="Fair Value Gaps")
+
+// Liquidity Analysis
+liqEnabled = input.bool(true, "Liquidity Sweeps", group="Liquidity")
+liqSwingLen = input.int(5, "Swing Detection", minval=3, maxval=15, group="Liquidity")
+liqTolerance = input.float(0.2, "Level Tolerance (%)", minval=0.05, maxval=0.5, tooltip="Higher = More Liquidity Zones", group="Liquidity")
+
+// Premium/Discount Arrays
+pdEnabled = input.bool(true, "Premium/Discount Filter", group="Value Arrays")
+pdArrayLen = input.int(50, "Array Period", minval=20, maxval=200, group="Value Arrays")
+pdShowFib = input.bool(true, "Fibonacci Levels", group="Value Arrays")
+pdDynamicEQ = input.bool(true, "Dynamic Equilibrium", group="Value Arrays")
+
+// Fibonacci Confluence
+fibEnabled = input.bool(true, "Fibonacci Confluence", group="Fibonacci")
+swing1Length = input.int(20, "Primary Wave", minval=10, maxval=100, group="Fibonacci")
+swing2Length = input.int(50, "Secondary Wave", minval=20, maxval=150, group="Fibonacci")
+showGoldenZone = input.bool(true, "Golden Pocket (0.618-0.65)", group="Fibonacci")
+confluenceTolerance = input.float(0.3, "Resonance Tolerance (%)", minval=0.1, maxval=1.0, group="Fibonacci")
+
+// Volatility Regime
+regimeEnabled = input.bool(true, "Regime Filter", group="Volatility Regime")
+avoidChoppy = input.bool(false, "Avoid Choppy Markets", tooltip="If false, trades in all regimes", group="Volatility Regime")
+minTrendStrength = input.float(1.0, "Min Trend Strength", minval=0.5, maxval=2.0, tooltip="Lower = More Trades", group="Volatility Regime")
+
+// Divergence Detection
+divEnabled = input.bool(true, "Divergence Filter", group="Divergence")
+rsiLength = input.int(14, "RSI Period", minval=5, maxval=50, group="Divergence")
+macdFast = input.int(12, "MACD Fast", minval=5, maxval=50, group="Divergence")
+macdSlow = input.int(26, "MACD Slow", minval=10, maxval=100, group="Divergence")
+macdSignal = input.int(9, "MACD Signal", minval=5, maxval=50, group="Divergence")
+divConfluence = input.bool(false, "Multi-Oscillator Required", tooltip="If false, single oscillator divergence OK", group="Divergence")
+
+// RSI-2 Mean Reversion
+rsi2Enabled = input.bool(true, "RSI-2 Mean Reversion", group="RSI-2 Strategy")
+rsi2Length = input.int(2, "RSI-2 Period", minval=2, maxval=10, group="RSI-2 Strategy")
+rsi2Oversold = input.int(10, "Oversold Level", minval=5, maxval=30, group="RSI-2 Strategy")
+rsi2Overbought = input.int(90, "Overbought Level", minval=70, maxval=95, group="RSI-2 Strategy")
+rsi2MA = input.int(200, "Trend Filter MA", minval=50, maxval=300, group="RSI-2 Strategy")
+
+// Session Timing
+killZoneEnabled = input.bool(true, "Session Filter", group="Session Timing")
+londonSession = input.session("0200-0500", "London Session", group="Session Timing")
+nySession = input.session("0830-1100", "New York Session", group="Session Timing")
+silverBullet = input.session("0900-1000", "Silver Bullet", group="Session Timing")
+
+// Risk Management
+riskPercent = input.float(1.0, "Risk Per Trade (%)", minval=0.1, maxval=5.0, step=0.1, group="Risk Management")
+rewardMultiple = input.float(2.0, "Reward Multiple (R)", minval=1.0, maxval=5.0, step=0.5, group="Risk Management")
+useAdaptiveTP = input.bool(true, "Adaptive Take Profit", tooltip="Adjusts TP based on volatility", group="Risk Management")
+useTimeExit = input.bool(true, "EOD Exit", group="Risk Management")
+eodSession = input.session("1555-1600", "EOD Session", group="Risk Management")
+useTrailingStop = input.bool(true, "Adaptive Trailing Stop", group="Risk Management")
+trailActivation = input.float(1.0, "Trail Activation (R)", minval=0.5, maxval=3.0, group="Risk Management")
+maxDailyTrades = input.int(10, "Max Daily Trades", minval=1, maxval=50, group="Risk Management")
+
+// Visual Settings
+showGradientCandles = input.bool(true, "Gradient Candles", group="Visual Settings")
+showGradientBg = input.bool(true, "Gradient Backgrounds", group="Visual Settings")
+showDashboard = input.bool(true, "Performance Dashboard", group="Visual Settings")
+showLabels = input.bool(true, "Entry/Exit Labels", group="Visual Settings")
+
+// ────────────────────────────────────────────────────────────────────────────────
+// COLOR SCHEME - Professional Trading Aesthetic
+// ────────────────────────────────────────────────────────────────────────────────
+// Primary Colors
+COLOR_LONG = color.new(#00ff9f, 0)
+COLOR_SHORT = color.new(#ff006e, 0)
+COLOR_ACCENT = color.new(#00d4ff, 0)
+COLOR_GOLDEN = color.new(#ffd700, 0)
+
+// Opening Range
+COLOR_OR = color.new(#ffd700, 65)
+COLOR_OR_BORDER = color.new(#ff8c00, 40)
+
+// Fair Value Gaps
+COLOR_FVG_BULL = color.new(#00ffaa, 75)
+COLOR_FVG_BULL_BORDER = color.new(#00ff9f, 40)
+COLOR_FVG_BEAR = color.new(#ff0066, 75)
+COLOR_FVG_BEAR_BORDER = color.new(#ff006e, 40)
+
+// Order Blocks
+COLOR_OB_BULL_FILL = color.new(#0d1117, 70)
+COLOR_OB_BULL_BORDER = color.new(#00ffaa, 0)
+COLOR_OB_BULL_EQ = color.new(#00ff9f, 30)
+COLOR_OB_BEAR_FILL = color.new(#0d1117, 70)
+COLOR_OB_BEAR_BORDER = color.new(#ff0066, 0)
+COLOR_OB_BEAR_EQ = color.new(#ff006e, 30)
+
+// Breaker Blocks
+COLOR_BREAKER_BULL = color.new(#00ffaa, 92)
+COLOR_BREAKER_BEAR = color.new(#ff0066, 92)
+
+// Liquidity Zones
+COLOR_LIQ_BULL = color.new(#00d4ff, 15)
+COLOR_LIQ_BEAR = color.new(#ff0080, 15)
+
+// Premium/Discount Arrays
+COLOR_PREMIUM_1 = color.new(#ff0080, 96)
+COLOR_PREMIUM_2 = color.new(#ff4500, 96)
+COLOR_DISCOUNT_1 = color.new(#00ced1, 96)
+COLOR_DISCOUNT_2 = color.new(#00ff9f, 96)
+COLOR_EQUILIBRIUM = color.new(#9370db, 98)
+
+// Fibonacci Levels
+COLOR_FIB_236 = color.new(#00d4ff, 70)
+COLOR_FIB_382 = color.new(#00ffaa, 70)
+COLOR_FIB_500 = color.new(#ffd700, 70)
+COLOR_FIB_618 = color.new(#ff8c00, 70)
+COLOR_FIB_786 = color.new(#ff1493, 70)
+COLOR_FIB_GOLDEN = color.new(#ffd700, 50)
+
+// Candlestick Colors
+COLOR_CANDLE_BULL_STRONG = color.new(#00ff9f, 0)
+COLOR_CANDLE_BULL_WEAK = color.new(#00d4ff, 0)
+COLOR_CANDLE_BEAR_STRONG = color.new(#ff006e, 0)
+COLOR_CANDLE_BEAR_WEAK = color.new(#ff4500, 0)
+COLOR_CANDLE_NEUTRAL = color.new(#9370db, 0)
+
+// Dashboard Colors
+COLOR_DASHBOARD_BG = color.new(#0a0a0a, 5)
+COLOR_DASHBOARD_BORDER = color.new(#00ff9f, 30)
+COLOR_DASHBOARD_HEADER = color.new(#1a1a2e, 15)
+COLOR_DASHBOARD_CELL = color.new(#1a1a2e, 40)
+
+// Signal Colors
+COLOR_PROFIT = color.new(#00ff00, 0)
+COLOR_LOSS = color.new(#ff0000, 0)
+COLOR_WARNING = color.new(#ffd700, 0)
+
+// Chaos Zone
+COLOR_CHAOS = color.new(#ff0000, 92)
+COLOR_CHAOS_SIGNAL = color.new(#ff6600, 0)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// CALCULATIONS
+// ────────────────────────────────────────────────────────────────────────────────
+// Core Metrics
+atr = ta.atr(14)
+avgVol = ta.sma(volume, 20)
+rsi = ta.rsi(close, rsiLength)
+rsi2 = ta.rsi(close, rsi2Length)
+[macdLine, signalLine, macdHist] = ta.macd(close, macdFast, macdSlow, macdSignal)
+
+// Moving Averages
+ema9 = ta.ema(close, 9)
+ema21 = ta.ema(close, 21)
+ema50 = ta.ema(close, 50)
+ema200 = ta.ema(close, rsi2MA)
+
+// Trend Analysis
+trend_bullish = ema9 > ema21 and ema21 > ema50
+trend_bearish = ema9 < ema21 and ema21 < ema50
+trend_strength = math.abs(ema9 - ema50) / atr
+
+// Volatility Analysis
+atrSma = ta.sma(atr, 50)
+volRatio = atr / atrSma
+volatility_high = atr > atrSma * 1.5
+volatility_low = atr < atrSma * 0.7
+
+// Volume Analysis
+volume_significant = volume > avgVol * 1.2
+volume_spike = volume > avgVol * 1.5
+volume_dry = volume < avgVol * 0.7
+buyVolume = close > open ? volume : 0
+sellVolume = close < open ? volume : 0
+volumeDelta = ta.cum(buyVolume) - ta.cum(sellVolume)
+
+// Momentum Analysis
+rsiMomentum = ta.change(rsi, 3)
+macdMomentum = ta.change(macdLine, 3)
+priceMomentum = ta.change(close, 5)
+momentum_bull = rsiMomentum > 0 and macdHist > 0
+momentum_bear = rsiMomentum < 0 and macdHist < 0
+
+// Stochastic
+k = ta.stoch(close, high, low, 14)
+d = ta.sma(k, 3)
+stoch_oversold = k < 20
+stoch_overbought = k > 80
+
+// Candlestick Pattern Recognition
+body = close - open
+rangeCandle = high - low
+upperWick = high - math.max(close, open)
+lowerWick = math.min(close, open) - low
+bodyPct = rangeCandle > 0 ? math.abs(body) / rangeCandle : 0
+
+// Hammer Pattern
+isHammer = lowerWick > math.abs(body) * 2 and upperWick < math.abs(body) * 0.3 and bodyPct < 0.4 and close > open
+hammerStrength = isHammer and volume > avgVol * 1.3
+
+// Shooting Star Pattern
+isShootingStar = upperWick > math.abs(body) * 2 and lowerWick < math.abs(body) * 0.3 and bodyPct < 0.4 and close < open
+shootingStarStrength = isShootingStar and volume > avgVol * 1.3
+
+// Engulfing Patterns
+isEngulfingBull = close > open and close[1] < open[1] and open < close[1] and close > open[1]
+engulfingBullStrength = isEngulfingBull and volume > volume[1] * 1.2
+
+isEngulfingBear = close < open and close[1] > open[1] and open > close[1] and close < open[1]
+engulfingBearStrength = isEngulfingBear and volume > volume[1] * 1.2
+
+// Morning/Evening Star
+isMorningStar = close[2] < open[2] and math.abs(close[1] - open[1]) < (high[1] - low[1]) * 0.3 and close > open and close > (high[2] + low[2]) / 2
+isEveningStar = close[2] > open[2] and math.abs(close[1] - open[1]) < (high[1] - low[1]) * 0.3 and close < open and close < (high[2] + low[2]) / 2
+
+// Divergence Detection
+pivotHigh = ta.pivothigh(high, 5, 5)
+pivotLow = ta.pivotlow(low, 5, 5)
+rsiPivotHigh = ta.pivothigh(rsi, 5, 5)
+rsiPivotLow = ta.pivotlow(rsi, 5, 5)
+
+var float lastPriceHigh = na
+var float lastPriceLow = na
+var float lastRsiHigh = na
+var float lastRsiLow = na
+
+bullish_divergence = false
+bearish_divergence = false
+
+if not na(pivotHigh) and not na(rsiPivotHigh)
+    if not na(lastPriceHigh) and not na(lastRsiHigh)
+        if pivotHigh > lastPriceHigh and rsiPivotHigh < lastRsiHigh
+            bearish_divergence := true
+    lastPriceHigh := pivotHigh
+    lastRsiHigh := rsiPivotHigh
+
+if not na(pivotLow) and not na(rsiPivotLow)
+    if not na(lastPriceLow) and not na(lastRsiLow)
+        if pivotLow < lastPriceLow and rsiPivotLow > lastRsiLow
+            bullish_divergence := true
+    lastPriceLow := pivotLow
+    lastRsiLow := rsiPivotLow
+
+// RSI-2 Signals
+rsi2_oversold = rsi2 < rsi2Oversold and close > ema200
+rsi2_overbought = rsi2 > rsi2Overbought and close < ema200
+
+// Session Detection
+inLondonKZ = not na(time(timeframe.period, londonSession))
+inNYKZ = not na(time(timeframe.period, nySession))
+inSilverBullet = not na(time(timeframe.period, silverBullet))
+inKillZone = killZoneEnabled ? (inLondonKZ or inNYKZ or inSilverBullet) : true
+
+// Daily Trade Counter
+var int dailyTradeCount = 0
+var int lastTradeDay = 0
+
+if dayofmonth != lastTradeDay
+    dailyTradeCount := 0
+    lastTradeDay := dayofmonth
+// ────────────────────────────────────────────────────────────────────────────────
+// OPENING RANGE
+// ────────────────────────────────────────────────────────────────────────────────
+inOR = not na(time(timeframe.period, orSession))
+var float orHigh = na
+var float orLow = na
+var bool orEstablished = false
+
+if inOR and not inOR[1]
+    orHigh := high
+    orLow := low
+    orEstablished := false
+
+if inOR
+    orHigh := math.max(high, orHigh)
+    orLow := math.min(low, orLow)
+
+if not inOR and inOR[1]
+    orEstablished := true
+
+// OR Breakout
+orBreakoutUp = orEstablished and close > orHigh and close[1] <= orHigh
+orBreakoutDown = orEstablished and close < orLow and close[1] >= orLow
+
+// Plot OR
+bgcolor(inOR ? COLOR_OR : na, title="Opening Range")
+plot(orEstablished ? orHigh : na, "OR High", COLOR_SHORT, 2, plot.style_linebr)
+plot(orEstablished ? orLow : na, "OR Low", COLOR_LONG, 2, plot.style_linebr)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// MARKET STRUCTURE (BOS/CHoCH)
+// ────────────────────────────────────────────────────────────────────────────────
+swingPivotHigh = ta.pivothigh(high, swingLength, swingLength)
+swingPivotLow = ta.pivotlow(low, swingLength, swingLength)
+
+var float lastSwingHigh = na
+var float lastSwingLow = na
+var bool bullishStructure = true
+var bool bosOccurred = false
+
+if not na(swingPivotHigh)
+    if not na(lastSwingHigh)
+        if swingPivotHigh > lastSwingHigh
+            if not bullishStructure
+                bullishStructure := true
+                bosOccurred := true
+            else
+                bosOccurred := true
+    lastSwingHigh := swingPivotHigh
+
+if not na(swingPivotLow)
+    if not na(lastSwingLow)
+        if swingPivotLow < lastSwingLow
+            if bullishStructure
+                bullishStructure := false
+                bosOccurred := true
+            else
+                bosOccurred := true
+    lastSwingLow := swingPivotLow
+
+// ────────────────────────────────────────────────────────────────────────────────
+// ORDER BLOCKS - Enhanced with Volume Delta and Strength Classification
+// ────────────────────────────────────────────────────────────────────────────────
+// Calculate volume strength for order blocks
+volStrength = volume > avgVol * 1.5 ? 3 : volume > avgVol * 1.3 ? 2 : 1
+atrStrength = (high - low) > atr * 2.0 ? 3 : (high - low) > atr * 1.5 ? 2 : 1
+
+bullishOB = close[1] < open[1] and close > open and 
+             (high - low) > atr * obAtrMult and 
+             volume > avgVol * obVolMult
+
+bearishOB = close[1] > open[1] and close < open and 
+             (high - low) > atr * obAtrMult and 
+             volume > avgVol * obVolMult
+
+var float lastBullOBHigh = na
+var float lastBullOBLow = na
+var int lastBullOBStrength = 0
+var float lastBearOBHigh = na
+var float lastBearOBLow = na
+var int lastBearOBStrength = 0
+
+if bullishOB
+    int currentOBStrength = math.min(volStrength + atrStrength, 5)
+    lastBullOBHigh := high[1]
+    lastBullOBLow := low[1]
+    lastBullOBStrength := currentOBStrength
+    
+    boxColor = currentOBStrength >= 4 ? color.new(COLOR_LONG, 75) : color.new(COLOR_LONG, 85)
+    borderColor = currentOBStrength >= 4 ? color.new(COLOR_LONG, 30) : color.new(COLOR_LONG, 50)
+    
+    box.new(bar_index[1], high[1], bar_index + 20, low[1],
+            border_color=borderColor,
+            bgcolor=boxColor,
+            border_width=currentOBStrength >= 4 ? 3 : 2)
+
+if bearishOB
+    int currentOBStrength = math.min(volStrength + atrStrength, 5)
+    lastBearOBHigh := high[1]
+    lastBearOBLow := low[1]
+    lastBearOBStrength := currentOBStrength
+    
+    boxColor = currentOBStrength >= 4 ? color.new(COLOR_SHORT, 75) : color.new(COLOR_SHORT, 85)
+    borderColor = currentOBStrength >= 4 ? color.new(COLOR_SHORT, 30) : color.new(COLOR_SHORT, 50)
+    
+    box.new(bar_index[1], high[1], bar_index + 20, low[1],
+            border_color=borderColor,
+            bgcolor=boxColor,
+            border_width=currentOBStrength >= 4 ? 3 : 2)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// FAIR VALUE GAPS
+// ────────────────────────────────────────────────────────────────────────────────
+bullishFVG = low > high[2]
+fvgBullSize = bullishFVG ? (low - high[2]) / high[2] * 100 : 0
+fvgBullTop = bullishFVG ? low : na
+fvgBullBottom = bullishFVG ? high[2] : na
+
+bearishFVG = high < low[2]
+fvgBearSize = bearishFVG ? (low[2] - high) / low[2] * 100 : 0
+fvgBearTop = bearishFVG ? low[2] : na
+fvgBearBottom = bearishFVG ? high : na
+
+var float activeFVGBullTop = na
+var float activeFVGBullBottom = na
+var float activeFVGBearTop = na
+var float activeFVGBearBottom = na
+
+if bullishFVG and fvgBullSize >= fvgMinSize
+    activeFVGBullTop := fvgBullTop
+    activeFVGBullBottom := fvgBullBottom
+    box.new(bar_index[2], fvgBullTop, bar_index + 15, fvgBullBottom,
+            border_color=color.new(COLOR_LONG, 60),
+            bgcolor=COLOR_FVG_BULL,
+            border_width=1)
+
+if bearishFVG and fvgBearSize >= fvgMinSize
+    activeFVGBearTop := fvgBearTop
+    activeFVGBearBottom := fvgBearBottom
+    box.new(bar_index[2], fvgBearTop, bar_index + 15, fvgBearBottom,
+            border_color=color.new(COLOR_SHORT, 60),
+            bgcolor=COLOR_FVG_BEAR,
+            border_width=1)
+
+// FVG Retest
+fvgBullRetest = not na(activeFVGBullTop) and low <= activeFVGBullTop and close >= activeFVGBullBottom
+fvgBearRetest = not na(activeFVGBearTop) and high >= activeFVGBearBottom and close <= activeFVGBearTop
+
+// ────────────────────────────────────────────────────────────────────────────────
+// PREMIUM/DISCOUNT ARRAYS
+// ────────────────────────────────────────────────────────────────────────────────
+rangeHigh = ta.highest(high, pdArrayLen)
+rangeLow = ta.lowest(low, pdArrayLen)
+rangeEQ = (rangeHigh + rangeLow) / 2
+
+inPremium = close > rangeEQ and close > (rangeEQ + (rangeHigh - rangeEQ) * 0.5)
+inDiscount = close < rangeEQ and close < (rangeEQ - (rangeEQ - rangeLow) * 0.5)
+
+bgGradient = if inPremium
+    distanceFromEQ = (close - rangeEQ) / (rangeHigh - rangeEQ)
+    color.from_gradient(distanceFromEQ, 0.5, 1.0, COLOR_PREMIUM_2, COLOR_PREMIUM_1)
+else if inDiscount
+    distanceFromEQ = (rangeEQ - close) / (rangeEQ - rangeLow)
+    color.from_gradient(distanceFromEQ, 0.5, 1.0, COLOR_DISCOUNT_2, COLOR_DISCOUNT_1)
+else
+    COLOR_EQUILIBRIUM
+
+bgcolor(showGradientBg and pdEnabled ? bgGradient : na, title="PD Array")
+
+// Glowing Equilibrium Line with Pulsing Effect
+eqColor1 = color.new(#9370db, 0)
+eqColor2 = color.new(#00d4ff, 0)
+eqColor3 = color.new(#ff0080, 0)
+eqColor4 = color.new(#00ffaa, 0)
+
+pulseValue = math.sin(bar_index * 0.1) * 20 + 50
+glowIntensity = int(pulseValue)
+
+plot(pdEnabled ? rangeEQ : na, "EQ Glow Outer", color.new(eqColor1, 80), 8, plot.style_line)
+plot(pdEnabled ? rangeEQ : na, "EQ Glow", color.new(eqColor1, glowIntensity), 6, plot.style_line)
+plot(pdEnabled ? rangeEQ : na, "EQ Mid", color.new(eqColor2, 40), 4, plot.style_line)
+plot(pdEnabled ? rangeEQ : na, "EQ Core", color.from_gradient(bar_index % 100, 0, 100, eqColor3, eqColor4), 2, plot.style_line)
+
+premium75 = rangeEQ + (rangeHigh - rangeEQ) * 0.75
+premium50 = rangeEQ + (rangeHigh - rangeEQ) * 0.5
+discount50 = rangeEQ - (rangeEQ - rangeLow) * 0.5
+discount75 = rangeEQ - (rangeEQ - rangeLow) * 0.75
+
+plot(pdShowFib and pdEnabled ? rangeHigh : na, "Range High", color.new(#ff0080, 50), 2, plot.style_stepline)
+plot(pdShowFib and pdEnabled ? premium75 : na, "Premium 75%", color.new(#ff4500, 60), 1, plot.style_stepline)
+plot(pdShowFib and pdEnabled ? premium50 : na, "Premium 50%", color.new(#ff7f50, 70), 1, plot.style_stepline)
+plot(pdShowFib and pdEnabled ? discount50 : na, "Discount 50%", color.new(#00ced1, 70), 1, plot.style_stepline)
+plot(pdShowFib and pdEnabled ? discount75 : na, "Discount 75%", color.new(#00d4ff, 60), 1, plot.style_stepline)
+plot(pdShowFib and pdEnabled ? rangeLow : na, "Range Low", color.new(#00ffaa, 50), 2, plot.style_stepline)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// FIBONACCI CONFLUENCE
+// ────────────────────────────────────────────────────────────────────────────────
+calculateSwingFibs(swingLen) =>
+    swingHigh = ta.highest(high, swingLen)
+    swingLow = ta.lowest(low, swingLen)
+    
+    highBar = 0
+    lowBar = 0
+    for i = 0 to swingLen - 1
+        if high[i] == swingHigh
+            highBar := i
+        if low[i] == swingLow
+            lowBar := i
+    
+    isUptrend = lowBar > highBar
+    
+    fibStart = isUptrend ? swingLow : swingHigh
+    fibEnd = isUptrend ? swingHigh : swingLow
+    fibDiff = fibEnd - fibStart
+    
+    var array<float> levels = array.new<float>()
+    array.clear(levels)
+    
+    array.push(levels, fibStart + (fibDiff * 0.236))
+    array.push(levels, fibStart + (fibDiff * 0.382))
+    array.push(levels, fibStart + (fibDiff * 0.5))
+    array.push(levels, fibStart + (fibDiff * 0.618))
+    array.push(levels, fibStart + (fibDiff * 0.786))
+    
+    levels
+
+fib1 = fibEnabled ? calculateSwingFibs(swing1Length) : array.new<float>()
+fib2 = fibEnabled ? calculateSwingFibs(swing2Length) : array.new<float>()
+
+var bool inGoldenZone = false
+if fibEnabled and showGoldenZone and array.size(fib1) >= 4
+    fib618 = array.get(fib1, 3)
+    fib65 = fib618 * 1.052
+    goldenTop = math.max(fib618, fib65)
+    goldenBot = math.min(fib618, fib65)
+    inGoldenZone := close >= goldenBot and close <= goldenTop
+
+// ────────────────────────────────────────────────────────────────────────────────
+// LIQUIDITY SWEEPS - Enhanced with Equal Highs/Lows Detection
+// ────────────────────────────────────────────────────────────────────────────────
+liqPivotHigh = ta.pivothigh(high, liqSwingLen, liqSwingLen)
+liqPivotLow = ta.pivotlow(low, liqSwingLen, liqSwingLen)
+
+var float lastLiqHigh = na
+var float lastLiqLow = na
+
+liquiditySweepUp = false
+liquiditySweepDown = false
+
+// Equal Highs Detection (Liquidity Pool Above)
+highest3 = ta.highest(high, 3)
+equalHighs = high == high[1] and high == high[2] and high >= highest3
+
+// Equal Lows Detection (Liquidity Pool Below)
+lowest3 = ta.lowest(low, 3)
+equalLows = low == low[1] and low == low[2] and low <= lowest3
+
+if liqEnabled and not na(liqPivotHigh)
+    if not na(lastLiqHigh)
+        diff = math.abs(liqPivotHigh - lastLiqHigh) / lastLiqHigh * 100
+        if diff <= liqTolerance
+            liquiditySweepUp := true
+    lastLiqHigh := liqPivotHigh
+
+if liqEnabled and not na(liqPivotLow)
+    if not na(lastLiqLow)
+        diff = math.abs(liqPivotLow - lastLiqLow) / lastLiqLow * 100
+        if diff <= liqTolerance
+            liquiditySweepDown := true
+    lastLiqLow := liqPivotLow
+
+// Enhanced Liquidity Detection
+liquidityAbove = equalHighs or liquiditySweepUp
+liquidityBelow = equalLows or liquiditySweepDown
+
+// ────────────────────────────────────────────────────────────────────────────────
+// GRADIENT CANDLE COLORING - Enhanced with Pattern Recognition
+// ────────────────────────────────────────────────────────────────────────────────
+isBullCandle = close > open
+candleStrength = atr > 0 ? math.abs(close - open) / atr : 0
+
+candleColor = if showGradientCandles
+    if hammerStrength or engulfingBullStrength or isMorningStar
+        color.new(#00ff00, 0)
+    else if shootingStarStrength or engulfingBearStrength or isEveningStar
+        color.new(#ff0000, 0)
+    else if inGoldenZone
+        isBullCandle ? color.new(#FFD700, 0) : color.new(#ff8c00, 0)
+    else if isBullCandle
+        candleStrength > 1.5 ? COLOR_CANDLE_BULL_STRONG : COLOR_CANDLE_BULL_WEAK
+    else
+        candleStrength > 1.5 ? COLOR_CANDLE_BEAR_STRONG : COLOR_CANDLE_BEAR_WEAK
+else
+    na
+
+barcolor(candleColor, title="Gradient Candles")
+
+// ────────────────────────────────────────────────────────────────────────────────
+// REGIME DETECTION
+// ────────────────────────────────────────────────────────────────────────────────
+regime = volRatio > 1.5 ? 0 : (ema9 > ema21 and ema21 > ema50) or (ema9 < ema21 and ema21 < ema50) ? 2 : 1  // 0=Choppy, 1=Ranging, 2=Trending
+
+regimeOK = not regimeEnabled or (regime != 0 or not avoidChoppy)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// DIVERGENCE DETECTION
+// ────────────────────────────────────────────────────────────────────────────────
+rsiOverbought = rsi > 70
+rsiOversold = rsi < 30
+
+divOK = not divEnabled or (not rsiOverbought and not rsiOversold)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// CONFLUENCE SCORING SYSTEM
+// ────────────────────────────────────────────────────────────────────────────────
+confluenceScoreLong = 0
+confluenceScoreShort = 0
+
+// OR Breakout
+if orEnabled and orBreakoutUp
+    confluenceScoreLong += 2
+if orEnabled and orBreakoutDown
+    confluenceScoreShort += 2
+
+// Market Structure
+if requireBOS and bosOccurred and bullishStructure
+    confluenceScoreLong += 2
+if requireBOS and bosOccurred and not bullishStructure
+    confluenceScoreShort += 2
+
+// FVG Retest
+if fvgEnabled and fvgBullRetest
+    confluenceScoreLong += 2
+if fvgEnabled and fvgBearRetest
+    confluenceScoreShort += 2
+
+// Order Blocks
+if obEnabled and not na(lastBullOBLow)
+    confluenceScoreLong += 1
+if obEnabled and not na(lastBearOBHigh)
+    confluenceScoreShort += 1
+
+// Premium/Discount
+if pdEnabled and inDiscount
+    confluenceScoreLong += 1
+if pdEnabled and inPremium
+    confluenceScoreShort += 1
+
+// Golden Zone
+if fibEnabled and inGoldenZone
+    confluenceScoreLong += 1
+    confluenceScoreShort += 1
+
+// RSI-2
+if rsi2Enabled and rsi2_oversold
+    confluenceScoreLong += 2
+if rsi2Enabled and rsi2_overbought
+    confluenceScoreShort += 2
+
+// Divergence
+if divEnabled and bullish_divergence
+    confluenceScoreLong += 2
+if divEnabled and bearish_divergence
+    confluenceScoreShort += 2
+
+// Liquidity Sweeps
+if liqEnabled and (liquiditySweepDown or liquidityBelow)
+    confluenceScoreLong += 1
+if liqEnabled and (liquiditySweepUp or liquidityAbove)
+    confluenceScoreShort += 1
+
+// Volume
+if volume_spike
+    confluenceScoreLong += 1
+    confluenceScoreShort += 1
+
+// Momentum
+if momentum_bull
+    confluenceScoreLong += 1
+if momentum_bear
+    confluenceScoreShort += 1
+
+// Candlestick Patterns
+if hammerStrength or engulfingBullStrength or isMorningStar
+    confluenceScoreLong += 2
+if shootingStarStrength or engulfingBearStrength or isEveningStar
+    confluenceScoreShort += 2
+
+// Order Block Strength Bonus
+if obEnabled and not na(lastBullOBLow) and lastBullOBStrength >= 4
+    confluenceScoreLong += 1
+if obEnabled and not na(lastBearOBHigh) and lastBearOBStrength >= 4
+    confluenceScoreShort += 1
+
+// ────────────────────────────────────────────────────────────────────────────────
+// ENTRY CONDITIONS - Enhanced with Multiple Confirmation Layers
+// ────────────────────────────────────────────────────────────────────────────────
+// Flexible Entry Logic Based on Confluence Mode
+minScore = confluenceMode == "Strict" ? 8 : confluenceMode == "Moderate" ? 6 : confluenceMode == "Flexible" ? 4 : 3
+
+// Additional Confirmation Filters
+trendConfirmLong = trend_bullish or (close > ema200 and ema9 > ema21)
+trendConfirmShort = trend_bearish or (close < ema200 and ema9 < ema21)
+
+// Volume Confirmation
+volumeConfirm = volume > avgVol * 0.8
+
+// LONG Entry with Enhanced Filters
+longCondition = confluenceScoreLong >= minScore and
+                 regimeOK and
+                 inKillZone and
+                 dailyTradeCount < maxDailyTrades and
+                 strategy.position_size == 0 and
+                 volumeConfirm and
+                 (allowPartialSetups or trendConfirmLong)
+
+// SHORT Entry with Enhanced Filters
+shortCondition = confluenceScoreShort >= minScore and
+                  regimeOK and
+                  inKillZone and
+                  dailyTradeCount < maxDailyTrades and
+                  strategy.position_size == 0 and
+                  volumeConfirm and
+                  (allowPartialSetups or trendConfirmShort)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// POSITION SIZING
+// ────────────────────────────────────────────────────────────────────────────────
+accountRisk = strategy.equity * (riskPercent / 100)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// TRADE EXECUTION - Enhanced with Pattern Recognition Labels
+// ────────────────────────────────────────────────────────────────────────────────
+if longCondition
+    stopLoss = orEnabled and orEstablished ? orLow : low - atr * 2
+    riskPerShare = close - stopLoss
+    
+    // Validate risk is positive
+    if riskPerShare > 0
+        // Adaptive Take Profit
+        tpMultiplier = useAdaptiveTP ? (volatility_high ? rewardMultiple * 1.5 : rewardMultiple) : rewardMultiple
+        takeProfit = close + (riskPerShare * tpMultiplier)
+        
+        qty = math.abs(accountRisk / riskPerShare)
+        qty := math.min(qty, 1000000000000.0)  // Cap at max allowed
+        
+        strategy.entry("LONG", strategy.long, qty=qty)
+        strategy.exit("TP/SL", "LONG", stop=stopLoss, limit=takeProfit)
+        
+        dailyTradeCount += 1
+        
+        if showLabels
+            patternInfo = hammerStrength ? " HAMMER" : engulfingBullStrength ? " ENGULF" : isMorningStar ? " MSTAR" : ""
+            labelText = "LONG" + patternInfo + "\nScore: " + str.tostring(confluenceScoreLong) + "\nEntry: " + str.tostring(close, format.mintick) + "\nSL: " + str.tostring(stopLoss, format.mintick) + "\nTP: " + str.tostring(takeProfit, format.mintick)
+            label.new(bar_index, low, labelText,
+                      style=label.style_label_up, color=COLOR_LONG, textcolor=color.white, size=size.small)
+            
+            line.new(bar_index, stopLoss, bar_index + 10, stopLoss, color=COLOR_SHORT, width=2, style=line.style_dashed)
+            line.new(bar_index, takeProfit, bar_index + 10, takeProfit, color=COLOR_LONG, width=2, style=line.style_dashed)
+
+if shortCondition
+    stopLoss = orEnabled and orEstablished ? orHigh : high + atr * 2
+    riskPerShare = stopLoss - close
+    
+    // Validate risk is positive
+    if riskPerShare > 0
+        // Adaptive Take Profit
+        tpMultiplier = useAdaptiveTP ? (volatility_high ? rewardMultiple * 1.5 : rewardMultiple) : rewardMultiple
+        takeProfit = close - (riskPerShare * tpMultiplier)
+        
+        qty = math.abs(accountRisk / riskPerShare)
+        qty := math.min(qty, 1000000000000.0)  // Cap at max allowed
+        
+        strategy.entry("SHORT", strategy.short, qty=qty)
+        strategy.exit("TP/SL", "SHORT", stop=stopLoss, limit=takeProfit)
+        
+        dailyTradeCount += 1
+        
+        if showLabels
+            patternInfo = shootingStarStrength ? " STAR" : engulfingBearStrength ? " ENGULF" : isEveningStar ? " ESTAR" : ""
+            labelText = "SHORT" + patternInfo + "\nScore: " + str.tostring(confluenceScoreShort) + "\nEntry: " + str.tostring(close, format.mintick) + "\nSL: " + str.tostring(stopLoss, format.mintick) + "\nTP: " + str.tostring(takeProfit, format.mintick)
+            label.new(bar_index, high, labelText,
+                      style=label.style_label_down, color=COLOR_SHORT, textcolor=color.white, size=size.small)
+            
+            line.new(bar_index, stopLoss, bar_index + 10, stopLoss, color=COLOR_SHORT, width=2, style=line.style_dashed)
+            line.new(bar_index, takeProfit, bar_index + 10, takeProfit, color=COLOR_LONG, width=2, style=line.style_dashed)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// VISUAL PATTERN LABELS - Enhanced Chart Annotations
+// ────────────────────────────────────────────────────────────────────────────────
+// Candlestick Pattern Labels
+if showLabels
+    if hammerStrength
+        label.new(bar_index, low - atr * 0.5, "HAMMER", 
+                  style=label.style_label_up, color=color.new(COLOR_LONG, 20), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if shootingStarStrength
+        label.new(bar_index, high + atr * 0.5, "STAR", 
+                  style=label.style_label_down, color=color.new(COLOR_SHORT, 20), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if engulfingBullStrength
+        label.new(bar_index, low - atr * 0.5, "ENGULF", 
+                  style=label.style_label_up, color=color.new(COLOR_LONG, 10), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if engulfingBearStrength
+        label.new(bar_index, high + atr * 0.5, "ENGULF", 
+                  style=label.style_label_down, color=color.new(COLOR_SHORT, 10), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if isMorningStar
+        label.new(bar_index, low - atr * 0.5, "MSTAR", 
+                  style=label.style_label_up, color=color.new(#00ff00, 10), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if isEveningStar
+        label.new(bar_index, high + atr * 0.5, "ESTAR", 
+                  style=label.style_label_down, color=color.new(#ff0000, 10), 
+                  textcolor=color.white, size=size.tiny)
+
+// Liquidity Pool Labels
+if showLabels and liqEnabled
+    if equalHighs or liquiditySweepUp
+        label.new(bar_index, high + atr * 0.3, "LIQ", 
+                  style=label.style_label_down, color=color.new(COLOR_GOLDEN, 30), 
+                  textcolor=color.white, size=size.tiny)
+    
+    if equalLows or liquiditySweepDown
+        label.new(bar_index, low - atr * 0.3, "LIQ", 
+                  style=label.style_label_up, color=color.new(COLOR_GOLDEN, 30), 
+                  textcolor=color.white, size=size.tiny)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// EOD EXIT
+// ────────────────────────────────────────────────────────────────────────────────
+inEOD = not na(time(timeframe.period, eodSession))
+
+if useTimeExit and inEOD and strategy.position_size != 0
+    strategy.close_all("EOD Exit")
+
+// ────────────────────────────────────────────────────────────────────────────────
+// PERFORMANCE DASHBOARD - Enhanced with Real-Time Metrics
+// ────────────────────────────────────────────────────────────────────────────────
+if barstate.islast and showDashboard
+    var table dashboard = table.new(position.top_right, 2, 16,
+                                     bgcolor=COLOR_DASHBOARD_BG,
+                                     border_width=3,
+                                     border_color=COLOR_DASHBOARD_BORDER)
+    
+    table.cell(dashboard, 0, 0, "PRECISION EDGE SYSTEM", text_color=COLOR_LONG,
+               text_size=size.normal, bgcolor=COLOR_DASHBOARD_HEADER)
+    table.merge_cells(dashboard, 0, 0, 1, 0)
+    
+    table.cell(dashboard, 0, 1, "Confluence Long", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    confLongText = str.tostring(confluenceScoreLong) + "/20"
+    confLongColor = confluenceScoreLong >= 10 ? COLOR_PROFIT : confluenceScoreLong >= 6 ? COLOR_WARNING : color.gray
+    table.cell(dashboard, 1, 1, confLongText, text_color=confLongColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 2, "Confluence Short", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    confShortText = str.tostring(confluenceScoreShort) + "/20"
+    confShortColor = confluenceScoreShort >= 10 ? COLOR_PROFIT : confluenceScoreShort >= 6 ? COLOR_WARNING : color.gray
+    table.cell(dashboard, 1, 2, confShortText, text_color=confShortColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 3, "OR Status", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    orText = orEstablished ? "ACTIVE" : "FORMING"
+    orColor = orEstablished ? COLOR_LONG : COLOR_WARNING
+    table.cell(dashboard, 1, 3, orText, text_color=orColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 4, "Structure", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    structText = bullishStructure ? "BULLISH" : "BEARISH"
+    structColor = bullishStructure ? COLOR_LONG : COLOR_SHORT
+    table.cell(dashboard, 1, 4, structText, text_color=structColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 5, "BOS Signal", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    bosText = bosOccurred ? "CONFIRMED" : "PENDING"
+    bosColor = bosOccurred ? COLOR_ACCENT : color.gray
+    table.cell(dashboard, 1, 5, bosText, text_color=bosColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 6, "Regime", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    regimeText = regime == 2 ? "TRENDING" : regime == 1 ? "RANGING" : "CHOPPY"
+    regimeColor = regime == 2 ? COLOR_LONG : regime == 1 ? COLOR_WARNING : COLOR_SHORT
+    table.cell(dashboard, 1, 6, regimeText, text_color=regimeColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 7, "Value Zone", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    zoneText = inPremium ? "PREMIUM" : inDiscount ? "DISCOUNT" : "EQUILIBRIUM"
+    zoneColor = inPremium ? COLOR_SHORT : inDiscount ? COLOR_LONG : COLOR_ACCENT
+    table.cell(dashboard, 1, 7, zoneText, text_color=zoneColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 8, "RSI State", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    rsiText = str.tostring(rsi, "#.#")
+    rsiState = rsi > 70 ? " OB" : rsi < 30 ? " OS" : " NEU"
+    rsiColor = rsi > 70 ? COLOR_SHORT : rsi < 30 ? COLOR_LONG : color.gray
+    table.cell(dashboard, 1, 8, rsiText + rsiState, text_color=rsiColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 9, "Volatility", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    volText = volatility_high ? "HIGH" : volatility_low ? "LOW" : "NORMAL"
+    volColor = volatility_high ? COLOR_WARNING : volatility_low ? color.gray : COLOR_ACCENT
+    table.cell(dashboard, 1, 9, volText, text_color=volColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 10, "Volume", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    volStatus = volume_spike ? "SPIKE" : volume_significant ? "HIGH" : volume_dry ? "DRY" : "NORMAL"
+    volStatusColor = volume_spike ? COLOR_PROFIT : volume_significant ? COLOR_LONG : volume_dry ? COLOR_LOSS : color.gray
+    table.cell(dashboard, 1, 10, volStatus, text_color=volStatusColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 11, "Position", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    posText = strategy.position_size > 0 ? "LONG" : strategy.position_size < 0 ? "SHORT" : "FLAT"
+    posColor = strategy.position_size > 0 ? COLOR_LONG : strategy.position_size < 0 ? COLOR_SHORT : color.gray
+    table.cell(dashboard, 1, 11, posText, text_color=posColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 12, "Net P/L", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    profitText = str.tostring(strategy.netprofit, format.mintick)
+    profitColor = strategy.netprofit > 0 ? COLOR_PROFIT : strategy.netprofit < 0 ? COLOR_LOSS : color.gray
+    table.cell(dashboard, 1, 12, profitText, text_color=profitColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 13, "Win Rate", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    winRate = strategy.closedtrades > 0 ? (strategy.wintrades / strategy.closedtrades * 100) : 0
+    winText = str.tostring(winRate, "#.#") + "%"
+    winColor = winRate > 60 ? COLOR_PROFIT : winRate > 45 ? COLOR_WARNING : COLOR_LOSS
+    table.cell(dashboard, 1, 13, winText, text_color=winColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 14, "Total Trades", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    tradesText = str.tostring(strategy.closedtrades)
+    tradesColor = strategy.closedtrades > 50 ? COLOR_LONG : strategy.closedtrades > 20 ? COLOR_WARNING : color.gray
+    table.cell(dashboard, 1, 14, tradesText, text_color=tradesColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    
+    table.cell(dashboard, 0, 15, "Profit Factor", text_color=color.new(#a0a0a0, 0), text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+    pf = strategy.grossprofit / math.max(strategy.grossloss, 1)
+    pfText = str.tostring(pf, "#.##")
+    pfColor = pf > 2.0 ? COLOR_PROFIT : pf > 1.5 ? COLOR_WARNING : pf > 1.0 ? color.gray : COLOR_LOSS
+    table.cell(dashboard, 1, 15, pfText, text_color=pfColor, text_size=size.small, bgcolor=COLOR_DASHBOARD_CELL)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// PERFORMANCE PLOTS
+// ────────────────────────────────────────────────────────────────────────────────
+plot(strategy.equity, "Equity", COLOR_LONG, 2, display=display.none)
+
+// ────────────────────────────────────────────────────────────────────────────────
+// ALERT CONDITIONS - Comprehensive Trading Signals
+// ────────────────────────────────────────────────────────────────────────────────
+alertcondition(longCondition, "LONG Entry", "LONG Signal - Score: {{plot_0}}")
+alertcondition(shortCondition, "SHORT Entry", "SHORT Signal - Score: {{plot_0}}")
+alertcondition(orBreakoutUp, "OR Breakout Up", "Opening Range Breakout - Bullish")
+alertcondition(orBreakoutDown, "OR Breakout Down", "Opening Range Breakout - Bearish")
+alertcondition(fvgBullRetest, "FVG Bull Retest", "Bullish Fair Value Gap Retest")
+alertcondition(fvgBearRetest, "FVG Bear Retest", "Bearish Fair Value Gap Retest")
+alertcondition(bosOccurred and bullishStructure, "BOS Bullish", "Break of Structure - Bullish")
+alertcondition(bosOccurred and not bullishStructure, "BOS Bearish", "Break of Structure - Bearish")
+alertcondition(bullish_divergence, "RSI Bullish Divergence", "Bullish Divergence Detected")
+alertcondition(bearish_divergence, "RSI Bearish Divergence", "Bearish Divergence Detected")
+alertcondition(hammerStrength, "Hammer Pattern", "Bullish Hammer Pattern")
+alertcondition(shootingStarStrength, "Shooting Star Pattern", "Bearish Shooting Star Pattern")
+alertcondition(engulfingBullStrength, "Bullish Engulfing", "Bullish Engulfing Pattern")
+alertcondition(engulfingBearStrength, "Bearish Engulfing", "Bearish Engulfing Pattern")
+alertcondition(liquidityAbove, "Liquidity Above", "Liquidity Pool Above Price")
+alertcondition(liquidityBelow, "Liquidity Below", "Liquidity Pool Below Price")
+alertcondition(inGoldenZone, "Golden Zone", "Price in Fibonacci Golden Zone")
+alertcondition(rsiOversold, "RSI Oversold", "RSI Below 30")
+alertcondition(rsiOverbought, "RSI Overbought", "RSI Above 70")
+alertcondition(volume_spike, "Volume Spike", "Significant Volume Increase")

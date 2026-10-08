@@ -1,0 +1,307 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/MN4tJCT5-Liquidity-Sweep-Breakout-LSB/
+// id: PUB;1d0671e157b741d5a0a6dc1eb8652d77  kind: strategy  likes: 764
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © humayunmha - Humayun MHA - Fintech, android apppp developer - Trader and trading software developer.
+
+
+//@version=5
+strategy("Liquidity Sweep Breakout - LSB", overlay=true, pyramiding=0)
+
+// === INPUT SECTION ===
+// Risk Management
+rrRatio = input.float(1.5, title="Reward:Risk Ratio", minval=0.1)
+riskModel = input.string("Fixed Dollar", title="Risk Model", options=["Fixed Dollar", "Percentage of Equity", "Conservative"], group="Risk Management")
+riskDollarAmount = input.float(100, "Risk Amount ($)", minval=1, tooltip="Exact dollar amount to risk on SL", group="Risk Management")
+riskPercentage = input.float(1.0, "Risk % of Equity", minval=0.1, maxval=100, step=0.1, group="Risk Management") / 100
+accountBalance = input.float(10000, "Account Balance ($)", minval=100, group="Risk Management")
+profitPerPip = input.float(0.693, title="Profit per Pip (per 0.1 lot)", tooltip="Set profit per pip for your instrument (0.69 for JPY pairs)", group="Risk Management")
+
+// === REMOVED DATE LIMIT FOR HISTORICAL TRADES ===
+// startDate = input.time(timestamp("9 Aug 2025 00:00 +0000"), "Start Date")
+// inDateRange = time >= startDate
+
+// Alert Configuration - IMPORTANT!
+enableAlerts = input.bool(true, title="🔔 Enable Custom Alerts", group="Alert Settings", tooltip="Enable custom alert messages with visual values")
+pineConnectorKey = input.string("123456789", title="Enter EA License Key:", group="Alert Settings", tooltip="Your EA license key for webhook alerts")
+alertMessageBox = input.string("{{alert_message}}", title="Alert Messgae Box Text formate:", group="Alert Settings", tooltip="The default text code format to generate an alert.")
+alertComment = input.string("AutoLSB", title="Alert Trade Comment:", group="Alert Settings", tooltip="This comment will be sent with each trade to appear in the comment section of every trade.")
+
+// Visual Styles
+magicLineStyle = input.string("Dashed", title="Magic Lines Style", options=["Solid", "Dashed", "Dotted"])
+tradeLineStyle = input.string("Solid", title="Trade Lines Style", options=["Solid", "Dashed", "Dotted"])
+
+// Display Toggles
+showShadedAreas = input.bool(true, title="Show TP/SL Shaded Areas")
+showExtendedTag = input.bool(true, title="Show Extended Tag")
+showTPSTTag = input.bool(true, title="Show TP/SL Tags")
+showMagicCandle = input.bool(true, title="Show Magic Candle Mark")
+showTradeLines = input.bool(true, title="Show Trade Lines")
+plotSessionBox = input.bool(true, title="Show Tokyo Session Box")
+showBuySellTags = input.bool(true, title="Show Buy/Sell Tags")
+keepOriginalStyle = input.bool(true, title="Keep Original Style After TP/SL")
+useExtendedLines = input.bool(false, title="Extended Trade Lines", group="Visual Settings", tooltip="Extend trade lines further right on chart")
+
+// === VARIABLE DECLARATIONS ===
+var float tokyoHigh = na
+var float tokyoLow = na
+var box sessionBox = na
+var float brkHigh = na
+var float brkLow = na
+var line brkHighLine = na
+var line brkLowLine = na
+var bool inTrade = false
+var float entryPrice = na
+var float slPrice = na
+var float tpPrice = na
+var float lotSize = na
+var line entryLine = na
+var line slLine = na
+var line tpLine = na
+var linefill riskArea = na
+var linefill rewardArea = na
+var bool tradeExecuted = false
+var int tradeDirection = 0
+var bool exitReached = false
+var int entryBarIndex = na
+var bool noTrade = false
+var label exitLabel = na
+
+// === TOKYO SESSION DETECTION ===
+tokyoSession = time(timeframe.period, "2000-0500:1234567")
+
+if tokyoSession and not tokyoSession[1]
+    tokyoHigh := high
+    tokyoLow := low
+    if plotSessionBox
+        sessionBox := box.new(left=bar_index, right=bar_index, top=high, bottom=low, bgcolor=color.new(#ff5272, 93), border_color=#ff525253)
+else if tokyoSession
+    tokyoHigh := math.max(tokyoHigh, high)
+    tokyoLow := math.min(tokyoLow, low)
+    if plotSessionBox and not na(sessionBox)
+        box.set_right(sessionBox, bar_index)
+        box.set_top(sessionBox, tokyoHigh)
+        box.set_bottom(sessionBox, tokyoLow)
+
+// === MAGIC CANDLE SETUP ===
+isBreakoutTime = (hour == 20 and minute == 54)
+
+if isBreakoutTime and showMagicCandle
+    brkHigh := high
+    brkLow := low
+    magicStyleChoice = magicLineStyle == "Solid" ? line.style_solid : magicLineStyle == "Dashed" ? line.style_dashed : line.style_dotted
+    brkHighLine := line.new(bar_index, brkHigh, bar_index+36, brkHigh, color=#bebebe, width=1, style=magicStyleChoice)
+    brkLowLine := line.new(bar_index, brkLow, bar_index+36, brkLow, color=#bebebe, width=1, style=magicStyleChoice)
+
+// === TMB LOT SIZE CALCULATION ===
+calculateTMBLotSize(entry, sl) =>
+    riskAmount = if riskModel == "Fixed Dollar"
+        riskDollarAmount
+    else if riskModel == "Percentage of Equity"
+        accountBalance * riskPercentage
+    else
+        math.min(riskDollarAmount, accountBalance * riskPercentage)
+    
+    slPips = math.abs(entry - sl) * 10000
+    calculatedLotSize = (riskAmount / (slPips * profitPerPip)) * 10
+    finalLotSize = math.round(calculatedLotSize / 0.01) * 0.01
+    
+    // Ensure lot size is always positive and reasonable
+    math.max(0.01, math.min(finalLotSize, 10.0))
+
+// === LINE EXTENSION CONTROL ===
+checkTimes = array.from("21:30","21:45","22:00","22:15","22:30","22:45","23:00","23:15","23:30")
+currentTime = str.tostring(hour,"00") + ":" + str.tostring(minute,"00")
+isCheckTime = array.includes(checkTimes, currentTime) and barstate.isconfirmed
+
+if isCheckTime and not na(brkHighLine) and currentTime != "23:30" and not inTrade
+    line.set_x2(brkHighLine, bar_index+36)
+    line.set_x2(brkLowLine, bar_index+36)
+
+if isCheckTime and currentTime == "23:30" and not na(brkHighLine) and not inTrade
+    line.set_x2(brkHighLine, bar_index)
+    line.set_x2(brkLowLine, bar_index)
+
+getLineExtension() => useExtendedLines ? 500 : 36
+
+// Trade Logic - Extend or No Trade
+if isCheckTime and not inTrade and not tradeExecuted and not na(brkHigh) and (high >= brkLow and low <= brkHigh) and not noTrade and showExtendedTag
+    if currentTime != "23:30"
+        label.new(bar_index, tokyoLow, "Extend", style=label.style_label_down, color=#ebbc76)
+
+if isCheckTime and not inTrade and currentTime == "23:30" and not na(brkHigh) and (high >= brkLow and low <= brkHigh) and not tradeExecuted
+    noTrade := true
+    label.new(bar_index, tokyoLow, "NO TRADE DAY", style=label.style_label_down, color=color.gray, textcolor=color.white)
+
+// === TMB LONG ENTRY (BUY) - FULL STRATEGY + ALERTS ===
+validLongBreakout = not na(brkHigh) and close > brkHigh and low > brkHigh
+if isCheckTime and not inTrade and not tradeExecuted and validLongBreakout and not noTrade
+    if showMagicCandle and not na(brkHighLine)
+        line.set_x2(brkHighLine, bar_index)
+        line.set_x2(brkLowLine, bar_index)
+    
+    // === TMB CALCULATIONS (SINGLE SOURCE OF TRUTH) ===
+    // Entry: Current close price (breakout price)
+    entryPrice := close
+    
+    // Stop Loss: Tokyo Session Low (TMB Rule)
+    slPrice := tokyoLow
+    
+    // Take Profit: Entry + (Entry - SL) * Risk:Reward Ratio (TMB Rule)
+    tpPrice := entryPrice + (entryPrice - slPrice) * rrRatio
+    
+    // Lot Size: Based on risk management settings
+    lotSize := calculateTMBLotSize(entryPrice, slPrice)
+    
+    // Set trade state
+    inTrade := true
+    tradeExecuted := true
+    tradeDirection := 1
+    
+    // === STRATEGY EXECUTION ===
+    strategy.entry("LSB_Buy", strategy.long, qty=lotSize, comment="LSB_Long")
+    strategy.exit("LSB_BuyExit", "LSB_Buy", stop=slPrice, limit=tpPrice)
+    
+    // === VISUALS (USING SAME VALUES) ===
+    lineExtension = getLineExtension()
+    if showTradeLines
+        tradeStyleChoice = tradeLineStyle == "Solid" ? line.style_solid : tradeLineStyle == "Dashed" ? line.style_dashed : line.style_dotted
+        entryLine := line.new(bar_index, entryPrice, bar_index + lineExtension, entryPrice, color=#d1ffff, width=1, style=tradeStyleChoice)
+        slLine := line.new(bar_index, slPrice, bar_index + lineExtension, slPrice, color=#c7444e, width=2, style=tradeStyleChoice)
+        tpLine := line.new(bar_index, tpPrice, bar_index + lineExtension, tpPrice, color=#008954, width=2, style=tradeStyleChoice)
+        if showShadedAreas
+            riskArea := linefill.new(entryLine, slLine, color.new(#ff5252, 90))
+            rewardArea := linefill.new(entryLine, tpLine, color.new(#00af6c, 90))
+    
+    // === VISUAL TRADE TAG ===
+    if showBuySellTags
+        labelY = high + (high-low)*0.5
+        label.new(bar_index, labelY, "LSB BUY\nEntry: " + str.tostring(entryPrice, "#.####") + "\nSL: " + str.tostring(slPrice, "#.####") + "\nTP: " + str.tostring(tpPrice, "#.####") + "\nLots: " + str.tostring(lotSize, "#.##"), style=label.style_label_down, color=#008954, textcolor=color.white)
+    
+    // === ALERT (USING EXACT SAME VALUES AS VISUAL) ===
+    if enableAlerts
+        actionType = "buy"
+        currentTicker = syminfo.ticker
+        alertMessage = pineConnectorKey + "," + actionType + "," + currentTicker + ",risk=" + str.tostring(lotSize, "#.##") + ",sl=" + str.tostring(slPrice, "#.####") + ",tp=" + str.tostring(tpPrice, "#.####") + ",comment=" + str.tostring(alertComment)
+        alert(alertMessage, alert.freq_once_per_bar)
+
+// === TMB SHORT ENTRY (SELL) - FULL STRATEGY + ALERTS ===
+validShortBreakout = not na(brkLow) and close < brkLow and high < brkLow
+if isCheckTime and not inTrade and not tradeExecuted and validShortBreakout and not noTrade
+    if showMagicCandle and not na(brkHighLine)
+        line.set_x2(brkHighLine, bar_index)
+        line.set_x2(brkLowLine, bar_index)
+    
+    // === TMB CALCULATIONS (SINGLE SOURCE OF TRUTH) ===
+    // Entry: Current close price (breakout price)
+    entryPrice := close
+    
+    // Stop Loss: Tokyo Session High (TMB Rule)
+    slPrice := tokyoHigh
+    
+    // Take Profit: Entry - (SL - Entry) * Risk:Reward Ratio (TMB Rule)
+    tpPrice := entryPrice - (slPrice - entryPrice) * rrRatio
+    
+    // Lot Size: Based on risk management settings
+    lotSize := calculateTMBLotSize(entryPrice, slPrice)
+    
+    // Set trade state
+    inTrade := true
+    tradeExecuted := true
+    tradeDirection := -1
+    
+    // === STRATEGY EXECUTION ===
+    strategy.entry("LSB_Sell", strategy.short, qty=lotSize, comment="LSB_Short")
+    strategy.exit("LSB_SellExit", "LSB_Sell", stop=slPrice, limit=tpPrice)
+    
+    // === VISUALS (USING SAME VALUES) ===
+    lineExtension = getLineExtension()
+    if showTradeLines
+        tradeStyleChoice = tradeLineStyle == "Solid" ? line.style_solid : tradeLineStyle == "Dashed" ? line.style_dashed : line.style_dotted
+        entryLine := line.new(bar_index, entryPrice, bar_index + lineExtension, entryPrice, color=#d1ffff, width=1, style=tradeStyleChoice)
+        slLine := line.new(bar_index, slPrice, bar_index + lineExtension, slPrice, color=#c7444e, width=2, style=tradeStyleChoice)
+        tpLine := line.new(bar_index, tpPrice, bar_index + lineExtension, tpPrice, color=#008954, width=2, style=tradeStyleChoice)
+        if showShadedAreas
+            riskArea := linefill.new(entryLine, slLine, color.new(#ff5252, 90))
+            rewardArea := linefill.new(entryLine, tpLine, color.new(#00af6c, 90))
+    
+    // === VISUAL TRADE TAG ===
+    if showBuySellTags
+        labelY = low - (high-low)*0.5
+        label.new(bar_index, labelY, "LSB SELL\nEntry: " + str.tostring(entryPrice, "#.####") + "\nSL: " + str.tostring(slPrice, "#.####") + "\nTP: " + str.tostring(tpPrice, "#.####") + "\nLots: " + str.tostring(lotSize, "#.##"), style=label.style_label_up, color=#c7444e, textcolor=color.white)
+    
+    // === ALERT (USING EXACT SAME VALUES AS VISUAL) ===
+    if enableAlerts
+        actionType = "sell"
+        currentTicker = syminfo.ticker
+        alertMessage = pineConnectorKey + "," + actionType + "," + currentTicker + ",risk=" + str.tostring(lotSize, "#.##") + ",sl=" + str.tostring(slPrice, "#.####") + ",tp=" + str.tostring(tpPrice, "#.####") + ",comment=" + str.tostring(alertComment)
+        alert(alertMessage, alert.freq_once_per_bar)
+
+// === TMB TRADE MANAGEMENT ===
+if inTrade
+    // Extend trade lines
+    if showTradeLines
+        lineExtension = getLineExtension()
+        line.set_x2(entryLine, bar_index + lineExtension)
+        line.set_x2(slLine, bar_index + lineExtension)
+        line.set_x2(tpLine, bar_index + lineExtension)
+    
+    // Check for TP/SL hits
+    tpHit = tradeDirection == 1 ? high >= tpPrice : low <= tpPrice
+    slHit = tradeDirection == 1 ? low <= slPrice : high >= slPrice
+    
+    // Handle exits
+    if tpHit or slHit
+        if showTradeLines
+            line.set_x2(entryLine, bar_index)
+            line.set_x2(slLine, bar_index)
+            line.set_x2(tpLine, bar_index)
+            
+            if not keepOriginalStyle
+                if tpHit
+                    linefill.delete(riskArea)
+                    line.set_color(tpLine, color.blue)
+                else
+                    linefill.delete(rewardArea)
+                    line.set_color(slLine, #ff5252)
+        
+        if showTPSTTag
+            exitText = tpHit ? (tradeDirection == 1 ? "LSB BUY TP" : "LSB SELL TP") : (tradeDirection == 1 ? "LSB BUY SL" : "LSB SELL SL")
+            labelColor = tpHit ? color.blue : #ff5252
+            exitPrice = tpHit ? tpPrice : slPrice
+            labelStyle = tradeDirection == 1 ? label.style_label_down : label.style_label_up
+            exitLabel := label.new(bar_index, exitPrice, exitText, style=labelStyle, color=labelColor, textcolor=color.white)
+        
+        inTrade := false
+        exitReached := true
+
+// === END OF DAY CLEANUP (MODIFIED TO PRESERVE HISTORICAL TAGS) ===
+if hour == 15 and minute == 0
+    if inTrade
+        // Close visual elements
+        if showTradeLines
+            line.set_x2(entryLine, bar_index)
+            line.set_x2(slLine, bar_index)
+            line.set_x2(tpLine, bar_index)
+            if not keepOriginalStyle
+                linefill.delete(riskArea)
+                linefill.delete(rewardArea)
+        if showTPSTTag
+            exitLabel := label.new(bar_index, close, "LSB EOD Close", style=label.style_label_down, color=color.gray, textcolor=color.white)
+        
+        // Close strategy position
+        strategy.close_all(comment="LSB_EOD")
+        inTrade := false
+    
+    // Reset for next day (ONLY reset trading state, NOT visual elements)
+    tradeExecuted := false
+    tradeDirection := 0
+    noTrade := false
+
+// === DAILY RESET (MODIFIED TO PRESERVE HISTORICAL TAGS) ===
+if hour == 0 and minute == 0
+    // ONLY reset trading state variables, NOT visual elements
+    inTrade := false
+    noTrade := false
+    tradeExecuted := false
+    tradeDirection := 0

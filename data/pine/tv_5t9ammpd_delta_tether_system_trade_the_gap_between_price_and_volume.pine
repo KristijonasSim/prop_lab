@@ -1,0 +1,246 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/5t9AmmPD-Delta-Tether-System-Trade-the-Gap-Between-Price-and-Volume/
+// id: PUB;8dbf374fc7a341d8b8873609890bb1d4  kind: strategy
+//@version=6
+strategy("Delta Tether System", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, commission_type=strategy.commission.percent, commission_value=0.05, slippage=2, pyramiding=0)
+
+// ===== DELTA GROUP =====
+int    deltaLookback   = input.int(80, "Cumulative Delta Lookback", minval=2, group="Delta")
+bool   useSmoothing    = input.bool(true, "Enable Smoothing", group="Delta")
+string smoothType      = input.string('EMA', "Smoothing Type", options=["EMA", "Gaussian"], group="Delta")
+int    smoothLength    = input.int(8, "Smoothing Length", minval=1, group="Delta")
+int    atrLength       = input.int(14, "ATR Length", minval=1, group="Delta")
+int    rankLookback    = input.int(800, "Rank Lookback (bars)", minval=10, group="Delta")
+
+// ===== DISPLAY GROUP =====
+bool showDeltaLine  = input.bool(true, "Show Delta Line", group="Display")
+bool showTether     = input.bool(true, "Show Tether Lines", group="Display")
+bool showRungs      = input.bool(true, "Show ATR Rungs", group="Display")
+bool showRankTable  = input.bool(true, "Show Rank Stack Table", group="Display")
+bool showExtremity  = input.bool(true, "Show Extremity Markers", group="Display")
+
+// ===== MODE GROUP =====
+string strategyMode = input.string('Trend Following', "Strategy Mode", options=["Mean Reversion", "Trend Following"], group="Mode")
+
+// ===== FILTERS GROUP =====
+bool  useTrendFilter   = input.bool(true, "Enable Trend Filter", group="Filters")
+int   trendEmaLength   = input.int(100, "Trend EMA Length", minval=1, group="Filters")
+bool  useVolumeFilter  = input.bool(true, "Enable Volume Surge Filter", group="Filters")
+int   volSmaLength     = input.int(20, "Volume SMA Length", minval=1, group="Filters")
+float volMultiplier    = input.float(1.8, "Volume Surge Multiplier", minval=0.1, group="Filters")
+bool  useRankCooldown  = input.bool(true, "Enable Rank Cooldown Filter", group="Filters")
+
+// ===== RISK GROUP =====
+float riskPercent = input.float(1.0, "Risk % of Equity per Trade", minval=0.01, group="Risk")
+
+// ===== EXITS GROUP =====
+float mrThreshold      = input.float(80.0, "MR Rank Threshold (Entry)", minval=50, maxval=100, group="Exits")
+float tfThreshold       = input.float(25.0, "TF Rank Threshold (Entry)", minval=0, maxval=50, group="Exits")
+float atrBuffer         = input.float(0.3, "ATR Buffer Beyond Rung", minval=0, group="Exits")
+float mrRR              = input.float(2.0, "Mean Reversion R:R", minval=0.1, group="Exits")
+float tfRR              = input.float(4.0, "Trend Following R:R", minval=0.1, group="Exits")
+bool  useTrailStop      = input.bool(true, "Enable Trailing Stop to Delta Line", group="Exits")
+
+// ===== CALCULATIONS =====
+float barDelta = close >= open ? volume : -volume
+float cumDelta = math.sum(barDelta, deltaLookback)
+
+var float sumX  = 0.0
+var float sumY  = 0.0
+var float sumXY = 0.0
+var float sumX2 = 0.0
+
+float regSrc = cumDelta
+
+float slope  = 0.0
+float intercept = 0.0
+if barstate.isconfirmed or barstate.islast
+    sumX  := 0.0
+    sumY  := 0.0
+    sumXY := 0.0
+    sumX2 := 0.0
+    for i = 0 to deltaLookback - 1
+        xi = float(i)
+        yi = close[i]
+        sumX  += xi
+        sumY  += yi
+        sumXY += xi * yi
+        sumX2 += xi * xi
+    n = float(deltaLookback)
+    denom = (n * sumX2 - sumX * sumX)
+    slope := denom != 0 ? (n * sumXY - sumX * sumY) / denom : 0.0
+    intercept := (sumY - slope * sumX) / n
+
+float rawDeltaLine = intercept
+float smoothedDeltaLine = useSmoothing ? (smoothType == "EMA" ? ta.ema(rawDeltaLine, smoothLength) : ta.sma(rawDeltaLine, smoothLength)) : rawDeltaLine
+float deltaLine = smoothedDeltaLine
+
+float atrValue = ta.atr(atrLength)
+
+float tetherDistance = atrValue != 0 ? (close - deltaLine) / atrValue : 0.0
+float absTether = math.abs(tetherDistance)
+
+float rankPctRaw = ta.percentrank(absTether, rankLookback)
+float tetherRank = na(rankPctRaw) ? 0.0 : rankPctRaw
+float prevTetherRank = nz(tetherRank[1])
+
+bool rankContracting = tetherRank < prevTetherRank
+
+float rung1Up = deltaLine + 1.0 * atrValue
+float rung2Up = deltaLine + 2.0 * atrValue
+float rung3Up = deltaLine + 3.0 * atrValue
+float rung1Dn = deltaLine - 1.0 * atrValue
+float rung2Dn = deltaLine - 2.0 * atrValue
+float rung3Dn = deltaLine - 3.0 * atrValue
+
+bool tetherCrossUpZero = ta.crossover(tetherDistance, 0.0)
+bool tetherCrossDnZero = ta.crossunder(tetherDistance, 0.0)
+
+// ===== FILTERS =====
+float trendEma = ta.ema(close, trendEmaLength)
+bool trendUp   = close > trendEma
+bool trendDn   = close < trendEma
+
+float volSma = ta.sma(volume, volSmaLength)
+bool volumeSurge = volume > volSma * volMultiplier
+
+var bool cooldownLongReady  = true
+var bool cooldownShortReady = true
+if tetherRank < 50.0
+    cooldownLongReady := true
+    cooldownShortReady := true
+
+// ===== MODE LOGIC =====
+bool isMeanReversion = strategyMode == "Mean Reversion"
+bool isTrendFollowing = strategyMode == "Trend Following"
+
+bool mrLongRaw  = tetherDistance < 0 and tetherRank >= mrThreshold and rankContracting
+bool mrShortRaw = tetherDistance > 0 and tetherRank >= mrThreshold and rankContracting
+
+bool tfLongRaw  = tetherCrossUpZero and tetherRank < tfThreshold
+bool tfShortRaw = tetherCrossDnZero and tetherRank < tfThreshold
+
+bool trendFilterLongOk  = not useTrendFilter or (isMeanReversion ? trendDn : trendUp)
+bool trendFilterShortOk = not useTrendFilter or (isMeanReversion ? trendUp : trendDn)
+bool volFilterOk = not useVolumeFilter or volumeSurge
+bool cooldownLongOk  = not useRankCooldown or cooldownLongReady
+bool cooldownShortOk = not useRankCooldown or cooldownShortReady
+
+bool longCondition  = (isMeanReversion ? mrLongRaw : tfLongRaw) and trendFilterLongOk and volFilterOk and cooldownLongOk and barstate.isconfirmed and strategy.position_size == 0
+bool shortCondition = (isMeanReversion ? mrShortRaw : tfShortRaw) and trendFilterShortOk and volFilterOk and cooldownShortOk and barstate.isconfirmed and strategy.position_size == 0
+
+// ===== STATE =====
+var float longSL = na
+var float longTP = na
+var float shortSL = na
+var float shortTP = na
+var bool justEntered = false
+var bool tradeWasLong = false
+var bool tradeWasShort = false
+
+// ===== ENTRY =====
+if longCondition
+    float stopBase = isMeanReversion ? rung3Dn : deltaLine
+    longSL := stopBase - atrBuffer * atrValue
+    float riskDist = close - longSL
+    float rr = isMeanReversion ? mrRR : tfRR
+    longTP := close + riskDist * rr
+    strategy.entry("Long", strategy.long)
+    justEntered := true
+    if useRankCooldown
+        cooldownLongReady := false
+
+if shortCondition
+    float stopBase = isMeanReversion ? rung3Up : deltaLine
+    shortSL := stopBase + atrBuffer * atrValue
+    float riskDist = shortSL - close
+    float rr = isMeanReversion ? mrRR : tfRR
+    shortTP := close - riskDist * rr
+    strategy.entry("Short", strategy.short)
+    justEntered := true
+    if useRankCooldown
+        cooldownShortReady := false
+
+// ===== TRAILING STOP =====
+if useTrailStop and strategy.position_size > 0 and not na(longSL)
+    if (close - strategy.position_avg_price) >= atrValue
+        longSL := math.max(longSL, deltaLine)
+
+if useTrailStop and strategy.position_size < 0 and not na(shortSL)
+    if (strategy.position_avg_price - close) >= atrValue
+        shortSL := math.min(shortSL, deltaLine)
+
+// ===== EXIT =====
+bool mrLongExitSignal  = tetherCrossUpZero
+bool mrShortExitSignal = tetherCrossDnZero
+bool tfLongExitSignal  = tetherCrossDnZero
+bool tfShortExitSignal = tetherCrossUpZero
+
+if strategy.position_size > 0 and not na(longSL)
+    bool structExit = isMeanReversion ? mrLongExitSignal : tfLongExitSignal
+    if structExit and barstate.isconfirmed
+        strategy.close("Long")
+        tradeWasLong := true
+    else
+        strategy.exit("Long Exit", "Long", stop=longSL, limit=longTP)
+
+if strategy.position_size < 0 and not na(shortSL)
+    bool structExit = isMeanReversion ? mrShortExitSignal : tfShortExitSignal
+    if structExit and barstate.isconfirmed
+        strategy.close("Short")
+        tradeWasShort := true
+    else
+        strategy.exit("Short Exit", "Short", stop=shortSL, limit=shortTP)
+
+// ===== RESET =====
+if strategy.position_size == 0 and not justEntered
+    longSL := na
+    longTP := na
+    shortSL := na
+    shortTP := na
+
+justEntered := false
+
+// ===== EXTREMITY TRACKING =====
+var int extremeCount = 0
+bool isExtreme = tetherRank >= 90.0
+if isExtreme
+    extremeCount += 1
+else
+    extremeCount := 0
+bool extremeFlag = extremeCount >= 2
+
+// ===== VISUALS =====
+plot(showDeltaLine ? deltaLine : na, "Delta Line", color=color.white, linewidth=2)
+
+color tetherColor = tetherDistance >= 0 ? color.green : color.red
+plot(showTether ? close : na, "Tether Anchor", color=color.new(color.black, 100), display=display.none)
+
+if showTether and barstate.isconfirmed
+    line.new(bar_index, close, bar_index, deltaLine, color=tetherColor, width=1)
+
+plot(showRungs ? rung1Up : na, "Rung +1 ATR", color=color.aqua, style=plot.style_circles)
+plot(showRungs ? rung2Up : na, "Rung +2 ATR", color=color.aqua, style=plot.style_circles)
+plot(showRungs ? rung3Up : na, "Rung +3 ATR", color=color.aqua, style=plot.style_circles)
+plot(showRungs ? rung1Dn : na, "Rung -1 ATR", color=color.orange, style=plot.style_circles)
+plot(showRungs ? rung2Dn : na, "Rung -2 ATR", color=color.orange, style=plot.style_circles)
+plot(showRungs ? rung3Dn : na, "Rung -3 ATR", color=color.orange, style=plot.style_circles)
+
+plotshape(showExtremity and extremeFlag and tetherDistance > 0 ? high : na, title="Extreme Up", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.tiny)
+plotshape(showExtremity and extremeFlag and tetherDistance < 0 ? low : na, title="Extreme Down", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.tiny)
+
+var table rankTable = table.new(position.top_right, 2, 10, border_width=1)
+if showRankTable and barstate.islast
+    int litCellsUp = int(math.round(tetherRank / 10))
+    for i = 0 to 9
+        bool lit = (9 - i) < litCellsUp
+        color cellColor = lit ? (tetherRank >= 90 ? color.red : color.orange) : color.new(color.black, 80)
+        table.cell(rankTable, 0, i, "", bgcolor=cellColor)
+        table.cell(rankTable, 1, i, "", bgcolor=cellColor)
+
+// ===== ALERTS =====
+alertcondition(longCondition, "Long Entry", "Delta Tether: Long entry signal")
+alertcondition(shortCondition, "Short Entry", "Delta Tether: Short entry signal")
+alertcondition(strategy.position_size[1] > 0 and strategy.position_size == 0, "Long Exit", "Delta Tether: Long exit")
+alertcondition(strategy.position_size[1] < 0 and strategy.position_size == 0, "Short Exit", "Delta Tether: Short exit")
+alertcondition(extremeFlag, "Extreme Rank Warning", "Delta Tether: Rank >= 90th percentile for 2+ bars")

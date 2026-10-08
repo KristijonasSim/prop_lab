@@ -1,0 +1,147 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/YJjFy8kD-Candle-Breakout-Strategy/
+// id: PUB;d49d3b0697ac40a99310e28170a285f2  kind: strategy  likes: 504
+//@version=5
+strategy("Candle Breakout Strategy", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INPUTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+targetHour = input.int(13, "Target Hour (UTC)", minval=0, maxval=23, tooltip="The hour when the breakout range candle will be identified")
+targetMinute = input.int(0, "Target Minute", minval=0, maxval=59, tooltip="The minute when the breakout range candle will be identified")
+riskRewardRatio = input.float(1.0, "Risk:Reward Ratio", minval=0.5, maxval=10, step=0.5, tooltip="The reward multiplier for take profit calculation (e.g., 1, 2, or 3)")
+enableAlerts = input.bool(true, "Enable Alerts", tooltip="Enable entry signal alerts")
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TIME DETECTION
+// ══════════════════════════════════════════════════════════════════════════════
+
+currentHour = hour(time, "UTC")
+currentMinute = minute(time, "UTC")
+previousHour = hour(time[1], "UTC")
+previousMinute = minute(time[1], "UTC")
+
+// Detect first candle at target time
+isFirstCandle = currentHour == targetHour and currentMinute == targetMinute and (previousHour != targetHour or previousMinute != targetMinute)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RANGE VARIABLES
+// ══════════════════════════════════════════════════════════════════════════════
+showLastBoxOnly = true
+var float boxHigh = na
+var float boxLow = na
+var bool waitingForBreakout = false
+var int boxBarIndex = na
+var box currentBox = na
+var line currentLineHigh = na
+var line currentLineLow = na
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BREAKOUT RANGE DETECTION
+// ══════════════════════════════════════════════════════════════════════════════
+
+if isFirstCandle
+    boxHigh := high
+    boxLow := low
+    waitingForBreakout := true
+    boxBarIndex := bar_index
+    
+    // Delete previous box if needed
+    if showLastBoxOnly
+        if not na(currentBox)
+            box.delete(currentBox)
+        if not na(currentLineHigh)
+            line.delete(currentLineHigh)
+        if not na(currentLineLow)
+            line.delete(currentLineLow)
+    
+    // Draw new range box
+    currentBox := box.new(boxBarIndex, boxHigh, bar_index + 1, boxLow, 
+                         border_color=color.blue, 
+                         bgcolor=color.new(color.blue, 90),
+                         border_width=2,
+                         extend=extend.right)
+    
+    // Draw range levels
+    currentLineHigh := line.new(boxBarIndex, boxHigh, bar_index + 1, boxHigh, color=color.blue, width=1, extend=extend.right, style=line.style_dashed)
+    currentLineLow := line.new(boxBarIndex, boxLow, bar_index + 1, boxLow, color=color.blue, width=1, extend=extend.right, style=line.style_dashed)
+
+// Update current box extension
+if waitingForBreakout and not na(currentBox)
+    box.set_right(currentBox, bar_index + 1)
+    if not na(currentLineHigh)
+        line.set_x2(currentLineHigh, bar_index + 1)
+    if not na(currentLineLow)
+        line.set_x2(currentLineLow, bar_index + 1)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ENTRY CONDITIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+longCondition = waitingForBreakout and not na(boxHigh) and close > boxHigh and strategy.position_size == 0
+shortCondition = waitingForBreakout and not na(boxLow) and close < boxLow and strategy.position_size == 0
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LONG ENTRY LOGIC
+// ══════════════════════════════════════════════════════════════════════════════
+
+if longCondition
+    stopLoss = boxLow
+    risk = close - stopLoss
+    takeProfit = close + (risk * riskRewardRatio)
+    
+    strategy.entry("Long", strategy.long)
+    strategy.exit("TP/SL Long", "Long", stop=stopLoss, limit=takeProfit)
+    
+    waitingForBreakout := false
+    
+    // Long alert
+    if enableAlerts
+        alert("🟢 LONG SIGNAL\nEntry Price: " + str.tostring(close, "#.##") + "\nStop Loss: " + str.tostring(stopLoss, "#.##") + "\nTake Profit: " + str.tostring(takeProfit, "#.##"), alert.freq_once_per_bar)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SHORT ENTRY LOGIC
+// ══════════════════════════════════════════════════════════════════════════════
+
+if shortCondition
+    stopLoss = boxHigh
+    risk = stopLoss - close
+    takeProfit = close - (risk * riskRewardRatio)
+    
+    strategy.entry("Short", strategy.short)
+    strategy.exit("TP/SL Short", "Short", stop=stopLoss, limit=takeProfit)
+    
+    waitingForBreakout := false
+    
+    // Short alert
+    if enableAlerts
+        alert("🔴 SHORT SIGNAL\nEntry Price: " + str.tostring(close, "#.##") + "\nStop Loss: " + str.tostring(stopLoss, "#.##") + "\nTake Profit: " + str.tostring(takeProfit, "#.##"), alert.freq_once_per_bar)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VISUAL SIGNALS
+// ══════════════════════════════════════════════════════════════════════════════
+
+plotshape(longCondition, "Long Signal", shape.triangleup, location.belowbar, color.new(color.green, 0), text="BUY", textcolor=color.white, size=size.small)
+plotshape(shortCondition, "Short Signal", shape.triangledown, location.abovebar, color.new(color.red, 0), text="SELL", textcolor=color.white, size=size.small)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INFORMATION TABLE
+// ══════════════════════════════════════════════════════════════════════════════
+
+var table infoTable = table.new(position.top_right, 2, 5, border_width=1)
+if barstate.islast
+    table.cell(infoTable, 0, 0, "Target Time", bgcolor=color.new(color.blue, 80), text_color=color.white)
+    table.cell(infoTable, 1, 0, str.format("{0,number,00}:{1,number,00} UTC", targetHour, targetMinute), bgcolor=color.new(color.gray, 80), text_color=color.white)
+    
+    table.cell(infoTable, 0, 1, "Active Range", bgcolor=color.new(color.blue, 80), text_color=color.white)
+    table.cell(infoTable, 1, 1, waitingForBreakout ? "Yes" : "No", bgcolor=color.new(color.gray, 80), text_color=color.white)
+    
+    table.cell(infoTable, 0, 2, "Range High", bgcolor=color.new(color.blue, 80), text_color=color.white)
+    table.cell(infoTable, 1, 2, not na(boxHigh) ? str.tostring(boxHigh, "#.##") : "N/A", bgcolor=color.new(color.gray, 80), text_color=color.white)
+    
+    table.cell(infoTable, 0, 3, "Range Low", bgcolor=color.new(color.blue, 80), text_color=color.white)
+    table.cell(infoTable, 1, 3, not na(boxLow) ? str.tostring(boxLow, "#.##") : "N/A", bgcolor=color.new(color.gray, 80), text_color=color.white)
+    
+    table.cell(infoTable, 0, 4, "Risk:Reward", bgcolor=color.new(color.blue, 80), text_color=color.white)
+    table.cell(infoTable, 1, 4, "1:" + str.tostring(riskRewardRatio), bgcolor=color.new(color.gray, 80), text_color=color.white)

@@ -1,0 +1,16 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/TcIPXr3d/
+// id: PUB;f0f5c1ffe58d4047a81a2b3da55d2707  kind: strategy  likes: 209
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © nadia1988
+
+//@version=6
+strategy("Mi estrategia", overlay=true, fill_orders_on_standard_ohlc = true)
+
+longCondition = ta.crossover(ta.sma(close, 14), ta.sma(close, 28))
+if (longCondition)
+    strategy.entry("My Long Entry Id", strategy.long)
+
+shortCondition = ta.crossunder(ta.sma(close, 14), ta.sma(close, 28))
+if (shortCondition)
+    strategy.entry("My Short Entry Id", strategy.short)

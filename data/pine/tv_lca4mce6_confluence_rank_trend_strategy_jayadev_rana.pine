@@ -1,0 +1,166 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/LcA4mcE6-Confluence-Rank-Trend-Strategy-Jayadev-Rana/
+// id: PUB;54a24b01bb6045e3a0e1b124b65c8ae4  kind: strategy
+// This source code is subject to the terms of the Mozilla Public License 2.0
+// (c) Jayadev Rana
+//@version=6
+strategy("Confluence Rank Trend Strategy [Jayadev Rana]", shorttitle = "CRTS", overlay = true, initial_capital = 10000, default_qty_type = strategy.fixed, default_qty_value = 1, commission_type = strategy.commission.percent, commission_value = 0.05, slippage = 2, pyramiding = 0, margin_long = 100, margin_short = 100)
+
+//------------------------------------------------------------------------------
+// Constants
+//------------------------------------------------------------------------------
+string GRP_SCORE = "Score Components"
+string GRP_SIG   = "Signals"
+string GRP_RISK  = "Risk"
+string GRP_DASH  = "Dashboard"
+string GRP_STYLE = "Style"
+
+//------------------------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------------------------
+int   fastLen = input.int(55, "Fast EMA", minval = 2, maxval = 200, group = GRP_SCORE)
+int   slowLen = input.int(233, "Slow EMA", minval = 5, maxval = 500, group = GRP_SCORE, tooltip = "Trend component: 10 points for price beyond the slow EMA plus 10 points for the fast EMA beyond the slow EMA.")
+int   rsiLen  = input.int(14, "RSI Length", minval = 2, maxval = 100, group = GRP_SCORE, tooltip = "Momentum component: scales from 0 points at RSI 50 to 20 points at RSI 70 (mirrored at 30 for shorts).")
+int   erLen   = input.int(20, "Efficiency Length", minval = 5, maxval = 200, group = GRP_SCORE)
+float erFull  = input.float(0.40, "Efficiency for Full Points", minval = 0.05, maxval = 1.0, step = 0.05, group = GRP_SCORE, tooltip = "Efficiency component: net move divided by total path over the window. This ratio earns the full 20 points; lower ratios earn proportionally less.")
+int   pctLen  = input.int(200, "Volatility Rank Lookback", minval = 50, maxval = 1000, group = GRP_SCORE)
+float volLo   = input.float(20.0, "Volatility Floor (Percentile)", minval = 1.0, maxval = 49.0, group = GRP_SCORE, tooltip = "Volatility component: full points while the ATR percentile sits between the floor and the ceiling, tapering to zero in dead or extreme volatility. It is the same for both directions.")
+float volHi   = input.float(85.0, "Volatility Ceiling (Percentile)", minval = 51.0, maxval = 99.0, group = GRP_SCORE)
+int   volLen  = input.int(20, "Relative Volume Length", minval = 5, maxval = 200, group = GRP_SCORE, tooltip = "Participation component: volume relative to its average on a bar closing in the trade direction. Symbols without volume receive a neutral 10 points.")
+
+float entryThr   = input.float(85.0, "Entry Score", minval = 40.0, maxval = 95.0, step = 1.0, group = GRP_SIG, tooltip = "A position opens when the directional score closes at or above this value after being below it on the previous bar.")
+float exitThr    = input.float(35.0, "Exit Score", minval = 0.0, maxval = 60.0, step = 1.0, group = GRP_SIG, tooltip = "The position closes when its own directional score closes below this value, even if the stop has not been reached.")
+bool  allowLong  = input.bool(true, "Allow Longs", group = GRP_SIG)
+bool  allowShort = input.bool(true, "Allow Shorts", group = GRP_SIG)
+
+int   atrLen   = input.int(14, "ATR Length", minval = 2, maxval = 100, group = GRP_RISK)
+float stopMult = input.float(3.0, "Trailing Stop (ATR)", minval = 0.5, maxval = 10.0, step = 0.25, group = GRP_RISK, tooltip = "Initial stop distance and trailing distance from each new close. The stop only moves in the trade's favor.")
+float baseRisk = input.float(0.5, "Risk at Entry Score (% Equity)", minval = 0.05, maxval = 5.0, step = 0.05, group = GRP_RISK, tooltip = "Risk taken when the score is exactly at the entry threshold.")
+float maxRisk  = input.float(1.0, "Risk at Score 100 (% Equity)", minval = 0.05, maxval = 5.0, step = 0.05, group = GRP_RISK, tooltip = "Risk scales linearly between the two values as the score rises from the entry threshold to 100.")
+float maxLev   = input.float(1.0, "Maximum Leverage", minval = 0.1, maxval = 10.0, step = 0.1, group = GRP_RISK, tooltip = "Position notional is capped at equity times this value, whatever the risk calculation asks for.")
+
+bool   showDash = input.bool(true, "Show Dashboard", group = GRP_DASH)
+string dashPos  = input.string("Top Right", "Position", options = ["Top Right", "Bottom Right", "Top Left", "Bottom Left"], group = GRP_DASH)
+
+color upCol   = input.color(#26a69a, "Long", group = GRP_STYLE)
+color dnCol   = input.color(#ef5350, "Short", group = GRP_STYLE)
+color neutCol = input.color(#787b86, "Neutral", group = GRP_STYLE)
+
+//------------------------------------------------------------------------------
+// Component calculations
+//------------------------------------------------------------------------------
+f_clamp(float x) => math.max(0.0, math.min(1.0, x))
+
+float emaF   = ta.ema(close, fastLen)
+float emaS   = ta.ema(close, slowLen)
+float rsi    = ta.rsi(close, rsiLen)
+float chg    = close - close[erLen]
+float path   = math.sum(math.abs(close - close[1]), erLen)
+float er     = path > 0 ? math.abs(chg) / path : 0.0
+float atr    = ta.atr(atrLen)
+float atrPct = nz(ta.percentrank(atr, pctLen), 50)
+float volMa  = ta.sma(nz(volume), volLen)
+bool  hasVol = nz(volMa) > 0
+float relVol = hasVol ? nz(volume) / volMa : 0.0
+
+// Each component contributes 0-20 points; the two directional scores are 0-100.
+float trendL = (close > emaS ? 10.0 : 0.0) + (emaF > emaS ? 10.0 : 0.0)
+float trendS = (close < emaS ? 10.0 : 0.0) + (emaF < emaS ? 10.0 : 0.0)
+float momL   = 20.0 * f_clamp((rsi - 50) / 20)
+float momS   = 20.0 * f_clamp((50 - rsi) / 20)
+float effL   = chg > 0 ? 20.0 * f_clamp(er / erFull) : 0.0
+float effS   = chg < 0 ? 20.0 * f_clamp(er / erFull) : 0.0
+float volReg = atrPct < volLo ? 20.0 * atrPct / volLo : atrPct > volHi ? 20.0 * f_clamp((100 - atrPct) / (100 - volHi)) : 20.0
+float partL  = not hasVol ? 10.0 : close > open ? 20.0 * f_clamp(relVol - 0.5) : 0.0
+float partS  = not hasVol ? 10.0 : close < open ? 20.0 * f_clamp(relVol - 0.5) : 0.0
+
+float scoreL = nz(trendL + momL + effL + volReg + partL)
+float scoreS = nz(trendS + momS + effS + volReg + partS)
+
+//------------------------------------------------------------------------------
+// Signals (closed bars only)
+//------------------------------------------------------------------------------
+bool warm     = bar_index > math.max(slowLen, pctLen)
+bool flat     = strategy.position_size == 0
+bool longSig  = warm and barstate.isconfirmed and allowLong and flat and scoreL >= entryThr and scoreL[1] < entryThr
+bool shortSig = warm and barstate.isconfirmed and allowShort and flat and scoreS >= entryThr and scoreS[1] < entryThr and not longSig
+
+//------------------------------------------------------------------------------
+// Sizing: risk grows with the score
+//------------------------------------------------------------------------------
+f_qty(float score, float stopDist) =>
+    float t        = f_clamp((score - entryThr) / math.max(100 - entryThr, 1))
+    float riskPct  = baseRisk + (maxRisk - baseRisk) * t
+    float riskCash = strategy.equity * riskPct / 100
+    float q   = stopDist > 0 ? riskCash / (stopDist * syminfo.pointvalue) : 0.0
+    float cap = strategy.equity * maxLev / (close * syminfo.pointvalue)
+    math.max(math.min(q, cap), 0.0)
+
+//------------------------------------------------------------------------------
+// Orders and trailing stop
+//------------------------------------------------------------------------------
+var float trail = na
+float stopDist = stopMult * atr
+
+if longSig
+    float q = f_qty(scoreL, stopDist)
+    if q > 0
+        trail := close - stopDist
+        strategy.entry("Long", strategy.long, qty = q)
+        strategy.exit("Long Stop", "Long", stop = trail)
+        alert("Confluence Rank: long entry, score " + str.tostring(scoreL, "#") + " on " + syminfo.ticker, alert.freq_once_per_bar_close)
+else if shortSig
+    float q = f_qty(scoreS, stopDist)
+    if q > 0
+        trail := close + stopDist
+        strategy.entry("Short", strategy.short, qty = q)
+        strategy.exit("Short Stop", "Short", stop = trail)
+        alert("Confluence Rank: short entry, score " + str.tostring(scoreS, "#") + " on " + syminfo.ticker, alert.freq_once_per_bar_close)
+else if strategy.position_size > 0
+    trail := math.max(nz(trail, close - stopDist), close - stopDist)
+    strategy.exit("Long Stop", "Long", stop = trail)
+    if barstate.isconfirmed and scoreL < exitThr
+        strategy.close("Long", comment = "Score Fade")
+else if strategy.position_size < 0
+    trail := math.min(nz(trail, close + stopDist), close + stopDist)
+    strategy.exit("Short Stop", "Short", stop = trail)
+    if barstate.isconfirmed and scoreS < exitThr
+        strategy.close("Short", comment = "Score Fade")
+else
+    trail := na
+
+//------------------------------------------------------------------------------
+// Visuals
+//------------------------------------------------------------------------------
+color biasCol = scoreL >= entryThr ? upCol : scoreS >= entryThr ? dnCol : neutCol
+plot(emaF, "Fast EMA", color = color.new(biasCol, 30))
+plot(emaS, "Slow EMA", color = color.new(neutCol, 30), linewidth = 2)
+plot(strategy.position_size != 0 ? trail : na, "Trailing Stop", color = strategy.position_size > 0 ? upCol : dnCol, style = plot.style_linebr)
+plot(scoreL, "Long Score", display = display.data_window)
+plot(scoreS, "Short Score", display = display.data_window)
+
+//------------------------------------------------------------------------------
+// Dashboard
+//------------------------------------------------------------------------------
+f_pos(string p) =>
+    switch p
+        "Top Right"    => position.top_right
+        "Bottom Right" => position.bottom_right
+        "Top Left"     => position.top_left
+        => position.bottom_left
+
+var table dash = table.new(f_pos(dashPos), 3, 7, bgcolor = color.new(#131722, 15), border_color = color.new(neutCol, 70), border_width = 1)
+
+f_row(int r, string k, string a, string b, color ca, color cb) =>
+    table.cell(dash, 0, r, k, text_color = color.new(color.white, 30), text_size = size.small, text_halign = text.align_left)
+    table.cell(dash, 1, r, a, text_color = ca, text_size = size.small, text_halign = text.align_right)
+    table.cell(dash, 2, r, b, text_color = cb, text_size = size.small, text_halign = text.align_right)
+
+if showDash and (barstate.islastconfirmedhistory or barstate.isrealtime)
+    f_row(0, "Component", "Long", "Short", color.white, color.white)
+    f_row(1, "Trend", str.tostring(trendL, "#"), str.tostring(trendS, "#"), upCol, dnCol)
+    f_row(2, "Momentum", str.tostring(momL, "#"), str.tostring(momS, "#"), upCol, dnCol)
+    f_row(3, "Efficiency", str.tostring(effL, "#"), str.tostring(effS, "#"), upCol, dnCol)
+    f_row(4, "Volatility", str.tostring(volReg, "#"), str.tostring(volReg, "#"), upCol, dnCol)
+    f_row(5, "Participation", str.tostring(partL, "#"), str.tostring(partS, "#"), upCol, dnCol)
+    f_row(6, "Score", str.tostring(scoreL, "#"), str.tostring(scoreS, "#"), scoreL >= entryThr ? upCol : color.white, scoreS >= entryThr ? dnCol : color.white)

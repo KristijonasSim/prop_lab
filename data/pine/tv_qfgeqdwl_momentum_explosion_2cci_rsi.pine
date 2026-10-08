@@ -1,0 +1,34 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/QFGEQDWL-Momentum-Explosion-2CCI-RSI/
+// id: PUB;EDOS7OCqt0ZCjJ1u7NyM1K2SIv55p3DO  kind: strategy  likes: 81
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © capam
+//BUY
+//EMA 8 crosses upward SMA 26.
+//CCI 34 periods > 0
+//CCI 55 periods > 0
+//RSI 26 > 48.
+//Sell
+//EMA 8 crosses downward SMA 26.
+//CCI 34 periods < 0
+//CCI 55 periods < 0
+//RSI 26 < 48.
+//@version=4
+strategy("Momentum Explosion 2CCI RSI", overlay=true)
+ema8 = ema(close,8)
+sma26 = sma(close,26)
+cci34 = cci(close,34)
+cci55 = cci(close,55)
+rsi26 = rsi(close,26)
+//plot(ema8)
+//plot(sma26)
+//plot(cci34,color=color.green)
+//plot(cci55,color=color.orange)
+//plot(rsi26,color=color.red)
+longCondition = crossover(ema8, sma26) and mom(sma26,5)>0 and cci34>0 and cci55>0 and rsi26>48
+if (longCondition)
+    strategy.entry("My Long Entry Id", strategy.long)
+
+shortCondition = crossunder(ema8, sma26) and mom(sma26,5)<0 and cci34<0 and cci55<0 and rsi26<48
+if (shortCondition)
+    strategy.entry("My Short Entry Id", strategy.short)

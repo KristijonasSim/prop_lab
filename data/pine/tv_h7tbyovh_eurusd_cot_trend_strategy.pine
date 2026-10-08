@@ -1,0 +1,22 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/h7tByovH-EURUSD-COT-Trend-Strategy/
+// id: PUB;54e5b11665384565a73f0d3956490715  kind: strategy  likes: 491
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © exlux99
+
+//@version=5
+strategy("EURUSD COT Strategy",overlay=true)
+
+long_noncom   = request.security("QUANDL:CFTC/"+'099741'+'_F_L_ALL|1', "W", close) 
+short_noncom  = request.security("QUANDL:CFTC/"+'099741'+'_F_L_ALL|2', "W", close) 
+net_noncomercial = long_noncom-short_noncom
+
+long = net_noncomercial > 0 
+short = net_noncomercial < 0 
+
+
+
+strategy.entry("long",strategy.long,when=long)
+strategy.entry("short",strategy.short,when=short)
+
+

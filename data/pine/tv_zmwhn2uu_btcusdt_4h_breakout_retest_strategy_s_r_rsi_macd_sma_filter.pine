@@ -1,0 +1,201 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/zMwHN2Uu-BTCUSDT-4H-Breakout-Retest-Strategy-S-R-RSI-MACD-SMA-Filter/
+// id: PUB;41efcf9c27fd48eeb8c4e0a575f31c72  kind: strategy
+//@version=6
+strategy("BTCUSDT 4H Breakout Retest Strategy - S/R + RSI/MACD/SMA Filter", shorttitle="BTC 4H BRK-RETEST", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, margin_long=100, margin_short=100, commission_type=strategy.commission.percent, commission_value=0.04, pyramiding=0, max_labels_count=500, max_lines_count=500)
+
+// Levels read from the BTCUSDT 4H chart (WhiteBIT) on 2026-10-02.
+// Structure: Sep 21 impulse to ~87.3K, 8-day range 82.6K-85.3K, range-top breakout on Oct 1-2.
+// Bars before the manual-levels date are backtested on swing-based auto levels.
+// Setups: (1) retest long of the 84.5K-85.3K breakout zone, (2) breakout long above 85.3K / 87.4K,
+//         (3) breakdown short below the 82.6K range low.
+
+// ───────────── Inputs: risk ─────────────
+string gRisk = "Risk"
+float slPerc       = input.float(1.5, "Stop Loss %", minval=0.1, maxval=20.0, step=0.1, group=gRisk) / 100.0
+float tpPerc       = input.float(3.0, "Take Profit %", minval=0.1, maxval=50.0, step=0.1, group=gRisk) / 100.0
+int   cooldownBars = input.int(6, "Cooldown between trades (bars)", minval=0, maxval=50, group=gRisk, tooltip="Bars to wait after an entry or an exit before the next entry. 6 bars = one day on 4H.")
+bool  enableLongs  = input.bool(true, "Enable longs", group=gRisk)
+bool  enableShorts = input.bool(true, "Enable shorts", group=gRisk)
+
+// ───────────── Inputs: manual levels ─────────────
+string gLvl = "Manual levels (structure as of 2026-10-02)"
+float zoneTop    = input.float(85300.0, "Breakout zone top / range top", step=50.0, group=gLvl)
+float zoneBot    = input.float(84500.0, "Breakout zone bottom", step=50.0, group=gLvl)
+float resBreak   = input.float(87400.0, "Breakout resistance (Sep 22-23 highs)", step=50.0, group=gLvl)
+float floorLevel = input.float(83000.0, "Retest floor (key support)", step=50.0, group=gLvl, tooltip="If the pullback sweeps below this level the retest long is cancelled.")
+float breakLevel = input.float(82600.0, "Structural break (range low)", step=50.0, group=gLvl, tooltip="A close below this level flips the thesis and triggers the short setup.")
+int   levelsFrom = input.time(timestamp("21 Sep 2026 00:00 +0000"), "Manual levels active from", group=gLvl, tooltip="Manual levels describe the structure formed since this date. Earlier bars use swing-based auto levels (see the auto levels group) or are skipped.")
+float objLevel   = input.float(88500.0, "Upside objective (visual)", step=50.0, group=gLvl)
+float deepSup    = input.float(80000.0, "Macro support (visual)", step=50.0, group=gLvl)
+
+// ───────────── Inputs: auto levels (testing aid) ─────────────
+string gAuto = "Auto levels (history backtest)"
+bool  autoBefore    = input.bool(true, "Backtest bars before the manual-levels date with swing-based auto levels", group=gAuto, tooltip="On: history before the date trades the same setups on swing highs/lows, so the Strategy Tester has closed trades. Off: only the manual levels are traded.")
+bool  useAuto       = input.bool(false, "Use auto levels on all bars (ignore manual levels)", group=gAuto)
+int   pvtLen        = input.int(5, "Pivot lookback (bars each side)", minval=2, maxval=30, group=gAuto)
+float autoZonePerc  = input.float(1.0, "Auto retest zone depth %", minval=0.1, maxval=10.0, step=0.1, group=gAuto) / 100.0
+float autoFloorPerc = input.float(2.7, "Auto retest floor distance %", minval=0.2, maxval=20.0, step=0.1, group=gAuto) / 100.0
+
+// ───────────── Inputs: indicators ─────────────
+string gInd = "Indicators"
+int  rsiLen         = input.int(14, "RSI length", minval=2, group=gInd)
+int  macdFastLen    = input.int(12, "MACD fast", minval=2, group=gInd)
+int  macdSlowLen    = input.int(26, "MACD slow", minval=3, group=gInd)
+int  macdSigLen     = input.int(9, "MACD signal", minval=2, group=gInd)
+int  smaFastLen     = input.int(50, "SMA fast length", minval=2, group=gInd)
+int  smaLongLen     = input.int(200, "SMA long length", minval=10, group=gInd)
+bool useTrendFilter = input.bool(false, "Require trend side of SMA long", group=gInd, tooltip="Off: SMA long is visual regime context only. On: longs only above it, shorts only below it (fewer, more trend-aligned trades).")
+
+// ───────────── Inputs: signal filters ─────────────
+string gFlt = "Signal filters"
+float rsiPullMin    = input.float(42.0, "Retest long: RSI min", group=gFlt)
+float rsiPullMax    = input.float(72.0, "Retest long: RSI max", group=gFlt)
+float rsiBreakMin   = input.float(55.0, "Breakout long: RSI min", group=gFlt)
+float rsiBreakMax   = input.float(80.0, "Breakout long: RSI max", group=gFlt)
+float rsiShortMin   = input.float(20.0, "Breakdown short: RSI min", group=gFlt)
+float rsiShortMax   = input.float(45.0, "Breakdown short: RSI max", group=gFlt)
+float maxExtPerc    = input.float(6.0, "Max extension from SMA fast %", minval=0.5, maxval=40.0, step=0.5, group=gFlt, tooltip="Blocks entries when price has already run this far from SMA fast (e.g. the vertical Sep 21 impulse).") / 100.0
+float maxChasePerc  = input.float(1.0, "Max close distance beyond trigger level %", minval=0.1, maxval=10.0, step=0.1, group=gFlt, tooltip="Blocks entries when the signal bar closed too far past the level, so the stop still sits near the level.") / 100.0
+int   sweepLookback = input.int(6, "Retest: dip window (bars)", minval=1, maxval=50, group=gFlt)
+int   priorWindow   = input.int(8, "Retest: prior window above the zone (bars)", minval=1, maxval=50, group=gFlt)
+
+// ───────────── Inputs: visuals ─────────────
+string gVis = "Visuals"
+bool showLevels    = input.bool(true, "Show key levels", group=gVis)
+bool showExtLevels = input.bool(false, "Show far levels (88.5K objective / 80K macro support)", group=gVis)
+bool showLabels    = input.bool(true, "Show trade label (entry / SL / TP)", group=gVis)
+bool showRiskLines = input.bool(true, "Show SL / TP line segments", group=gVis)
+int  riskLineLen   = input.int(12, "SL / TP line length (bars)", minval=1, maxval=200, group=gVis)
+bool showDebug     = input.bool(false, "Show blocked-signal markers", group=gVis, tooltip="Orange x = the structural event happened on this bar but a filter, cooldown or open position blocked the entry.")
+
+// ───────────── Indicators ─────────────
+float rsiVal = ta.rsi(close, rsiLen)
+[macdLine, macdSignal, macdHist] = ta.macd(close, macdFastLen, macdSlowLen, macdSigLen)
+float smaFast = ta.sma(close, smaFastLen)
+float smaLong = ta.sma(close, smaLongLen)
+
+// ───────────── Helpers ─────────────
+crossUp(float lvl) => not na(lvl) and close > lvl and close[1] <= lvl
+crossDn(float lvl) => not na(lvl) and close < lvl and close[1] >= lvl
+nearUp(float lvl)  => not na(lvl) and close <= lvl * (1.0 + maxChasePerc)
+nearDn(float lvl)  => not na(lvl) and close >= lvl * (1.0 - maxChasePerc)
+
+// ───────────── Auto levels ─────────────
+float ph = ta.pivothigh(high, pvtLen, pvtLen)
+float pl = ta.pivotlow(low, pvtLen, pvtLen)
+var float autoRes  = na
+var float autoSup  = na
+var float autoFlip = na
+if not na(ph)
+    autoRes := ph
+if not na(pl)
+    autoSup := pl
+bool autoResCross = crossUp(autoRes)
+if autoResCross
+    autoFlip := autoRes
+
+// ───────────── Levels in use ─────────────
+bool  autoNow  = useAuto or (autoBefore and time < levelsFrom)
+float zoneTopU = autoNow ? autoFlip : zoneTop
+float zoneBotU = autoNow ? autoFlip * (1.0 - autoZonePerc) : zoneBot
+float floorU   = autoNow ? autoFlip * (1.0 - autoFloorPerc) : floorLevel
+float res1U    = autoNow ? na : zoneTop
+float res2U    = autoNow ? autoRes : resBreak
+float breakU   = autoNow ? autoSup : breakLevel
+bool  inWindow = autoNow or time >= levelsFrom
+
+// ───────────── Structural events ─────────────
+float sweepLow       = ta.lowest(low, sweepLookback)
+float priorHighClose = ta.highest(close, priorWindow)[sweepLookback]
+bool  zoneOk         = not na(zoneTopU) and not na(floorU)
+
+// Retest: bullish bar that wicked into (or reclaimed) the zone and closed back above it
+bool retestEvent   = zoneOk and close > zoneTopU and close > open and (low <= zoneTopU or close[1] <= zoneTopU)
+bool cameFromAbove = zoneOk and not na(priorHighClose) and priorHighClose > zoneTopU
+bool notCollapsed  = zoneOk and sweepLow >= floorU
+
+// Breakout: close crosses above the range top (res1) or the prior highs (res2)
+bool  brk1          = crossUp(res1U)
+bool  brk2          = crossUp(res2U)
+bool  breakoutEvent = brk1 or brk2
+float breakoutLvl   = brk2 ? res2U : res1U
+
+// Breakdown: close crosses below the structural break level
+bool breakdownEvent = crossDn(breakU)
+
+// ───────────── Filters ─────────────
+bool macdUp        = macdHist > 0 or macdHist > macdHist[1]
+bool retestMom     = rsiVal > rsiPullMin and rsiVal < rsiPullMax and macdUp
+bool breakMom      = rsiVal > rsiBreakMin and rsiVal < rsiBreakMax and macdHist > 0 and (na(smaFast) or close > smaFast)
+bool shortMom      = rsiVal > rsiShortMin and rsiVal < rsiShortMax and macdHist < 0 and (na(smaFast) or close < smaFast)
+bool notExtUp      = na(smaFast) or close < smaFast * (1.0 + maxExtPerc)
+bool notExtDn      = na(smaFast) or close > smaFast * (1.0 - maxExtPerc)
+bool trendLongOk   = not useTrendFilter or (not na(smaLong) and close > smaLong)
+bool trendShortOk  = not useTrendFilter or (not na(smaLong) and close < smaLong)
+bool chaseRetestOk = nearUp(zoneTopU)
+bool chaseBreakOk  = nearUp(breakoutLvl)
+bool chaseShortOk  = nearDn(breakU)
+
+// ───────────── Cooldown / state ─────────────
+var int lastTradeBar = na
+if strategy.position_size == 0 and strategy.position_size[1] != 0
+    lastTradeBar := bar_index
+bool cooldownOk = na(lastTradeBar) or (bar_index - lastTradeBar) >= cooldownBars
+bool canTrade   = inWindow and strategy.position_size == 0 and cooldownOk and barstate.isconfirmed
+
+// ───────────── Signals ─────────────
+bool retestLong  = enableLongs and canTrade and retestEvent and cameFromAbove and notCollapsed and retestMom and notExtUp and chaseRetestOk and trendLongOk
+bool breakLong   = enableLongs and canTrade and not retestLong and breakoutEvent and breakMom and notExtUp and chaseBreakOk and trendLongOk
+bool longSignal  = retestLong or breakLong
+bool shortSignal = enableShorts and canTrade and not longSignal and breakdownEvent and shortMom and notExtDn and chaseShortOk and trendShortOk
+
+// ───────────── Orders, SL / TP, labels ─────────────
+var float slPrice = na
+var float tpPrice = na
+
+drawRisk(float sl, float tp, string txt, bool isLong) =>
+    if showLabels
+        label.new(bar_index, isLong ? low : high, txt, style=isLong ? label.style_label_up : label.style_label_down, color=color.new(isLong ? color.teal : color.maroon, 15), textcolor=color.white, size=size.small)
+    if showRiskLines
+        line.new(bar_index, sl, bar_index + riskLineLen, sl, color=color.new(color.red, 0), width=1)
+        line.new(bar_index, tp, bar_index + riskLineLen, tp, color=color.new(color.green, 0), width=1)
+
+if longSignal
+    slPrice := close * (1.0 - slPerc)
+    tpPrice := close * (1.0 + tpPerc)
+    lastTradeBar := bar_index
+    strategy.entry("Long", strategy.long, comment=retestLong ? "L retest" : "L breakout")
+    strategy.exit("Long exit", from_entry="Long", stop=slPrice, limit=tpPrice, comment_loss="SL", comment_profit="TP")
+    drawRisk(slPrice, tpPrice, (retestLong ? "LONG retest " : "LONG breakout ") + str.tostring(close, format.mintick) + "\nSL " + str.tostring(slPrice, format.mintick) + "  |  TP " + str.tostring(tpPrice, format.mintick), true)
+
+if shortSignal
+    slPrice := close * (1.0 + slPerc)
+    tpPrice := close * (1.0 - tpPerc)
+    lastTradeBar := bar_index
+    strategy.entry("Short", strategy.short, comment="S breakdown")
+    strategy.exit("Short exit", from_entry="Short", stop=slPrice, limit=tpPrice, comment_loss="SL", comment_profit="TP")
+    drawRisk(slPrice, tpPrice, "SHORT breakdown " + str.tostring(close, format.mintick) + "\nSL " + str.tostring(slPrice, format.mintick) + "  |  TP " + str.tostring(tpPrice, format.mintick), false)
+
+// ───────────── Plots (price pane: SMAs and price levels only) ─────────────
+plot(smaFast, "SMA fast", color=color.new(color.orange, 0), linewidth=1)
+plot(smaLong, "SMA long", color=color.new(color.purple, 0), linewidth=2)
+
+bool lvlVisible = showLevels and inWindow and autoNow == autoNow[1]
+pZoneTop = plot(lvlVisible ? zoneTopU : na, "Breakout zone top", color=color.new(color.teal, 0), linewidth=1, style=plot.style_linebr)
+pZoneBot = plot(lvlVisible ? zoneBotU : na, "Breakout zone bottom", color=color.new(color.teal, 40), linewidth=1, style=plot.style_linebr)
+fill(pZoneTop, pZoneBot, color=color.new(color.teal, 88), title="Breakout / retest zone")
+plot(lvlVisible ? res2U : na, "Breakout resistance", color=color.new(color.red, 0), linewidth=1, style=plot.style_linebr)
+plot(lvlVisible ? floorU : na, "Retest floor", color=color.new(color.yellow, 20), linewidth=1, style=plot.style_linebr)
+plot(lvlVisible ? breakU : na, "Structural break", color=color.new(color.fuchsia, 0), linewidth=2, style=plot.style_linebr)
+plot(showExtLevels and not autoNow and time >= levelsFrom ? objLevel : na, "Upside objective", color=color.new(color.lime, 30), linewidth=1, style=plot.style_linebr)
+plot(showExtLevels and not autoNow and time >= levelsFrom ? deepSup : na, "Macro support", color=color.new(color.blue, 30), linewidth=1, style=plot.style_linebr)
+
+// Regime background: visual context only
+bgcolor(not na(smaLong) and close < smaLong ? color.new(color.red, 90) : na, title="Bearish regime (below SMA long)")
+
+// Debug: structural event occurred but the entry was blocked
+bool blockedLong  = showDebug and inWindow and barstate.isconfirmed and (retestEvent or breakoutEvent) and not longSignal
+bool blockedShort = showDebug and inWindow and barstate.isconfirmed and breakdownEvent and not shortSignal
+plotchar(blockedLong, "Blocked long event", "x", location.abovebar, color=color.new(color.orange, 0), size=size.tiny)
+plotchar(blockedShort, "Blocked short event", "x", location.belowbar, color=color.new(color.orange, 0), size=size.tiny)

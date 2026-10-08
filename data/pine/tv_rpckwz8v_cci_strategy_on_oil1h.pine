@@ -1,0 +1,15 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/RpcKWz8V-CCI-strategy-on-OIL1H/
+// id: PUB;0SgZTJuugBAQK9aBC2JFWr6VN7rgEJ6P  kind: strategy  likes: 110
+//@version=4
+strategy("My Strategy", overlay=true)
+
+shortCondition = falling(cci(close,200),12) and cci(close,200)>130
+if (shortCondition)
+    strategy.entry("Short Entry", strategy.short)
+    strategy.exit("exitL", "Short Entry", profit = open/0.34, loss = open/0.81)
+
+longCondition = rising(cci(close,200),12) and cci(close,200)<-130
+if (longCondition)
+    strategy.entry("Long Entry", strategy.long)
+    strategy.exit("exitS", "Long Entry", profit = open/0.34, loss = open/0.81)

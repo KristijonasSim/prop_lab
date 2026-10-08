@@ -1,0 +1,40 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/NJb4BQ5n-Bilateral-Stochastic-Oscillator-Strategy/
+// id: PUB;TuvX8JPrUw7oDY6QCk734sbMzNbUPHtW  kind: strategy  likes: 604
+//@version=4
+strategy("Bilateral Stochastic Oscillator Strategy",commission_type = strategy.commission.cash_per_contract)
+//----
+length = input(100),slen = input(20,title="Signal Length")
+method = input("TMA",title="Pre-Filtering Method",options=["SMA","TMA","LSMA"])
+
+Ds = input(1,title="Order Size")
+sm = input("Bull/Bear Cross",title="Strategy Method",options=["Bull/Bear Cross","Signal Cross"])
+mult = input(1.,title="Martingale Multiplier")
+//----
+source = close
+f(x)=>method==x
+s(x,p)=>f("SMA")?sma(x,p):f("TMA")?sma(sma(x,p),p):f("LSMA")?linreg(x,p,0):na
+//----
+src = s(source,length)
+a = highest(src,length) 
+b = lowest(src,length)
+//----
+bull = src/sma(a - b,length) - b/sma(a - b,length)
+bear = abs(src/sma(a - b,length) - a/sma(a - b,length))
+signal = sma(max(bull,bear),slen)
+//----
+w = strategy.wintrades
+l = strategy.losstrades
+size = 0.
+size := change(l) ? nz(size[1],1) * mult : change(w) ? 1 : nz(size[1],1)
+//----
+long = sm == "Bull/Bear Cross" ? crossover(bull,bear) : crossover(bull,signal)
+short = sm == "Bull/Bear Cross" ? crossunder(bull,bear) : crossover(bear,signal)
+strategy.order("Buy",true,qty=size*Ds,when=long)
+strategy.order("Sell",false,qty=size*Ds,when=short)
+strategy.close("Buy",crossunder(bull,signal))
+strategy.close("Sell",crossunder(bear,signal))
+//----
+plot(bull,title="Bull",color=#2196f3,linewidth=2,transp=0)
+plot(bear,title="Bear",color=#ff1100,linewidth=2,transp=0)
+plot(signal,title="Signal",color=color.orange,linewidth=1,transp=0)

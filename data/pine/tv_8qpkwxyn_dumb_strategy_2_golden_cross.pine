@@ -1,0 +1,52 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/8qPKWXyN-Dumb-Strategy-2-Golden-Cross/
+// id: PUB;Qzj6hreoa2l8ypb3llU2Rtk20ceOGKxi  kind: strategy  likes: 158
+//@version=3
+strategy("Dumb strategy 2 - Golden Cross", shorttitle="Golden Cross", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+lShort = input(50, title="short length")
+lLong = input(200, title="long length")
+src = input(close, title="Source")
+
+smaShort = sma(src, lShort)
+smaLong = sma(src, lLong)
+
+plot(smaShort, title="SMA Short", style=line, linewidth=3, color=lime)
+plot(smaLong, title="SMA Long", style=line, linewidth=3, color=red)
+
+
+//
+//Backtest Time Inputs
+//
+
+testStartYear = input(2009, "Backtest Start Year")
+testStartMonth = input(1, "Backtest Start Month")
+testStartDay = input(1, "Backtest Start Day")
+testPeriodStart = timestamp(testStartYear,testStartMonth,testStartDay,0,0)
+
+testStopYear = input(2019, "Backtest Stop Year")
+testStopMonth = input(1, "Backtest Stop Month")
+testStopDay = input(01, "Backtest Stop Day")
+testPeriodStop = timestamp(testStopYear,testStopMonth,testStopDay,0,0)
+
+testPeriodBackground = input(title="Color Background?", type=bool, defval=true)
+testPeriodBackgroundColor = testPeriodBackground and (time >= testPeriodStart) and (time <= testPeriodStop) ? blue : na
+bgcolor(testPeriodBackgroundColor, transp=80)
+
+//
+//Backtest Function
+//
+testPeriod() =>
+    time >= testPeriodStart and time <= testPeriodStop ? true : false
+
+	
+
+if testPeriod()
+	longCondition = crossover(smaShort, smaLong)
+	if (longCondition)
+		strategy.entry("Long Entry", strategy.long)
+
+	shortCondition = crossunder(smaShort, smaLong)
+	if (shortCondition)
+		strategy.close_all(true)
+	

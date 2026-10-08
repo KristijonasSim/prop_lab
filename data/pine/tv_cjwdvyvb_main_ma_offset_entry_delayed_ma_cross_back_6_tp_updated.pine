@@ -1,0 +1,734 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/CjwDVYvb-Main-MA-Offset-Entry-Delayed-MA-Cross-Back-6-TP-updated/
+// id: PUB;01114d36179d4780bbf6af0950e47872  kind: strategy
+//@version=6
+strategy("Main MA + Offset Entry + Delayed MA Cross-Back + 6 TP",
+     overlay=true,
+     initial_capital=100000,
+     currency=currency.USD,
+     default_qty_type=strategy.fixed,
+     default_qty_value=6,
+     pyramiding=0,
+     process_orders_on_close=false,
+     calc_on_order_fills=true,
+     calc_on_every_tick=false,
+     commission_type=strategy.commission.cash_per_contract,
+     commission_value=0,
+     slippage=0,
+     margin_long=10,
+     margin_short=10)
+
+
+// =====================================================
+// 1. DIRECTION
+// =====================================================
+
+groupDirection = "1. Direction"
+
+enableLong = input.bool(true, "Enable Long", group=groupDirection)
+enableShort = input.bool(true, "Enable Short", group=groupDirection)
+
+
+// =====================================================
+// 2. MAIN LINE
+// =====================================================
+
+groupMA = "2. Main Line"
+
+maType = input.string(
+     "EMA",
+     "Main Line Type",
+     options=["EMA", "SMA", "WMA", "VWMA", "VWAP"],
+     group=groupMA)
+
+maLength = input.int(
+     200,
+     "Main Line Length",
+     minval=1,
+     group=groupMA)
+
+
+// =====================================================
+// 3. ENTRY AFTER MA CROSS
+// =====================================================
+
+groupEntry = "3. Entry After MA Cross"
+
+entryOffset = input.float(
+     1.0,
+     "Entry Offset After MA Cross (Points)",
+     minval=0.0,
+     step=0.25,
+     group=groupEntry)
+
+
+// =====================================================
+// 4. DAILY FILTER
+// =====================================================
+
+groupDaily = "4. Daily Filter"
+
+useDailyFilter = input.bool(
+     true,
+     "Use Previous Daily Candle Filter",
+     group=groupDaily)
+
+
+// =====================================================
+// 5. SLOPE FILTER
+// =====================================================
+
+groupSlope = "5. Slope Filter"
+
+useSlopeFilter = input.bool(
+     false,
+     "Use Slope Filter",
+     group=groupSlope)
+
+slopeTimeframe = input.timeframe(
+     "1",
+     "Slope Timeframe",
+     group=groupSlope)
+
+slopeBars = input.int(
+     15,
+     "Slope Bars",
+     minval=2,
+     group=groupSlope)
+
+
+// =====================================================
+// 6. INITIAL STOP
+// =====================================================
+
+groupSL = "6. Initial Stop"
+
+useInitialStop = input.bool(
+     true,
+     "Use Cross Candle High / Low Stop",
+     group=groupSL)
+
+
+// =====================================================
+// 7. MA CROSS-BACK
+// =====================================================
+
+groupCross = "7. MA Cross-Back"
+
+useMACrossBack = input.bool(
+     true,
+     "Use MA Cross-Back Exit",
+     group=groupCross)
+
+maCrossActivation = input.float(
+     1.0,
+     "Activate MA Cross-Back After Profit (Points)",
+     minval=0.0,
+     step=0.25,
+     group=groupCross)
+
+
+// =====================================================
+// 8. TAKE PROFITS
+// =====================================================
+
+groupTP = "8. Take Profits"
+
+tp1 = input.float(40, "TP1 Points", minval=0.25, step=0.25, group=groupTP)
+tp2 = input.float(80, "TP2 Points", minval=0.25, step=0.25, group=groupTP)
+tp3 = input.float(140, "TP3 Points", minval=0.25, step=0.25, group=groupTP)
+tp4 = input.float(200, "TP4 Points", minval=0.25, step=0.25, group=groupTP)
+tp5 = input.float(300, "TP5 Points", minval=0.25, step=0.25, group=groupTP)
+tp6 = input.float(500, "TP6 Points", minval=0.25, step=0.25, group=groupTP)
+
+
+// =====================================================
+// 9. BACKTEST RANGE
+// =====================================================
+
+groupDate = "9. Backtest Range"
+
+startDate = input.time(
+     timestamp("01 Jan 2020 00:00 +0000"),
+     "Start Date",
+     group=groupDate)
+
+endDate = input.time(
+     timestamp("31 Dec 2099 23:59 +0000"),
+     "End Date",
+     group=groupDate)
+
+inDateRange = time >= startDate and time <= endDate
+
+
+// =====================================================
+// 10. WEEKLY CLOSE
+// =====================================================
+
+groupWeek = "10. Weekly Close"
+
+useWeeklyClose = input.bool(
+     true,
+     "Close All Trades Friday",
+     group=groupWeek)
+
+weeklyTimezone = input.string(
+     "America/New_York",
+     "Weekly Close Timezone",
+     options=["America/New_York", "Etc/UTC", "Asia/Riyadh"],
+     group=groupWeek)
+
+weeklyCloseHour = input.int(
+     16,
+     "Friday Close Hour",
+     minval=0,
+     maxval=23,
+     group=groupWeek)
+
+weeklyCloseMinute = input.int(
+     0,
+     "Friday Close Minute",
+     minval=0,
+     maxval=59,
+     group=groupWeek)
+
+
+// =====================================================
+// MAIN LINE
+// =====================================================
+
+mainLine = switch maType
+    "EMA"  => ta.ema(close, maLength)
+    "SMA"  => ta.sma(close, maLength)
+    "WMA"  => ta.wma(close, maLength)
+    "VWMA" => ta.vwma(close, maLength)
+    "VWAP" => ta.vwap(hlc3)
+    => ta.ema(close, maLength)
+
+
+// =====================================================
+// CROSS EVENTS
+// =====================================================
+
+crossAboveMain = ta.crossover(close, mainLine)
+crossBelowMain = ta.crossunder(close, mainLine)
+
+
+// =====================================================
+// PREVIOUS COMPLETED DAILY CANDLE
+// =====================================================
+
+prevDailyOpen = request.security(
+     syminfo.tickerid,
+     "D",
+     open[1],
+     gaps=barmerge.gaps_off,
+     lookahead=barmerge.lookahead_off)
+
+prevDailyClose = request.security(
+     syminfo.tickerid,
+     "D",
+     close[1],
+     gaps=barmerge.gaps_off,
+     lookahead=barmerge.lookahead_off)
+
+previousDayGreen = prevDailyClose > prevDailyOpen
+previousDayRed = prevDailyClose < prevDailyOpen
+
+
+// =====================================================
+// SLOPE FILTER
+// =====================================================
+
+slopeValue = request.security(
+     syminfo.tickerid,
+     slopeTimeframe,
+     ta.linreg(close, slopeBars, 0) - ta.linreg(close, slopeBars, 1),
+     gaps=barmerge.gaps_off,
+     lookahead=barmerge.lookahead_off)
+
+slopeUp = slopeValue > 0
+slopeDown = slopeValue < 0
+
+
+// =====================================================
+// DIRECTION FILTER
+// =====================================================
+
+longAllowed = useSlopeFilter ? slopeUp : useDailyFilter ? previousDayGreen : true
+shortAllowed = useSlopeFilter ? slopeDown : useDailyFilter ? previousDayRed : true
+
+
+// =====================================================
+// FRIDAY CLOSE LOGIC
+// =====================================================
+
+weekDay = dayofweek(time, weeklyTimezone)
+weekHour = hour(time, weeklyTimezone)
+weekMinute = minute(time, weeklyTimezone)
+
+isFriday = weekDay == dayofweek.friday
+
+afterFridayCutoff = isFriday and (weekHour > weeklyCloseHour or (weekHour == weeklyCloseHour and weekMinute >= weeklyCloseMinute))
+
+blockFridayEntry = useWeeklyClose and afterFridayCutoff
+
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
+var float longStop = na
+var float shortStop = na
+
+var float longTrigger = na
+var float shortTrigger = na
+
+var bool longSetup = false
+var bool shortSetup = false
+
+var bool maCrossArmed = false
+
+var bool weeklyCloseDone = false
+
+
+// =====================================================
+// RESET WEEKLY FLAG
+// =====================================================
+
+if not afterFridayCutoff
+    weeklyCloseDone := false
+
+
+// =====================================================
+// POSITION STATE
+// =====================================================
+
+flat = strategy.position_size == 0
+
+
+// =====================================================
+// LONG CROSS SETUP
+// =====================================================
+//
+// EMA crosses upward.
+//
+// Save:
+// - LOW of crossing candle as initial SL.
+// - EMA + 1 point as entry trigger.
+//
+// =====================================================
+
+longCrossSetup = flat and enableLong and longAllowed and crossAboveMain and inDateRange and not blockFridayEntry
+
+if longCrossSetup
+
+    strategy.cancel("SHORT")
+
+    shortSetup := false
+    shortTrigger := na
+    shortStop := na
+
+    longStop := low
+    longTrigger := mainLine + entryOffset
+    longSetup := true
+
+
+// =====================================================
+// SHORT CROSS SETUP
+// =====================================================
+//
+// EMA crosses downward.
+//
+// Save:
+// - HIGH of crossing candle as initial SL.
+// - EMA - 1 point as entry trigger.
+//
+// =====================================================
+
+shortCrossSetup = flat and enableShort and shortAllowed and crossBelowMain and inDateRange and not blockFridayEntry
+
+if shortCrossSetup
+
+    strategy.cancel("LONG")
+
+    longSetup := false
+    longTrigger := na
+    longStop := na
+
+    shortStop := high
+    shortTrigger := mainLine - entryOffset
+    shortSetup := true
+
+
+// =====================================================
+// CANCEL INVALID LONG SETUP
+// =====================================================
+
+if longSetup and flat and crossBelowMain
+
+    strategy.cancel("LONG")
+
+    longSetup := false
+    longTrigger := na
+    longStop := na
+
+
+// =====================================================
+// CANCEL INVALID SHORT SETUP
+// =====================================================
+
+if shortSetup and flat and crossAboveMain
+
+    strategy.cancel("SHORT")
+
+    shortSetup := false
+    shortTrigger := na
+    shortStop := na
+
+
+// =====================================================
+// LONG ENTRY
+// =====================================================
+
+if longSetup and flat and not na(longTrigger)
+
+    strategy.entry(
+         "LONG",
+         strategy.long,
+         qty=6,
+         stop=longTrigger)
+
+
+// =====================================================
+// SHORT ENTRY
+// =====================================================
+
+if shortSetup and flat and not na(shortTrigger)
+
+    strategy.entry(
+         "SHORT",
+         strategy.short,
+         qty=6,
+         stop=shortTrigger)
+
+
+// =====================================================
+// NEW LONG POSITION
+// =====================================================
+
+newLong = strategy.position_size > 0 and strategy.position_size[1] <= 0
+
+if newLong
+
+    longSetup := false
+    longTrigger := na
+    maCrossArmed := false
+
+    strategy.cancel("SHORT")
+
+
+// =====================================================
+// NEW SHORT POSITION
+// =====================================================
+
+newShort = strategy.position_size < 0 and strategy.position_size[1] >= 0
+
+if newShort
+
+    shortSetup := false
+    shortTrigger := na
+    maCrossArmed := false
+
+    strategy.cancel("LONG")
+
+
+// =====================================================
+// LONG TAKE PROFITS + INITIAL STOP
+// =====================================================
+
+if strategy.position_size > 0
+
+    entryPrice = strategy.position_avg_price
+
+    strategy.exit(
+         "LONG TP1",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp1,
+         stop=useInitialStop ? longStop : na)
+
+    strategy.exit(
+         "LONG TP2",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp2,
+         stop=useInitialStop ? longStop : na)
+
+    strategy.exit(
+         "LONG TP3",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp3,
+         stop=useInitialStop ? longStop : na)
+
+    strategy.exit(
+         "LONG TP4",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp4,
+         stop=useInitialStop ? longStop : na)
+
+    strategy.exit(
+         "LONG TP5",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp5,
+         stop=useInitialStop ? longStop : na)
+
+    strategy.exit(
+         "LONG TP6",
+         from_entry="LONG",
+         qty=1,
+         limit=entryPrice + tp6,
+         stop=useInitialStop ? longStop : na)
+
+
+// =====================================================
+// SHORT TAKE PROFITS + INITIAL STOP
+// =====================================================
+
+if strategy.position_size < 0
+
+    entryPrice = strategy.position_avg_price
+
+    strategy.exit(
+         "SHORT TP1",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp1,
+         stop=useInitialStop ? shortStop : na)
+
+    strategy.exit(
+         "SHORT TP2",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp2,
+         stop=useInitialStop ? shortStop : na)
+
+    strategy.exit(
+         "SHORT TP3",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp3,
+         stop=useInitialStop ? shortStop : na)
+
+    strategy.exit(
+         "SHORT TP4",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp4,
+         stop=useInitialStop ? shortStop : na)
+
+    strategy.exit(
+         "SHORT TP5",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp5,
+         stop=useInitialStop ? shortStop : na)
+
+    strategy.exit(
+         "SHORT TP6",
+         from_entry="SHORT",
+         qty=1,
+         limit=entryPrice - tp6,
+         stop=useInitialStop ? shortStop : na)
+
+
+// =====================================================
+// ARM MA CROSS-BACK
+// =====================================================
+//
+// DEFAULT = +1 POINT
+//
+// LONG:
+// Once price reaches Entry + 1,
+// EMA cross-back protection is armed.
+//
+// SHORT:
+// Once price reaches Entry - 1,
+// EMA cross-back protection is armed.
+//
+// =====================================================
+
+if useMACrossBack and strategy.position_size > 0 and not maCrossArmed
+
+    longActivationPrice = strategy.position_avg_price + maCrossActivation
+
+    if high >= longActivationPrice
+        maCrossArmed := true
+
+
+if useMACrossBack and strategy.position_size < 0 and not maCrossArmed
+
+    shortActivationPrice = strategy.position_avg_price - maCrossActivation
+
+    if low <= shortActivationPrice
+        maCrossArmed := true
+
+
+// =====================================================
+// MA CROSS-BACK EXIT
+// =====================================================
+
+longCrossBack = useMACrossBack and maCrossArmed and strategy.position_size > 0 and crossBelowMain
+
+shortCrossBack = useMACrossBack and maCrossArmed and strategy.position_size < 0 and crossAboveMain
+
+
+// =====================================================
+// LONG MA CROSS-BACK CLOSE
+// =====================================================
+
+if longCrossBack
+
+    strategy.cancel_all()
+
+    strategy.close(
+         "LONG",
+         comment="LONG MA CROSS BACK",
+         immediately=true)
+
+
+// =====================================================
+// SHORT MA CROSS-BACK CLOSE
+// =====================================================
+
+if shortCrossBack
+
+    strategy.cancel_all()
+
+    strategy.close(
+         "SHORT",
+         comment="SHORT MA CROSS BACK",
+         immediately=true)
+
+
+// =====================================================
+// WEEKLY CLOSE
+// =====================================================
+
+weeklyCloseNow = useWeeklyClose and afterFridayCutoff and not weeklyCloseDone
+
+if weeklyCloseNow
+
+    strategy.cancel_all()
+
+    longSetup := false
+    shortSetup := false
+
+    longTrigger := na
+    shortTrigger := na
+
+    if strategy.position_size != 0
+
+        strategy.close_all(
+             comment="END OF WEEK",
+             immediately=true)
+
+    weeklyCloseDone := true
+
+
+// =====================================================
+// RESET AFTER TRADE
+// =====================================================
+
+tradeJustClosed = strategy.position_size == 0 and strategy.position_size[1] != 0
+
+if tradeJustClosed
+
+    strategy.cancel_all()
+
+    longStop := na
+    shortStop := na
+
+    longTrigger := na
+    shortTrigger := na
+
+    longSetup := false
+    shortSetup := false
+
+    maCrossArmed := false
+
+
+// =====================================================
+// MAIN LINE PLOT
+// =====================================================
+
+plot(
+     mainLine,
+     title="Main Line",
+     color=color.orange,
+     linewidth=2)
+
+
+// =====================================================
+// INITIAL STOP PLOTS
+// =====================================================
+
+plot(
+     strategy.position_size > 0 and useInitialStop ? longStop : na,
+     title="LONG Initial Stop",
+     color=color.red,
+     linewidth=2,
+     style=plot.style_linebr)
+
+plot(
+     strategy.position_size < 0 and useInitialStop ? shortStop : na,
+     title="SHORT Initial Stop",
+     color=color.red,
+     linewidth=2,
+     style=plot.style_linebr)
+
+
+// =====================================================
+// PENDING ENTRY LEVELS
+// =====================================================
+
+plot(
+     longSetup and strategy.position_size == 0 ? longTrigger : na,
+     title="LONG Entry Trigger",
+     color=color.green,
+     linewidth=1,
+     style=plot.style_linebr)
+
+plot(
+     shortSetup and strategy.position_size == 0 ? shortTrigger : na,
+     title="SHORT Entry Trigger",
+     color=color.red,
+     linewidth=1,
+     style=plot.style_linebr)
+
+
+// =====================================================
+// MA CROSS-BACK ARMED MARKER
+// =====================================================
+
+plotshape(
+     maCrossArmed and strategy.position_size != 0,
+     title="MA Cross-Back Armed",
+     style=shape.circle,
+     location=location.bottom,
+     size=size.tiny,
+     color=color.yellow)
+
+
+// =====================================================
+// FILTER BACKGROUND
+// =====================================================
+
+filterBackground = useSlopeFilter ? (slopeUp ? color.new(color.green, 94) : slopeDown ? color.new(color.red, 94) : na) : useDailyFilter ? (previousDayGreen ? color.new(color.green, 94) : previousDayRed ? color.new(color.red, 94) : na) : na
+
+bgcolor(
+     filterBackground,
+     title="Direction Filter")

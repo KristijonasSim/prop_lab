@@ -1,0 +1,27 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/Figho5B3-Forex-Master-EUR-USD/
+// id: PUB;2286  kind: strategy  likes: 917
+//@version=2
+strategy("FX Master Long/Short", overlay=true)
+
+price = close
+
+long_basis = rsi(price, input(10))
+long_rsiema = ema(long_basis, input(20))
+short_basis = rsi(price, input(30))
+short_rsiema = ema(short_basis, input(30))
+
+long_trigger = input(50)
+short_trigger = input(50)
+
+long_profit = input(500)
+long_loss = input(500)
+
+short_profit = input(500)
+short_loss = input(500)
+
+strategy.entry("enter long", true, when = crossover(long_rsiema, long_trigger))
+strategy.exit("exit long", "enter long", profit = long_profit, loss = long_loss)
+
+strategy.entry("enter short", false, when = crossunder(short_rsiema, short_trigger))
+strategy.exit("exit short", "enter short", profit = short_profit, loss = short_loss)

@@ -1,0 +1,624 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/fVu5DNuk/
+// id: PUB;bcfce13e293847e686309911b5a96eee  kind: strategy  likes: 71
+// ============================================================================
+//  LIQUIDITY SWEEP MEAN REVERSION STRATEGY  v1.0
+//  Optimized for XAUUSD / XAGUSD  |  M1 – M15
+//  Pine Script v6
+//  © 2025  –  Production-Ready Build
+// ============================================================================
+//@version=6
+strategy(
+     title       = "Liquidity Sweep Mean Reversion [XAUUSD/XAGUSD]",
+     shorttitle  = "LS-MR",
+     overlay     = true,
+     margin_long = 100,
+     margin_short= 100,
+     default_qty_type  = strategy.percent_of_equity,
+     default_qty_value = 2,
+     initial_capital   = 10000,
+     commission_type   = strategy.commission.percent,
+     commission_value  = 0.03,
+     slippage          = 2,
+     pyramiding        = 0
+     )
+
+// ============================================================================
+//  ─────────────────────────────  INPUTS  ─────────────────────────────────
+// ============================================================================
+
+// ── Strategy Mode ────────────────────────────────────────────────────────────
+i_mode = input.string("Balanced", "Strategy Mode",
+         options = ["Conservative", "Balanced", "Aggressive"],
+         group = "🎯 Strategy Configuration",
+         tooltip = "Conservative: MSS confirmation required | Balanced: Candle close + EMA | Aggressive: Immediate entry at sweep level")
+
+// ── Liquidity Zone Lookback ───────────────────────────────────────────────────
+i_lb1 = input.int(20,  "Lookback Short (Default 20)",  minval = 5,  maxval = 200, group = "📐 Liquidity Zones")
+i_lb2 = input.int(50,  "Lookback Long  (Default 50)",  minval = 10, maxval = 500, group = "📐 Liquidity Zones")
+i_zoneExtend   = input.int(8, "Zone Extend (Bars Right)", minval = 1, maxval = 50, group = "📐 Liquidity Zones")
+i_sweepFilter  = input.string("All Sweeps", "Sweep Filter",
+                 options = ["All Sweeps", "VWAP Filtered"],
+                 group   = "📐 Liquidity Zones",
+                 tooltip = "All Sweeps: show every sweep regardless of VWAP position\nVWAP Filtered: Bullish sweeps only above VWAP, Bearish sweeps only below VWAP")
+
+// ── SMMA Settings ────────────────────────────────────────────────────────────
+i_emaFast = input.int(9,  "SMMA Fast (default 9)",  minval = 3, maxval = 50, group = "📈 SMMA / VWAP")
+i_emaSlow = input.int(13, "SMMA Slow (default 13)", minval = 5, maxval = 100, group = "📈 SMMA / VWAP")
+
+// ── VWAP Anchor ──────────────────────────────────────────────────────────────
+i_vwapAnchor = input.string("Session", "VWAP Anchor",
+               options = ["Session", "Week", "Month"],
+               group = "📈 SMMA / VWAP")
+
+// ── Risk Management ───────────────────────────────────────────────────────────
+i_minRR      = input.float(1.5, "Min RRR (e.g. 1.5 = 1:1.5)", minval = 1.0, step = 0.1, group = "🛡️ Risk Management")
+i_slBuffer   = input.float(0.5, "SL Buffer above/below Wick (%)",   minval = 0.0, step = 0.1, group = "🛡️ Risk Management",
+               tooltip = "Percentage offset added to the sweep wick as SL buffer")
+i_partialTP  = input.bool(true, "Partial TP: Close 50% at SMMA", group = "🛡️ Risk Management")
+i_partialPct = input.float(50.0,"Partial Close Size (%)", minval = 10.0, maxval = 90.0, step = 5.0, group = "🛡️ Risk Management")
+
+// ── Time Filter ───────────────────────────────────────────────────────────────
+i_useTimeFilter = input.bool(true,  "Time Filter Active", group = "🕐 Time Filter (UTC)")
+i_startHour     = input.int(8,  "Start Hour (UTC)", minval = 0, maxval = 23, group = "🕐 Time Filter (UTC)")
+i_startMin      = input.int(0,  "Start Minute",       minval = 0, maxval = 59, group = "🕐 Time Filter (UTC)")
+i_endHour       = input.int(20, "End Hour (UTC)",  minval = 0, maxval = 23, group = "🕐 Time Filter (UTC)")
+i_endMin        = input.int(0,  "End Minute",        minval = 0, maxval = 59, group = "🕐 Time Filter (UTC)")
+
+// ── Visuals ───────────────────────────────────────────────────────────────────
+i_showBoxes   = input.bool(true,  "Show Liquidity Boxes",  group = "🎨 Visualization")
+i_showSweepX  = input.bool(true,  "Show Sweep Marker (X)", group = "🎨 Visualization")
+i_showLabels  = input.bool(true,  "Show BUY/SELL Labels",    group = "🎨 Visualization")
+i_showDash    = input.bool(true,  "Show Dashboard",          group = "🎨 Visualization")
+i_showEMA     = input.bool(true,  "Show SMAs",               group = "🎨 Visualization")
+i_showVWAP    = input.bool(true,  "Show VWAP",               group = "🎨 Visualization")
+i_dashPos     = input.string("Top Right", "Dashboard Position",
+                 options = ["Top Right", "Top Left", "Top Center",
+                            "Bottom Right", "Bottom Left", "Bottom Center",
+                            "Middle Right", "Middle Left"],
+                 group = "🎨 Visualization")
+i_dashSize    = input.string("Small", "Dashboard Text Size",
+                 options = ["Tiny", "Small", "Normal"],
+                 group = "🎨 Visualization")
+
+// ============================================================================
+//  ────────────────────────  CALCULATIONS  ────────────────────────────────
+// ============================================================================
+
+// ── Time Filter ───────────────────────────────────────────────────────────────
+_currentMinutes = hour(time, "UTC") * 60 + minute(time, "UTC")
+_startMinutes   = i_startHour * 60 + i_startMin
+_endMinutes     = i_endHour   * 60 + i_endMin
+inSession = i_useTimeFilter ? (_currentMinutes >= _startMinutes and _currentMinutes <= _endMinutes) : true
+
+// ── SMMA (Smoothed Moving Average = ta.rma = Wilder's MA) ───────────────────
+// ta.rma(source, length) is Pine's built-in SMMA: alpha = 1/length
+smmaFast = ta.rma(close, i_emaFast)
+smmaSlow = ta.rma(close, i_emaSlow)
+
+// ── VWAP ──────────────────────────────────────────────────────────────────────
+// timeframe.change() requires a simple/const string per call – evaluated per branch
+vwapIsNewPeriod = i_vwapAnchor == "Week"  ? timeframe.change("W") :
+                  i_vwapAnchor == "Month" ? timeframe.change("M") :
+                  timeframe.change("D")   // Default: Session (daily reset)
+
+// ta.vwap() requires 1 or 3 arguments in v6 – no 2-arg overload exists
+// _vwapUB / _vwapLB discarded intentionally (bands not used)
+[vwapVal, _vwapUB, _vwapLB] = ta.vwap(hlc3, vwapIsNewPeriod, 1.0)
+aboveVWAP = close > vwapVal
+belowVWAP = close < vwapVal
+
+// ── Liquidity Zones ─────────────────────────────────────────────────────────
+highLB1 = ta.highest(high, i_lb1)
+lowLB1  = ta.lowest (low,  i_lb1)
+highLB2 = ta.highest(high, i_lb2)
+lowLB2  = ta.lowest (low,  i_lb2)
+
+// Previous period High/Low for MSS – tracked internally via lastSwingHigh/Low
+// ── EMA Cross ─────────────────────────────────────────────────────────────────
+smmaCrossBull = ta.crossover (smmaFast, smmaSlow)
+smmaCrossBear = ta.crossunder(smmaFast, smmaSlow)
+// Price-SMMA interaction: reclaim above/below SMMA after sweep
+priceAboveSMMA = close > smmaFast
+priceBelowSMMA = close < smmaFast
+
+// ── ATR (SL scaling for XAUUSD/XAGUSD volatility) ──────────────────────────
+atr14 = ta.atr(14)
+
+// ============================================================================
+//  ─────────────────────  SWEEP DETECTION  ────────────────────────────────
+// ============================================================================
+// Bullish Sweep: wick breaks below the lowest low of the last X bars,
+//                but candle CLOSES back above it (fakeout / stop-hunt)
+sweepBull1 = low  < lowLB1[1]  and close > lowLB1[1]   // LB Short
+sweepBull2 = low  < lowLB2[1]  and close > lowLB2[1]   // LB Long
+sweepBull  = sweepBull1 or sweepBull2
+
+// Bearish Sweep: wick breaks above the highest high of the last X bars,
+//                but candle CLOSES back below it (fakeout / stop-hunt)
+sweepBear1 = high > highLB1[1] and close < highLB1[1]
+sweepBear2 = high > highLB2[1] and close < highLB2[1]
+sweepBear  = sweepBear1 or sweepBear2
+
+// Apply VWAP filter to sweeps if selected
+// "VWAP Filtered": bull sweeps only above VWAP, bear sweeps only below VWAP
+// Raw sweeps kept for reference; filtered variants used in all downstream logic
+sweepBullF = i_sweepFilter == "VWAP Filtered" ? sweepBull and aboveVWAP : sweepBull
+sweepBearF = i_sweepFilter == "VWAP Filtered" ? sweepBear and belowVWAP : sweepBear
+
+// Persist the last sweep wick price for SL calculation
+var float lastBullSweepWick = na
+var float lastBearSweepWick = na
+var int   lastBullSweepBar  = na
+var int   lastBearSweepBar  = na
+
+if sweepBull
+    lastBullSweepWick := low
+    lastBullSweepBar  := bar_index
+if sweepBear
+    lastBearSweepWick := high
+    lastBearSweepBar  := bar_index
+
+// Sweep is considered active for up to 5 bars after detection
+bullSweepActive = not na(lastBullSweepBar) and (bar_index - lastBullSweepBar) <= 5
+bearSweepActive = not na(lastBearSweepBar) and (bar_index - lastBearSweepBar) <= 5
+
+// ============================================================================
+//  ─────────────  MARKET STRUCTURE SHIFT (MSS)  ───────────────────────────
+// ============================================================================
+// Bullish Sweep → price breaks above last swing high = MSS Bull
+// Bearish Sweep → price breaks below last swing low  = MSS Bear
+mssSwingHigh = ta.pivothigh(high, 3, 3)
+mssSwingLow  = ta.pivotlow (low,  3, 3)
+
+var float lastSwingHigh = na
+var float lastSwingLow  = na
+
+if not na(mssSwingHigh)
+    lastSwingHigh := mssSwingHigh
+if not na(mssSwingLow)
+    lastSwingLow  := mssSwingLow
+
+// MSS: break of last swing structure following a sweep
+mssBull = bullSweepActive and not na(lastSwingHigh) and close > lastSwingHigh
+mssBear = bearSweepActive and not na(lastSwingLow)  and close < lastSwingLow
+
+// ============================================================================
+//  ────────────────────  ENTRY CONDITIONS  ────────────────────────────────
+// ============================================================================
+
+// ── Conservative: MSS + EMA cross + VWAP filter ─────────────────────────────
+longCondConservative  = bullSweepActive and mssBull  and (smmaCrossBull or priceAboveSMMA) and aboveVWAP and inSession
+shortCondConservative = bearSweepActive and mssBear  and (smmaCrossBear or priceBelowSMMA) and belowVWAP and inSession
+
+// ── Balanced: Close back inside range + EMA cross + VWAP ────────────────────
+// Candle close above the swept low (encoded in sweepBullF) + EMA cross
+longCondBalanced  = bullSweepActive and sweepBullF and (smmaCrossBull or (close > smmaFast and close[1] <= smmaFast[1])) and aboveVWAP and inSession
+shortCondBalanced = bearSweepActive and sweepBearF and (smmaCrossBear or (close < smmaFast and close[1] >= smmaFast[1])) and belowVWAP and inSession
+
+// ── Aggressive: Immediate entry on sweep bar (market order) ─────────────────
+longCondAggressive  = sweepBullF and inSession
+shortCondAggressive = sweepBearF and inSession
+
+// ── Active entry condition per selected mode ─────────────────────────────────
+longSignal = switch i_mode
+    "Conservative" => longCondConservative
+    "Balanced"=> longCondBalanced
+    "Aggressive"   => longCondAggressive
+    => longCondBalanced
+
+shortSignal = switch i_mode
+    "Conservative" => shortCondConservative
+    "Balanced"=> shortCondBalanced
+    "Aggressive"   => shortCondAggressive
+    => shortCondBalanced
+
+// ============================================================================
+//  ──────────────────────  SL / TP CALCULATION  ───────────────────────────
+// ============================================================================
+// SL/TP frozen at entry via var – no drift after position is open
+// _cur variants used only for pre-entry CRV evaluation
+longSL_cur  = not na(lastBullSweepWick) ? lastBullSweepWick * (1.0 - i_slBuffer / 100.0) : close - atr14 * 1.5
+shortSL_cur = not na(lastBearSweepWick) ? lastBearSweepWick * (1.0 + i_slBuffer / 100.0) : close + atr14 * 1.5
+longTP_cur  = highLB1
+shortTP_cur = lowLB1
+
+// Frozen SL/TP: set once at entry, held for the duration of the trade
+var float longSL  = na
+var float longTP  = na
+var float shortSL = na
+var float shortTP = na
+
+// ── RRR check ────────────────────────────────────────────────────────────────
+// Uses _cur (current-bar) SL/TP for pre-entry RRR evaluation
+longRisk   = math.abs(close - longSL_cur)
+longReward = math.abs(longTP_cur - close)
+longCRV    = longRisk > 0 ? longReward / longRisk : 0.0
+
+shortRisk   = math.abs(shortSL_cur - close)
+shortReward = math.abs(close - shortTP_cur)
+shortCRV    = shortRisk > 0 ? shortReward / shortRisk : 0.0
+
+longValid  = longCRV  >= i_minRR
+shortValid = shortCRV >= i_minRR
+
+// ============================================================================
+//  ────────────────────────  STRATEGY ORDERS  ─────────────────────────────
+// ============================================================================
+noOpenTrade = strategy.position_size == 0
+
+// One-shot guard – partial TP fires exactly once per trade
+var bool partialLongDone  = false
+var bool partialShortDone = false
+
+// Reset partial-TP guards when position is closed
+if strategy.position_size == 0
+    partialLongDone  := false
+    partialShortDone := false
+
+// Freeze SL/TP at entry bar – values do not drift on subsequent bars
+if longSignal and longValid and noOpenTrade
+    longSL := longSL_cur
+    longTP := longTP_cur
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Long Exit",
+         from_entry = "Long",
+         stop       = longSL,
+         limit      = longTP,
+         comment    = "TP/SL Long")
+    alert("🟢 LONG ENTRY | " + syminfo.ticker + " | " + timeframe.period + "m" +
+         " | Price: "  + str.tostring(close,       "#.##") +
+         " | SL: "     + str.tostring(longSL_cur,  "#.##") +
+         " | TP: "     + str.tostring(longTP_cur,  "#.##") +
+         " | RRR: 1:"  + str.tostring(longCRV,     "#.##") +
+         " | Mode: "   + i_mode,
+         alert.freq_once_per_bar_close)
+
+if shortSignal and shortValid and noOpenTrade
+    shortSL := shortSL_cur
+    shortTP := shortTP_cur
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Short Exit",
+         from_entry = "Short",
+         stop       = shortSL,
+         limit      = shortTP,
+         comment    = "TP/SL Short")
+    alert("🔴 SHORT ENTRY | " + syminfo.ticker + " | " + timeframe.period + "m" +
+         " | Price: "  + str.tostring(close,        "#.##") +
+         " | SL: "     + str.tostring(shortSL_cur,  "#.##") +
+         " | TP: "     + str.tostring(shortTP_cur,  "#.##") +
+         " | RRR: 1:"  + str.tostring(shortCRV,     "#.##") +
+         " | Mode: "   + i_mode,
+         alert.freq_once_per_bar_close)
+
+// ── Partial TP: close configured % at EMA touch ─────────────────────────────
+// Guard prevents repeated partial closes on EMA re-crosses
+// strategy.cancel + re-register always uses the frozen SL/TP from entry
+if i_partialTP
+    if not partialLongDone and strategy.position_size > 0 and ta.crossover(close, smmaFast)
+        partialLongDone := true
+        strategy.cancel("Long Exit")
+        strategy.close("Long", qty_percent = i_partialPct, comment = "Partial TP Long @ EMA")
+        strategy.exit("Long Exit Rem", from_entry = "Long", stop = longSL, limit = longTP, comment = "TP/SL Long Rem")
+        alert("💛 PARTIAL TP LONG (" + str.tostring(i_partialPct, "#") + "%) | " + syminfo.ticker +
+             " | Price: " + str.tostring(close, "#.##") + " | SMMA hit — remainder running",
+             alert.freq_once_per_bar_close)
+    if not partialShortDone and strategy.position_size < 0 and ta.crossunder(close, smmaFast)
+        partialShortDone := true
+        strategy.cancel("Short Exit")
+        strategy.close("Short", qty_percent = i_partialPct, comment = "Partial TP Short @ EMA")
+        strategy.exit("Short Exit Rem", from_entry = "Short", stop = shortSL, limit = shortTP, comment = "TP/SL Short Rem")
+        alert("💛 PARTIAL TP SHORT (" + str.tostring(i_partialPct, "#") + "%) | " + syminfo.ticker +
+             " | Price: " + str.tostring(close, "#.##") + " | SMMA hit — remainder running",
+             alert.freq_once_per_bar_close)
+
+// ============================================================================
+//  ──────────────────────────────  ALERTS  ────────────────────────────────
+// ============================================================================
+// IMPORTANT: alertcondition() is silently ignored inside strategy() scripts.
+// All alerts must use alert() with freq_once_per_bar_close.
+//
+// HOW TO SET UP IN TRADINGVIEW:
+//   Create Alert → Condition: select this strategy
+//   Interval:  "Only alert() function calls"
+//   Message:   leave as-is (filled dynamically by the script)
+//
+// One single alert catches ALL types. The message text identifies each event:
+//   TYPE:SWEEP_BULL   – raw bullish sweep
+//   TYPE:SWEEP_BEAR   – raw bearish sweep
+//   TYPE:MSS_BULL     – market structure shift bullish
+//   TYPE:MSS_BEAR     – market structure shift bearish
+//   (Entry + Partial TP alerts already fire from within the strategy blocks above)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Sweep alerts (raw, no entry filter) ──────────────────────────────────────
+if sweepBull
+    alert("⚡ TYPE:SWEEP_BULL | BULLISH SWEEP | " + syminfo.ticker +
+         " | " + timeframe.period + "m" +
+         " | Price: " + str.tostring(close, "#.##") +
+         " | Reversal zone hit — watch for entry",
+         alert.freq_once_per_bar_close)
+
+if sweepBear
+    alert("⚡ TYPE:SWEEP_BEAR | BEARISH SWEEP | " + syminfo.ticker +
+         " | " + timeframe.period + "m" +
+         " | Price: " + str.tostring(close, "#.##") +
+         " | Reversal zone hit — watch for entry",
+         alert.freq_once_per_bar_close)
+
+// ── MSS alerts ────────────────────────────────────────────────────────────────
+if mssBull
+    alert("🔵 TYPE:MSS_BULL | MARKET STRUCTURE SHIFT BULLISH | " + syminfo.ticker +
+         " | " + timeframe.period + "m" +
+         " | Price: " + str.tostring(close, "#.##"),
+         alert.freq_once_per_bar_close)
+
+if mssBear
+    alert("🔵 TYPE:MSS_BEAR | MARKET STRUCTURE SHIFT BEARISH | " + syminfo.ticker +
+         " | " + timeframe.period + "m" +
+         " | Price: " + str.tostring(close, "#.##"),
+         alert.freq_once_per_bar_close)
+
+// ============================================================================
+//  ──────────────────────────  PLOTS / UI  ────────────────────────────────
+// ============================================================================
+
+// ── EMAs ──────────────────────────────────────────────────────────────────────
+plot(i_showEMA ? smmaFast : na, "SMMA Fast", color = color.new(color.orange, 0),  linewidth = 1)
+plot(i_showEMA ? smmaSlow : na, "SMMA Slow", color = color.new(color.yellow, 20), linewidth = 1)
+
+// ── VWAP ──────────────────────────────────────────────────────────────────────
+plot(i_showVWAP ? vwapVal : na, "VWAP", color = color.new(color.aqua, 0), linewidth = 2, style = plot.style_line)
+
+// ── Liquidity Zone Boxes ─────────────────────────────────────────────────────
+// LB1 zones (short lookback)
+var box boxHighLB1 = na
+var box boxLowLB1  = na
+var box boxHighLB2 = na
+var box boxLowLB2  = na
+
+boxColor1 = color.new(color.gray, 82)
+boxColor2 = color.new(color.silver, 88)
+borderCol1 = color.new(color.gray, 40)
+borderCol2 = color.new(color.silver, 60)
+
+if i_showBoxes and barstate.islast
+    // LB1 High-Zone – text_color + text_size in box.new(), box.set_text() only takes 2 args in v6
+    box.delete(boxHighLB1)
+    boxHighLB1 := box.new(
+         left         = bar_index - i_lb1,
+         top          = highLB1,
+         right        = bar_index + i_zoneExtend,
+         bottom       = highLB1 - atr14 * 0.4,
+         border_color = borderCol1,
+         bgcolor      = boxColor1,
+         border_width = 1,
+         text         = "LIQ " + str.tostring(i_lb1) + "H",
+         text_color   = color.new(color.gray, 20),
+         text_size    = size.tiny)
+
+    // LB1 Low-Zone
+    box.delete(boxLowLB1)
+    boxLowLB1 := box.new(
+         left         = bar_index - i_lb1,
+         top          = lowLB1 + atr14 * 0.4,
+         right        = bar_index + i_zoneExtend,
+         bottom       = lowLB1,
+         border_color = borderCol1,
+         bgcolor      = boxColor1,
+         border_width = 1,
+         text         = "LIQ " + str.tostring(i_lb1) + "L",
+         text_color   = color.new(color.gray, 20),
+         text_size    = size.tiny)
+
+    // LB2 High-Zone
+    box.delete(boxHighLB2)
+    boxHighLB2 := box.new(
+         left         = bar_index - i_lb2,
+         top          = highLB2,
+         right        = bar_index + i_zoneExtend,
+         bottom       = highLB2 - atr14 * 0.6,
+         border_color = borderCol2,
+         bgcolor      = boxColor2,
+         border_width = 1,
+         text         = "LIQ " + str.tostring(i_lb2) + "H",
+         text_color   = color.new(color.silver, 10),
+         text_size    = size.tiny)
+
+    // LB2 Low-Zone
+    box.delete(boxLowLB2)
+    boxLowLB2 := box.new(
+         left         = bar_index - i_lb2,
+         top          = lowLB2 + atr14 * 0.6,
+         right        = bar_index + i_zoneExtend,
+         bottom       = lowLB2,
+         border_color = borderCol2,
+         bgcolor      = boxColor2,
+         border_width = 1,
+         text         = "LIQ " + str.tostring(i_lb2) + "L",
+         text_color   = color.new(color.silver, 10),
+         text_size    = size.tiny)
+
+// ── Sweep markers ────────────────────────────────────────────────────────────
+plotshape(i_showSweepX and sweepBullF, title = "Bull Sweep ✕",
+     style  = shape.xcross,
+     location = location.belowbar,
+     color  = color.new(color.lime, 20),
+     size   = size.small,
+     text   = "")
+
+plotshape(i_showSweepX and sweepBearF, title = "Bear Sweep ✕",
+     style  = shape.xcross,
+     location = location.abovebar,
+     color  = color.new(color.red, 20),
+     size   = size.small,
+     text   = "")
+
+// ── BUY / SELL signal labels ─────────────────────────────────────────────────
+if i_showLabels and longSignal and longValid
+    label.new(bar_index, low - atr14 * 1.2,
+         text       = "▲ BUY\nCRV " + str.tostring(math.round(longCRV, 2)),
+         style      = label.style_label_up,
+         color      = color.new(color.lime, 10),
+         textcolor  = color.black,
+         size       = size.normal)
+
+if i_showLabels and shortSignal and shortValid
+    label.new(bar_index, high + atr14 * 1.2,
+         text       = "▼ SELL\nCRV " + str.tostring(math.round(shortCRV, 2)),
+         style      = label.style_label_down,
+         color      = color.new(color.red, 10),
+         textcolor  = color.white,
+         size       = size.normal)
+
+// ── MSS markers ──────────────────────────────────────────────────────────────
+plotshape(mssBull, title = "MSS Bull",
+     style    = shape.triangleup,
+     location = location.belowbar,
+     color    = color.new(color.teal, 0),
+     size     = size.tiny)
+
+plotshape(mssBear, title = "MSS Bear",
+     style    = shape.triangledown,
+     location = location.abovebar,
+     color    = color.new(color.orange, 0),
+     size     = size.tiny)
+
+// ── SL/TP Lines for open position ────────────────────────────────────────────
+// Lines created ONCE on entry bar (flat→open transition)
+// Subsequent bars only extend x2 – no new objects created
+// Avoids TradingView's 500-object limit on longer backtests
+var line slLine      = na
+var line tpLine      = na
+var bool wasInTrade  = false
+
+isInLong  = strategy.position_size > 0
+isInShort = strategy.position_size < 0
+isFlat    = strategy.position_size == 0
+
+// Entry bar: create new lines
+if isInLong and not wasInTrade
+    line.delete(slLine)
+    line.delete(tpLine)
+    slLine := line.new(bar_index, longSL,  bar_index + i_zoneExtend, longSL,  color = color.new(color.red,  20), style = line.style_dashed, width = 1)
+    tpLine := line.new(bar_index, longTP,  bar_index + i_zoneExtend, longTP,  color = color.new(color.lime, 20), style = line.style_dashed, width = 1)
+
+if isInShort and not wasInTrade
+    line.delete(slLine)
+    line.delete(tpLine)
+    slLine := line.new(bar_index, shortSL, bar_index + i_zoneExtend, shortSL, color = color.new(color.red,  20), style = line.style_dashed, width = 1)
+    tpLine := line.new(bar_index, shortTP, bar_index + i_zoneExtend, shortTP, color = color.new(color.lime, 20), style = line.style_dashed, width = 1)
+
+// Subsequent bars: extend x2 only (no new objects)
+if (isInLong or isInShort) and wasInTrade
+    line.set_x2(slLine, bar_index + i_zoneExtend)
+    line.set_x2(tpLine, bar_index + i_zoneExtend)
+
+// Exit bar: delete lines
+if isFlat and wasInTrade
+    line.delete(slLine)
+    line.delete(tpLine)
+
+wasInTrade := not isFlat
+
+// ── Background: session filter shading ───────────────────────────────────────
+bgcolor(i_useTimeFilter and not inSession ? color.new(color.gray, 94) : na, title = "Outside Session")
+
+// ============================================================================
+//  ──────────────────────────────  DASHBOARD  ─────────────────────────────
+// ============================================================================
+// Daily volume via request.security() – resets correctly at session start
+// ta.cum() is not suitable here as it accumulates from chart load
+dailyVol   = request.security(syminfo.tickerid, "D", volume, lookahead = barmerge.lookahead_off)
+cumVol     = math.round(dailyVol / 1000, 1)
+
+// Resolve dashboard position and text size from inputs
+dashPos = switch i_dashPos
+    "Top Right"     => position.top_right
+    "Top Left"      => position.top_left
+    "Top Center"    => position.top_center
+    "Bottom Right"  => position.bottom_right
+    "Bottom Left"   => position.bottom_left
+    "Bottom Center" => position.bottom_center
+    "Middle Right"  => position.middle_right
+    "Middle Left"   => position.middle_left
+    => position.top_right
+
+dashSz = switch i_dashSize
+    "Tiny"   => size.tiny
+    "Normal" => size.normal
+    => size.small
+
+// Table is deleted and recreated on every islast update so that
+// position and size changes take effect immediately without restart
+var table dash = na
+
+if i_showDash and barstate.islast
+    table.delete(dash)
+    dash := table.new(dashPos, 2, 9,
+         bgcolor      = color.new(color.black, 75),
+         border_color = color.new(color.gray, 50),
+         border_width = 1,
+         frame_color  = color.new(color.gray, 30),
+         frame_width  = 1)
+
+    // Header
+    table.cell(dash, 0, 0, "📊 LS-MR Dashboard",
+         bgcolor     = color.new(color.navy, 40),
+         text_color  = color.white,
+         text_size   = dashSz,
+         text_halign = text.align_center)
+    table.cell(dash, 1, 0, "",
+         bgcolor = color.new(color.navy, 40))
+    table.merge_cells(dash, 0, 0, 1, 0)
+
+    // Mode
+    table.cell(dash, 0, 1, "Mode", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 1, i_mode,
+         text_color = i_mode == "Conservative" ? color.lime : i_mode == "Aggressive" ? color.red : color.orange,
+         text_size  = dashSz)
+
+    // VWAP Status
+    vwapStatus     = aboveVWAP ? "Bullish ▲" : "Bearish ▼"
+    vwapStatusCol  = aboveVWAP ? color.lime   : color.red
+    table.cell(dash, 0, 2, "VWAP Status", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 2, vwapStatus, text_color = vwapStatusCol, text_size = dashSz)
+
+    // Daily volume (computed at global scope for correct per-bar accumulation)
+    table.cell(dash, 0, 3, "Daily Vol (K)", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 3, str.tostring(cumVol) + "K",
+         text_color = color.white, text_size = dashSz)
+
+    // ATR
+    table.cell(dash, 0, 4, "ATR(14)", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 4, str.tostring(math.round(atr14, 2)),
+         text_color = color.white, text_size = dashSz)
+
+    // Sweep Status
+    sweepStatus    = sweepBullF ? "BULL SWEEP ⚡" : sweepBearF ? "BEAR SWEEP ⚡" : "No Sweep"
+    sweepStatusCol = sweepBullF ? color.lime : sweepBearF ? color.red : color.new(color.gray, 30)
+    table.cell(dash, 0, 5, "Sweep", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 5, sweepStatus, text_color = sweepStatusCol, text_size = dashSz)
+
+    // Offene Position
+    posStatus    = strategy.position_size > 0 ? "LONG 🟢" : strategy.position_size < 0 ? "SHORT 🔴" : "Flat ⬜"
+    posStatusCol = strategy.position_size > 0 ? color.lime  : strategy.position_size < 0 ? color.red  : color.gray
+    table.cell(dash, 0, 6, "Position", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 6, posStatus, text_color = posStatusCol, text_size = dashSz)
+
+    // RRR of the most recent signal
+    crvDisplay    = longSignal  ? longCRV  : shortSignal ? shortCRV  : 0.0
+    crvColor      = crvDisplay >= i_minRR ? color.lime : color.red
+    table.cell(dash, 0, 7, "RRR", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 7, crvDisplay > 0 ? str.tostring(math.round(crvDisplay, 2)) : "–",
+         text_color = crvColor, text_size = dashSz)
+
+    // Session Status
+    sessionStatus    = inSession ? "Active ✅" : "Inactive ⛔"
+    sessionStatusCol = inSession ? color.lime : color.red
+    table.cell(dash, 0, 8, "Session", text_color = color.new(color.silver, 20), text_size = dashSz)
+    table.cell(dash, 1, 8, sessionStatus, text_color = sessionStatusCol, text_size = dashSz)
+
+// ============================================================================
+//  END OF SCRIPT
+// ============================================================================

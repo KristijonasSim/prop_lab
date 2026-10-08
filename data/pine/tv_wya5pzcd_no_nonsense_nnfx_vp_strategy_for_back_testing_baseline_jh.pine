@@ -1,0 +1,262 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/WyA5pZCd-No-Nonsense-NNFX-VP-Strategy-for-Back-Testing-Baseline-jh/
+// id: PUB;MjSxUzPDSby4QcbEDAPuE3xRuhP6HVqH  kind: strategy  likes: 448
+//@version=4
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Designed per No Nonsense Forex VP rules
+//For testing your individual indicators before the full system
+//Originated from causecelebre
+//Tried to put in as much VP rules as possible
+
+///////////////////////////////////////////////////
+//Rules Implemented:
+///////////////////////////////////////////////////
+// - SL 1.5 x ATR
+// - TP 1 x ATR
+//
+// - Entry conditions
+//// - Entry from 1 x confirmation
+// - Exit conditions
+//// - Exit on confirmation flip 
+
+///////////////////////////////////////////////////
+//Trades entries
+///////////////////////////////////////////////////
+// - First entry L1 or S1 with standard SL and TP
+
+///////////////////////////////////////////////////
+//Included Indicators and settings
+///////////////////////////////////////////////////
+// - Confirmtion = SSL 10
+
+///////////////////////////////////////////////////
+//Credits
+// Strategy causecelebre https://www.tradingview.com/u/causecelebre/
+// SSL Channel ErwinBeckers https://www.tradingview.com/u/ErwinBeckers/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Change log
+//First release. Testing of indicators
+//Corrected ATR
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+strategy(title="NNFX Strategy Indicator - Baseline | jh", overlay = true, pyramiding=0, initial_capital=20000, currency=currency.USD, calc_on_order_fills=0,default_qty_type=strategy.fixed, default_qty_value=10000)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  **** Set the main stuff  ****
+///////////////////////////////////////////////////
+
+//Price
+price = close
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ATR stuff
+///////////////////////////////////////////////////
+
+slMultiplier = input(1.5, "SL")
+tpMultiplier = input(1, "TP")
+
+atrlength = input(title="ATR Length", defval=14, minval=1)
+atrsmoothing = input(title="ATR Smoothing", defval="RMA", options=["RMA", "SMA", "EMA", "WMA"])
+
+ma_function(source, atrlength) => 
+    if atrsmoothing == "RMA"
+        rma(source, atrlength)
+    else
+        if atrsmoothing == "SMA"
+            sma(source, atrlength)
+        else
+            if atrsmoothing == "EMA"
+                ema(source, atrlength)
+            else
+                wma(source, atrlength)
+
+//plot(ma_function(tr(true), atrlength), title = "ATR", color=#991515, transp=0)
+
+atr = ma_function(tr(true), atrlength)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  **** Baseline ****
+///////////////////////////////////////////////////
+
+// Credits:
+// fractured, collected different MA's, converted to pine v4, modified to work in a function.
+// /script/xDdweXk5-Many-Moving-Averages/
+// Removed scripts from original authors
+// Added NNFX VP Rules 1 x ATR rule
+// Added ATR bands
+
+ma_slow_type = input(title="MA Type", type=input.string, defval="TEMA", options=["ALMA", "EMA", "DEMA", "TEMA", "WMA", "VWMA", "SMA", "SMMA", "HMA", "LSMA", "Kijun", "McGinley"])
+ma_slow_src = input(title="MA Source", type=input.source, defval=close)
+ma_slow_len = input(title="MA Length", type=input.integer, defval=56)
+
+lsma_offset  = input(defval=0, title="* Least Squares (LSMA) Only - Offset Value", minval=0)
+alma_offset  = input(defval=0.85, title="* Arnaud Legoux (ALMA) Only - Offset Value", minval=0, step=0.01)
+alma_sigma   = input(defval=6, title="* Arnaud Legoux (ALMA) Only - Sigma Value", minval=0)
+
+ma(type, src, len) =>
+    float result = 0
+    if type=="SMA" // Simple
+        result := sma(src, len)
+    if type=="EMA" // Exponential
+        result := ema(src, len)
+    if type=="DEMA" // Double Exponential
+        e = ema(src, len)
+        result := 2 * e - ema(e, len)
+    if type=="TEMA" // Triple Exponential
+        e = ema(src, len)
+        result := 3 * (e - ema(e, len)) + ema(ema(e, len), len)
+    if type=="WMA" // Weighted
+        result := wma(src, len)
+    if type=="VWMA" // Volume Weighted
+        result := vwma(src, len) 
+    if type=="SMMA" // Smoothed
+        w = wma(src, len)
+        result := na(w[1]) ? sma(src, len) : (w[1] * (len - 1) + src) / len
+    if type=="HMA" // Hull
+        result := wma(2 * wma(src, len / 2) - wma(src, len), round(sqrt(len)))
+    if type=="LSMA" // Least Squares
+        result := linreg(src, len, lsma_offset)
+    if type=="ALMA" // Arnaud Legoux
+        result := alma(src, len, alma_offset, alma_sigma)
+    if type=="Kijun" //Kijun-sen
+        kijun = avg(lowest(len), highest(len))
+        result :=kijun
+    if type=="McGinley"
+        mg = 0.0
+        mg := na(mg[1]) ? ema(src, len) : mg[1] + (src - mg[1]) / (len * pow(src/mg[1], 4))
+        result :=mg
+    result
+
+slow_ma = ma(ma_slow_type, ma_slow_src, ma_slow_len)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Main Stuff
+///////////////////////////////////////////////////
+show_atr = input(title="Show ATR Bands", type=input.bool, defval=true)
+show_atr_rule = input(title="Show 1 x ATR Violation", type=input.bool, defval=true)
+show_color_bar = input(title="Color Bars", type=input.bool, defval=true)
+
+textspacing = input(title="Text Label Spacing", defval=10, minval=1)
+
+baseline = slow_ma
+
+///////////////////////////////////////////////////
+//Base Signals
+///////////////////////////////////////////////////
+
+//Signals based on crossover
+base_cross_Long = crossover(price, baseline)
+base_cross_Short = crossover(baseline, price)
+
+//Signals based on signal position
+base_trend_Long = baseline < price ? 1 : 0
+base_trend_Short = baseline > price ? 1 : 0
+
+///////////////////////////////////////////////////
+//ATR Check
+///////////////////////////////////////////////////
+
+distBasefromPrice = abs(baseline - price)
+
+//1 if more than ATR
+atrFail = distBasefromPrice <= atr ? 0 : 1 
+
+//Always 1, unless ATR fails
+allow_enter_ATR = atrFail ? 0 : 1
+
+atrchecklocation = atrFail and base_trend_Long ? baseline - (atr*0.5) : atrFail and base_trend_Short ? baseline + (atr*0.5) : na
+
+atr_top_1_time = price + atr
+atr_top_1_5_time = price + (atr * 1.5)
+atr_bottom_1_time = price - atr
+atr_bottom_1_5_time = price - (atr * 1.5)
+
+///////////////////////////////////////////////////
+//Plots
+///////////////////////////////////////////////////
+codiff = base_cross_Long ? 1 : base_cross_Short ? -1 : na 
+color_bar = close > baseline ? color.green : color.red
+
+//Baseline Plots
+plotarrow(codiff, colorup=color.green, colordown=color.red, transp=20, maxheight=30, offset=0)
+
+//plot(slow_ma, color=color.white, linewidth=4,transp=0,title='Slow MA')
+p1 = plot(baseline, color=color_bar, linewidth=4,transp=0, title='Slow MA Glow')
+p2=plot(price,color=na)
+barcolor(show_color_bar ? color_bar : na)
+fill(p1,p2,color=color_bar, transp=95)
+
+//Plot Shape if price is more than 1 ATR from baseline
+plotshape(show_atr_rule ? atrchecklocation : na, style=shape.diamond, location=location.absolute, size=size.auto, color=color.gray, transp=20)
+
+//ATR Plots
+tp1 = plot(show_atr ? atr_top_1_time : na, "ATR Top 1", linewidth=1, color=color.blue, transp=55)
+tp2 = plot(show_atr ? atr_bottom_1_time : na, "ATR Bottom 1", linewidth=1, color=color.blue, transp=55)
+fill(tp1, tp2, color=color.blue, transp=show_atr ? 95 : 100)
+
+sl1 = plot(show_atr ? atr_top_1_5_time : na, "ATR Top 1.5", linewidth=1, color=color.orange, transp=55)
+sl2 = plot(show_atr ? atr_bottom_1_5_time : na, "ATR Bottom 1.5", linewidth=1, color=color.orange, transp=55)
+fill(sl1, sl2, color=color.orange, transp=show_atr ? 95 : 100)
+
+///////////////////////////////////////////////////
+//ATR Label only works for daily timeframe
+///////////////////////////////////////////////////
+
+current_atr = atr
+previous_atr = atr[1]
+
+label_loc = base_trend_Long ? price-atr*1.5 : base_trend_Short ? price+atr*1.5 : na
+datetime = time - time[1]
+
+l = label.new(time+datetime * textspacing,label_loc, 'Last ATR is '+tostring(previous_atr) + '\nCurrent ATR is '+tostring(current_atr), 
+  color=color.gray, 
+  textcolor=color.gray,
+  style=label.style_none,
+  xloc = xloc.bar_time,
+  yloc = yloc.price,
+  size = size.large)
+
+label.delete(l[1])
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Entries and Exits
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Long entries with standard 1.5 ATR for SL, 1 ATR for TP
+//Corrected assignment of the ATR to TP and SL, credit to @baselinejunky
+long_sl = 0.0
+long_tp = 0.0
+long_sl := base_cross_Long ? close - (atr * slMultiplier): long_sl[1]
+long_tp := base_cross_Long ? close + (atr * tpMultiplier) : long_tp[1]
+
+//Short entries with standard 1.5 ATR for SL, 1 ATR for TP
+short_sl = 0.0
+short_tp = 0.0
+short_sl := base_cross_Short ? close + (atr * slMultiplier) : short_sl[1]
+short_tp := base_cross_Short ? close - (atr * tpMultiplier) : short_tp[1]
+
+if (year>2009)
+
+    strategy.close("L1", when = base_cross_Short)
+    strategy.exit("L Limit Exit", "L1", stop = long_sl, limit = long_tp)
+
+    strategy.close("S1", when = base_cross_Long)
+    strategy.exit("S Limit Exit", "S1", stop = short_sl, limit = short_tp)
+
+    strategy.order("L1", strategy.long, when = base_cross_Long and allow_enter_ATR)
+    strategy.order("S1", strategy.short, when = base_cross_Short and allow_enter_ATR)
+
+//Plotting of TP and SL lines credit to @baselinejunky
+plot(strategy.position_size <= 0 ? na : long_sl, color=color.red, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size <= 0 ? na : long_tp, color=color.green, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size >= 0 ? na : short_sl, color=color.red, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size >= 0 ? na : short_tp, color=color.green, style=plot.style_linebr, linewidth=2)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//End
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+

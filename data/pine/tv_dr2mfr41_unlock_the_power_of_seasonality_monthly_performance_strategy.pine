@@ -1,0 +1,185 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/DR2MFR41-Unlock-the-Power-of-Seasonality-Monthly-Performance-Strategy/
+// id: PUB;f693cacf7cdb4991bf25459545c4db81  kind: strategy  likes: 192
+//@version=5
+strategy("Monthly Performance Strategy based on Seasonality", overlay = true, calc_on_order_fills=true)//, max_boxes_count = 500)
+
+startYearInput = input.int(2000)
+//#region ———————————————————— Constants, inputs, and global variables
+is_newday(sess) =>
+    d = time("W", sess)
+    ta.change(d) != 0 ? true : na
+    
+is_newbar(res) =>
+    t = time(res)
+    ta.change(t) != 0 ? true : na
+
+
+// User inputs for selecting the month(s) to test
+january   = input.bool(false, title="Test January")
+february  = input.bool(false, title="Test February")
+march     = input.bool(false, title="Test March")
+april     = input.bool(false, title="Test April")
+may       = input.bool(false, title="Test May")
+june      = input.bool(false, title="Test June")
+july      = input.bool(false, title="Test July")
+august    = input.bool(false, title="Test August")
+september = input.bool(false, title="Test September")
+october   = input.bool(false, title="Test October")
+november  = input.bool(false, title="Test November")
+december  = input.bool(false, title="Test December")
+
+// Function to check if the current month is selected
+isMonthSelected() =>
+    (january and month == 1) or    (february and month == 2) or    (march and month == 3) or    (april and month == 4) or    (may and month == 5) or    (june and month == 6) or    (july and month == 7) or    (august and month == 8) or    (september and month == 9) or   (october and month == 10) or    (november and month == 11) or    (december and month == 12)
+
+// Entry: Enter the trade on the first day of the selected month
+// firstDayOfMonth = isMonthSelected()
+
+// Function to check if it's the first day of the next month
+isNextMonthSelected() =>
+    (january and month == 2) or    (february and month == 3) or    (march and month == 4) or    (april and month == 5) or    (may and month == 6) or    (june and month == 7) or    (july and month == 8) or    (august and month == 9) or    (september and month == 10) or    (october and month == 11) or    (november and month == 12) or    (december and month == 1)
+
+apply_risk_management=input.bool(false)
+timeframer = input.timeframe("W")
+length = input(1)
+numATRs = input.float(2, step=0.5)
+atrs = request.security(syminfo.tickerid, timeframer, ta.atr(14)*numATRs)
+// if (not na(close[length]))
+// 	strategy.entry("VltClsLE", strategy.long, stop=close+atrs, comment = "VltClsLE")
+// 	strategy.entry("VltClsSE", strategy.short, stop=close-atrs, comment = "VltClsSE")
+
+// Function to check if it's the first day of a specific month
+isFirstDay(monthNum) =>
+    month == monthNum  and year>=startYearInput
+
+// Function to check if it's the first day of the next month
+isFirstDayNextMonth(currentMonth) =>
+    month == (currentMonth % 12) + 1
+    // is_newbar("W") and month == currentMonth
+var int cont_jan = na
+var  int cont_feb= na
+var  int cont_mar= na
+var  int cont_apr= na
+var  int cont_may= na
+var  int cont_jun= na
+var  int cont_jul= na
+var  int cont_aug= na
+var  int cont_sept= na
+var  int cont_oct= na
+var  int cont_nov= na
+var  int cont_dec= na
+// January
+if (january and isFirstDay(1) )//jan==0)
+    strategy.entry("Entry January", strategy.long)
+    cont_jan:=1
+
+if (january and isFirstDayNextMonth(1))
+    cont_jan:=0
+    strategy.close("Entry January")
+
+// February
+if (february and isFirstDay(2) )//feb==0)
+    strategy.entry("Entry February", strategy.long)
+    cont_feb:=1
+
+if (february and isFirstDayNextMonth(2))
+    cont_feb:=0
+    strategy.close("Entry February")
+
+// March
+if (march and isFirstDay(3) )//mar==0)
+    strategy.entry("Entry March", strategy.long)
+    cont_mar:=1
+if (march and isFirstDayNextMonth(3))
+    cont_mar:=0
+    strategy.close("Entry March")
+
+// April
+if (april and isFirstDay(4) )//apr==0)
+    strategy.entry("Entry April", strategy.long)
+    cont_apr :=1
+if (april and isFirstDayNextMonth(4))
+    cont_apr:=0
+    strategy.close("Entry April")
+
+// May
+if (may and isFirstDay(5) )//may==0)
+    strategy.entry("Entry May", strategy.long)
+    cont_may:=1
+
+if (may and isFirstDayNextMonth(5))
+    cont_may:=0
+    strategy.close("Entry May")
+
+// June
+if (june and isFirstDay(6) )//jun ==0)
+    strategy.entry("Entry June", strategy.long)
+    cont_jun :=1
+if (june and isFirstDayNextMonth(6))
+    cont_jun :=0
+    strategy.close("Entry June")
+
+// July
+if (july and isFirstDay(7) )//jul==0)
+    strategy.entry("Entry July", strategy.long)
+    cont_jul :=1
+
+if (july and isFirstDayNextMonth(7))
+    cont_jul:=0
+    strategy.close("Entry July")
+
+// August
+if (august and isFirstDay(8) )//aug ==0)
+    strategy.entry("Entry August", strategy.long)
+    cont_aug :=1
+if (august and isFirstDayNextMonth(8))
+    cont_aug:=0
+    strategy.close("Entry August")
+
+// September
+if (september and isFirstDay(9) )//sept==0)
+    strategy.entry("Entry September", strategy.long)
+    cont_sept:=1
+
+if (september and isFirstDayNextMonth(9))
+    cont_sept:=0
+    strategy.close("Entry September")
+
+// October
+if (october and isFirstDay(10) )//oct==0)
+    strategy.entry("Entry October", strategy.long)
+    cont_oct :=1
+if (october and isFirstDayNextMonth(10))
+    cont_oct:=0
+    strategy.close("Entry October")
+
+// November
+if (november and isFirstDay(11) )//nov==0)
+    strategy.entry("Entry November", strategy.long)
+    cont_nov:=1
+if (november and isFirstDayNextMonth(11))
+    strategy.close("Entry November")
+    cont_nov:=0
+// December
+if (december and isFirstDay(12) )//dec==0)
+    strategy.entry("Entry December", strategy.long)
+    cont_dec :=1
+if (december and isFirstDayNextMonth(12))
+    strategy.close("Entry December")
+    cont_dec :=0
+
+if apply_risk_management==true
+    strategy.exit("SL_TP_jan", "Entry January", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_feb", "Entry February", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_mar", "Entry March", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_apr", "Entry April", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_may", "Entry May", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_jun", "Entry June", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_jul", "Entry July", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_aug", "Entry August", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_sep", "Entry September", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_oct", "Entry October", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_nov", "Entry November", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+    strategy.exit("SL_TP_dec", "Entry December", stop=strategy.position_avg_price-atrs, limit=strategy.position_avg_price+atrs)
+

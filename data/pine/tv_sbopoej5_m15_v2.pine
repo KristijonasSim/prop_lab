@@ -1,0 +1,122 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/sbopOeJ5-M15-v2/
+// id: PUB;5c6c32b8bca24b9d8022bc57e6646de0  kind: strategy
+//@version=5
+strategy("EURUSD $300 Sniper v8.7", 
+     overlay=true, 
+     initial_capital=300, 
+     default_qty_type=strategy.cash, 
+     default_qty_value=5000, 
+     currency=currency.USD, 
+     commission_type=strategy.commission.cash_per_order, 
+     commission_value=0.01, 
+     process_orders_on_close=true)
+
+// -----------------------------------------------------------------------------
+// DESCRIPTION / DISCLAIMER
+// This strategy is designed for EURUSD using Mean Reversion + Trend Filtering.
+// Settings are optimized for the 15m or 30m timeframe.
+// -----------------------------------------------------------------------------
+
+// --- 1. INPUTS ---
+grp_bt  = "Backtest Settings"
+lookbackDays = input.int(90, "Backtest Lookback (Days)", minval=1, group=grp_bt)
+
+grp_st  = "Strategy Parameters"
+tpPips   = input.int(35, "Take Profit (Pips)", minval=1, group=grp_st) 
+slPips   = input.int(18, "Stop Loss (Pips)", minval=1, group=grp_st)   
+beTrigger = input.int(12, "Breakeven Trigger (Pips)", minval=1, group=grp_st, tooltip="Moves SL to Entry after this many pips in profit")
+
+grp_tm  = "Time Settings"
+sessionTime = input.session("1130-2200", "Trading Window (IST)", group=grp_tm)
+timezone    = "Asia/Kolkata"
+
+// --- 2. INDICATORS ---
+basis  = ta.sma(close, 20)
+dev    = 2.0 * ta.stdev(close, 20)
+upper  = basis + dev
+lower  = basis - dev
+ema200 = ta.ema(close, 200)
+rsi    = ta.rsi(close, 14)
+
+// --- 3. LOGIC & CONVERSIONS ---
+pip = syminfo.mintick * 10
+tpDist = tpPips * pip
+slDist = slPips * pip
+beDist = beTrigger * pip
+
+// Backtest Range Filter
+startTime    = last_bar_time - (lookbackDays * 24 * 60 * 60 * 1000)
+isWithinTime = time >= startTime
+
+// Session & EOD Logic
+isInSession = not na(time(timeframe.period, sessionTime, timezone))
+isEOD       = hour(time, timezone) == 21 and minute(time, timezone) >= 45
+
+// Daily Trade Limit
+var int tradesToday = 0
+if ta.change(time("D", timezone))
+    tradesToday := 0
+
+// --- 4. ENTRY CONDITIONS ---
+// Trend Following Mean Reversion: Buy dips in uptrend, Sell peaks in downtrend
+longCondition  = isWithinTime and isInSession and tradesToday < 1 and 
+                 low <= lower and close > ema200 and rsi < 45
+
+shortCondition = isWithinTime and isInSession and tradesToday < 1 and 
+                 high >= upper and close < ema200 and rsi > 55
+
+// --- 5. EXECUTION & DYNAMIC EXIT ---
+if longCondition and strategy.position_size == 0
+    strategy.entry("Long", strategy.long, comment="Sniper BUY")
+    alert("Sniper BUY Signal on EURUSD", alert.freq_once_per_bar_close)
+    tradesToday := 1
+
+if shortCondition and strategy.position_size == 0
+    strategy.entry("Short", strategy.short, comment="Sniper SELL")
+    alert("Sniper SELL Signal on EURUSD", alert.freq_once_per_bar_close)
+    tradesToday := 1
+
+// Exit Management (Breakeven Logic)
+if strategy.position_size > 0
+    float ep = strategy.opentrades.entry_price(0)
+    // Check if price reached the Breakeven Trigger
+    bool reachBE = (high - ep) >= beDist
+    float slPrice = reachBE ? ep : ep - slDist
+    strategy.exit("ExL", "Long", stop=slPrice, limit=ep + tpDist, comment_loss=reachBE ? "BE" : "SL", comment_profit="TP")
+
+if strategy.position_size < 0
+    float ep = strategy.opentrades.entry_price(0)
+    bool reachBE = (ep - low) >= beDist
+    float slPrice = reachBE ? ep : ep + slDist
+    strategy.exit("ExS", "Short", stop=slPrice, limit=ep - tpDist, comment_loss=reachBE ? "BE" : "SL", comment_profit="TP")
+
+// EOD Force Close
+if isEOD and strategy.position_size != 0
+    strategy.close_all(comment="EOD Exit")
+
+// --- 6. VISUALS ---
+plot(upper, color=color.new(#ff5252, 60), title="BB Upper")
+plot(lower, color=color.new(#26a69a, 60), title="BB Lower")
+plot(ema200, color=color.new(color.white, 20), linewidth=2, title="200 EMA")
+
+// Background Highlights
+bgcolor(isInSession ? color.new(color.blue, 97) : na, title="Session Background")
+
+// Visual TP/SL Markers for the current trade
+var line l_tp = na
+var line l_sl = na
+
+if strategy.position_size != 0 and strategy.position_size[1] == 0
+    line.delete(l_tp)
+    line.delete(l_sl)
+    float entry_p = strategy.opentrades.entry_price(0)
+    float tp_p = strategy.position_size > 0 ? entry_p + tpDist : entry_p - tpDist
+    float sl_p = strategy.position_size > 0 ? entry_p - slDist : entry_p + slDist
+    
+    l_tp := line.new(bar_index, tp_p, bar_index + 5, tp_p, color=color.lime, width=1, style=line.style_dotted, extend=extend.right)
+    l_sl := line.new(bar_index, sl_p, bar_index + 5, sl_p, color=color.red, width=1, style=line.style_dotted, extend=extend.right)
+
+if strategy.position_size == 0
+    line.delete(l_tp)
+    line.delete(l_sl)

@@ -1,0 +1,424 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/N6ZDwigU-TLO-Opening-Box-Retest-Strategy/
+// id: PUB;17a8c7e8f3eb4c93ae0fdf7d0b075a6a  kind: strategy
+//@version=6
+strategy("TLO Opening Box Retest Strategy", shorttitle="TLO Box Retest STRAT",
+     overlay=true,
+     pyramiding=0,
+     process_orders_on_close=false,
+     calc_on_order_fills=true,
+     calc_on_every_tick=false,
+     use_bar_magnifier=true,
+     commission_type=strategy.commission.percent,
+     commission_value=0.01)
+
+// ============================================================================
+// TLO OPENING BOX RETEST STRATEGY — R3 CLEAN MARKETING
+//
+// Logic aligned with R3 indicator:
+//   ONE opening box
+//   -> ONE first qualified BREAK
+//   -> ONE first RETEST
+//   -> ONE LONG/SHORT confirmation
+//   -> ONE outcome
+//
+// Historical sessions remain visible but muted.
+// Active trade plan is emphasized.
+// ============================================================================
+
+// ---- 0. SESSION -------------------------------------------------------------
+g0 = "0. SESSION"
+sessionMode = input.string("Auto", "Session mode",
+     options=["Auto","US Opening Hour","Tokyo Opening Hour","Futures Opening Hour","Custom"], group=g0)
+
+futuresSession = input.session("1800-1900", "Futures opening hour", group=g0)
+futuresTimezone = input.string("America/New_York", "Futures timezone",
+     options=["America/New_York","America/Chicago","Asia/Tokyo","Etc/UTC"], group=g0)
+
+customSession = input.session("0900-1000", "Custom opening hour", group=g0)
+customTimezone = input.string("Asia/Tokyo", "Custom timezone",
+     options=["Asia/Tokyo","Asia/Hong_Kong","Asia/Singapore","America/New_York","America/Chicago","Europe/London","Etc/UTC"], group=g0)
+
+historySessions = input.int(6, "Historical sessions to retain", minval=2, maxval=20, group=g0)
+
+// ---- 1. ENTRY ---------------------------------------------------------------
+g1 = "1. ENTRY"
+atrLen = input.int(14, "ATR length", minval=2, group=g1)
+breakBufferATR = input.float(0.00, "Breakout buffer / ATR", minval=0.0, step=0.05, group=g1)
+retestToleranceATR = input.float(0.12, "Retest tolerance / ATR", minval=0.0, step=0.02, group=g1)
+maxRetestBars = input.int(80, "Maximum bars to wait for retest", minval=1, maxval=500, group=g1)
+requireCloseOutside = input.bool(true, "Confirmation must close outside box", group=g1)
+entryMode = input.string("Retest Confirmation", "Entry mode",
+     options=["Retest Confirmation","Direct Breakout"], group=g1)
+
+// ---- 2. RISK / EXIT ---------------------------------------------------------
+g2 = "2. RISK / EXIT"
+riskPct = input.float(0.50, "Approx. risk per trade (% equity)", minval=0.05, maxval=5.0, step=0.05, group=g2)
+stopBoxMultiple = input.float(2.0, "Stop distance (box heights)", minval=0.25, step=0.25, group=g2)
+
+exitMode = input.string("Measured 1× Box", "Exit mode",
+     options=["Measured 1× Box","Fixed R","Next Opening Box"], group=g2)
+
+targetBoxMultiple = input.float(1.0, "Measured target (box heights)", minval=0.25, step=0.25, group=g2)
+fixedR = input.float(2.0, "Fixed-R target", minval=0.25, step=0.25, group=g2)
+moveToBE = input.bool(true, "Move stop to breakeven at +1R", group=g2)
+
+// ---- 3. OPTIONAL FILTERS ----------------------------------------------------
+g3 = "3. OPTIONAL FILTERS"
+useRegimeFilter = input.bool(false, "Use 30m EMA regime filter", group=g3)
+regimeLen = input.int(34, "30m EMA length", minval=5, group=g3)
+useRVOLFilter = input.bool(false, "Require breakout RVOL", group=g3)
+rvolLen = input.int(30, "RVOL lookback", minval=5, group=g3)
+minBreakRVOL = input.float(1.00, "Minimum breakout RVOL", minval=0.1, step=0.05, group=g3)
+
+// ---- 4. DISPLAY -------------------------------------------------------------
+g4 = "4. DISPLAY"
+showMidline = input.bool(false, "Show box midpoint", group=g4)
+showEventLabels = input.bool(true, "Show BREAK / RETEST / ENTRY", group=g4)
+showTradeLevels = input.bool(true, "Show active entry / stop / target", group=g4)
+
+// ---- AUTO session resolution ------------------------------------------------
+isUS = syminfo.type == "stock" or syminfo.type == "fund" or syminfo.type == "index"
+isFXCrypto = syminfo.type == "forex" or syminfo.type == "crypto"
+isFutures = syminfo.type == "futures"
+
+resolvedMode =
+     sessionMode != "Auto" ? sessionMode :
+     isUS ? "US Opening Hour" :
+     isFutures ? "Futures Opening Hour" :
+     isFXCrypto ? "Tokyo Opening Hour" :
+     "US Opening Hour"
+
+resolvedSession =
+     resolvedMode == "US Opening Hour" ? "0930-1030" :
+     resolvedMode == "Tokyo Opening Hour" ? "0900-1000" :
+     resolvedMode == "Futures Opening Hour" ? futuresSession :
+     customSession
+
+resolvedTimezone =
+     resolvedMode == "US Opening Hour" ? "America/New_York" :
+     resolvedMode == "Tokyo Opening Hour" ? "Asia/Tokyo" :
+     resolvedMode == "Futures Opening Hour" ? futuresTimezone :
+     customTimezone
+
+inBox = not na(time(timeframe.period, resolvedSession, resolvedTimezone))
+newBox = inBox and not inBox[1]
+
+// ---- Visual object state ----------------------------------------------------
+var float boxHigh = na
+var float boxLow = na
+var int boxStart = na
+
+var box activeBox = na
+var line highLine = na
+var line lowLine = na
+var line midLine = na
+
+var array<box> oldBoxes = array.new<box>()
+var array<line> oldHighLines = array.new<line>()
+var array<line> oldLowLines = array.new<line>()
+var array<line> oldMidLines = array.new<line>()
+
+var array<label> currentLabels = array.new<label>()
+var array<label> historicalLabels = array.new<label>()
+
+f_archive_labels() =>
+    while array.size(currentLabels) > 0
+        id = array.shift(currentLabels)
+        label.set_color(id, color.new(color.gray, 72))
+        label.set_textcolor(id, color.new(color.white, 25))
+        array.push(historicalLabels, id)
+    while array.size(historicalLabels) > historySessions * 4
+        label.delete(array.shift(historicalLabels))
+
+f_trim_objects() =>
+    while array.size(oldBoxes) > historySessions
+        box.delete(array.shift(oldBoxes))
+    while array.size(oldHighLines) > historySessions
+        line.delete(array.shift(oldHighLines))
+    while array.size(oldLowLines) > historySessions
+        line.delete(array.shift(oldLowLines))
+    while array.size(oldMidLines) > historySessions
+        line.delete(array.shift(oldMidLines))
+
+// ---- Signal state -----------------------------------------------------------
+var int bias = 0
+var bool breakLocked = false
+var bool retestSeen = false
+var bool retestLocked = false
+var bool tradeUsed = false
+var int breakBar = na
+
+// ---- Trade state ------------------------------------------------------------
+var float plannedStop = na
+var float plannedTarget = na
+var float actualEntry = na
+var float initialRisk = na
+var bool movedBE = false
+var int activeDir = 0
+
+if newBox
+    f_archive_labels()
+
+    if not na(activeBox)
+        box.set_bgcolor(activeBox, color.new(color.gray, 96))
+        box.set_border_color(activeBox, color.new(color.gray, 78))
+        array.push(oldBoxes, activeBox)
+
+    if not na(highLine)
+        line.set_color(highLine, color.new(color.gray, 78))
+        array.push(oldHighLines, highLine)
+
+    if not na(lowLine)
+        line.set_color(lowLine, color.new(color.gray, 78))
+        array.push(oldLowLines, lowLine)
+
+    if not na(midLine)
+        line.set_color(midLine, color.new(color.gray, 90))
+        array.push(oldMidLines, midLine)
+
+    f_trim_objects()
+
+    boxHigh := high
+    boxLow := low
+    boxStart := bar_index
+
+    activeBox := box.new(
+         left=bar_index, top=high, right=bar_index, bottom=low,
+         border_color=color.new(color.blue, 0),
+         border_width=2,
+         bgcolor=color.new(color.blue, 92))
+
+    highLine := line.new(bar_index, high, bar_index, high, color=color.new(color.lime, 0), width=2)
+    lowLine := line.new(bar_index, low, bar_index, low, color=color.new(color.red, 0), width=2)
+    midLine := line.new(bar_index, (high+low)/2.0, bar_index, (high+low)/2.0,
+         color=color.new(color.gray, 70), width=1, style=line.style_dashed)
+
+    bias := 0
+    breakLocked := false
+    retestSeen := false
+    retestLocked := false
+    tradeUsed := false
+    breakBar := na
+
+if inBox
+    boxHigh := math.max(nz(boxHigh, high), high)
+    boxLow := math.min(nz(boxLow, low), low)
+
+    if not na(activeBox)
+        box.set_right(activeBox, bar_index)
+        box.set_top(activeBox, boxHigh)
+        box.set_bottom(activeBox, boxLow)
+
+    if not na(highLine)
+        line.set_xy1(highLine, boxStart, boxHigh)
+        line.set_xy2(highLine, bar_index, boxHigh)
+
+    if not na(lowLine)
+        line.set_xy1(lowLine, boxStart, boxLow)
+        line.set_xy2(lowLine, bar_index, boxLow)
+
+    if not na(midLine)
+        mid = (boxHigh+boxLow)/2.0
+        line.set_xy1(midLine, boxStart, mid)
+        line.set_xy2(midLine, bar_index, mid)
+
+boxReady = not inBox and not na(boxHigh) and not na(boxLow)
+boxHeight = boxReady ? boxHigh - boxLow : na
+boxMid = boxReady ? (boxHigh + boxLow)/2.0 : na
+
+if boxReady
+    if not na(activeBox)
+        box.set_right(activeBox, bar_index)
+    if not na(highLine)
+        line.set_x2(highLine, bar_index)
+        line.set_y2(highLine, boxHigh)
+    if not na(lowLine)
+        line.set_x2(lowLine, bar_index)
+        line.set_y2(lowLine, boxLow)
+    if not na(midLine)
+        line.set_x2(midLine, bar_index)
+        line.set_y2(midLine, boxMid)
+        line.set_color(midLine, showMidline ? color.new(color.gray,70) : color.new(color.gray,100))
+
+// ---- Filters ---------------------------------------------------------------
+atr = ta.atr(atrLen)
+breakBuf = atr * breakBufferATR
+tol = atr * retestToleranceATR
+
+volAvg = ta.sma(nz(volume,0), rvolLen)
+rvol = volAvg > 0 ? nz(volume,0)/volAvg : 1.0
+
+regimeEMA = request.security(syminfo.tickerid, "30", ta.ema(close, regimeLen)[1], lookahead=barmerge.lookahead_on)
+regimeEMA2 = request.security(syminfo.tickerid, "30", ta.ema(close, regimeLen)[2], lookahead=barmerge.lookahead_on)
+regimeSlope = not na(regimeEMA) and not na(regimeEMA2) ? regimeEMA-regimeEMA2 : 0.0
+
+regimeLongOK = not useRegimeFilter or (close > regimeEMA and regimeSlope > 0)
+regimeShortOK = not useRegimeFilter or (close < regimeEMA and regimeSlope < 0)
+rvolOK = not useRVOLFilter or rvol >= minBreakRVOL
+
+// ---- ONE breakout per opening box ------------------------------------------
+rawLongBreak = boxReady and close > boxHigh + breakBuf and close[1] <= boxHigh + breakBuf
+rawShortBreak = boxReady and close < boxLow - breakBuf and close[1] >= boxLow - breakBuf
+
+newLongBreak = rawLongBreak and regimeLongOK and rvolOK and not breakLocked
+newShortBreak = rawShortBreak and regimeShortOK and rvolOK and not breakLocked
+
+if newLongBreak
+    bias := 1
+    breakLocked := true
+    breakBar := bar_index
+
+if newShortBreak
+    bias := -1
+    breakLocked := true
+    breakBar := bar_index
+
+barsFromBreak = not na(breakBar) ? bar_index-breakBar : na
+retestWindow = breakLocked and not na(barsFromBreak) and barsFromBreak > 0 and barsFromBreak <= maxRetestBars
+
+longRetest = bias == 1 and retestWindow and low <= boxHigh + tol and high >= boxHigh - tol
+shortRetest = bias == -1 and retestWindow and high >= boxLow - tol and low <= boxLow + tol
+
+newRetest = (longRetest or shortRetest) and not retestLocked
+
+if newRetest
+    retestSeen := true
+    retestLocked := true
+
+longSnapback = bias == 1 and retestSeen and not tradeUsed and
+     low <= boxHigh + tol and
+     (requireCloseOutside ? close > boxHigh : close > open and close >= boxHigh-tol)
+
+shortSnapback = bias == -1 and retestSeen and not tradeUsed and
+     high >= boxLow - tol and
+     (requireCloseOutside ? close < boxLow : close < open and close <= boxLow+tol)
+
+longSignal = not tradeUsed and (entryMode == "Direct Breakout" ? newLongBreak : longSnapback)
+shortSignal = not tradeUsed and (entryMode == "Direct Breakout" ? newShortBreak : shortSnapback)
+
+// ---- Position sizing --------------------------------------------------------
+f_qty(signalPx, stopPx) =>
+    riskCash = strategy.equity * (riskPct/100.0)
+    riskPerUnit = math.abs(signalPx-stopPx) * syminfo.pointvalue
+    riskPerUnit > 0 ? riskCash/riskPerUnit : 0.0
+
+if longSignal and strategy.position_size == 0 and boxHeight > 0
+    rawStop = boxHigh - stopBoxMultiple*boxHeight
+    qty = f_qty(close, rawStop)
+    if qty > 0 and rawStop < close
+        plannedStop := rawStop
+        plannedTarget := exitMode == "Measured 1× Box" ? boxHigh + targetBoxMultiple*boxHeight : na
+        activeDir := 1
+        movedBE := false
+        strategy.entry("L", strategy.long, qty=qty)
+        tradeUsed := true
+
+if shortSignal and strategy.position_size == 0 and boxHeight > 0
+    rawStop = boxLow + stopBoxMultiple*boxHeight
+    qty = f_qty(close, rawStop)
+    if qty > 0 and rawStop > close
+        plannedStop := rawStop
+        plannedTarget := exitMode == "Measured 1× Box" ? boxLow - targetBoxMultiple*boxHeight : na
+        activeDir := -1
+        movedBE := false
+        strategy.entry("S", strategy.short, qty=qty)
+        tradeUsed := true
+
+newLongPos = strategy.position_size > 0 and strategy.position_size[1] <= 0
+newShortPos = strategy.position_size < 0 and strategy.position_size[1] >= 0
+
+if newLongPos
+    actualEntry := strategy.position_avg_price
+    initialRisk := actualEntry - plannedStop
+    if exitMode == "Fixed R"
+        plannedTarget := actualEntry + fixedR*initialRisk
+
+if newShortPos
+    actualEntry := strategy.position_avg_price
+    initialRisk := plannedStop - actualEntry
+    if exitMode == "Fixed R"
+        plannedTarget := actualEntry - fixedR*initialRisk
+
+longBE = strategy.position_size > 0 and moveToBE and not movedBE and
+     not na(initialRisk) and initialRisk > 0 and high >= actualEntry + initialRisk
+
+shortBE = strategy.position_size < 0 and moveToBE and not movedBE and
+     not na(initialRisk) and initialRisk > 0 and low <= actualEntry - initialRisk
+
+if longBE or shortBE
+    movedBE := true
+
+activeStop =
+     strategy.position_size > 0 and movedBE ? math.max(plannedStop, actualEntry) :
+     strategy.position_size < 0 and movedBE ? math.min(plannedStop, actualEntry) :
+     plannedStop
+
+if strategy.position_size > 0
+    if exitMode == "Next Opening Box"
+        strategy.exit("LX","L",stop=activeStop)
+    else
+        strategy.exit("LX","L",stop=activeStop,limit=plannedTarget)
+
+if strategy.position_size < 0
+    if exitMode == "Next Opening Box"
+        strategy.exit("SX","S",stop=activeStop)
+    else
+        strategy.exit("SX","S",stop=activeStop,limit=plannedTarget)
+
+if newBox and exitMode == "Next Opening Box" and strategy.position_size != 0
+    strategy.close_all(comment="Next opening box")
+
+// ---- Clean event labels -----------------------------------------------------
+if showEventLabels and (newLongBreak or newShortBreak)
+    id = label.new(
+         bar_index, bias == 1 ? low : high,
+         bias == 1 ? "BREAK ↑" : "BREAK ↓",
+         style=bias == 1 ? label.style_label_up : label.style_label_down,
+         color=color.new(color.yellow,0), textcolor=color.black, size=size.small)
+    array.push(currentLabels,id)
+
+if showEventLabels and newRetest
+    id = label.new(
+         bar_index, bias == 1 ? low : high, "RETEST",
+         style=bias == 1 ? label.style_label_up : label.style_label_down,
+         color=color.new(color.aqua,0), textcolor=color.black, size=size.small)
+    array.push(currentLabels,id)
+
+if showEventLabels and longSignal
+    id = label.new(
+         bar_index, low, "LONG ✓",
+         style=label.style_label_up,
+         color=color.new(color.lime,0), textcolor=color.black, size=size.normal)
+    array.push(currentLabels,id)
+
+if showEventLabels and shortSignal
+    id = label.new(
+         bar_index, high, "SHORT ✓",
+         style=label.style_label_down,
+         color=color.new(color.red,0), textcolor=color.white, size=size.normal)
+    array.push(currentLabels,id)
+
+// ---- Active trade only ------------------------------------------------------
+plot(showTradeLevels and strategy.position_size != 0 ? strategy.position_avg_price : na,
+     "Entry", color=color.new(color.white,20), linewidth=1, style=plot.style_linebr)
+
+plot(showTradeLevels and strategy.position_size != 0 ? activeStop : na,
+     "Stop", color=color.new(color.orange,0), linewidth=2, style=plot.style_linebr)
+
+plot(showTradeLevels and strategy.position_size != 0 and exitMode != "Next Opening Box" ? plannedTarget : na,
+     "Target", color=color.new(color.aqua,0), linewidth=2, style=plot.style_linebr)
+
+// Current session visual emphasis.
+if not na(activeBox)
+    currentBg =
+         strategy.position_size != 0 ? (activeDir == 1 ? color.new(color.lime,92) : color.new(color.red,92)) :
+         breakLocked ? color.new(color.yellow,94) :
+         color.new(color.blue,94)
+    box.set_bgcolor(activeBox,currentBg)
+
+// ---- Alerts -----------------------------------------------------------------
+alertcondition(newLongBreak, "TLO Bullish Box Breakout", "TLO Opening Box Retest Strategy: bullish breakout.")
+alertcondition(newShortBreak, "TLO Bearish Box Breakout", "TLO Opening Box Retest Strategy: bearish breakout.")
+alertcondition(longSignal, "TLO Long Entry Signal", "TLO Opening Box Retest Strategy: LONG entry signal.")
+alertcondition(shortSignal, "TLO Short Entry Signal", "TLO Opening Box Retest Strategy: SHORT entry signal.")

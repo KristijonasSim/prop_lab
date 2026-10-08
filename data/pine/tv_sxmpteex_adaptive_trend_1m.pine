@@ -1,0 +1,236 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/SXMPTEEX-adaptive-trend-1m/
+// id: PUB;3d36ec0aebca4a4e80682ac785f2e06a  kind: strategy  likes: 425
+// This Pine Script® code is subject to the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © gopog777 (parallel SL/TP + 1m realistic TP/SL)
+
+//@version=6
+strategy(title="Adaptive Trend_impulse Parallel SL/TP 1m Realistic", overlay=true, margin_long=100, margin_short=100)
+
+// Base Inputs (твои)
+baseAtrPeriod = input.int(7, "Base ATR Period")
+src = input.source(hl2, "Source")
+baseAtrMult = input.float(2.0, "Base SuperTrend ATR Multiplier", step=0.1)
+baseMacdFast = input.int(8, "Base MACD Fast")
+baseMacdSlow = input.int(17, "Base MACD Slow")
+baseMacdSignal = input.int(6, "Base MACD Signal")
+baseRsiPeriod = input.int(9, "Base RSI Period")
+baseBbPeriod = input.int(12, "Base Bollinger Period")
+baseBbDev = input.float(1.8, "Bollinger Deviation")
+baseVolPeriod = input.int(20, "Base Volume SMA Period")
+baseVolMult = input.float(1.8, "Base Volume Spike Multiplier", step=0.1)
+adaptWindow = input.int(50, "Adaptation Window")
+adaptRocLen = input.int(10, "ROC Length")
+
+// TP/SL (1m realistic)
+useSL = input.bool(true, "Use Stop Loss")
+baseSlMult = input.float(3.0, "Base SL Multiplier (ATR)", step=0.1)  // Шире для 1m
+useTP = input.bool(true, "Use Take Profits")
+baseTp1Mult = input.float(1.5, "Base TP1 Multiplier (ATR)")  // Ближе для 1m
+baseTp2Mult = input.float(3.0, "Base TP2 Multiplier (ATR)")
+baseTp3Mult = input.float(4.5, "Base TP3 Multiplier (ATR)")
+tp1Qty = input.float(40.0, "TP1 % Position")
+tp2Qty = input.float(40.0, "TP2 % Position")
+useBreakeven = input.bool(true, "Breakeven after TP1")
+useTrailing = input.bool(false, "Trailing SL after TP1")
+baseMinAtrFilter = input.float(0.001, "Base Min ATR Filter")
+
+// Relax/Debug
+useVolumeFilter = input.bool(false, "Use Volume Spike Filter")
+bbMode = input.string("Midline", "BB Condition", options=["Breakout", "Midline", "None"])
+useMacdCross = input.bool(false, "Use MACD Cross (false=Trend Filter)")
+showDebug = input.bool(true, "Show Debug")
+
+// Adaptive (без изменений)
+marketSpeed = math.abs(ta.roc(close, adaptRocLen))
+normSpeed = marketSpeed / ta.highest(marketSpeed, adaptWindow)
+direction = math.abs(close - close[baseMacdSlow])
+volatility = math.sum(math.abs(ta.change(close)), baseMacdSlow)
+er = volatility != 0 ? direction / volatility : 0
+
+adaptAtrPeriod = math.round(baseAtrPeriod * (0.2 + 0.8 * (1 - normSpeed)))
+adaptAtrPeriod := math.max(3, math.min(50, adaptAtrPeriod))
+adaptRsiPeriod = math.round(baseRsiPeriod * (0.3 + 0.7 * (1 - er)))
+adaptRsiPeriod := math.max(5, math.min(30, adaptRsiPeriod))
+adaptMacdFast = math.round(baseMacdFast * (0.5 + 0.5 * er))
+adaptMacdFast := math.max(5, math.min(20, adaptMacdFast))
+adaptMacdSlow = math.round(baseMacdSlow * (0.6 + 0.4 * (1 - er)))
+adaptMacdSlow := math.max(15, math.min(40, adaptMacdSlow))
+
+adaptAtrMult = baseAtrMult * (0.7 + 0.3 * normSpeed)
+adaptSlMult = baseSlMult * (1.2 - 0.2 * er)
+adaptTp1Mult = baseTp1Mult * (0.8 + 0.2 * er)
+adaptTp2Mult = baseTp2Mult * (0.8 + 0.2 * er)
+adaptTp3Mult = baseTp3Mult * (0.8 + 0.2 * er)
+adaptVolMult = baseVolMult * (1.0 - 0.2 * normSpeed)
+adaptBbDev = baseBbDev * (1.0 + 0.2 * (1 - er))
+
+histAtrPct = ta.rma(ta.atr(14) / close, 50)
+adaptMinAtrFilter = 0.5 * histAtrPct
+
+// Core (без изменений)
+alphaAtr = 1.0 / adaptAtrPeriod
+var float atr = na
+atr := na(atr[1]) ? ta.tr : alphaAtr * ta.tr + (1 - alphaAtr) * atr[1]
+atrPct = atr / close
+volFilter = atrPct > adaptMinAtrFilter
+
+up = src - (adaptAtrMult * atr)
+up1 = nz(up[1], up)
+up := close[1] > up1 ? math.max(up, up1) : up
+dn = src + (adaptAtrMult * atr)
+dn1 = nz(dn[1], dn)
+dn := close[1] < dn1 ? math.min(dn, dn1) : dn
+var int trend = 1
+trend := nz(trend[1], trend)
+trend := (trend == -1 and close > dn1) ? 1 : (trend == 1 and close < up1) ? -1 : trend
+buySignal = trend == 1 and trend[1] == -1
+sellSignal = trend == -1 and trend[1] == 1
+
+ema(src_, alpha) =>
+    var float emaVal = na
+    emaVal := na(emaVal[1]) ? src_ : alpha * src_ + (1 - alpha) * emaVal[1]
+    emaVal
+
+alphaMacdFast = 2.0 / (adaptMacdFast + 1)
+alphaMacdSlow = 2.0 / (adaptMacdSlow + 1)
+alphaSignal = 2.0 / (baseMacdSignal + 1)
+emaFast = ema(close, alphaMacdFast)
+emaSlow = ema(close, alphaMacdSlow)
+macdLine = emaFast - emaSlow
+signalLine = ema(macdLine, alphaSignal)
+macdCrossUp = ta.crossover(macdLine, signalLine)
+macdTrendUp = macdLine > signalLine
+macdLongCond = useMacdCross ? macdCrossUp : macdTrendUp
+macdCrossDown = ta.crossunder(macdLine, signalLine)
+macdTrendDown = macdLine < signalLine
+macdShortCond = useMacdCross ? macdCrossDown : macdTrendDown
+
+alphaRsi = 1.0 / adaptRsiPeriod
+var float upRsi = na
+var float downRsi = na
+delta = ta.change(close)
+upRsi := na(upRsi[1]) ? math.max(delta, 0) : alphaRsi * math.max(delta, 0) + (1 - alphaRsi) * upRsi[1]
+downRsi := na(downRsi[1]) ? math.abs(math.min(delta, 0)) : alphaRsi * math.abs(math.min(delta, 0)) + (1 - alphaRsi) * downRsi[1]
+rs = downRsi == 0 ? 100 : upRsi / downRsi
+rsi = downRsi == 0 ? 100 : 100 - (100 / (1 + rs))
+
+bbBasis = ta.sma(close, baseBbPeriod)
+bbStdev = ta.stdev(close, baseBbPeriod)
+bbUpper = bbBasis + adaptBbDev * bbStdev
+bbLower = bbBasis - adaptBbDev * bbStdev
+bbBreakUp = bbMode == "Breakout" ? ta.crossover(close, bbUpper) : bbMode == "Midline" ? close > bbBasis : true
+bbBreakDown = bbMode == "Breakout" ? ta.crossunder(close, bbLower) : bbMode == "Midline" ? close < bbBasis : true
+
+volSma = ta.sma(volume, baseVolPeriod)
+volumeSpike = volume > volSma * adaptVolMult
+
+longCondition = buySignal and macdLongCond and rsi > 50 and bbBreakUp and (useVolumeFilter ? volumeSpike : true) and volFilter
+shortCondition = sellSignal and macdShortCond and rsi < 50 and bbBreakDown and (useVolumeFilter ? volumeSpike : true) and volFilter
+
+// Variables (для levels)
+var float entryPrice = na
+var float currentAtr = na
+var float tp1Level = na
+var bool tp1TriggeredLong = false
+var bool tp1TriggeredShort = false
+var float prevPositionSize = 0.0
+var bool tp1Hit = false
+var float longTp1Level = na
+var float longSlLevel = na
+var float shortTp1Level = na
+var float shortSlLevel = na
+
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+    entryPrice := strategy.position_avg_price
+    currentAtr := atr
+    tp1Level := entryPrice + adaptTp1Mult * currentAtr
+    longTp1Level := tp1Level
+    prevPositionSize := strategy.position_size
+    tp1TriggeredLong := false
+    tp1Hit := false
+    if (useSL)
+        slLevel = entryPrice - adaptSlMult * currentAtr
+        longSlLevel := slLevel
+        strategy.exit("SL Long", "Long", stop=slLevel)
+    if (useTP)
+        strategy.exit("TP1 Long", "Long", qty_percent=tp1Qty, limit=entryPrice + adaptTp1Mult * currentAtr)
+        strategy.exit("TP2 Long", "Long", qty_percent=tp2Qty, limit=entryPrice + adaptTp2Mult * currentAtr)
+        strategy.exit("TP3 Long", "Long", limit=entryPrice + adaptTp3Mult * currentAtr)
+
+if (shortCondition)
+    strategy.entry("Short", strategy.short)
+    entryPrice := strategy.position_avg_price
+    currentAtr := atr
+    tp1Level := entryPrice - adaptTp1Mult * currentAtr
+    shortTp1Level := tp1Level
+    prevPositionSize := strategy.position_size
+    tp1TriggeredShort := false
+    tp1Hit := false
+    if (useSL)
+        slLevel = entryPrice + adaptSlMult * currentAtr
+        shortSlLevel := slLevel
+        strategy.exit("SL Short", "Short", stop=slLevel)
+    if (useTP)
+        strategy.exit("TP1 Short", "Short", qty_percent=tp1Qty, limit=entryPrice - adaptTp1Mult * currentAtr)
+        strategy.exit("TP2 Short", "Short", qty_percent=tp2Qty, limit=entryPrice - adaptTp2Mult * currentAtr)
+        strategy.exit("TP3 Short", "Short", limit=entryPrice - adaptTp3Mult * currentAtr)
+
+// Breakeven + Trailing after TP1
+if (useBreakeven and useTP and not na(entryPrice) and strategy.position_size != 0)
+    currSize = strategy.position_size
+    if (currSize != prevPositionSize)
+        tp1Hit := true
+    if (tp1Hit and strategy.position_size > 0)
+        strategy.exit("BE Long", "Long", stop=entryPrice)
+    if (tp1Hit and strategy.position_size < 0)
+        strategy.exit("BE Short", "Short", stop=entryPrice)
+    if (useTrailing and tp1Hit)
+        trailOffset = math.round(adaptSlMult * currentAtr / syminfo.mintick)
+        if (strategy.position_size > 0)
+            strategy.exit("Trail Long", "Long", trail_price=bbBasis, trail_offset=trailOffset)
+        if (strategy.position_size < 0)
+            strategy.exit("Trail Short", "Short", trail_price=bbBasis, trail_offset=trailOffset)
+    prevPositionSize := currSize
+
+if (strategy.position_size == 0)
+    entryPrice := na
+    tp1Level := na
+    tp1TriggeredLong := false
+    tp1TriggeredShort := false
+    tp1Hit := false
+    prevPositionSize := 0.0
+    longTp1Level := na
+    longSlLevel := na
+    shortTp1Level := na
+    shortSlLevel := na
+
+// Plots + Debug hits (global scope)
+plot(trend == 1 ? up : na, "ST Up", color.green, 2)
+plot(trend == -1 ? dn : na, "ST Dn", color.red, 2)
+plot(bbBasis, "BB Mid", color.blue)
+plot(bbUpper, "BB Upper", color.orange)
+plot(bbLower, "BB Lower", color.orange)
+
+// Plot levels (global, conditional)
+plot(strategy.position_size > 0 ? longTp1Level : na, "TP1 Long Level", color.green, 1, plot.style_linebr)
+plot(strategy.position_size > 0 ? longSlLevel : na, "SL Long Level", color.red, 1, plot.style_linebr)
+plot(strategy.position_size < 0 ? shortTp1Level : na, "TP1 Short Level", color.green, 1, plot.style_linebr)
+plot(strategy.position_size < 0 ? shortSlLevel : na, "SL Short Level", color.red, 1, plot.style_linebr)
+
+plotshape(longCondition, "Long", shape.triangleup, location.belowbar, color.green, size=size.small)
+plotshape(shortCondition, "Short", shape.triangledown, location.abovebar, color.red, size=size.small)
+
+// Debug hits
+slHitLong = strategy.position_size[1] > 0 and strategy.position_size == 0 and close <= entryPrice - adaptSlMult * currentAtr[1]
+slHitShort = strategy.position_size[1] < 0 and strategy.position_size == 0 and close >= entryPrice + adaptSlMult * currentAtr[1]
+tpHit = strategy.position_size[1] != 0 and strategy.position_size != strategy.position_size[1] and close >= tp1Level
+plotshape(slHitLong or slHitShort, "SL Hit", shape.xcross, location.top, color.red, size=size.small)
+plotshape(tpHit, "TP Hit", shape.flag, location.top, color.green, size=size.small)
+
+plotshape(showDebug and buySignal, "ST Buy", shape.circle, location.top, color.blue, size=size.tiny)
+plotshape(showDebug and macdLongCond, "MACD OK", shape.diamond, location.top, color.purple, size=size.tiny)
+plotshape(showDebug and (rsi > 50), "RSI OK", shape.labelup, location.top, color.lime, size=size.tiny, text="R")
+plotshape(showDebug and bbBreakUp, "BB OK", shape.square, location.top, color.yellow, size=size.tiny)
+plotshape(showDebug and volFilter, "VolF OK", shape.flag, location.top, color.teal, size=size.tiny)

@@ -1,0 +1,575 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/YYABPdUo-CleightyP-BOS-SMA-MACD-VWAP/
+// id: PUB;43a8682cbb11406bae8c3490d11a6b40  kind: strategy
+//@version=5
+strategy("CleightyP BOS/SMA/MACD/VWAP", overlay=true, max_labels_count=500, max_lines_count=500, max_boxes_count=500, pyramiding=0)
+
+// ===================== INPUTS =====================
+// --- Structure Detection ---
+swingSize        = input.int(1, "Pivot Lookback", minval=1, maxval=50, group="Structure Detection")
+autoSwingSize    = input.bool(true, "Auto-adjust Pivot Lookback for TF", group="Structure Detection", tooltip="Scales up the pivot lookback on higher timeframes so structure levels remain meaningful.")
+
+// --- Stop Loss Settings ---
+slType           = input.string("Previous Swing", "Stop Loss Type", options=["Previous Swing", "Entry Candle", "Percent"], group="Stop Loss")
+slPercent        = input.float(0.5, "Stop Loss %", minval=0.1, step=0.1, group="Stop Loss")
+slSwingPctEnable = input.bool(true, "Use % of Previous Swing Distance", group="Stop Loss", tooltip="When 'Previous Swing' SL type is selected, place SL at this % of the distance from entry to the previous swing. 100% = exact swing level, 50% = halfway, 10% = very tight.")
+slSwingPctStr    = input.string("80%", "Previous Swing %", options=["10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"], group="Stop Loss", tooltip="% of distance from entry to previous swing. 100% = at swing, lower = tighter SL.")
+slSwingPct       = slSwingPctStr == "10%" ? 10.0 : slSwingPctStr == "20%" ? 20.0 : slSwingPctStr == "30%" ? 30.0 : slSwingPctStr == "40%" ? 40.0 : slSwingPctStr == "50%" ? 50.0 : slSwingPctStr == "60%" ? 60.0 : slSwingPctStr == "70%" ? 70.0 : slSwingPctStr == "80%" ? 80.0 : slSwingPctStr == "90%" ? 90.0 : 100.0
+slBufferPoints   = input.float(0.0, "SL Buffer (points)", minval=0.0, step=0.1, group="Stop Loss", tooltip="Add extra distance from SL level")
+slBufferPercent  = input.float(0.0, "SL Buffer %", minval=0.0, step=0.1, group="Stop Loss", tooltip="Add extra distance as % of price")
+
+// --- Take Profit Settings ---
+useSeperateRR    = input.bool(false, "Separate Long/Short R:R", group="Take Profit")
+rrLong           = input.float(1.5, "Long R:R Multiplier", minval=0.1, step=0.1, group="Take Profit")
+rrShort          = input.float(1.5, "Short R:R Multiplier", minval=0.1, step=0.1, group="Take Profit")
+rrTarget         = input.float(0.5, "R:R Multiplier (both)", minval=0.1, step=0.1, group="Take Profit")
+
+// --- Entry Timing ---
+enterOnTick      = input.bool(true, "Enter On Tick (BOS candle)", group="Entry Timing", tooltip="On: enter intrabar when BOS breaks. Off: wait for candle close, enter next bar open.")
+
+// --- Strategy ---
+tradeDirection       = input.string("Both", "Trade Direction", options=["Both", "Long Only", "Short Only"], group="Strategy", tooltip="Restrict entries to longs only, shorts only, or allow both.")
+enterOnBOSOnly       = input.bool(true, "Enter On BOS Only", group="Strategy")
+enterOnCHoCHOnly     = input.bool(false, "Enter On CHoCH Only", group="Strategy")
+useStrongCandleFilter = input.bool(true, "Use Strong Candle Filter", group="Strategy")
+bodyOverWickPct      = input.float(100.0, "Body > Wick By (%)", minval=0.0, step=5.0, group="Strategy")
+
+// --- SMA Slope Filter Inputs ---
+useSmaFilter     = input.bool(true, "Use SMA Slope Filter", group="SMA Trend Filter")
+smaFilterMode    = input.string("2 of 3 SMAs", "SMA Filter Mode", options=["All 3 SMAs", "2 of 3 SMAs", "SMA 21+84 Only", "SMA 21 Only", "Price vs SMA"], group="SMA Trend Filter", tooltip="'All 3 SMAs' is very restrictive on higher timeframes. '2 of 3 SMAs' requires any 2 of the 3 to align. 'Price vs SMA' checks price position relative to SMAs.")
+sma21Len         = input.int(21, "SMA 21 Length", minval=1, group="SMA Trend Filter")
+sma84Len         = input.int(84, "SMA 84 Length", minval=1, group="SMA Trend Filter")
+sma252Len        = input.int(150, "SMA 252 Length", minval=1, group="SMA Trend Filter")
+useSmaStackFilter = input.bool(false, "Use SMA Stacking Filter", group="SMA Trend Filter", tooltip="When on, requires SMAs to be stacked in order: Longs = SMA21 > SMA84 > SMA252, Shorts = SMA21 < SMA84 < SMA252. Combines with the slope filter above.")
+useSmaDivergeFilter = input.bool(true, "Use SMA Slope Divergence Filter", group="SMA Trend Filter", tooltip="When on, requires SMA slopes to be diverging: Longs = SMA21 slope > SMA84 slope > SMA252 slope, Shorts = SMA21 slope < SMA84 slope < SMA252 slope. Works independently from the other filters.")
+showSmaPlots     = input.bool(true, "Show SMA Lines", group="SMA Trend Filter")
+sma21Color       = input.color(color.green, "SMA 21 Color", group="SMA Trend Filter")
+sma84Color       = input.color(#4CAF50, "SMA 84 Color", group="SMA Trend Filter")
+sma252Color      = input.color(#2E7D32, "SMA 252 Color", group="SMA Trend Filter")
+
+// --- Daily / Session Settings ---
+closeEOD         = input.bool(false, "Close Positions at End of Day", group="Daily Settings", tooltip="Close any open position when a new day starts.")
+maxTradesPerDay  = input.int(0, "Max Trades Per Day (0=unlimited)", minval=0, maxval=20, group="Daily Settings")
+resetStructureDaily = input.bool(false, "Reset Structure on New Day", group="Daily Settings", tooltip="WARNING: On daily+ timeframes this wipes pivots every bar. Only enable for intraday strategies that need a clean slate each day.")
+
+// --- P&L Display ---
+showPnlBoxes     = input.bool(true, "Show P&L Boxes", group="P&L Display")
+tpBoxColor       = input.color(color.new(color.green, 75), "TP Zone Color", group="P&L Display")
+slBoxColor       = input.color(color.new(color.red, 75), "SL Zone Color", group="P&L Display")
+
+// --- NY VWAP Filter Inputs ---
+nyVwapTimezone   = input.string("America/Denver", "NY VWAP Timezone", options=["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "UTC", "Europe/London", "Asia/Tokyo", "Australia/Sydney"], group="NY VWAP Filter", tooltip="Select timezone for anchor time. America/New_York handles DST automatically.")
+nyVwapAnchorHour = input.int(7, "NY VWAP Anchor Hour", minval=0, maxval=23, inline="nyanchor", group="NY VWAP Filter")
+nyVwapAnchorMin  = input.int(30, ":", minval=0, maxval=59, inline="nyanchor", group="NY VWAP Filter")
+showNyVwap       = input.bool(true, "Show NY VWAP", group="NY VWAP Filter")
+filterNyVwap     = input.bool(false, "Filter by NY VWAP", tooltip="Longs only above VWAP, Shorts only below VWAP", group="NY VWAP Filter")
+
+// --- Trading Window Filter ---
+useTradingWindow    = input.bool(false, "Filter by Trading Window", group="Trading Window", tooltip="Only allow new trade entries between Start and End times. Existing positions are not closed by this filter.")
+tradingWindowTz     = input.string("America/Denver", "Trading Window Timezone", options=["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "UTC", "Europe/London", "Asia/Tokyo", "Australia/Sydney"], group="Trading Window", tooltip="Timezone for the start/end times. America/New_York handles DST automatically.")
+tradingStartHour    = input.int(7,  "Start Hour", minval=0, maxval=23, inline="twstart", group="Trading Window")
+tradingStartMin     = input.int(30, ":",          minval=0, maxval=59, inline="twstart", group="Trading Window")
+tradingEndHour      = input.int(14, "End Hour",   minval=0, maxval=23, inline="twend",   group="Trading Window")
+tradingEndMin       = input.int(0,  ":",          minval=0, maxval=59, inline="twend",   group="Trading Window")
+
+// --- Daily VWAP Filter Inputs ---
+dailyVwapTimezone   = input.string("America/Denver", "Daily VWAP Timezone", options=["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "UTC", "Europe/London", "Asia/Tokyo", "Australia/Sydney"], group="Daily VWAP Filter", tooltip="Select timezone for anchor time. America/New_York handles DST automatically.")
+dailyVwapAnchorHour = input.int(16, "Daily VWAP Anchor Hour", minval=0, maxval=23, inline="dailyanchor", group="Daily VWAP Filter")
+dailyVwapAnchorMin  = input.int(0, ":", minval=0, maxval=59, inline="dailyanchor", group="Daily VWAP Filter")
+showDailyVwap      = input.bool(true, "Show Daily VWAP", group="Daily VWAP Filter")
+filterDailyVwap    = input.bool(false, "Filter by Daily VWAP", tooltip="Longs only above VWAP, Shorts only below VWAP", group="Daily VWAP Filter")
+
+// ===================== TIMEFRAME-ADAPTIVE PIVOT LOOKBACK =====================
+// Current timeframe in minutes
+tfMinutes = timeframe.in_seconds() / 60
+
+// Auto-scale pivot lookback based on timeframe
+effectiveSwingSize = swingSize
+if autoSwingSize
+    if tfMinutes >= 1440        // Daily+
+        effectiveSwingSize := math.max(swingSize, 3)
+    else if tfMinutes >= 240    // 4H
+        effectiveSwingSize := math.max(swingSize, 2)
+    else if tfMinutes >= 60     // 1H
+        effectiveSwingSize := math.max(swingSize, 2)
+    // For timeframes < 1H, keep user's swingSize as-is
+
+// ===================== SMA CALCULATIONS =====================
+sma21 = ta.sma(close, sma21Len)
+sma84 = ta.sma(close, sma84Len)
+sma252 = ta.sma(close, sma252Len)
+
+// SMA Slope Calculation (current MA - previous MA)
+sma21Slope = sma21 - sma21[1]
+sma84Slope = sma84 - sma84[1]
+sma252Slope = sma252 - sma252[1]
+
+// Slope Direction
+sma21SlopeUp   = sma21Slope > 0
+sma84SlopeUp   = sma84Slope > 0
+sma252SlopeUp  = sma252Slope > 0
+sma21SlopeDown = sma21Slope < 0
+sma84SlopeDown = sma84Slope < 0
+sma252SlopeDown = sma252Slope < 0
+
+// Price position relative to SMAs
+priceAboveAll  = close > sma21 and close > sma84 and close > sma252
+priceBelowAll  = close < sma21 and close < sma84 and close < sma252
+priceAbove21and84 = close > sma21 and close > sma84
+priceBelow21and84 = close < sma21 and close < sma84
+
+// ── SMA Stacking (proper order of SMAs) ──
+smaStackBull = sma21 > sma84 and sma84 > sma252
+smaStackBear = sma21 < sma84 and sma84 < sma252
+smaStackLongOk  = not useSmaStackFilter ? true : smaStackBull
+smaStackShortOk = not useSmaStackFilter ? true : smaStackBear
+
+// ── SMA Slope Divergence (slopes spreading apart) ──
+smaDivergeBull = sma21Slope > sma84Slope and sma84Slope > sma252Slope
+smaDivergeBear = sma21Slope < sma84Slope and sma84Slope < sma252Slope
+smaDivergeLongOk  = not useSmaDivergeFilter ? true : smaDivergeBull
+smaDivergeShortOk = not useSmaDivergeFilter ? true : smaDivergeBear
+
+// ── Trend filter based on mode ──
+longSlopeOk  = not useSmaFilter ? true :
+     smaFilterMode == "All 3 SMAs"     ? (sma21SlopeUp and sma84SlopeUp and sma252SlopeUp) :
+     smaFilterMode == "2 of 3 SMAs"    ? ((sma21SlopeUp ? 1 : 0) + (sma84SlopeUp ? 1 : 0) + (sma252SlopeUp ? 1 : 0) >= 2) :
+     smaFilterMode == "SMA 21+84 Only" ? (sma21SlopeUp and sma84SlopeUp) :
+     smaFilterMode == "SMA 21 Only"    ? sma21SlopeUp :
+     smaFilterMode == "Price vs SMA"   ? priceAboveAll :
+     true
+
+shortSlopeOk = not useSmaFilter ? true :
+     smaFilterMode == "All 3 SMAs"     ? (sma21SlopeDown and sma84SlopeDown and sma252SlopeDown) :
+     smaFilterMode == "2 of 3 SMAs"    ? ((sma21SlopeDown ? 1 : 0) + (sma84SlopeDown ? 1 : 0) + (sma252SlopeDown ? 1 : 0) >= 2) :
+     smaFilterMode == "SMA 21+84 Only" ? (sma21SlopeDown and sma84SlopeDown) :
+     smaFilterMode == "SMA 21 Only"    ? sma21SlopeDown :
+     smaFilterMode == "Price vs SMA"   ? priceBelowAll :
+     true
+
+// ── Combined: slope filter + stacking filter + divergence filter ──
+longTrendOk  = longSlopeOk and smaStackLongOk and smaDivergeLongOk
+shortTrendOk = shortSlopeOk and smaStackShortOk and smaDivergeShortOk
+
+// ===================== PLOT SMAs =====================
+plot(showSmaPlots ? sma21 : na, color=sma21Color, title="SMA 21", linewidth=1)
+plot(showSmaPlots ? sma84 : na, color=sma84Color, title="SMA 84", linewidth=1)
+plot(showSmaPlots ? sma252 : na, color=sma252Color, title="SMA 252", linewidth=1)
+
+// ===================== STATE =====================
+var float prevHigh    = na
+var float prevLow     = na
+var int   prevHighIdx = na
+var int   prevLowIdx  = na
+var bool  highActive  = false
+var bool  lowActive   = false
+var int   prevBreakDir = 0
+
+// SL/TP levels (set when entry signal fires, used by strategy.exit)
+var float longSL  = na
+var float longTP  = na
+var float shortSL = na
+var float shortTP = na
+
+// Saved SL/TP at order placement time (not fill time)
+var float pendingLongSL  = na
+var float pendingLongTP  = na
+var float pendingShortSL = na
+var float pendingShortTP = na
+
+// Box drawing state
+var box   liveTPBox    = na
+var box   liveSLBox    = na
+var int   boxEntryBar  = na
+var float boxEntryPx   = na
+
+// Daily trade counter
+var int   tradesToday     = 0
+var int   lastTradeDay    = 0
+
+// Re-entry guard: track the last pivot level we entered on to prevent
+// entering again on the same level after TP/SL exit
+var float lastLongEntryPivot  = na
+var float lastShortEntryPivot = na
+
+// ===================== DAILY STATE RESET =====================
+isNewDay = ta.change(time("D")) != 0
+
+// Get current day for trade counting
+currentDay = dayofmonth
+currentMonth = month
+currentYear = year
+
+if isNewDay
+    // ── Reset daily trade counter ──
+    tradesToday := 0
+
+    // ── Close positions at end of day if enabled ──
+    if closeEOD
+        if strategy.position_size > 0
+            strategy.close("Long", comment="EOD Close")
+        if strategy.position_size < 0
+            strategy.close("Short", comment="EOD Close")
+
+    // ── Cancel pending stop orders only if not in a position ──
+    // If we're in a position, the exit orders should remain active
+    if strategy.position_size == 0
+        strategy.cancel_all()
+
+    // ── Reset SL/TP for new day (only when flat) ──
+    if strategy.position_size == 0
+        longSL  := na
+        longTP  := na
+        shortSL := na
+        shortTP := na
+        pendingLongSL  := na
+        pendingLongTP  := na
+        pendingShortSL := na
+        pendingShortTP := na
+
+    // ── Reset re-entry guards on new day ──
+    lastLongEntryPivot  := na
+    lastShortEntryPivot := na
+
+    // ── Optionally reset structure tracking (off by default) ──
+    // WARNING: On daily+ timeframes, resetting structure every day
+    // means pivots are wiped before they can be broken → no trades
+    if resetStructureDaily
+        prevHigh    := na
+        prevLow     := na
+        prevHighIdx := na
+        prevLowIdx  := na
+        highActive  := false
+        lowActive   := false
+        prevBreakDir := 0
+
+    // ── Clean up visual boxes from previous day ──
+    if not na(liveTPBox)
+        box.delete(liveTPBox)
+    if not na(liveSLBox)
+        box.delete(liveSLBox)
+    liveTPBox   := na
+    liveSLBox   := na
+    boxEntryBar := na
+    boxEntryPx  := na
+
+// ===================== VWAP CALCULATIONS =====================
+// VWAP source: ohlc4 (Open+High+Low+Close / 4)
+vwapSrc = ohlc4
+
+// NY VWAP: reset on the first bar at or after the NY anchor time each day
+// Uses user-selected timezone (DST-aware) instead of exchange timezone
+nyAnchorTs = timestamp(nyVwapTimezone, year, month, dayofmonth, nyVwapAnchorHour, nyVwapAnchorMin)
+isNewNyPeriod = time >= nyAnchorTs and (na(time[1]) or time[1] < nyAnchorTs)
+[nyVwap, _, _] = ta.vwap(vwapSrc, isNewNyPeriod, 1)
+
+// Daily VWAP: reset on the first bar at or after the daily anchor time each day
+// Uses user-selected timezone (DST-aware) instead of exchange timezone
+dailyAnchorTs = timestamp(dailyVwapTimezone, year, month, dayofmonth, dailyVwapAnchorHour, dailyVwapAnchorMin)
+isNewDailyPeriod = time >= dailyAnchorTs and (na(time[1]) or time[1] < dailyAnchorTs)
+[dailyVwap, _, _] = ta.vwap(vwapSrc, isNewDailyPeriod, 1)
+
+// VWAP filter conditions
+nyVwapLongOk     = filterNyVwap    ? (not na(nyVwap)    and close > nyVwap)    : true
+nyVwapShortOk    = filterNyVwap    ? (not na(nyVwap)    and close < nyVwap)    : true
+dailyVwapLongOk  = filterDailyVwap ? (not na(dailyVwap) and close > dailyVwap) : true
+dailyVwapShortOk = filterDailyVwap ? (not na(dailyVwap) and close < dailyVwap) : true
+
+vwapLongOk  = nyVwapLongOk  and dailyVwapLongOk
+vwapShortOk = nyVwapShortOk and dailyVwapShortOk
+
+// ===================== PLOT VWAPs =====================
+plot(showNyVwap and not na(nyVwap) ? nyVwap : na, color=color.orange, title="NY VWAP", linewidth=1)
+plot(showDailyVwap and not na(dailyVwap) ? dailyVwap : na, color=color.orange, title="Daily VWAP", linewidth=1)
+
+// ===================== TRADING WINDOW =====================
+// Build start/end timestamps in user-selected timezone (DST-aware)
+twStartTs = timestamp(tradingWindowTz, year, month, dayofmonth, tradingStartHour, tradingStartMin)
+twEndTs   = timestamp(tradingWindowTz, year, month, dayofmonth, tradingEndHour,   tradingEndMin)
+// Handle overnight windows (e.g. 22:00 to 04:00) by allowing wrap-around
+twWraps   = twEndTs <= twStartTs
+inTradingWindow = not useTradingWindow ? true : (twWraps ? (time >= twStartTs or time < twEndTs) : (time >= twStartTs and time < twEndTs))
+
+// ===================== PIVOT TRACKING =====================
+pivHi = ta.pivothigh(high, effectiveSwingSize, effectiveSwingSize)
+pivLo = ta.pivotlow(low, effectiveSwingSize, effectiveSwingSize)
+
+if not na(pivHi)
+    prevHigh    := pivHi
+    prevHighIdx := bar_index - effectiveSwingSize
+    highActive  := true
+
+if not na(pivLo)
+    prevLow     := pivLo
+    prevLowIdx  := bar_index - effectiveSwingSize
+    lowActive   := true
+
+// ===================== ENTRY TYPE LOGIC =====================
+useBosSignal  = enterOnBOSOnly and not enterOnCHoCHOnly
+useChochSignal = enterOnCHoCHOnly and not enterOnBOSOnly
+entryTypeOk(isBosSignal) =>
+    useBosSignal ? isBosSignal : useChochSignal ? not isBosSignal : true
+
+// ===================== STRONG CANDLE FILTER =====================
+bodySize = math.abs(close - open)
+wickSize = math.max((high - low) - bodySize, 0.0)
+strongBullCandle = close > open and bodySize >= wickSize * (1 + bodyOverWickPct / 100)
+strongBearCandle = close < open and bodySize >= wickSize * (1 + bodyOverWickPct / 100)
+
+// ===================== DAILY TRADE LIMIT CHECK =====================
+canTradeToday = maxTradesPerDay == 0 or tradesToday < maxTradesPerDay
+
+// ===================== DIRECTION FILTER =====================
+allowLongs  = tradeDirection == "Both" or tradeDirection == "Long Only"
+allowShorts = tradeDirection == "Both" or tradeDirection == "Short Only"
+
+// ===================== BOS / CHoCH =====================
+if enterOnTick
+    // ══════════════════════════════════════════════════════════
+    // ENTER ON TICK MODE
+    // Place pending stop orders at pivot levels.
+    // Stop orders fill intrabar at the exact BOS level.
+    // Strong candle filter is skipped (enter before candle completes).
+    // ══════════════════════════════════════════════════════════
+
+    // --- Pending long stop at prevHigh ---
+    isBullBOS = prevBreakDir != -1
+    // Re-entry guard: skip if we already entered long at this exact pivot level
+    pivotNotUsedLong = na(lastLongEntryPivot) or na(prevHigh) or math.abs(prevHigh - lastLongEntryPivot) > syminfo.mintick
+    // Structural sanity: prevHigh must be ABOVE prevLow for a valid long setup
+    structureLongOk = not na(prevHigh) and not na(prevLow) and prevHigh > prevLow
+    // Stop entry must be above current price (otherwise it would fill immediately as market)
+    stopAboveMarketLong = not na(prevHigh) and prevHigh > high
+    longOk = allowLongs and highActive and not na(prevHigh) and longTrendOk and entryTypeOk(isBullBOS) and vwapLongOk and strategy.position_size <= 0 and canTradeToday and pivotNotUsedLong and structureLongOk and stopAboveMarketLong and inTradingWindow
+    if longOk
+        entryPxLong = prevHigh
+        // Previous Swing SL: optionally use % of entry-to-swing distance (100% = at swing, 50% = halfway, tighter)
+        prevSwingSlLong = slSwingPctEnable ? entryPxLong - ((entryPxLong - prevLow) * slSwingPct / 100) : prevLow
+        slBase = slType == "Previous Swing" ? prevSwingSlLong : slType == "Entry Candle" ? low : entryPxLong * (1 - (slPercent / 100))
+        slLongCalc = slBase - slBufferPoints - (entryPxLong * slBufferPercent / 100)
+        rr = useSeperateRR ? rrLong : rrTarget
+        risk = entryPxLong - slLongCalc
+        tpLongCalc = entryPxLong + (risk * rr)
+        // STRICT INVARIANT: SL < entry < TP for longs (no exceptions)
+        validLong = risk > 0 and slLongCalc < entryPxLong and tpLongCalc > entryPxLong and slLongCalc < tpLongCalc
+        if validLong
+            longSL := slLongCalc
+            longTP := tpLongCalc
+            pendingLongSL  := slLongCalc
+            pendingLongTP  := tpLongCalc
+            lastLongEntryPivot := entryPxLong
+            strategy.entry("Long", strategy.long, stop=entryPxLong)
+        else
+            strategy.cancel("Long")
+    else
+        strategy.cancel("Long")
+
+    // --- Pending short stop at prevLow ---
+    isBearBOS = prevBreakDir != 1
+    // Re-entry guard: skip if we already entered short at this exact pivot level
+    pivotNotUsedShort = na(lastShortEntryPivot) or na(prevLow) or math.abs(prevLow - lastShortEntryPivot) > syminfo.mintick
+    // Structural sanity: prevLow must be BELOW prevHigh for a valid short setup
+    structureShortOk = not na(prevHigh) and not na(prevLow) and prevLow < prevHigh
+    // Stop entry must be below current price (otherwise it would fill immediately as market)
+    stopBelowMarketShort = not na(prevLow) and prevLow < low
+    shortOk = allowShorts and lowActive and not na(prevLow) and shortTrendOk and entryTypeOk(isBearBOS) and vwapShortOk and strategy.position_size >= 0 and canTradeToday and pivotNotUsedShort and structureShortOk and stopBelowMarketShort and inTradingWindow
+    if shortOk
+        entryPxShort = prevLow
+        // Previous Swing SL: optionally use % of entry-to-swing distance (100% = at swing, 50% = halfway, tighter)
+        prevSwingSlShort = slSwingPctEnable ? entryPxShort + ((prevHigh - entryPxShort) * slSwingPct / 100) : prevHigh
+        slBase = slType == "Previous Swing" ? prevSwingSlShort : slType == "Entry Candle" ? high : entryPxShort * (1 + (slPercent / 100))
+        slShortCalc = slBase + slBufferPoints + (entryPxShort * slBufferPercent / 100)
+        rr = useSeperateRR ? rrShort : rrTarget
+        risk = slShortCalc - entryPxShort
+        tpShortCalc = entryPxShort - (risk * rr)
+        // STRICT INVARIANT: SL > entry > TP for shorts (no exceptions)
+        validShort = risk > 0 and slShortCalc > entryPxShort and tpShortCalc < entryPxShort and slShortCalc > tpShortCalc
+        if validShort
+            shortSL := slShortCalc
+            shortTP := tpShortCalc
+            pendingShortSL  := slShortCalc
+            pendingShortTP  := tpShortCalc
+            lastShortEntryPivot := entryPxShort
+            strategy.entry("Short", strategy.short, stop=entryPxShort)
+        else
+            strategy.cancel("Short")
+    else
+        strategy.cancel("Short")
+
+    // --- Detect breakouts for state updates ---
+    if highActive and not na(prevHigh) and high >= prevHigh
+        highActive   := false
+        prevBreakDir := 1
+
+    if lowActive and not na(prevLow) and low <= prevLow
+        lowActive    := false
+        prevBreakDir := -1
+
+else
+    // ══════════════════════════════════════════════════════════
+    // ENTER ON NEXT CANDLE MODE
+    // Wait for confirmed BOS close, enter with market order.
+    // ══════════════════════════════════════════════════════════
+    if barstate.isconfirmed
+        if highActive and not na(prevHigh) and close > prevHigh
+            highActive   := false
+            isBOS = prevBreakDir != -1
+            // Reference entry price = close (we will fill at next bar open, but use close as the reference)
+            entryRefLong = close
+            // Structural sanity: prevHigh must be ABOVE prevLow for a valid long setup
+            structureLongOk = not na(prevHigh) and not na(prevLow) and prevHigh > prevLow
+            // Previous Swing SL: optionally use % of entry-to-swing distance (100% = at swing, 50% = halfway, tighter)
+            prevSwingSlLong = slSwingPctEnable ? entryRefLong - ((entryRefLong - prevLow) * slSwingPct / 100) : prevLow
+            slBase = slType == "Previous Swing" ? prevSwingSlLong : slType == "Entry Candle" ? low : entryRefLong * (1 - (slPercent / 100))
+            slLong = slBase - slBufferPoints - (entryRefLong * slBufferPercent / 100)
+            candleOk = not useStrongCandleFilter or strongBullCandle
+            // Re-entry guard
+            pivotNotUsedLong = na(lastLongEntryPivot) or math.abs(prevHigh - lastLongEntryPivot) > syminfo.mintick
+            if allowLongs and entryTypeOk(isBOS) and candleOk and not na(slLong) and longTrendOk and vwapLongOk and canTradeToday and pivotNotUsedLong and structureLongOk and inTradingWindow
+                rr = useSeperateRR ? rrLong : rrTarget
+                risk = entryRefLong - slLong
+                tpLongCalc = entryRefLong + (risk * rr)
+                // STRICT INVARIANT: SL < entry < TP for longs
+                validLong = risk > 0 and slLong < entryRefLong and tpLongCalc > entryRefLong and slLong < tpLongCalc and strategy.position_size <= 0
+                if validLong
+                    longSL := slLong
+                    longTP := tpLongCalc
+                    pendingLongSL  := slLong
+                    pendingLongTP  := tpLongCalc
+                    lastLongEntryPivot := prevHigh
+                    strategy.entry("Long", strategy.long)
+            prevBreakDir := 1
+
+        if lowActive and not na(prevLow) and close < prevLow
+            lowActive    := false
+            isBOS = prevBreakDir != 1
+            entryRefShort = close
+            // Structural sanity: prevLow must be BELOW prevHigh for a valid short setup
+            structureShortOk = not na(prevHigh) and not na(prevLow) and prevLow < prevHigh
+            // Previous Swing SL: optionally use % of entry-to-swing distance (100% = at swing, 50% = halfway, tighter)
+            prevSwingSlShort = slSwingPctEnable ? entryRefShort + ((prevHigh - entryRefShort) * slSwingPct / 100) : prevHigh
+            slBase = slType == "Previous Swing" ? prevSwingSlShort : slType == "Entry Candle" ? high : entryRefShort * (1 + (slPercent / 100))
+            slShort = slBase + slBufferPoints + (entryRefShort * slBufferPercent / 100)
+            candleOk = not useStrongCandleFilter or strongBearCandle
+            // Re-entry guard
+            pivotNotUsedShort = na(lastShortEntryPivot) or math.abs(prevLow - lastShortEntryPivot) > syminfo.mintick
+            if allowShorts and entryTypeOk(isBOS) and candleOk and not na(slShort) and shortTrendOk and vwapShortOk and canTradeToday and pivotNotUsedShort and structureShortOk and inTradingWindow
+                rr = useSeperateRR ? rrShort : rrTarget
+                risk = slShort - entryRefShort
+                tpShortCalc = entryRefShort - (risk * rr)
+                // STRICT INVARIANT: SL > entry > TP for shorts
+                validShort = risk > 0 and slShort > entryRefShort and tpShortCalc < entryRefShort and slShort > tpShortCalc and strategy.position_size >= 0
+                if validShort
+                    shortSL := slShort
+                    shortTP := tpShortCalc
+                    pendingShortSL  := slShort
+                    pendingShortTP  := tpShortCalc
+                    lastShortEntryPivot := prevLow
+                    strategy.entry("Short", strategy.short)
+            prevBreakDir := -1
+
+// ===================== EXIT MANAGEMENT =====================
+// Final defensive gate: re-validate SL/TP geometry before submitting exit orders.
+// If anything is off, emergency-close instead of sending a malformed exit.
+if strategy.position_size > 0 and not na(longSL) and not na(longTP)
+    avgPx = strategy.position_avg_price
+    longExitSane = longSL < longTP and longSL < avgPx and longTP > avgPx
+    if longExitSane
+        strategy.exit("Long Exit", from_entry="Long", stop=longSL, limit=longTP, comment_loss="SL", comment_profit="TP")
+    else
+        strategy.close("Long", comment="Invalid SL/TP - emergency close")
+
+if strategy.position_size < 0 and not na(shortSL) and not na(shortTP)
+    avgPx = strategy.position_avg_price
+    shortExitSane = shortSL > shortTP and shortSL > avgPx and shortTP < avgPx
+    if shortExitSane
+        strategy.exit("Short Exit", from_entry="Short", stop=shortSL, limit=shortTP, comment_loss="SL", comment_profit="TP")
+    else
+        strategy.close("Short", comment="Invalid SL/TP - emergency close")
+
+// ===================== TRADE COUNTER =====================
+// Increment trade counter when a new position opens
+var float lastPosSize = 0.0
+posJustOpened = strategy.position_size != 0 and lastPosSize == 0
+posJustClosed = strategy.position_size == 0 and lastPosSize != 0
+
+if posJustOpened
+    tradesToday := tradesToday + 1
+
+// ===================== POSITION TRACKING & VISUALS =====================
+// --- Entry markers ---
+plotshape(posJustOpened and strategy.position_size > 0, title="Long Entry", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, text="BUY", textcolor=color.green)
+plotshape(posJustOpened and strategy.position_size < 0, title="Short Entry", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, text="SELL", textcolor=color.red)
+
+// --- SL/TP lines while in trade ---
+inLong  = strategy.position_size > 0
+inShort = strategy.position_size < 0
+plot(inLong and not na(longSL) ? longSL : na, title="Long SL Line", color=color.red, style=plot.style_linebr, linewidth=1)
+plot(inLong and not na(longTP) ? longTP : na, title="Long TP Line", color=color.green, style=plot.style_linebr, linewidth=1)
+plot(inShort and not na(shortSL) ? shortSL : na, title="Short SL Line", color=color.red, style=plot.style_linebr, linewidth=1)
+plot(inShort and not na(shortTP) ? shortTP : na, title="Short TP Line", color=color.green, style=plot.style_linebr, linewidth=1)
+
+// --- SL/TP zone boxes while in trade ---
+if posJustOpened
+    boxEntryBar := bar_index
+    boxEntryPx  := strategy.position_avg_price
+    if not na(liveTPBox)
+        box.delete(liveTPBox)
+    if not na(liveSLBox)
+        box.delete(liveSLBox)
+    liveTPBox := na
+    liveSLBox := na
+
+inTrade = strategy.position_size != 0
+if inTrade and showPnlBoxes and not na(boxEntryPx)
+    isLong = strategy.position_size > 0
+    curSL  = isLong ? longSL : shortSL
+    curTP  = isLong ? longTP : shortTP
+    if not na(curSL) and not na(curTP)
+        // TP box
+        tpTop    = isLong ? curTP : boxEntryPx
+        tpBottom = isLong ? boxEntryPx : curTP
+        if na(liveTPBox)
+            liveTPBox := box.new(boxEntryBar, tpTop, bar_index + 1, tpBottom, border_color=color.new(color.green, 40), bgcolor=tpBoxColor)
+        else
+            box.set_right(liveTPBox, bar_index + 1)
+            box.set_top(liveTPBox, tpTop)
+            box.set_bottom(liveTPBox, tpBottom)
+        // SL box
+        slTop    = isLong ? boxEntryPx : curSL
+        slBottom = isLong ? curSL : boxEntryPx
+        if na(liveSLBox)
+            liveSLBox := box.new(boxEntryBar, slTop, bar_index + 1, slBottom, border_color=color.new(color.red, 40), bgcolor=slBoxColor)
+        else
+            box.set_right(liveSLBox, bar_index + 1)
+            box.set_top(liveSLBox, slTop)
+            box.set_bottom(liveSLBox, slBottom)
+
+// --- Detect TP vs SL at exit ---
+var bool lastTradeWasLong = true
+if posJustOpened
+    lastTradeWasLong := strategy.position_size > 0
+
+lastTradeSL = lastTradeWasLong ? longSL : shortSL
+lastTradeTP = lastTradeWasLong ? longTP : shortTP
+
+isTPExit = posJustClosed and not na(lastTradeTP) and ((lastTradeWasLong and close >= lastTradeTP) or (not lastTradeWasLong and close <= lastTradeTP))
+isSLExit = posJustClosed and not na(lastTradeSL) and ((lastTradeWasLong and close <= lastTradeSL) or (not lastTradeWasLong and close >= lastTradeSL))
+
+plotshape(isTPExit, title="Take Profit", style=shape.triangledown, location=location.abovebar, color=color.green, size=size.small, text="TP", textcolor=color.green)
+plotshape(isSLExit, title="Stop Loss", style=shape.triangleup, location=location.belowbar, color=color.red, size=size.small, text="SL", textcolor=color.red)
+
+// --- Finalize boxes on trade close ---
+if posJustClosed
+    if not na(liveTPBox)
+        box.set_right(liveTPBox, bar_index)
+        isWinTP = isTPExit
+        box.set_bgcolor(liveTPBox, isWinTP ? tpBoxColor : color.new(color.gray, 88))
+        liveTPBox := na
+    if not na(liveSLBox)
+        box.set_right(liveSLBox, bar_index)
+        isWinSL = not isSLExit
+        box.set_bgcolor(liveSLBox, isWinSL ? color.new(color.gray, 88) : slBoxColor)
+        liveSLBox := na
+
+lastPosSize := strategy.position_size

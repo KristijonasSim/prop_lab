@@ -1,0 +1,15 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/EpO6Rqj0-Generation-6-Massive-Trend-Following-for-Gold-Note-at-bottom/
+// id: PUB;BlOgqrLq8KDNHzEELyL7Okz50Qs3bv4p  kind: strategy  likes: 363
+//@version=2
+strategy("Generation 6", overlay=true, commission_value = 0.02, initial_capital = 10000, pyramiding = 1)
+
+// Initial Trend Establishment Trades
+
+longcondition = sma(close, 15) > sma(close, 60) and crossover(sma(close, 20), ema(close, 60)) and close > sma(close, 600)
+shortcondition = sma(close, 15) < sma(close, 60) and crossunder(sma(close, 20), ema(close, 60)) and close < sma(close, 600)
+
+strategy.entry("buy", strategy.long, 1, when = longcondition)
+strategy.entry("sell", strategy.short, 1, when = shortcondition)
+
+

@@ -1,0 +1,144 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/J1U1NNgx-SP500-Session-Gap-Fade-Strategy/
+// id: PUB;da73a87567274d51bedae71a254bc9ab  kind: strategy  likes: 104
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © exlux
+//@version=6
+strategy(     "SP500 Session Gap Fade Strategy",     shorttitle = "SPX Gap Fade",     overlay = true)
+
+//================= SESSION SETTINGS =================//
+group_sess      = "Session Settings"
+sess            = input.session("0830-1530", "Trading session (exchange time)", group = group_sess)
+flat_before_min = input.int(60, "Minutes before session end to force exit", minval = 1, maxval = 300, group = group_sess)
+
+// Parse "HHMM-HHMM" from sess (kept same logic as original)
+int colon_pos   = str.pos(sess, ":")
+string core     = na(colon_pos) ? sess : str.substring(sess, 0, colon_pos)
+
+int dash_pos     = str.pos(core, "-")
+string start_str = na(dash_pos) ? "0000" : str.substring(core, 0, dash_pos)
+string end_str   = na(dash_pos) ? "2359" : str.substring(core, dash_pos + 1, str.length(core))
+
+int start_hour  = int(str.tonumber(str.substring(start_str, 0, 2)))
+int start_min   = int(str.tonumber(str.substring(start_str, 2, 4)))
+int end_hour    = int(str.tonumber(str.substring(end_str,   0, 2)))
+int end_min     = int(str.tonumber(str.substring(end_str,   2, 4)))
+
+int sess_start_total = start_hour * 60 + start_min
+int sess_end_total   = end_hour   * 60 + end_min
+int sess_len_total   = sess_end_total - sess_start_total
+
+// clamp flat_before to session length
+int fb_minutes = flat_before_min > sess_len_total ? sess_len_total : flat_before_min
+int flat_total = sess_end_total - fb_minutes
+int flat_hour  = flat_total / 60
+int flat_min   = flat_total % 60
+
+//================= GAP RISK CONFIG =================//
+group_risk     = "Gap Risk"
+use_gap_risk   = input.bool(true,  "Enable gap based TP/SL",  group = group_risk)
+use_gap_tp     = input.bool(false, "Use TP limit from gap",   group = group_risk)
+use_gap_sl     = input.bool(true,  "Use SL stop from gap",    group = group_risk)
+tp_mult        = input.float(1.0, "TP multiplier of gap distance",  minval = 0.0, step = 0.1, group = group_risk)
+sl_mult        = input.float(1.0, "SL multiplier of gap distance",  minval = 0.0, step = 0.1, group = group_risk)
+
+//================= EXIT BEHAVIOR CONFIG =================//
+group_exit      = "Exit Controls"
+use_candle_exit = input.bool(false, "Exit with candle logic (strategy.close)", group = group_exit, tooltip = "If enabled, long closes on bearish bar and short closes on bullish bar.")
+use_forced_flat = input.bool(true,  "Force flat before session end",           group = group_exit, tooltip = "Close all positions at flat time and store reference close.")
+
+//================= GLOBAL TP/SL SERIES =================//
+var float long_tp_price  = na
+var float long_sl_price  = na
+var float short_tp_price = na
+var float short_sl_price = na
+
+// previous EOD reference close (at flat time)
+var float prev_eod_close = na
+
+//================= TIME STATE PER BAR =================//
+int cur_hour  = hour(time)
+int cur_min   = minute(time)
+int cur_total = cur_hour * 60 + cur_min
+
+bool in_session = cur_total >= sess_start_total and cur_total <= sess_end_total
+bool flat_bar   = in_session and cur_hour == flat_hour and cur_min == flat_min
+
+//================= GAP SIGNALS =================//
+bool gap_down_full = high < low[1]
+bool gap_up_full   = low  > high[1]
+bool bull_bar      = close > open
+bool bear_bar      = close < open
+
+bool long_cond  = in_session and gap_down_full     // and bull_bar
+bool short_cond = in_session and gap_up_full       // and bear_bar
+
+//================= ENTRY + GAP TP/SL (USING prev_eod_close) =================//
+// distance = |open - prev_eod_close|, TP and SL symmetric around entry
+
+if long_cond
+    if use_gap_risk and not na(prev_eod_close)
+        float gap_dist   = math.abs(open - prev_eod_close)
+        if gap_dist > 0
+            float entry_open = open
+            long_tp_price  := entry_open + gap_dist * tp_mult
+            long_sl_price  := entry_open - gap_dist * sl_mult
+            short_tp_price := na
+            short_sl_price := na
+    strategy.entry("long", strategy.long)
+
+if short_cond
+    if use_gap_risk and not na(prev_eod_close)
+        float gap_dist   = math.abs(open - prev_eod_close)
+        if gap_dist > 0
+            float entry_open = open
+            short_tp_price := entry_open - gap_dist * tp_mult
+            short_sl_price := entry_open + gap_dist * sl_mult
+            long_tp_price  := na
+            long_sl_price  := na
+    strategy.entry("short", strategy.short)
+
+//================= CANDLE-BASED CLOSE (OPTIONAL) =================//
+if use_candle_exit
+    if close > open
+        strategy.close("short")
+    if close < open
+        strategy.close("long")
+
+//================= FORCED FLAT AND EOD REFERENCE CLOSE =================//
+if flat_bar and use_forced_flat
+    prev_eod_close := close
+    strategy.close("long")
+    strategy.close("short")
+
+//================= APPLY TP/SL ORDERS =================//
+if use_gap_risk
+    bool has_tp = use_gap_tp
+    bool has_sl = use_gap_sl
+
+    // long side
+    if strategy.position_size > 0 and not na(long_tp_price) and not na(long_sl_price) and (has_tp or has_sl)
+        float tp_long = has_tp ? long_tp_price : na
+        float sl_long = has_sl ? long_sl_price : na
+        strategy.exit("long_gap", "long", stop = sl_long, limit = tp_long)
+
+    // short side
+    if strategy.position_size < 0 and not na(short_tp_price) and not na(short_sl_price) and (has_tp or has_sl)
+        float tp_short = has_tp ? short_tp_price : na
+        float sl_short = has_sl ? short_sl_price : na
+        strategy.exit("short_gap", "short", stop = sl_short, limit = tp_short)
+
+//================= RESET WHEN FLAT =================//
+bool flat_now  = strategy.position_size == 0
+bool flat_prev = strategy.position_size[1] != 0
+if flat_now and flat_prev
+    long_tp_price  := na
+    long_sl_price  := na
+    short_tp_price := na
+    short_sl_price := na
+
+//================= PLOTS (GLOBAL SCOPE) =================//
+plot(strategy.position_size > 0 ? long_tp_price  : na, "Long TP",  color = color.new(color.lime, 0),  style = plot.style_linebr)
+plot(strategy.position_size > 0 ? long_sl_price  : na, "Long SL",  color = color.new(color.red,  0),  style = plot.style_linebr)
+plot(strategy.position_size < 0 ? short_tp_price : na, "Short TP", color = color.new(color.lime, 60), style = plot.style_linebr)
+plot(strategy.position_size < 0 ? short_sl_price : na, "Short SL", color = color.new(color.red,  60), style = plot.style_linebr)

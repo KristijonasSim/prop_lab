@@ -1,0 +1,34 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/6vefGGyk-Bollinger-bubble-Forex-edition/
+// id: PUB;3vzKXqZuc3BHakId5V3gGcjT3kq6LhVS  kind: strategy  likes: 119
+//@version=4
+
+// Initial settings
+strategy("Bulle de bollinger", overlay = true, currency = currency.EUR, initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 100, commission_type = strategy.commission.percent, commission_value = 0)
+
+// Parameter Settings
+mdl = sma(close, 20)
+dev = stdev(close, 20)
+
+upr = mdl + 2*dev
+lwr = mdl - 2*dev
+
+// Plot
+plot(mdl, color = color.green) // Plot moving average
+p1 = plot(upr, color = color.red) // Plot Upper_band
+p2 = plot(lwr, color = color.green) // Plot lower band
+fill(p1, p2, color = color.blue) // Fill transparant color between the 2 plots
+
+// Strategy entry & close
+
+if open[1] < lwr[1] and close[1] < lwr[1] // Previous price lower than lower band and current close is higher than lower band
+    stop_level = lowest(10)
+    profit_level = highest(10)
+    strategy.entry(id = 'bb_buy', long = true)
+    strategy.exit("TP/SL", "bb_buy", stop=stop_level, limit=profit_level)
+    
+if open[1] > upr[1] and close[1] > upr // Previous price is higher than higher band & current close is lower the higher band
+    stop_level = highest(10)
+    profit_level = lowest(10)
+    strategy.entry(id = 'bb_sell', long = false)
+    strategy.exit("TP/SL", "bb_sell", stop=stop_level, limit=profit_level)

@@ -1,0 +1,19 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/oh1Np8sM-RSI-Strategy/
+// id: PUB;2rQQwHZnMnmoLgRy6JJzHqHKnofLJDPr  kind: strategy  likes: 117
+//@version=4
+strategy("RSI Strategy", overlay=true)
+length = input( 14 )
+overSold = input( 30 )
+overBought = input( 70 )
+price = close
+
+vrsi = rsi(price, length)
+
+if (not na(vrsi))
+    if (crossover(vrsi, overSold))
+        strategy.entry("RsiLE", strategy.long, comment="RsiLE")
+    if (crossunder(vrsi, overBought))
+        strategy.entry("RsiSE", strategy.short, comment="RsiSE")
+
+//plot(strategy.equity, title="equity", color=color.red, linewidth=2, style=plot.style_areabr)

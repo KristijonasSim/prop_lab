@@ -1,0 +1,96 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/vl30WkMq/
+// id: PUB;be46cba93c4a42098ae0001ee8b3fe46  kind: strategy  likes: 385
+//@version=5
+strategy("ADR AsianLS", overlay=true, initial_capital=2100, default_qty_type=strategy.fixed, default_qty_value=2)
+
+// --- 1. CONFIGURACIÓN DE ENTRADAS ---
+asiaSession = input.session("1900-0000", title="Horario Sesión Asia (Chile GMT-3)")
+tradeWindow = input.session("0000-1200", title="Ventana Operativa Post-Asia")
+bodyThreshold = input.float(65.0, title="% Mínimo de Cuerpo (Sugerido)")
+
+// Configuración de Legibilidad (MÁS ESPACIO)
+labelOffset = input.int(10, title="Desplazamiento Horizontal (Velas a la izquierda)") // Aumentado a 10 por defecto
+verticalBuffer = input.float(5.0, title="Separación Vertical (Puntos/500 Pips)") // <--- NUEVO: Colchón de aire arriba/abajo
+
+slOffset    = 10.0 // 1000 pips de margen extra
+tp1Pips     = 10.0 // 1000 pips
+tp2Pips     = 20.0 // 2000 pips
+boxColor    = input.color(color.new(#00bcd4, 75), title="Color Relleno Asia")
+
+// --- 2. LÓGICA DE SESIÓN ASÍATICA (Chile) ---
+inSession = not na(time(timeframe.period, asiaSession, "GMT-3"))
+newAsia = inSession and not inSession[1]
+
+var float sessionHigh = na
+var float sessionLow = na
+var box currentBox = na
+var int tradesToday = 0
+
+if newAsia
+    sessionHigh := high
+    sessionLow := low
+    tradesToday := 0
+    currentBox := box.new(left=bar_index, top=sessionHigh, right=bar_index, bottom=sessionLow, bgcolor=boxColor, border_color=na)
+else if inSession
+    sessionHigh := math.max(sessionHigh, high)
+    sessionLow := math.min(sessionLow, low)
+    box.set_top(currentBox, sessionHigh)
+    box.set_bottom(currentBox, sessionLow)
+    box.set_right(currentBox, bar_index)
+
+// --- 3. FILTROS DE VELA (30 min) ---
+rangoVela = high - low
+cuerpoVela = math.abs(close - open)
+esVelaCuerpo = (cuerpoVela / (rangoVela > 0 ? rangoVela : 1)) * 100 >= bodyThreshold
+
+// --- 4. LÓGICA DE ENTRADA (1 por sesión) ---
+canTrade = not inSession and not na(time(timeframe.period, tradeWindow, "GMT-3")) and tradesToday < 1
+
+longCond  = canTrade and close > sessionHigh and open < close and esVelaCuerpo
+shortCond = canTrade and close < sessionLow and open > close and esVelaCuerpo
+
+// --- 5. EJECUCIÓN CON ESPACIADO MEJORADO ---
+if longCond
+    tradesToday := 1
+    float entryPrice = close
+    float slPrice = sessionHigh - slOffset
+    float vTP1 = entryPrice + tp1Pips
+    float vTP2 = entryPrice + tp2Pips
+    
+    strategy.entry("Buy", strategy.long, comment="Entry: " + str.tostring(entryPrice, "#.##"))
+    
+    strategy.exit("TP1-Buy", "Buy", qty=1, limit=vTP1, stop=slPrice, comment="TP1 1k")
+    strategy.exit("TP2-Trail-Buy", "Buy", qty=1, stop=slPrice, trail_points=tp1Pips, trail_offset=tp1Pips/2, comment="Trailing")
+
+    // Etiqueta Visual MÁS a la IZQUIERDA y MÁS ARRIBA
+    label.new(x=bar_index - labelOffset, y=high + verticalBuffer, // <--- y=high + colchón
+         text="ENTRY BUY: " + str.tostring(entryPrice, "#.##") + 
+              "\nSL: " + str.tostring(slPrice, "#.##") + 
+              "\nTP1: " + str.tostring(vTP1, "#.##") + 
+              "\nTP2: " + str.tostring(vTP2, "#.##"), 
+         color=color.green, textcolor=color.white, style=label.style_label_down)
+
+if shortCond
+    tradesToday := 1
+    float entryPrice = close
+    float slPrice = sessionLow + slOffset
+    float vTP1 = entryPrice - tp1Pips
+    float vTP2 = entryPrice - tp2Pips
+    
+    strategy.entry("Sell", strategy.short, comment="Entry: " + str.tostring(entryPrice, "#.##"))
+    
+    strategy.exit("TP1-Sell", "Sell", qty=1, limit=vTP1, stop=slPrice, comment="TP1 1k")
+    strategy.exit("TP2-Trail-Sell", "Sell", qty=1, stop=slPrice, trail_points=tp1Pips, trail_offset=tp1Pips/2, comment="Trailing")
+
+    // Etiqueta Visual MÁS a la IZQUIERDA y MÁS ABAJO
+    label.new(x=bar_index - labelOffset, y=low - verticalBuffer, // <--- y=low - colchón
+         text="ENTRY SELL: " + str.tostring(entryPrice, "#.##") + 
+              "\nSL: " + str.tostring(slPrice, "#.##") + 
+              "\nTP1: " + str.tostring(vTP1, "#.##") + 
+              "\nTP2: " + str.tostring(vTP2, "#.##"), 
+         color=color.red, textcolor=color.white, style=label.style_label_up)
+
+// --- 6. VISUALIZACIÓN ---
+plot(sessionHigh, "Nivel Asia High", color=color.new(color.gray, 80), style=plot.style_linebr)
+plot(sessionLow, "Nivel Asia Low", color=color.new(color.gray, 80), style=plot.style_linebr)

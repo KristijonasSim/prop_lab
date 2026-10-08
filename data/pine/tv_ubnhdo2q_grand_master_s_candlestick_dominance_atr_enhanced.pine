@@ -1,0 +1,1305 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/ubNhdO2q-Grand-Master-s-Candlestick-Dominance-ATR-Enhanced/
+// id: PUB;eaffd110bdd349a389d8111cbfef4a19  kind: strategy  likes: 69
+//Eternal M a y
+//@Eternal_May
+// @version=5
+strategy("Grand Master's Candlestick Dominance (ATR Enhanced)", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, pyramiding=0)
+
+// -----------------------------------------------------------------------------
+// INPUTS
+// -----------------------------------------------------------------------------
+// Strategy Settings
+useAsStrategy = input.bool(false, "Use as Strategy?", group="Strategy Settings")
+showDashboard = input.bool(true, "Show Dashboard?", group="Dashboard Settings")
+
+// Entry/Exit Confirmation Filters
+minAvgStrength = input.float(7.0, "Minimum Average Strength for Entry/Exit", minval=1.0, maxval=10.0, step=0.5, group="Confirmation Settings")
+minPatternStrength = input.float(5.0, "Minimum Individual Pattern Strength", minval=1.0, maxval=10.0, step=0.5, group="Confirmation Settings")
+
+// Trend Filters
+maLength = input.int(20, "Trend MA Length", group="Trend Filters")
+enableMTFFilter = input.bool(false, "Enable Higher TF Trend Filter", group="Trend Filters")
+higherTimeframe = input.timeframe("D", "Higher Timeframe", group="Trend Filters")
+higherTFMALength = input.int(50, "Higher TF MA Length", group="Trend Filters")
+
+// S/R Filter
+enableSRConfirmation = input.bool(false, "Enable S/R Confirmation", group="S/R Filters")
+swingPivotLength = input.int(10, "S/R Pivot Length", minval=5, group="S/R Filters")
+srTolerancePerc = input.float(0.01, "S/R Tolerance %", minval=0.0, maxval=0.1, step=0.001, group="S/R Filters")
+
+// Volume Filter
+enableVolumeConfirmation = input.bool(false, "Enable Volume Confirmation", group="Volume Filters")
+volumeMALength = input.int(20, "Volume MA Length", group="Volume Filters")
+volumeSpikeMultiplier = input.float(1.5, "Volume Spike Multiplier", minval=1.0, group="Volume Filters")
+
+// ATR Filter for Candle Body Size
+enableATRFilter = input.bool(true, "Enable ATR Filter for Body Size", group="ATR Filter")
+atrLength = input.int(14, "ATR Length", group="ATR Filter")
+longBodyAtrMult = input.float(0.8, "Long Body ATR Multiplier (>)", group="ATR Filter", step=0.1)
+smallBodyAtrMult = input.float(0.3, "Small Body ATR Multiplier (<)", group="ATR Filter", step=0.1)
+
+// Follow-Through Filter
+enableAdvancedFollowThrough = input.bool(false, "Enable Follow-Through Filter", group="Follow-Through Filters")
+followThroughType = input.string("Bullish/Bearish Candle", "Follow-Through Type", options=["Bullish/Bearish Candle", "Close Beyond Previous"], group="Follow-Through Filters")
+
+// === TRADE MANAGEMENT & RISK ===
+group_tm = "Trade Management & Risk"
+use_partial_tp   = input.bool(true, "Enable Partial Take Profits (3 Levels + Runner)", group=group_tm)
+tp1_pct          = input.float(10.0, "Take Profit 1 (%)", minval=0.1, group=group_tm)
+tp2_pct          = input.float(15.0, "Take Profit 2 (%)", minval=0.1, group=group_tm)
+tp3_pct          = input.float(20.0, "Take Profit 3 (%)", minval=0.1, group=group_tm)
+
+tp1_qty_pct      = input.int(25, "TP1 Position %", minval=0, maxval=100, group=group_tm)
+tp2_qty_pct      = input.int(25, "TP2 Position %", minval=0, maxval=100, group=group_tm)
+tp3_qty_pct      = input.int(25, "TP3 Position %", minval=0, maxval=100, group=group_tm)
+runner_qty_pct   = input.int(25, "Runner % (No Fixed TP, Trails Only)", minval=0, maxval=100, group=group_tm)
+
+sl_pct           = input.float(5.0, "Stop Loss / Trail Distance (%)", minval=0.1, group=group_tm)
+trail_from_start = input.bool(true, "Trail SL from Highest/Lowest (from bar 1)", group=group_tm, tooltip="If enabled: trail from best price since entry. If disabled: fixed SL until any TP hit.")
+show_levels      = input.bool(true, "Show TP/SL/Trailing Lines", group=group_tm)
+
+// Backtest Date Range
+startDate = input.time(timestamp("01 Jan 2020 00:00 UTC"), "Start Date", group="Backtest Date Range")
+endDate = input.time(timestamp("31 Dec 2025 23:59 UTC"), "End Date", group="Backtest Date Range")
+inDateRange = time >= startDate and time <= endDate
+
+// Alert Settings (kept all original)
+enableLongEntryAlert = input.bool(true, "Enable Long Entry Alert", group="Alert Settings")
+enableShortEntryAlert = input.bool(true, "Enable Short Entry Alert", group="Alert Settings")
+enableLongExitAlert = input.bool(true, "Enable Long Exit Alert", group="Alert Settings")
+enableShortExitAlert = input.bool(true, "Enable Short Exit Alert", group="Alert Settings")
+enableStrongBullishAlert = input.bool(true, "Enable Strong Bullish Pattern Alert", group="Alert Settings")
+enableStrongBearishAlert = input.bool(true, "Enable Strong Bearish Pattern Alert", group="Alert Settings")
+enableNeutralIndecisionAlert = input.bool(true, "Enable Neutral/Indecision Alert", group="Alert Settings")
+enableVolumeSpikeAlert = input.bool(true, "Enable Volume Spike with Strong Pattern Alert", group="Alert Settings")
+enableSRBreakoutAlert = input.bool(true, "Enable S/R Breakout Alert", group="Alert Settings")
+enableHTFTrendReversalAlert = input.bool(true, "Enable Higher TF Trend Reversal Alert", group="Alert Settings")
+enableHighConfidencePatternAlert = input.bool(true, "Enable High-Confidence Single Pattern Alert", group="Alert Settings")
+enableConflictingSignalsAlert = input.bool(true, "Enable Conflicting Signals Alert", group="Alert Settings")
+enableTrendMACrossoverAlert = input.bool(true, "Enable Trend MA Crossover Alert", group="Alert Settings")
+enableATRVolatilitySpikeAlert = input.bool(true, "Enable ATR Volatility Spike Alert", group="Alert Settings")
+enableMultiBarPatternAlert = input.bool(true, "Enable Multi-Bar Pattern Completion Alert", group="Alert Settings")
+
+// -----------------------------------------------------------------------------
+// CALCULATIONS & PATTERNS (All original patterns and arrays unchanged)
+// -----------------------------------------------------------------------------
+float atrValue = ta.atr(atrLength)
+
+// [All helper functions, patterns, arrays, fillPatternArrays() remain exactly as in your original code]
+// -----------------------------------------------------------------------------
+// ENHANCED HELPER FUNCTIONS
+// -----------------------------------------------------------------------------
+isBullish(o, c) => c > o
+isBearish(o, c) => c < o
+
+bodySize(o, c) => math.abs(c - o)
+candleRange(h, l) => h - l
+
+upperShadow(o, c, h) => h - math.max(o, c)
+lowerShadow(o, c, l) => math.min(o, c) - l
+
+// Common ratios
+bodyToRangeRatio(o, c, h, l) => bodySize(o, c) / candleRange(h, l)
+upperToBodyRatio(o, c, h) => upperShadow(o, c, h) / bodySize(o, c)
+lowerToBodyRatio(o, c, l) => lowerShadow(o, c, l) / bodySize(o, c)
+
+// ATR-aware body size (with fallback)
+isSmallBody(o, c, h, l, atr, mult, fallbackPerc = 0.25) => 
+     enableATRFilter ? bodySize(o, c) < atr * mult : bodySize(o, c) < candleRange(h, l) * fallbackPerc
+
+isLongBody(o, c, h, l, atr, mult, fallbackPerc = 0.60) => 
+     enableATRFilter ? bodySize(o, c) > atr * mult : bodySize(o, c) > candleRange(h, l) * fallbackPerc
+
+// Doji with configurable tolerance
+isDojiCandle(o, c, h, l, atr, mult, tolerancePerc = 0.1) => 
+     isSmallBody(o, c, h, l, atr, mult, tolerancePerc) and 
+     (upperShadow(o, c, h) > 0 or lowerShadow(o, c, l) > 0)
+
+// Gaps
+isGapUp(currentOpen, prevHigh)  => currentOpen > prevHigh
+isGapDown(currentOpen, prevLow) => currentOpen < prevLow
+
+// Strict Harami (current fully inside previous range)
+isHaramiStrict(o, c, h, l, o1, c1, h1, l1) => h < h1 and l > l1
+
+// Engulfing (body engulfing + opposite direction)
+isEngulfing(o, c, o1, c1) => 
+     bodySize(o, c) > bodySize(o1, c1) and isBullish(o, c) != isBullish(o1, c1)
+
+// Marubozu (near-perfect body, minimal shadows)
+isMarubozu(o, c, h, l, tolerancePerc = 0.05) => 
+     bodySize(o, c) >= candleRange(h, l) * (1 - tolerancePerc)
+
+// Long shadow helpers
+isLongUpperShadow(o, c, h, ratio = 2.0) => upperShadow(o, c, h) >= bodySize(o, c) * ratio
+isLongLowerShadow(o, c, l, ratio = 2.0) => lowerShadow(o, c, l) >= bodySize(o, c) * ratio
+isLongShadowPercent(shadow, p_range, perc) => shadow > p_range * perc  // ← This must be here
+// -----------------------------------------------------------------------------
+//                           BULLISH PATTERNS+. 
+// -----------------------------------------------------------------------------
+// 1. Hammer (Strength 8.0)
+bool isHammer = isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.2) and lowerShadow(open, close, low) > 2 * bodySize(open, close) and upperShadow(open, close, high) < 0.1 * candleRange(high, low)
+float hammerStrength = 8.0
+
+// 2. Bullish Engulfing (Strength 10.0)
+bool isBullishEngulfing = isBearish(open[1], close[1]) and isBullish(open, close) and isEngulfing(open, close, open[1], close[1])
+float bullishEngulfingStrength = 10.0
+
+// 3. Piercing Line (Strength 8.0)
+bool isPiercingLine = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and open < low[1] and close > (open[1] + close[1]) / 2 and close < open[1]
+float piercingLineStrength = 8.0
+
+// 4. Morning Star (Strength 7.0)
+bool isMorningStar = isBearish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and open[1] < close[2] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close > (open[2] + close[2]) / 2
+float morningStarStrength = 7.0
+
+// 5. Three White Soldiers (Strength 9.0)
+bool is3WhiteSoldiers = isBullish(open[2], close[2]) and isBullish(open[1], close[1]) and isBullish(open, close) and close[1] > close[2] and close > close[1] and open > open[2] and open[1] > open[2] and open < close[1]
+float threeWhiteSoldiersStrength = 9.0
+
+// 6. Inverted Hammer (Strength 6.0)
+bool isInvertedHammer = isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.2) and upperShadow(open, close, high) > 2 * bodySize(open, close) and lowerShadow(open, close, low) < 0.1 * candleRange(high, low)
+float invertedHammerStrength = 6.0
+
+// 7. Bullish Harami (Strength 6.0)
+bool isHaramiBull = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.25) and isHaramiStrict(open, close, high, low, open[1], close[1], high[1], low[1])
+float haramiBullStrength = 6.0
+
+// 8. Rising Three (Strength 8.0)
+bool isRisingThree = isBullish(open[4], close[4]) and isLongBody(open[4], close[4], high[4], low[4], atrValue[4], longBodyAtrMult) and isBearish(open[3], close[3]) and isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and close[1] > open[4] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close > high[4]
+float risingThreeStrength = 8.0
+
+// 9. Tweezer Bottom (Strength 6.0)
+bool isTweezersBottom = low[1] == low and isBearish(open[1], close[1]) and isBullish(open, close)
+float tweezersBottomStrength = 6.0
+
+// 10. Bullish Marubozu (Strength 8.0)
+bool isMarubozuBull = isMarubozu(open, close, high, low) and isBullish(open, close)
+float marubozuBullStrength = 8.0
+
+// 11. Bullish Belt Hold (Strength 6.0)
+bool isBeltHoldBull = isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open == low
+float beltHoldBullStrength = 6.0
+
+// 12. Matching Low (Strength 4.0)
+bool isMatchingLow = isBearish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and close == close[1] and low == low[1]
+float matchingLowStrength = 4.0
+
+// 13. Three Inside Up (Strength 7.0)
+bool is3InsideBull = isBearish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isHaramiBull[1] and isBullish(open, close) and close > close[2]
+float threeInsideBullStrength = 7.0
+
+// 14. Bullish Kicking (Strength 10.0)
+bool isKickingBull = isMarubozu(open[1], close[1], high[1], low[1]) and isBearish(open[1], close[1]) and isMarubozuBull and isGapUp(open, high[1])
+float kickingBullStrength = 10.0
+
+// 15. Stick Sandwich (Strength 6.0)
+bool isStickSandwich = isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and isBullish(open, close) and close == close[2] and close < close[1]
+float stickSandwichStrength = 6.0
+
+// 16. Ladder Bottom (Strength 7.0)
+bool isLadderBottom = isBearish(open[4], close[4]) and isBearish(open[3], close[3]) and isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and open[1] < close[2] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult)
+float ladderBottomStrength = 7.0
+
+// 17. Dragonfly Doji (Strength 8.0)
+bool isDragonflyDoji = isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult) and lowerShadow(open, close, low) > bodySize(open, close) * 5 and upperShadow(open, close, high) < bodySize(open, close) * 0.1
+float dragonflyDojiStrength = 8.0
+
+// 18. White Marubozu (Strength 8.0)
+float whiteMarubozuStrength = 8.0 // Same as Bullish Marubozu
+
+// 19. Three Line Strike (Bullish) (Strength 9.0)
+bool is3LineStrikeBull = isBearish(open[3], close[3]) and isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and close[1] < close[2] and close[2] < close[3] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close > open[3]
+float threeLineStrikeBullStrength = 9.0
+
+// 20. Abandoned Baby (Bullish) (Strength 10.0)
+bool isAbandonedBabyBull = isBearish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isDojiCandle(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult)[1] and low[1] < low[2] and high[1] < close[2] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open > high[1] and open > close[2]
+float abandonedBabyBullStrength = 10.0
+
+// 21. Thrusting Line (Strength 4.0)
+bool isThrustingLine = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and open < close[1] and close > close[1] and close < (open[1] + close[1]) / 2
+float thrustingLineStrength = 4.0
+
+// 22. Meeting Lines (Bullish) (Strength 4.0)
+bool isMeetingLinesBull = isBearish(open[1], close[1]) and isBullish(open, close) and math.abs(close - close[1]) / syminfo.mintick < 2
+float meetingLinesBullStrength = 4.0
+
+// 23. Separating Lines (Bullish) (Strength 6.0)
+bool isSeparatingLinesBull = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open == open[1] and open > close[1]
+float separatingLinesBullStrength = 6.0
+
+// 24. Unique Three River Bottom (Strength 8.0)
+bool isUnique3RiverBottom = isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and low[1] < low[2] and isBullish(open, close) and open > low[1] and open < close[1] and close < open[1] and low == low[1]
+float unique3RiverBottomStrength = 8.0
+
+// 25. Hook Reversal (Bullish) (Strength 6.0)
+bool isHookReversalBull = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open > close[1] and open < open[1] and close > high[1]
+float hookReversalBullStrength = 6.0
+
+// -----------------------------------------------------------------------------
+//                             BEARISH PATTERNS
+// -----------------------------------------------------------------------------
+// 26. Hanging Man (Strength 8.0)
+bool isHangingMan = isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.2) and lowerShadow(open, close, low) > 2 * bodySize(open, close) and upperShadow(open, close, high) < 0.1 * candleRange(high, low)
+float hangingManStrength = 8.0
+
+// 27. Bearish Engulfing (Strength 10.0)
+bool isBearishEngulfing = isBullish(open[1], close[1]) and isBearish(open, close) and isEngulfing(open, close, open[1], close[1])
+float bearishEngulfingStrength = 10.0
+
+// 28. Dark Cloud Cover (Strength 8.0)
+bool isDarkCloudCover = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and open > high[1] and close < (open[1] + close[1]) / 2 and close > open[1]
+float darkCloudCoverStrength = 8.0
+
+// 29. Evening Star (Strength 7.0)
+bool isEveningStar = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and open[1] > close[2] and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close < (open[2] + close[2]) / 2
+float eveningStarStrength = 7.0
+
+// 30. Three Black Crows (Strength 9.0)
+bool is3BlackCrows = isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and isBearish(open, close) and close[1] < close[2] and close < close[1] and open < open[2] and open[1] < open[2] and open > close[1]
+float threeBlackCrowsStrength = 9.0
+
+// 31. Gravestone Doji (Strength 8.0)
+bool isGravestoneDoji = isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult) and upperShadow(open, close, high) > bodySize(open, close) * 5 and lowerShadow(open, close, low) < bodySize(open, close) * 0.1
+float gravestoneDojiStrength = 8.0
+
+// 32. Shooting Star (Strength 6.0)
+bool isShootingStar = isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.2) and upperShadow(open, close, high) > 2 * bodySize(open, close) and lowerShadow(open, close, low) < 0.1 * candleRange(high, low)
+float shootingStarStrength = 6.0
+
+// 33. Bearish Harami (Strength 6.0)
+bool isHaramiBear = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.25) and isHaramiStrict(open, close, high, low, open[1], close[1], high[1], low[1])
+float haramiBearStrength = 6.0
+
+// 34. Falling Three (Strength 8.0)
+bool isFallingThree = isBearish(open[4], close[4]) and isLongBody(open[4], close[4], high[4], low[4], atrValue[4], longBodyAtrMult) and isBullish(open[3], close[3]) and isBullish(open[2], close[2]) and isBullish(open[1], close[1]) and close[1] < open[4] and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close < low[4]
+float fallingThreeStrength = 8.0
+
+// 35. Tweezer Top (Strength 6.0)
+bool isTweezersTop = high[1] == high and isBullish(open[1], close[1]) and isBearish(open, close)
+float tweezersTopStrength = 6.0
+
+// 36. Bearish Marubozu (Strength 8.0)
+bool isMarubozuBear = isMarubozu(open, close, high, low) and isBearish(open, close)
+float marubozuBearStrength = 8.0
+
+// 37. Bearish Belt Hold (Strength 6.0)
+bool isBeltHoldBear = isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open == high
+float beltHoldBearStrength = 6.0
+
+// 38. Matching High (Strength 4.0)
+bool isMatchingHigh = isBullish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and close == close[1] and high == high[1]
+float matchingHighStrength = 4.0
+
+// 39. Three Inside Down (Strength 7.0)
+bool is3InsideBear = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isHaramiBear[1] and isBearish(open, close) and close < close[2]
+float threeInsideBearStrength = 7.0
+
+// 40. Bearish Kicking (Strength 10.0)
+bool isKickingBear = isMarubozu(open[1], close[1], high[1], low[1]) and isBullish(open[1], close[1]) and isMarubozuBear and isGapDown(open, low[1])
+float kickingBearStrength = 10.0
+
+// 41. Deliberation (Strength 4.0)
+bool isDeliberation = isBullish(open[2], close[2]) and isBullish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and open > open[2] and close > close[2] and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open > open[1] and close > close[1]
+float deliberationStrength = 4.0
+
+// 42. Descending Hawk (Strength 4.0)
+bool isDescendingHawk = isBullish(open[1], close[1]) and isBearish(open, close) and high == high[1] and low < low[1]
+float descendingHawkStrength = 4.0
+
+// 43. Downside Tasuki Gap (Strength 6.0)
+bool isDownsideTasukiGap = isBearish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and open[1] < close[2] and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open > close[1] and open < open[1] and close > open[1] and close < close[2]
+float downsideTasukiGapStrength = 6.0
+
+// 44. Upside Gap Two Crows (Strength 8.0)
+bool isUpsideGapTwoCrows = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isBearish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and open[1] > high[2] and isBearish(open, close) and close < open[1] and open < close[2]
+float upsideGapTwoCrowsStrength = 8.0
+
+// 45. Black Marubozu (Strength 8.0)
+float blackMarubozuStrength = 8.0 // Same as Bearish Marubozu
+
+// 46. Dark Cloud Cover (Weakened) (Strength 6.0)
+bool isDarkCloudCoverWeak = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open > high[1] and close <= (open[1] + close[1]) / 2 and close > open[1] * 0.75 + close[1] * 0.25
+float darkCloudCoverWeakStrength = 6.0
+
+// 47. Meeting Lines (Bearish) (Strength 4.0)
+bool isMeetingLinesBear = isBullish(open[1], close[1]) and isBearish(open, close) and math.abs(close - close[1]) / syminfo.mintick < 2
+float meetingLinesBearStrength = 4.0
+
+// 48. Separating Lines (Bearish) (Strength 6.0)
+bool isSeparatingLinesBear = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open == open[1] and open < close[1]
+float separatingLinesBearStrength = 6.0
+
+// 49. Three Stars in the North (Strength 4.0)
+bool is3StarsNorth = upperShadow(open[2], close[2], high[2]) > upperShadow(open[1], close[1], high[1]) and upperShadow(open[1], close[1], high[1]) > upperShadow(open, close, high) and isSmallBody(open[2], close[2], high[2], low[2], atrValue[2], smallBodyAtrMult) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult)
+float threeStarsNorthStrength = 4.0
+
+// 50. Bearish Abandoned Baby (Strength 10.0)
+bool isAbandonedBabyBear = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isDojiCandle(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult)[1] and high[1] > high[2] and low[1] > open[2] and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open < low[1] and open < open[2]
+float abandonedBabyBearStrength = 10.0
+
+// -----------------------------------------------------------------------------
+//                             NEUTRAL PATTERNS
+// -----------------------------------------------------------------------------
+// 51. Long-Legged Doji (Strength 4.0)
+bool isLongLeggedDoji = isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and isLongShadowPercent(upperShadow(open, close, high), candleRange(high, low), 0.3) and isLongShadowPercent(lowerShadow(open, close, low), candleRange(high, low), 0.3)
+float longLeggedDojiStrength = 4.0
+
+// 52. Four Price Doji (Strength 2.0)
+bool isFourPriceDoji = open == high and open == low and open == close
+float fourPriceDojiStrength = 2.0
+
+// 53. Spinning Top (Strength 4.0)
+bool isSpinningTop = isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.25) and isLongShadowPercent(upperShadow(open, close, high), candleRange(high, low), 0.2) and isLongShadowPercent(lowerShadow(open, close, low), candleRange(high, low), 0.2)
+float spinningTopStrength = 4.0
+
+// 54. Gapping Up/Down Doji (Strength 4.0)
+bool isGappingDoji = isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and (isGapUp(open, high[1]) or isGapDown(open, low[1]))
+float gappingDojiStrength = 4.0
+
+// 55. Harami Cross (Bullish) (Strength 8.0)
+bool isHaramiCrossBull = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and isHaramiStrict(open, close, high, low, open[1], close[1], high[1], low[1])
+float haramiCrossBullStrength = 8.0
+
+// 56. Harami Cross (Bearish) (Strength 8.0)
+bool isHaramiCrossBear = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and isHaramiStrict(open, close, high, low, open[1], close[1], high[1], low[1])
+float haramiCrossBearStrength = 8.0
+
+// 57. Upside Tasuki Gap (Strength 6.0)
+bool isUpsideTasukiGap = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and open[1] > close[2] and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open < close[1] and open > open[1] and close < open[1] and close > close[2]
+float upsideTasukiGapStrength = 6.0
+
+// 58. On Neck Line (Strength 4.0)
+bool isOnNeckLine = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open < low[1] and math.abs(close - close[1]) / syminfo.mintick < 2
+float onNeckLineStrength = 4.0
+
+// 59. In Neck Line (Strength 4.0)
+bool isInNeckLine = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open < low[1] and close > close[1] and close < close[1] + bodySize(open[1], close[1]) * 0.1
+float inNeckLineStrength = 4.0
+
+// 60. Three-Bar Inside (Bullish) (Strength 6.0)
+bool is3BarInsideBull = (high[2] > high[1] and low[2] < low[1]) and (high[1] > high and low[1] < low) and isBullish(open, close)
+float threeBarInsideBullStrength = 6.0
+
+// 61. Three-Bar Inside (Bearish) (Strength 6.0)
+bool is3BarInsideBear = (high[2] > high[1] and low[2] < low[1]) and (high[1] > high and low[1] < low) and isBearish(open, close)
+float threeBarInsideBearStrength = 6.0
+
+// 62. Concealing Baby Swallow (Strength 8.0)
+bool isConcealingBabySwallow = isMarubozu(open[3], close[3], high[3], low[3]) and isBearish(open[3], close[3]) and isMarubozu(open[2], close[2], high[2], low[2]) and isBearish(open[2], close[2]) and isBearish(open[1], close[1]) and open[1] < low[2] and isBearish(open, close) and close < close[1]
+float concealingBabySwallowStrength = 8.0
+
+// 63. Homing Pigeon (Strength 6.0)
+bool isHomingPigeon = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and isHaramiStrict(open, close, high, low, open[1], close[1], high[1], low[1])
+float homingPigeonStrength = 6.0
+
+// 64. Last Engulfing Bottom (Strength 8.0)
+bool isLastEngulfingBottom = isBearish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and isBullishEngulfing
+float lastEngulfingBottomStrength = 8.0
+
+// 65. Last Engulfing Top (Strength 8.0)
+bool isLastEngulfingTop = isBullish(open[1], close[1]) and isSmallBody(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult) and isBearishEngulfing
+float lastEngulfingTopStrength = 8.0
+
+// 66. Counterattack Line (Bullish) (Strength 6.0)
+bool isCounterattackBull = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open < low[1] and math.abs(close - close[1]) / syminfo.mintick < 2
+float counterattackBullStrength = 6.0
+
+// 67. Counterattack Line (Bearish) (Strength 6.0)
+bool isCounterattackBear = isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and open > high[1] and math.abs(close - close[1]) / syminfo.mintick < 2
+float counterattackBearStrength = 6.0
+
+// 68. Unique Three River Bottom (Bullish) is already defined above
+
+// 69. Squeeze Alert (Strength 2.0)
+bool isSqueezeAlert = isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and isLongShadowPercent(upperShadow(open, close, high), candleRange(high, low), 0.4) and isLongShadowPercent(lowerShadow(open, close, low), candleRange(high, low), 0.4)
+float squeezeAlertStrength = 2.0
+
+// 70. Hook Reversal (Bullish) is already defined above
+
+// 71. Hook Reversal (Bearish) (Strength 6.0)
+bool isHookReversalBear = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open < close[1] and open > open[1] and close < low[1]
+float hookReversalBearStrength = 6.0
+
+// 72. Stalled Pattern (Bearish) (Strength 6.0)
+bool isStalledPattern = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBullish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.15) and isLongShadowPercent(upperShadow(open, close, high), candleRange(high, low), 0.5) and close > close[1] and close > close[2]
+float stalledPatternStrength = 6.0
+
+// 73. Upside-Downside Gap Three (Bullish) (Strength 8.0)
+bool isUpsideDownsideGap3Bull = isBullish(open[3], close[3]) and isLongBody(open[3], close[3], high[3], low[3], atrValue[3], longBodyAtrMult) and isBearish(open[2], close[2]) and open[2] < close[3] and isBearish(open[1], close[1]) and open[1] < close[2] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close > high[3]
+float upsideDownsideGap3BullStrength = 8.0
+
+// 74. Upside-Downside Gap Three (Bearish) (Strength 8.0)
+bool isUpsideDownsideGap3Bear = isBearish(open[3], close[3]) and isLongBody(open[3], close[3], high[3], low[3], atrValue[3], longBodyAtrMult) and isBullish(open[2], close[2]) and open[2] > close[3] and isBullish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close < low[3]
+float upsideDownsideGap3BearStrength = 8.0
+
+// 75. Engulfing Doji (Strength 6.0)
+bool isEngulfingDoji = isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and ( (open < close[1] and close > open[1]) or (open > close[1] and close < open[1]) ) and high > high[1] and low < low[1]
+float engulfingDojiStrength = 6.0
+
+// High Wave Candle (Strength 4.0)
+bool isHighWaveCandle = isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult, 0.1) and isLongShadowPercent(upperShadow(open, close, high), candleRange(high, low), 0.3) and isLongShadowPercent(lowerShadow(open, close, low), candleRange(high, low), 0.3)
+float highWaveCandleStrength = 4.0
+
+// Three Stars in the South (Strength 2.0)
+bool isThreeStarsSouth = false // Placeholder
+float threeStarsSouthStrength = 2.0
+
+// -----------------------------------------------------------------------------
+//                     NEWLY ADDED CANDLESTICK PATTERNS
+// -----------------------------------------------------------------------------
+// One-Bar Reversal (Bullish) (Strength 3.0)
+bool isOneBarReversalBull = isBullish(open, close) and close > high[1] and low < low[1]
+float oneBarReversalBullStrength = 3.0
+
+// One-Bar Reversal (Bearish) (Strength 3.0)
+bool isOneBarReversalBear = isBearish(open, close) and close < low[1] and high > high[1]
+float oneBarReversalBearStrength = 3.0
+
+// Three Gap Up (Strength 3.0)
+bool isThreeGapUp = isBullish(open[2], close[2]) and isGapUp(open[2], high[3]) and isBullish(open[1], close[1]) and isGapUp(open[1], high[2]) and isBullish(open, close) and isGapUp(open, high[1])
+float threeGapUpStrength = 3.0
+
+// Three Gap Down (Strength 3.0)
+bool isThreeGapDown = isBearish(open[2], close[2]) and isGapDown(open[2], low[3]) and isBearish(open[1], close[1]) and isGapDown(open[1], low[2]) and isBearish(open, close) and isGapDown(open, low[1])
+float threeGapDownStrength = 3.0
+
+// Two Crows (Bearish) (Strength 3.0)
+bool isTwoCrows = isBearish(open[1], close[1]) and isLongBody(open[1], close[1], high[1], low[1], atrValue[1], longBodyAtrMult) and isBearish(open, close) and isSmallBody(open, close, high, low, atrValue, smallBodyAtrMult) and open > open[1] and open < close[1] and close < close[1]
+float twoCrowsStrength = 3.0
+
+// Morning Doji Star (Strength 7.0)
+bool isMorningDojiStar = isBearish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isDojiCandle(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult, 0.1) and open[1] < close[2] and isBullish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close > (open[2] + close[2]) / 2 and open > close[1]
+float morningDojiStarStrength = 7.0
+
+// Evening Doji Star (Strength 7.0)
+bool isEveningDojiStar = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isDojiCandle(open[1], close[1], high[1], low[1], atrValue[1], smallBodyAtrMult, 0.1) and open[1] > close[2] and isBearish(open, close) and isLongBody(open, close, high, low, atrValue, longBodyAtrMult) and close < (open[2] + close[2]) / 2 and open < close[1]
+float eveningDojiStarStrength = 7.0
+
+// Advancing Block (Strength 6.0)
+bool isAdvancingBlock = isBullish(open[2], close[2]) and isLongBody(open[2], close[2], high[2], low[2], atrValue[2], longBodyAtrMult) and isBullish(open[1], close[1]) and open[1] > open[2] and open[1] < close[2] and isBullish(open, close) and open > open[1] and open < close[1] and bodySize(open, close) < bodySize(open[1], close[1])
+float advancingBlockStrength = 6.0
+
+// Kicking (Indecision) (Strength 5.0)
+bool isKickingIndecision = (isMarubozuBull[1] and isMarubozuBull and isGapUp(open, high[1])) or (isMarubozuBear[1] and isMarubozuBear and isGapDown(open, low[1]))
+float kickingIndecisionStrength = 5.0
+
+// -----------------------------------------------------------------------------
+//                          PATTERN ARRAY CONSOLIDATION
+// -----------------------------------------------------------------------------
+// MODIFICATION: Added arrays for pattern durations
+var bool[] bullishPatternResults = array.new_bool(25)
+var float[] bullishPatternStrengths = array.new_float(25)
+var int[] bullishPatternDurations = array.new_int(25)
+var bool[] bearishPatternResults = array.new_bool(25)
+var float[] bearishPatternStrengths = array.new_float(25)
+var int[] bearishPatternDurations = array.new_int(25)
+var bool[] neutralPatternResults = array.new_bool(34)
+var float[] neutralPatternStrengths = array.new_float(34)
+var int[] neutralPatternDurations = array.new_int(34)
+
+var string[] bullishPatternNames = array.new_string(25)
+var string[] bearishPatternNames = array.new_string(25)
+var string[] neutralPatternNames = array.new_string(34)
+
+if barstate.isfirst
+    array.set(bullishPatternNames, 0, "Hammer")
+    array.set(bullishPatternStrengths, 0, hammerStrength)
+    array.set(bullishPatternDurations, 0, 1)
+    array.set(bullishPatternNames, 1, "Bullish Engulfing")
+    array.set(bullishPatternStrengths, 1, bullishEngulfingStrength)
+    array.set(bullishPatternDurations, 1, 2)
+    array.set(bullishPatternNames, 2, "Piercing Line")
+    array.set(bullishPatternStrengths, 2, piercingLineStrength)
+    array.set(bullishPatternDurations, 2, 2)
+    array.set(bullishPatternNames, 3, "Morning Star")
+    array.set(bullishPatternStrengths, 3, morningStarStrength)
+    array.set(bullishPatternDurations, 3, 3)
+    array.set(bullishPatternNames, 4, "Three White Soldiers")
+    array.set(bullishPatternStrengths, 4, threeWhiteSoldiersStrength)
+    array.set(bullishPatternDurations, 4, 3)
+    array.set(bullishPatternNames, 5, "Inverted Hammer")
+    array.set(bullishPatternStrengths, 5, invertedHammerStrength)
+    array.set(bullishPatternDurations, 5, 1)
+    array.set(bullishPatternNames, 6, "Bullish Harami")
+    array.set(bullishPatternStrengths, 6, haramiBullStrength)
+    array.set(bullishPatternDurations, 6, 2)
+    array.set(bullishPatternNames, 7, "Rising Three")
+    array.set(bullishPatternStrengths, 7, risingThreeStrength)
+    array.set(bullishPatternDurations, 7, 5)
+    array.set(bullishPatternNames, 8, "Tweezer Bottom")
+    array.set(bullishPatternStrengths, 8, tweezersBottomStrength)
+    array.set(bullishPatternDurations, 8, 2)
+    array.set(bullishPatternNames, 9, "Marubozu Bull")
+    array.set(bullishPatternStrengths, 9, marubozuBullStrength)
+    array.set(bullishPatternDurations, 9, 1)
+    array.set(bullishPatternNames, 10, "Belt Hold Bull")
+    array.set(bullishPatternStrengths, 10, beltHoldBullStrength)
+    array.set(bullishPatternDurations, 10, 1)
+    array.set(bullishPatternNames, 11, "Matching Low")
+    array.set(bullishPatternStrengths, 11, matchingLowStrength)
+    array.set(bullishPatternDurations, 11, 2)
+    array.set(bullishPatternNames, 12, "Three Inside Up")
+    array.set(bullishPatternStrengths, 12, threeInsideBullStrength)
+    array.set(bullishPatternDurations, 12, 3)
+    array.set(bullishPatternNames, 13, "Kicking Bull")
+    array.set(bullishPatternStrengths, 13, kickingBullStrength)
+    array.set(bullishPatternDurations, 13, 2)
+    array.set(bullishPatternNames, 14, "Stick Sandwich")
+    array.set(bullishPatternStrengths, 14, stickSandwichStrength)
+    array.set(bullishPatternDurations, 14, 3)
+    array.set(bullishPatternNames, 15, "Ladder Bottom")
+    array.set(bullishPatternStrengths, 15, ladderBottomStrength)
+    array.set(bullishPatternDurations, 15, 5)
+    array.set(bullishPatternNames, 16, "Dragonfly Doji")
+    array.set(bullishPatternStrengths, 16, dragonflyDojiStrength)
+    array.set(bullishPatternDurations, 16, 1)
+    array.set(bullishPatternNames, 17, "White Marubozu")
+    array.set(bullishPatternStrengths, 17, whiteMarubozuStrength)
+    array.set(bullishPatternDurations, 17, 1)
+    array.set(bullishPatternNames, 18, "Three Line Strike Bull")
+    array.set(bullishPatternStrengths, 18, threeLineStrikeBullStrength)
+    array.set(bullishPatternDurations, 18, 4)
+    array.set(bullishPatternNames, 19, "Abandoned Baby Bull")
+    array.set(bullishPatternStrengths, 19, abandonedBabyBullStrength)
+    array.set(bullishPatternDurations, 19, 3)
+    array.set(bullishPatternNames, 20, "Thrusting Line")
+    array.set(bullishPatternStrengths, 20, thrustingLineStrength)
+    array.set(bullishPatternDurations, 20, 2)
+    array.set(bullishPatternNames, 21, "Meeting Lines Bull")
+    array.set(bullishPatternStrengths, 21, meetingLinesBullStrength)
+    array.set(bullishPatternDurations, 21, 2)
+    array.set(bullishPatternNames, 22, "Separating Lines Bull")
+    array.set(bullishPatternStrengths, 22, separatingLinesBullStrength)
+    array.set(bullishPatternDurations, 22, 2)
+    array.set(bullishPatternNames, 23, "Unique Three River Bottom")
+    array.set(bullishPatternStrengths, 23, unique3RiverBottomStrength)
+    array.set(bullishPatternDurations, 23, 3)
+    array.set(bullishPatternNames, 24, "Hook Reversal Bull")
+    array.set(bullishPatternStrengths, 24, hookReversalBullStrength)
+    array.set(bullishPatternDurations, 24, 2)
+    array.set(bearishPatternNames, 0, "Hanging Man")
+    array.set(bearishPatternStrengths, 0, hangingManStrength)
+    array.set(bearishPatternDurations, 0, 1)
+    array.set(bearishPatternNames, 1, "Bearish Engulfing")
+    array.set(bearishPatternStrengths, 1, bearishEngulfingStrength)
+    array.set(bearishPatternDurations, 1, 2)
+    array.set(bearishPatternNames, 2, "Dark Cloud Cover")
+    array.set(bearishPatternStrengths, 2, darkCloudCoverStrength)
+    array.set(bearishPatternDurations, 2, 2)
+    array.set(bearishPatternNames, 3, "Evening Star")
+    array.set(bearishPatternStrengths, 3, eveningStarStrength)
+    array.set(bearishPatternDurations, 3, 3)
+    array.set(bearishPatternNames, 4, "Three Black Crows")
+    array.set(bearishPatternStrengths, 4, threeBlackCrowsStrength)
+    array.set(bearishPatternDurations, 4, 3)
+    array.set(bearishPatternNames, 5, "Gravestone Doji")
+    array.set(bearishPatternStrengths, 5, gravestoneDojiStrength)
+    array.set(bearishPatternDurations, 5, 1)
+    array.set(bearishPatternNames, 6, "Shooting Star")
+    array.set(bearishPatternStrengths, 6, shootingStarStrength)
+    array.set(bearishPatternDurations, 6, 1)
+    array.set(bearishPatternNames, 7, "Bearish Harami")
+    array.set(bearishPatternStrengths, 7, haramiBearStrength)
+    array.set(bearishPatternDurations, 7, 2)
+    array.set(bearishPatternNames, 8, "Falling Three")
+    array.set(bearishPatternStrengths, 8, fallingThreeStrength)
+    array.set(bearishPatternDurations, 8, 5)
+    array.set(bearishPatternNames, 9, "Tweezer Top")
+    array.set(bearishPatternStrengths, 9, tweezersTopStrength)
+    array.set(bearishPatternDurations, 9, 2)
+    array.set(bearishPatternNames, 10, "Marubozu Bear")
+    array.set(bearishPatternStrengths, 10, marubozuBearStrength)
+    array.set(bearishPatternDurations, 10, 1)
+    array.set(bearishPatternNames, 11, "Belt Hold Bear")
+    array.set(bearishPatternStrengths, 11, beltHoldBearStrength)
+    array.set(bearishPatternDurations, 11, 1)
+    array.set(bearishPatternNames, 12, "Matching High")
+    array.set(bearishPatternStrengths, 12, matchingHighStrength)
+    array.set(bearishPatternDurations, 12, 2)
+    array.set(bearishPatternNames, 13, "Three Inside Down")
+    array.set(bearishPatternStrengths, 13, threeInsideBearStrength)
+    array.set(bearishPatternDurations, 13, 3)
+    array.set(bearishPatternNames, 14, "Kicking Bear")
+    array.set(bearishPatternStrengths, 14, kickingBearStrength)
+    array.set(bearishPatternDurations, 14, 2)
+    array.set(bearishPatternNames, 15, "Deliberation")
+    array.set(bearishPatternStrengths, 15, deliberationStrength)
+    array.set(bearishPatternDurations, 15, 3)
+    array.set(bearishPatternNames, 16, "Descending Hawk")
+    array.set(bearishPatternStrengths, 16, descendingHawkStrength)
+    array.set(bearishPatternDurations, 16, 2)
+    array.set(bearishPatternNames, 17, "Downside Tasuki Gap")
+    array.set(bearishPatternStrengths, 17, downsideTasukiGapStrength)
+    array.set(bearishPatternDurations, 17, 3)
+    array.set(bearishPatternNames, 18, "Upside Gap Two Crows")
+    array.set(bearishPatternStrengths, 18, upsideGapTwoCrowsStrength)
+    array.set(bearishPatternDurations, 18, 3)
+    array.set(bearishPatternNames, 19, "Black Marubozu")
+    array.set(bearishPatternStrengths, 19, blackMarubozuStrength)
+    array.set(bearishPatternDurations, 19, 1)
+    array.set(bearishPatternNames, 20, "Dark Cloud Cover (Weakened)")
+    array.set(bearishPatternStrengths, 20, darkCloudCoverWeakStrength)
+    array.set(bearishPatternDurations, 20, 2)
+    array.set(bearishPatternNames, 21, "Meeting Lines Bear")
+    array.set(bearishPatternStrengths, 21, meetingLinesBearStrength)
+    array.set(bearishPatternDurations, 21, 2)
+    array.set(bearishPatternNames, 22, "Separating Lines Bear")
+    array.set(bearishPatternStrengths, 22, separatingLinesBearStrength)
+    array.set(bearishPatternDurations, 22, 2)
+    array.set(bearishPatternNames, 23, "Concealing Baby Swallow")
+    array.set(bearishPatternStrengths, 23, concealingBabySwallowStrength)
+    array.set(bearishPatternDurations, 23, 4)
+    array.set(bearishPatternNames, 24, "Hook Reversal Bear")
+    array.set(bearishPatternStrengths, 24, hookReversalBearStrength)
+    array.set(bearishPatternDurations, 24, 2)
+    array.set(neutralPatternNames, 0, "Doji")
+    array.set(neutralPatternStrengths, 0, 5.0)
+    array.set(neutralPatternDurations, 0, 1)
+    array.set(neutralPatternNames, 1, "Long-Legged Doji")
+    array.set(neutralPatternStrengths, 1, longLeggedDojiStrength)
+    array.set(neutralPatternDurations, 1, 1)
+    array.set(neutralPatternNames, 2, "Four Price Doji")
+    array.set(neutralPatternStrengths, 2, fourPriceDojiStrength)
+    array.set(neutralPatternDurations, 2, 1)
+    array.set(neutralPatternNames, 3, "Spinning Top")
+    array.set(neutralPatternStrengths, 3, spinningTopStrength)
+    array.set(neutralPatternDurations, 3, 1)
+    array.set(neutralPatternNames, 4, "Gapping Doji")
+    array.set(neutralPatternStrengths, 4, gappingDojiStrength)
+    array.set(neutralPatternDurations, 4, 2)
+    array.set(neutralPatternNames, 5, "Harami Cross Bull")
+    array.set(neutralPatternStrengths, 5, haramiCrossBullStrength)
+    array.set(neutralPatternDurations, 5, 2)
+    array.set(neutralPatternNames, 6, "Harami Cross Bear")
+    array.set(neutralPatternStrengths, 6, haramiCrossBearStrength)
+    array.set(neutralPatternDurations, 6, 2)
+    array.set(neutralPatternNames, 7, "Upside Tasuki Gap")
+    array.set(neutralPatternStrengths, 7, upsideTasukiGapStrength)
+    array.set(neutralPatternDurations, 7, 3)
+    array.set(neutralPatternNames, 8, "On Neck Line")
+    array.set(neutralPatternStrengths, 8, onNeckLineStrength)
+    array.set(neutralPatternDurations, 8, 2)
+    array.set(neutralPatternNames, 9, "In Neck Line")
+    array.set(neutralPatternStrengths, 9, inNeckLineStrength)
+    array.set(neutralPatternDurations, 9, 2)
+    array.set(neutralPatternNames, 10, "Three-Bar Inside Bull")
+    array.set(neutralPatternStrengths, 10, threeBarInsideBullStrength)
+    array.set(neutralPatternDurations, 10, 3)
+    array.set(neutralPatternNames, 11, "Three-Bar Inside Bear")
+    array.set(neutralPatternStrengths, 11, threeBarInsideBearStrength)
+    array.set(neutralPatternDurations, 11, 3)
+    array.set(neutralPatternNames, 12, "Homing Pigeon")
+    array.set(neutralPatternStrengths, 12, homingPigeonStrength)
+    array.set(neutralPatternDurations, 12, 2)
+    array.set(neutralPatternNames, 13, "Last Engulfing Bottom")
+    array.set(neutralPatternStrengths, 13, lastEngulfingBottomStrength)
+    array.set(neutralPatternDurations, 13, 2)
+    array.set(neutralPatternNames, 14, "Last Engulfing Top")
+    array.set(neutralPatternStrengths, 14, lastEngulfingTopStrength)
+    array.set(neutralPatternDurations, 14, 2)
+    array.set(neutralPatternNames, 15, "Counterattack Bull")
+    array.set(neutralPatternStrengths, 15, counterattackBullStrength)
+    array.set(neutralPatternDurations, 15, 2)
+    array.set(neutralPatternNames, 16, "Counterattack Bear")
+    array.set(neutralPatternStrengths, 16, counterattackBearStrength)
+    array.set(neutralPatternDurations, 16, 2)
+    array.set(neutralPatternNames, 17, "Three Stars in the South")
+    array.set(neutralPatternStrengths, 17, threeStarsSouthStrength)
+    array.set(neutralPatternDurations, 17, 3)
+    array.set(neutralPatternNames, 18, "Three Stars in the North")
+    array.set(neutralPatternStrengths, 18, threeStarsNorthStrength)
+    array.set(neutralPatternDurations, 18, 3)
+    array.set(neutralPatternNames, 19, "Squeeze Alert")
+    array.set(neutralPatternStrengths, 19, squeezeAlertStrength)
+    array.set(neutralPatternDurations, 19, 1)
+    array.set(neutralPatternNames, 20, "Stalled Pattern")
+    array.set(neutralPatternStrengths, 20, stalledPatternStrength)
+    array.set(neutralPatternDurations, 20, 3)
+    array.set(neutralPatternNames, 21, "Upside-Downside Gap Three Bull")
+    array.set(neutralPatternStrengths, 21, upsideDownsideGap3BullStrength)
+    array.set(neutralPatternDurations, 21, 4)
+    array.set(neutralPatternNames, 22, "Upside-Downside Gap Three Bear")
+    array.set(neutralPatternStrengths, 22, upsideDownsideGap3BearStrength)
+    array.set(neutralPatternDurations, 22, 4)
+    array.set(neutralPatternNames, 23, "Engulfing Doji")
+    array.set(neutralPatternStrengths, 23, engulfingDojiStrength)
+    array.set(neutralPatternDurations, 23, 2)
+    array.set(neutralPatternNames, 24, "High Wave Candle")
+    array.set(neutralPatternStrengths, 24, highWaveCandleStrength)
+    array.set(neutralPatternDurations, 24, 1)
+    array.set(neutralPatternNames, 25, "One-Bar Reversal Bull")
+    array.set(neutralPatternStrengths, 25, oneBarReversalBullStrength)
+    array.set(neutralPatternDurations, 25, 2)
+    array.set(neutralPatternNames, 26, "One-Bar Reversal Bear")
+    array.set(neutralPatternStrengths, 26, oneBarReversalBearStrength)
+    array.set(neutralPatternDurations, 26, 2)
+    array.set(neutralPatternNames, 27, "Three Gap Up")
+    array.set(neutralPatternStrengths, 27, threeGapUpStrength)
+    array.set(neutralPatternDurations, 27, 4)
+    array.set(neutralPatternNames, 28, "Three Gap Down")
+    array.set(neutralPatternStrengths, 28, threeGapDownStrength)
+    array.set(neutralPatternDurations, 28, 4)
+    array.set(neutralPatternNames, 29, "Two Crows")
+    array.set(neutralPatternStrengths, 29, twoCrowsStrength)
+    array.set(neutralPatternDurations, 29, 2)
+    array.set(neutralPatternNames, 30, "Morning Doji Star")
+    array.set(neutralPatternStrengths, 30, morningDojiStarStrength)
+    array.set(neutralPatternDurations, 30, 3)
+    array.set(neutralPatternNames, 31, "Evening Doji Star")
+    array.set(neutralPatternStrengths, 31, eveningDojiStarStrength)
+    array.set(neutralPatternDurations, 31, 3)
+    array.set(neutralPatternNames, 32, "Advancing Block")
+    array.set(neutralPatternStrengths, 32, advancingBlockStrength)
+    array.set(neutralPatternDurations, 32, 3)
+    array.set(neutralPatternNames, 33, "Kicking (Indecision)")
+    array.set(neutralPatternStrengths, 33, kickingIndecisionStrength)
+    array.set(neutralPatternDurations, 33, 2)
+
+fillPatternArrays() =>
+    array.set(bullishPatternResults, 0, isHammer)
+    array.set(bullishPatternResults, 1, isBullishEngulfing)
+    array.set(bullishPatternResults, 2, isPiercingLine)
+    array.set(bullishPatternResults, 3, isMorningStar)
+    array.set(bullishPatternResults, 4, is3WhiteSoldiers)
+    array.set(bullishPatternResults, 5, isInvertedHammer)
+    array.set(bullishPatternResults, 6, isHaramiBull)
+    array.set(bullishPatternResults, 7, isRisingThree)
+    array.set(bullishPatternResults, 8, isTweezersBottom)
+    array.set(bullishPatternResults, 9, isMarubozuBull)
+    array.set(bullishPatternResults, 10, isBeltHoldBull)
+    array.set(bullishPatternResults, 11, isMatchingLow)
+    array.set(bullishPatternResults, 12, is3InsideBull)
+    array.set(bullishPatternResults, 13, isKickingBull)
+    array.set(bullishPatternResults, 14, isStickSandwich)
+    array.set(bullishPatternResults, 15, isLadderBottom)
+    array.set(bullishPatternResults, 16, isDragonflyDoji)
+    array.set(bullishPatternResults, 17, isMarubozuBull) // White Marubozu
+    array.set(bullishPatternResults, 18, is3LineStrikeBull)
+    array.set(bullishPatternResults, 19, isAbandonedBabyBull)
+    array.set(bullishPatternResults, 20, isThrustingLine)
+    array.set(bullishPatternResults, 21, isMeetingLinesBull)
+    array.set(bullishPatternResults, 22, isSeparatingLinesBull)
+    array.set(bullishPatternResults, 23, isUnique3RiverBottom)
+    array.set(bullishPatternResults, 24, isHookReversalBull)
+    array.set(bearishPatternResults, 0, isHangingMan)
+    array.set(bearishPatternResults, 1, isBearishEngulfing)
+    array.set(bearishPatternResults, 2, isDarkCloudCover)
+    array.set(bearishPatternResults, 3, isEveningStar)
+    array.set(bearishPatternResults, 4, is3BlackCrows)
+    array.set(bearishPatternResults, 5, isGravestoneDoji)
+    array.set(bearishPatternResults, 6, isShootingStar)
+    array.set(bearishPatternResults, 7, isHaramiBear)
+    array.set(bearishPatternResults, 8, isFallingThree)
+    array.set(bearishPatternResults, 9, isTweezersTop)
+    array.set(bearishPatternResults, 10, isMarubozuBear)
+    array.set(bearishPatternResults, 11, isBeltHoldBear)
+    array.set(bearishPatternResults, 12, isMatchingHigh)
+    array.set(bearishPatternResults, 13, is3InsideBear)
+    array.set(bearishPatternResults, 14, isKickingBear)
+    array.set(bearishPatternResults, 15, isDeliberation)
+    array.set(bearishPatternResults, 16, isDescendingHawk)
+    array.set(bearishPatternResults, 17, isDownsideTasukiGap)
+    array.set(bearishPatternResults, 18, isUpsideGapTwoCrows)
+    array.set(bearishPatternResults, 19, isMarubozuBear) // Black Marubozu
+    array.set(bearishPatternResults, 20, isDarkCloudCoverWeak)
+    array.set(bearishPatternResults, 21, isMeetingLinesBear)
+    array.set(bearishPatternResults, 22, isSeparatingLinesBear)
+    array.set(bearishPatternResults, 23, isConcealingBabySwallow)
+    array.set(bearishPatternResults, 24, isHookReversalBear)
+    array.set(neutralPatternResults, 0, isDojiCandle(open, close, high, low, atrValue, smallBodyAtrMult, 0.1))
+    array.set(neutralPatternResults, 1, isLongLeggedDoji)
+    array.set(neutralPatternResults, 2, isFourPriceDoji)
+    array.set(neutralPatternResults, 3, isSpinningTop)
+    array.set(neutralPatternResults, 4, isGappingDoji)
+    array.set(neutralPatternResults, 5, isHaramiCrossBull)
+    array.set(neutralPatternResults, 6, isHaramiCrossBear)
+    array.set(neutralPatternResults, 7, isUpsideTasukiGap)
+    array.set(neutralPatternResults, 8, isOnNeckLine)
+    array.set(neutralPatternResults, 9, isInNeckLine)
+    array.set(neutralPatternResults, 10, is3BarInsideBull)
+    array.set(neutralPatternResults, 11, is3BarInsideBear)
+    array.set(neutralPatternResults, 12, isHomingPigeon)
+    array.set(neutralPatternResults, 13, isLastEngulfingBottom)
+    array.set(neutralPatternResults, 14, isLastEngulfingTop)
+    array.set(neutralPatternResults, 15, isCounterattackBull)
+    array.set(neutralPatternResults, 16, isCounterattackBear)
+    array.set(neutralPatternResults, 17, isThreeStarsSouth)
+    array.set(neutralPatternResults, 18, is3StarsNorth)
+    array.set(neutralPatternResults, 19, isSqueezeAlert)
+    array.set(neutralPatternResults, 20, isStalledPattern)
+    array.set(neutralPatternResults, 21, isUpsideDownsideGap3Bull)
+    array.set(neutralPatternResults, 22, isUpsideDownsideGap3Bear)
+    array.set(neutralPatternResults, 23, isEngulfingDoji)
+    array.set(neutralPatternResults, 24, isHighWaveCandle)
+    array.set(neutralPatternResults, 25, isOneBarReversalBull)
+    array.set(neutralPatternResults, 26, isOneBarReversalBear)
+    array.set(neutralPatternResults, 27, isThreeGapUp)
+    array.set(neutralPatternResults, 28, isThreeGapDown)
+    array.set(neutralPatternResults, 29, isTwoCrows)
+    array.set(neutralPatternResults, 30, isMorningDojiStar)
+    array.set(neutralPatternResults, 31, isEveningDojiStar)
+    array.set(neutralPatternResults, 32, isAdvancingBlock)
+    array.set(neutralPatternResults, 33, isKickingIndecision)
+
+fillPatternArrays()
+
+// Call pattern fill
+
+
+// -----------------------------------------------------------------------------
+// TREND & CONFIRMATION LOGIC
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// TREND & CONFIRMATION LOGIC (Updated)
+// -----------------------------------------------------------------------------
+maType = input.string("SMA", "Trend MA Type", options=["SMA", "EMA"], group="Trend Filters")
+
+// Primary Trend MA
+ma = maType == "EMA" ? ta.ema(close, maLength) : ta.sma(close, maLength)
+isUptrend   = close > ma
+isDowntrend = close < ma
+
+// Volume Confirmation
+float avgVolume = ta.sma(volume, volumeMALength)
+bool isVolumeSpike = enableVolumeConfirmation ? volume > avgVolume * volumeSpikeMultiplier : true
+
+// Support / Resistance Confirmation
+float ph = ta.pivothigh(high, swingPivotLength, swingPivotLength)
+float pl = ta.pivotlow(low, swingPivotLength, swingPivotLength)
+
+bool isNearSupport    = not enableSRConfirmation or (not na(pl[1]) and low >= pl[1] * (1 - srTolerancePerc) and low <= pl[1] * (1 + srTolerancePerc))
+
+bool isNearResistance = not enableSRConfirmation or (not na(ph[1]) and high <= ph[1] * (1 + srTolerancePerc) and high >= ph[1] * (1 - srTolerancePerc))
+
+// Follow-Through Confirmation
+bool isFollowThroughBullish = not enableAdvancedFollowThrough or (followThroughType == "Bullish/Bearish Candle"  ? close > open : followThroughType == "Close Beyond Previous"   ? close > close[1] : true)
+
+bool isFollowThroughBearish = not enableAdvancedFollowThrough or (followThroughType == "Bullish/Bearish Candle"  ? close < open : followThroughType == "Close Beyond Previous"   ? close < close[1] : true)
+
+// Higher Timeframe Trend Filter (with proper lookahead)
+float htf_ma = request.security(syminfo.tickerid, higherTimeframe, maType == "EMA" ? ta.ema(close, higherTFMALength) : ta.sma(close, higherTFMALength), lookahead = barmerge.lookahead_on)
+
+bool isHTFUptrend   = not enableMTFFilter or close > htf_ma
+bool isHTFDowntrend = not enableMTFFilter or close < htf_ma
+
+// Pattern strength calculations
+int bullishCount = 0
+float bullishStrengthSum = 0.0
+string recentBullPattern = ""
+float recentBullStrength = 0.0
+int recentBullDuration = 0
+for i = 0 to array.size(bullishPatternResults) - 1
+    if array.get(bullishPatternResults, i) and array.get(bullishPatternStrengths, i) >= minPatternStrength
+        bullishCount += 1
+        bullishStrengthSum += array.get(bullishPatternStrengths, i)
+        if recentBullPattern == "" or array.get(bullishPatternStrengths, i) > recentBullStrength
+            recentBullPattern := array.get(bullishPatternNames, i)
+            recentBullStrength := array.get(bullishPatternStrengths, i)
+            recentBullDuration := array.get(bullishPatternDurations, i)
+
+float avgBullishStrength = bullishCount > 0 ? bullishStrengthSum / bullishCount : 0
+
+int bearishCount = 0
+float bearishStrengthSum = 0.0
+string recentBearPattern = ""
+float recentBearStrength = 0.0
+int recentBearDuration = 0
+for i = 0 to array.size(bearishPatternResults) - 1
+    if array.get(bearishPatternResults, i) and array.get(bearishPatternStrengths, i) >= minPatternStrength
+        bearishCount += 1
+        bearishStrengthSum += array.get(bearishPatternStrengths, i)
+        if recentBearPattern == "" or array.get(bearishPatternStrengths, i) > recentBearStrength
+            recentBearPattern := array.get(bearishPatternNames, i)
+            recentBearStrength := array.get(bearishPatternStrengths, i)
+            recentBearDuration := array.get(bearishPatternDurations, i)
+
+float avgBearishStrength = bearishCount > 0 ? bearishStrengthSum / bearishCount : 0
+
+int neutralCount = 0
+float neutralStrengthSum = 0.0
+string recentNeutralPattern = ""
+float recentNeutralStrength = 0.0
+int recentNeutralDuration = 0
+for i = 0 to array.size(neutralPatternResults) - 1
+    if array.get(neutralPatternResults, i) and array.get(neutralPatternStrengths, i) >= minPatternStrength
+        neutralCount += 1
+        neutralStrengthSum += array.get(neutralPatternStrengths, i)
+        if recentNeutralPattern == "" or array.get(neutralPatternStrengths, i) > recentNeutralStrength
+            recentNeutralPattern := array.get(neutralPatternNames, i)
+            recentNeutralStrength := array.get(neutralPatternStrengths, i)
+            recentNeutralDuration := array.get(neutralPatternDurations, i)
+
+float avgNeutralStrength = neutralCount > 0 ? neutralStrengthSum / neutralCount : 0
+
+// Entry Conditions
+bool longCondition  = avgBullishStrength >= minAvgStrength and avgBearishStrength < minAvgStrength and isUptrend and isVolumeSpike and isNearSupport and isFollowThroughBullish and isHTFUptrend
+bool shortCondition = avgBearishStrength >= minAvgStrength and avgBullishStrength < minAvgStrength and isDowntrend and isVolumeSpike and isNearResistance and isFollowThroughBearish and isHTFDowntrend
+
+// -----------------------------------------------------------------------------
+// TRADE MANAGEMENT SYSTEM
+// -----------------------------------------------------------------------------
+total_qty_pct = tp1_qty_pct + tp2_qty_pct + tp3_qty_pct + runner_qty_pct
+tp1_qty_adj = total_qty_pct > 0 ? math.round(tp1_qty_pct * 100 / total_qty_pct) : 0
+tp2_qty_adj = total_qty_pct > 0 ? math.round(tp2_qty_pct * 100 / total_qty_pct) : 0
+tp3_qty_adj = total_qty_pct > 0 ? math.round(tp3_qty_pct * 100 / total_qty_pct) : 0
+runner_qty_adj = 100 - (tp1_qty_adj + tp2_qty_adj + tp3_qty_adj)
+// -----------------------------------------------------------------------------
+//                             STRATEGY LOGIC
+// -----------------------------------------------------------------------------
+// MODIFICATION: Added variables to track exit price and time
+var float lastLongEntryPrice = na, var int lastLongEntryTime = na
+var float lastShortEntryPrice = na, var int lastShortEntryTime = na
+var float lastLongExitPrice = na, var int lastLongExitTime = na
+var float lastShortExitPrice = na, var int lastShortExitTime = na
+
+
+var float  long_entry_price   = na
+var float  short_entry_price  = na
+var float  long_highest       = na
+var float  short_lowest       = na
+var float  long_trailing_sl   = na
+var float  short_trailing_sl  = na
+var float  long_trail_base    = na
+var float  short_trail_base   = na
+var bool   long_tp_hit        = false
+var bool   short_tp_hit       = false
+
+var line line_entry_long  = na
+var line line_entry_short = na
+var line line_tp1_long    = na
+var line line_tp2_long    = na
+var line line_tp3_long    = na
+var line line_trail_long  = na
+var line line_tp1_short   = na
+var line line_tp2_short   = na
+var line line_tp3_short   = na
+var line line_trail_short = na
+
+
+// Entry Logic
+if useAsStrategy and inDateRange
+    if longCondition and strategy.position_size <= 0
+        strategy.cancel_all()
+        strategy.close_all(comment="Exit Short → Enter Long")
+        long_entry_price  := close
+        long_highest      := close
+        long_trail_base   := close
+        long_trailing_sl  := close * (1 - sl_pct / 100)
+        long_tp_hit       := false
+        lastLongEntryPrice := close
+        lastLongEntryTime := time
+        strategy.entry("Long", strategy.long, comment="Long Entry")
+
+        if show_levels
+            line.delete(line_entry_long)
+            line_entry_long := line.new(bar_index, close, bar_index + 1, close, color=color.yellow, width=2, style=line.style_dashed, extend=extend.right)
+            label.new(bar_index, close, "LONG", color=color.green, textcolor=color.white, style=label.style_label_down, yloc=yloc.belowbar, size=size.small)
+
+    if shortCondition and strategy.position_size >= 0
+        strategy.cancel_all()
+        strategy.close_all(comment="Exit Long → Enter Short")
+        short_entry_price := close
+        short_lowest      := close
+        short_trail_base  := close
+        short_trailing_sl := close * (1 + sl_pct / 100)
+        short_tp_hit      := false
+        lastShortEntryPrice := close
+        lastShortEntryTime := time
+        strategy.entry("Short", strategy.short, comment="Short Entry")
+
+        if show_levels
+            line.delete(line_entry_short)
+            line_entry_short := line.new(bar_index, close, bar_index + 1, close, color=color.yellow, width=2, style=line.style_dashed, extend=extend.right)
+            label.new(bar_index, close, "SHORT", color=color.red, textcolor=color.white, style=label.style_label_up, yloc=yloc.abovebar, size=size.small)
+
+// Update trailing
+if strategy.position_size > 0
+    long_highest := math.max(long_highest, high)
+    if trail_from_start or long_tp_hit
+        long_trail_base := math.max(long_trail_base, high)
+    long_trailing_sl := long_trail_base * (1 - sl_pct / 100)
+
+if strategy.position_size < 0
+    short_lowest := math.min(short_lowest, low)
+    if trail_from_start or short_tp_hit
+        short_trail_base := math.min(short_trail_base, low)
+    short_trailing_sl := short_trail_base * (1 + sl_pct / 100)
+
+// Detect TP hit
+if strategy.position_size > 0
+    int lastIdx = strategy.closedtrades - 1
+    if lastIdx >= 0
+        string comment = strategy.closedtrades.exit_comment(lastIdx)
+        if not na(comment) and str.contains(comment, "TP")
+            long_tp_hit := true
+
+if strategy.position_size < 0
+    int lastIdx = strategy.closedtrades - 1
+    if lastIdx >= 0
+        string comment = strategy.closedtrades.exit_comment(lastIdx)
+        if not na(comment) and str.contains(comment, "TP")
+            short_tp_hit := true
+
+// Exit Orders
+if strategy.position_size > 0 and useAsStrategy
+    float entry = long_entry_price
+    if use_partial_tp
+        if tp1_qty_adj > 0
+            strategy.exit("TP1 Long", "Long", qty_percent=tp1_qty_adj, limit=entry * (1 + tp1_pct / 100), comment="TP1 Long")
+        if tp2_qty_adj > 0
+            strategy.exit("TP2 Long", "Long", qty_percent=tp2_qty_adj, limit=entry * (1 + tp2_pct / 100), comment="TP2 Long")
+        if tp3_qty_adj > 0
+            strategy.exit("TP3 Long", "Long", qty_percent=tp3_qty_adj, limit=entry * (1 + tp3_pct / 100), comment="TP3 Long")
+    else
+        strategy.exit("Full TP Long", "Long", limit=entry * (1 + tp3_pct / 100), comment="Full TP Long")
+    strategy.exit("Trail SL Long", "Long", stop=long_trailing_sl, comment="Trail SL Long")
+    lastLongExitPrice := close
+    lastLongExitTime := time
+
+if strategy.position_size < 0 and useAsStrategy
+    float entry = short_entry_price
+    
+    if use_partial_tp
+        if tp1_qty_adj > 0
+            strategy.exit("TP1 Short", "Short", qty_percent=tp1_qty_adj, limit=entry * (1 - tp1_pct / 100), comment="TP1 Short")
+        if tp2_qty_adj > 0
+            strategy.exit("TP2 Short", "Short", qty_percent=tp2_qty_adj, limit=entry * (1 - tp2_pct / 100), comment="TP2 Short")
+        if tp3_qty_adj > 0
+            strategy.exit("TP3 Short", "Short", qty_percent=tp3_qty_adj, limit=entry * (1 - tp3_pct / 100), comment="TP3 Short")
+    else
+        strategy.exit("Full TP Short", "Short", limit=entry * (1 - tp3_pct / 100), comment="Full TP Short")
+    strategy.exit("Trail SL Short", "Short", stop=short_trailing_sl, comment="Trail SL Short")
+    lastShortExitPrice := close
+    lastShortExitTime := time
+// Visual Levels
+if show_levels and strategy.position_size > 0
+    line.delete(line_tp1_long)
+    line.delete(line_tp2_long)
+    line.delete(line_tp3_long)
+    line.delete(line_trail_long)
+    line_tp1_long   := line.new(bar_index-50, long_entry_price * (1 + tp1_pct / 100), bar_index+10, long_entry_price * (1 + tp1_pct / 100), color=color.green, style=line.style_dotted, extend=extend.right)
+    line_tp2_long   := line.new(bar_index-50, long_entry_price * (1 + tp2_pct / 100), bar_index+10, long_entry_price * (1 + tp2_pct / 100), color=color.lime, style=line.style_dotted, extend=extend.right)
+    line_tp3_long   := line.new(bar_index-50, long_entry_price * (1 + tp3_pct / 100), bar_index+10, long_entry_price * (1 + tp3_pct / 100), color=color.teal, style=line.style_dotted, extend=extend.right)
+    line_trail_long := line.new(bar_index-50, long_trailing_sl, bar_index+10, long_trailing_sl, color=color.orange, width=2, extend=extend.right)
+
+if show_levels and strategy.position_size < 0
+    line.delete(line_tp1_short)
+    line.delete(line_tp2_short)
+    line.delete(line_tp3_short)
+    line.delete(line_trail_short)
+    line_tp1_short  := line.new(bar_index-50, short_entry_price * (1 - tp1_pct / 100), bar_index+10, short_entry_price * (1 - tp1_pct / 100), color=color.red, style=line.style_dotted, extend=extend.right)
+    line_tp2_short  := line.new(bar_index-50, short_entry_price * (1 - tp2_pct / 100), bar_index+10, short_entry_price * (1 - tp2_pct / 100), color=color.maroon, style=line.style_dotted, extend=extend.right)
+    line_tp3_short  := line.new(bar_index-50, short_entry_price * (1 - tp3_pct / 100), bar_index+10, short_entry_price * (1 - tp3_pct / 100), color=color.purple, style=line.style_dotted, extend=extend.right)
+    line_trail_short:= line.new(bar_index-50, short_trailing_sl, bar_index+10, short_trailing_sl, color=color.orange, width=2, extend=extend.right)
+
+
+// -----------------------------------------------------------------------------
+//                                 DASHBOARD
+// -----------------------------------------------------------------------------
+
+var int totalTrades = 0, var int winningTrades = 0, var int losingTrades = 0
+var int currentStreak = 0, var bool lastTradeWon = na
+
+if useAsStrategy and inDateRange and strategy.closedtrades > strategy.closedtrades[1]
+    float lastClosedProfit = strategy.closedtrades.profit(strategy.closedtrades - 1)
+    if lastClosedProfit > 0
+        winningTrades += 1
+        currentStreak := not na(lastTradeWon) and lastTradeWon ? currentStreak + 1 : 1
+        lastTradeWon := true
+    else if lastClosedProfit < 0
+        losingTrades += 1
+        currentStreak := not na(lastTradeWon) and not lastTradeWon ? currentStreak + 1 : 1
+        lastTradeWon := false
+    totalTrades := winningTrades + losingTrades
+
+float winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0.0
+
+string marketPhase = avgBullishStrength > 0 ? "Bullish Phase (Avg Str: " + str.tostring(avgBullishStrength, "#.#") + ")" : avgBearishStrength > 0 ? "Bearish Phase (Avg Str: " + str.tostring(avgBearishStrength, "#.#") + ")" : isUptrend ? "Uptrend (Price > MA)" : isDowntrend ? "Downtrend (Price < MA)" : "Neutral / Indecision"
+if avgBullishStrength > 0 and avgBearishStrength > 0
+    marketPhase := "Conflicting Signals / Indecision"
+
+var table dashTable = table.new(position.top_right, 1, 1, border_width=1)
+if showDashboard and barstate.islast
+    // MODIFICATION: Added strings for exit info and active pattern
+    string lastLongEntryStr = na(lastLongEntryPrice) ? "N/A" : str.tostring(lastLongEntryPrice, format.mintick) + " @ " + str.format("{0,date,dd MMM yyyy HH:mm}", lastLongEntryTime)
+    string lastShortEntryStr = na(lastShortEntryPrice) ? "N/A" : str.tostring(lastShortEntryPrice, format.mintick) + " @ " + str.format("{0,date,dd MMM yyyy HH:mm}", lastShortEntryTime)
+    string lastLongExitStr = na(lastLongExitPrice) ? "N/A" : str.tostring(lastLongExitPrice, format.mintick) + " @ " + str.format("{0,date,dd MMM yyyy HH:mm}", lastLongExitTime)
+    string lastShortExitStr = na(lastShortExitPrice) ? "N/A" : str.tostring(lastShortExitPrice, format.mintick) + " @ " + str.format("{0,date,dd MMM yyyy HH:mm}", lastShortExitTime)
+
+    string volConfText = enableVolumeConfirmation ? "\nVolume Confirmation: " + (isVolumeSpike ? "✔ Spike" : "✖ No Spike") : ""
+    string srConfText = enableSRConfirmation ? "\nS/R Confirmation: " + (isNearSupport ? "✔ Near Support" : (isNearResistance ? "✔ Near Resistance" : "✖ None")) : ""
+    string atrFilterText = enableATRFilter ? "\nATR Filter: Enabled (L:" + str.tostring(longBodyAtrMult) + ", S:" + str.tostring(smallBodyAtrMult) + ")" : ""
+    string advConfText = enableAdvancedFollowThrough ? "\nFollow-Through: " + (isFollowThroughBullish or isFollowThroughBearish ? "✔ Confirmed" : "✖ No") : ""
+    string mtfFilterText = enableMTFFilter ? "\nHigher TF Trend: " + (isHTFUptrend ? "✔ Uptrend" : (isHTFDowntrend ? "✔ Downtrend" : "✖ Sideways")) : ""
+
+    string activePatternText = "None"
+    if avgBullishStrength > avgBearishStrength and avgBullishStrength > 0 and recentBullPattern != ""
+        activePatternText := "BULLISH: " + recentBullPattern + " (Str: " + str.tostring(recentBullStrength, "#.#") + ", Bars: " + str.tostring(recentBullDuration) + ")"
+    else if avgBearishStrength > avgBullishStrength and avgBearishStrength > 0 and recentBearPattern != ""
+        activePatternText := "BEARISH: " + recentBearPattern + " (Str: " + str.tostring(recentBearStrength, "#.#") + ", Bars: " + str.tostring(recentBearDuration) + ")"
+    else if avgNeutralStrength > 0 and recentNeutralPattern != ""
+        activePatternText := "NEUTRAL: " + recentNeutralPattern + " (Str: " + str.tostring(recentNeutralStrength, "#.#") + ", Bars: " + str.tostring(recentNeutralDuration) + ")"
+
+    // MODIFICATION: Updated dashboard text string
+    string dashboardText = "Grand Master's Dominance (ATR)\n" +
+       "-------------------------------------------\n" +
+       "**Current Market Phase:** " + marketPhase + "\n" +
+       "**Active Pattern:** " + activePatternText + "\n" +
+       "**Trend:** " + (isUptrend ? "Uptrend" : (isDowntrend ? "Downtrend" : "Sideways")) + "\n" +
+       "-------------------------------------------\n" +
+       "Avg Bullish Strength: " + str.tostring(avgBullishStrength, "#.##") + " (Count: " + str.tostring(bullishCount) + ")\n" +
+       "Avg Bearish Strength: " + str.tostring(avgBearishStrength, "#.##") + " (Count: " + str.tostring(bearishCount) + ")\n" +
+       "Avg Neutral Strength: " + str.tostring(avgNeutralStrength, "#.##") + " (Count: " + str.tostring(neutralCount) + ")\n" +
+       "-------------------------------------------\n" +
+       "**Active Filters**\n" +
+       "Min Avg Strength: " + str.tostring(minAvgStrength, "#.#") + "\n" +
+       "Min Individual Strength: " + str.tostring(minPatternStrength, "#.#") + "\n" +
+       "Trend MA Length: " + str.tostring(maLength) +
+       volConfText + srConfText + atrFilterText + advConfText + mtfFilterText +
+       "\n-------------------------------------------\n" +
+       "**Backtest Stats**\n" +
+       "Total Trades: " + str.tostring(totalTrades) + "\n" +
+       "Win Rate: " + str.tostring(winRate, "#.##") + "%" + "\n" +
+       "Current Streak: " + str.tostring(currentStreak) + (na(lastTradeWon) ? "" : (lastTradeWon ? " (Win)" : " (Loss)")) + "\n" +
+       "-------------------------------------------\n" +
+       "**Last Trade Info**\n" +
+       "Last Long Entry: " + lastLongEntryStr + "\n" +
+       "Last Long Exit: " + lastLongExitStr + "\n" +
+       "Last Short Entry: " + lastShortEntryStr + "\n" +
+       "Last Short Exit: " + lastShortExitStr + "\n" +
+       "-------------------------------------------\n" +
+       "Mode: " + (useAsStrategy ? "Strategy" : "Indicator") + " | Date Range: " + str.tostring(inDateRange)
+
+    table.cell(dashTable, 0, 0, text=dashboardText, text_color=color.white, bgcolor=color.new(color.black, 20), text_size=size.small)
+
+
+// Add these 15 alertcondition() lines at the end of your script, before the plot statements or at the end of the logic section.
+// -----------------------------------------------------------------------------
+// ALERTS (Only valid ones)
+// -----------------------------------------------------------------------------
+if inDateRange
+    if longCondition and enableLongEntryAlert
+        alert("LONG ENTRY | Strength: " + str.tostring(avgBullishStrength, "#.#") + " | Pattern: " + recentBullPattern, alert.freq_once_per_bar_close)
+    if shortCondition and enableShortEntryAlert
+        alert("SHORT ENTRY | Strength: " + str.tostring(avgBearishStrength, "#.#") + " | Pattern: " + recentBearPattern, alert.freq_once_per_bar_close)
+    if avgBullishStrength >= minAvgStrength and bullishCount >= 2 and enableStrongBullishAlert
+        alert("STRONG BULLISH PATTERN | " + recentBullPattern, alert.freq_once_per_bar_close)
+    if avgBearishStrength >= minAvgStrength and bearishCount >= 2 and enableStrongBearishAlert
+        alert("STRONG BEARISH PATTERN | " + recentBearPattern, alert.freq_once_per_bar_close)
+
+
+// -----------------------------------------------------------------------------
+//                          ALERTS USING alert() FUNCTION (Toggleable)
+// These will trigger alerts when conditions are true and the respective alert is enabled.
+// Set up one alert with "Any alert() function call" in the dialog.
+// -----------------------------------------------------------------------------
+
+     // 3. Long Exit (Opposite Short Signal While in Long Position)
+    if shortCondition and strategy.position_size > 0 and enableLongExitAlert
+        alert("Grand Master's Candlestick Dominance: EXIT LONG SIGNAL!\n" +
+              "Reason: Bearish reversal pattern detected\n" +
+              "Bearish Strength: " + str.tostring(avgBearishStrength, "#.#") + 
+              " | Top Pattern: " + recentBearPattern + 
+              "\nPrice: " + str.tostring(close, format.mintick), 
+              alert.freq_once_per_bar_close)
+
+    // 4. Short Exit (Opposite Long Signal While in Short Position)
+    if longCondition and strategy.position_size < 0 and enableShortExitAlert
+        alert("Grand Master's Candlestick Dominance: EXIT SHORT SIGNAL!\n" +
+              "Reason: Bullish reversal pattern detected\n" +
+              "Bullish Strength: " + str.tostring(avgBullishStrength, "#.#") + 
+              " | Top Pattern: " + recentBullPattern + 
+              "\nPrice: " + str.tostring(close, format.mintick), 
+              alert.freq_once_per_bar_close)
+    // 5. Strong Bullish Pattern
+    if avgBullishStrength >= minAvgStrength and bullishCount >= 2 and enableStrongBullishAlert
+        alert("Grand Master's Candlestick Dominance: STRONG BULLISH PATTERN!\nStrength: " + str.tostring(avgBullishStrength, "#.#") + " | Top Pattern: " + recentBullPattern + " | Trend: " + (isUptrend ? "Uptrend" : "Sideways/Down"), alert.freq_once_per_bar_close)
+
+    // 6. Strong Bearish Pattern
+    if avgBearishStrength >= minAvgStrength and bearishCount >= 2 and enableStrongBearishAlert
+        alert("Grand Master's Candlestick Dominance: STRONG BEARISH PATTERN!\nStrength: " + str.tostring(avgBearishStrength, "#.#") + " | Top Pattern: " + recentBearPattern + " | Trend: " + (isDowntrend ? "Downtrend" : "Sideways/Up"), alert.freq_once_per_bar_close)
+
+    // 7. Neutral/Indecision
+    if avgNeutralStrength >= minAvgStrength and neutralCount >= 1 and enableNeutralIndecisionAlert
+        alert("Grand Master's Candlestick Dominance: NEUTRAL / INDECISION\nStrength: " + str.tostring(avgNeutralStrength, "#.#") + " | Pattern: " + recentNeutralPattern + " | Volume Spike: " + (isVolumeSpike ? "Yes" : "No"), alert.freq_once_per_bar_close)
+
+    // 8. Volume Spike with Strong Pattern
+    if isVolumeSpike and (avgBullishStrength >= minAvgStrength or avgBearishStrength >= minAvgStrength) and enableVolumeSpikeAlert
+        alert("Grand Master's Candlestick Dominance: VOLUME SPIKE + STRONG PATTERN!\nBull Str: " + str.tostring(avgBullishStrength, "#.#") + " | Bear Str: " + str.tostring(avgBearishStrength, "#.#") + " | Volume: " + str.tostring(volume) + " | Price: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+    // 9. S/R Breakout
+    if enableSRConfirmation and enableSRBreakoutAlert
+        bool bullishBreak = not na(ph[1]) and close > ph[1] * (1 + srTolerancePerc) and avgBullishStrength >= minPatternStrength
+        bool bearishBreak = not na(pl[1]) and close < pl[1] * (1 - srTolerancePerc) and avgBearishStrength >= minPatternStrength
+        if bullishBreak or bearishBreak
+            string direction = bullishBreak ? "RESISTANCE BREAKOUT (Bullish)" : "SUPPORT BREAKDOWN (Bearish)"
+            alert("Grand Master's Candlestick Dominance: S/R BREAKOUT!\n" + direction + "\nPrice: " + str.tostring(close, format.mintick) + "\nBull Str: " + str.tostring(avgBullishStrength, "#.#") + " | Bear Str: " + str.tostring(avgBearishStrength, "#.#"), alert.freq_once_per_bar_close)
+
+    // 10. Higher Timeframe Trend Reversal
+    if enableMTFFilter and (ta.crossover(close, htf_ma) or ta.crossunder(close, htf_ma)) and enableHTFTrendReversalAlert
+        string direction = ta.crossover(close, htf_ma) ? "BULLISH" : "BEARISH"
+        alert("Grand Master's Candlestick Dominance: HTF TREND REVERSAL (" + direction + ")!\nHTF MA: " + str.tostring(htf_ma, format.mintick) + " | Price: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+    // 11. High-Confidence Single Pattern
+    if ((avgBullishStrength >= 8.0 and bullishCount == 1) or (avgBearishStrength >= 8.0 and bearishCount == 1)) and enableHighConfidencePatternAlert
+        string pattern = recentBullPattern != "" ? recentBullPattern : recentBearPattern
+        float strength = math.max(avgBullishStrength, avgBearishStrength)
+        alert("Grand Master's Candlestick Dominance: HIGH-CONFIDENCE PATTERN!\nPattern: " + pattern + " | Strength: " + str.tostring(strength, "#.#") + " | Price: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+    // 12. Conflicting Signals
+    if avgBullishStrength >= minAvgStrength and avgBearishStrength >= minAvgStrength and bullishCount > 0 and bearishCount > 0 and enableConflictingSignalsAlert
+        alert("Grand Master's Candlestick Dominance: CONFLICTING SIGNALS!\nBull: " + recentBullPattern + " (Str: " + str.tostring(avgBullishStrength, "#.#") + ")\nBear: " + recentBearPattern + " (Str: " + str.tostring(avgBearishStrength, "#.#") + ")\nPrice: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+    // 13. Trend MA Crossover
+    if (ta.crossover(close, ma) or ta.crossunder(close, ma)) and enableTrendMACrossoverAlert
+        string direction = ta.crossover(close, ma) ? "Bullish" : "Bearish"
+        alert("Grand Master's Candlestick Dominance: TREND MA CROSSOVER (" + direction + ")!\nPrice: " + str.tostring(close, format.mintick) + " | MA(" + str.tostring(maLength) + "): " + str.tostring(ma, format.mintick), alert.freq_once_per_bar_close)
+
+    // 14. ATR Volatility Spike
+    if enableATRFilter and (bodySize(open, close) > atrValue * longBodyAtrMult * 1.5) and enableATRVolatilitySpikeAlert
+        alert("Grand Master's Candlestick Dominance: ATR VOLATILITY SPIKE!\nBody: " + str.tostring(bodySize(open, close), format.mintick) + " | ATR x1.5: " + str.tostring(atrValue * longBodyAtrMult * 1.5, format.mintick) + "\nPrice: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+    // 15. Multi-Bar Pattern Completion
+    if ((recentBullPattern != "" and recentBullDuration >= 3 and avgBullishStrength >= minAvgStrength) or (recentBearPattern != "" and recentBearDuration >= 3 and avgBearishStrength >= minAvgStrength)) and enableMultiBarPatternAlert
+        string pattern = recentBullPattern != "" ? recentBullPattern : recentBearPattern
+        int duration = math.max(recentBullDuration, recentBearDuration)
+        float strength = math.max(avgBullishStrength, avgBearishStrength)
+        alert("Grand Master's Candlestick Dominance: MULTI-BAR PATTERN COMPLETED!\nPattern: " + pattern + " | Bars: " + str.tostring(duration) + " | Strength: " + str.tostring(strength, "#.#") + "\nPrice: " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
+
+// -----------------------------------------------------------------------------
+//                                 PLOTS
+// -----------------------------------------------------------------------------
+// Hidden plots for alert placeholders
+plot(avgBullishStrength, title="avgBullishStrength", display=display.none)
+plot(avgBearishStrength, title="avgBearishStrength", display=display.none)
+plot(avgNeutralStrength, title="avgNeutralStrength", display=display.none)
+plot(float(isVolumeSpike ? 1 : 0), title="isVolumeSpike", display=display.none)
+plot(float(isUptrend ? 1 : 0), title="isUptrend", display=display.none)
+plot(float(isDowntrend ? 1 : 0), title="isDowntrend", display=display.none)
+plot(float(isHTFUptrend ? 1 : 0), title="isHTFUptrend", display=display.none)
+plot(maLength, title="maLength", display=display.none)
+plot(recentBullDuration, title="recentBullDuration", display=display.none)
+plot(recentBearDuration, title="recentBearDuration", display=display.none)
+plot(bodySize(open, close), title="bodySize", display=display.none)
+plot(atrValue, title="atrValue", display=display.none)
+
+plotshape(longCondition, title="Long Entry", location=location.belowbar, color=color.new(color.green, 20), style=shape.triangleup, size=size.small, text="LONG")
+plotshape(shortCondition, title="Short Entry", location=location.abovebar, color=color.new(color.red, 20), style=shape.triangledown, size=size.small, text="SHORT")
+plot(ma, "Trend MA", color.black, linewidth=2)
+plot(enableMTFFilter ? htf_ma : na, "Higher TF MA", color.aqua, linewidth=2, style=plot.style_line)
+plot(ph, title="ph", style=plot.style_circles, linewidth=2, color=color.new(color.red, 50), offset=-swingPivotLength)
+plot(pl, title="pl", style=plot.style_circles, linewidth=2, color=color.new(color.green, 50), offset=-swingPivotLength)
+
+// -----------------------------------------------------------------------------
+// PLOTS
+// -----------------------------------------------------------------------------
+plotshape(longCondition,  title="Long Entry",  location=location.belowbar, color=color.new(color.green, 20), style=shape.triangleup,   size=size.small, text="LONG")
+plotshape(shortCondition, title="Short Entry", location=location.abovebar, color=color.new(color.red, 20),   style=shape.triangledown, size=size.small, text="SHORT")
+plot(ma, "Trend MA", color=color.black, linewidth=2)
+plot(enableMTFFilter ? htf_ma : na, "Higher TF MA", color=color.aqua, linewidth=2)
+plot(ph, style=plot.style_circles, linewidth=2, color=color.new(color.red, 50), offset=-swingPivotLength)
+plot(pl, style=plot.style_circles, linewidth=2, color=color.new(color.green, 50), offset=-swingPivotLength)
+
+//Steve Nison ("Japanese Candlestick Charting Techniques"):

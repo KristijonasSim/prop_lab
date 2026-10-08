@@ -1,0 +1,46 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/5TZcsTXf-New-series-Consistent-Losing-Strategies-34-EMA-Scalping/
+// id: PUB;YKKsPBrVAeqd9DEUKdCk4SDw3bphfbvl  kind: strategy  likes: 127
+//@version=3
+strategy("ʕ•ᴥ•ʔ", currency ="USD", initial_capital=1000, overlay=true, commission_type=strategy.commission.cash_per_contract, 
+     commission_value=0.00003, slippage = 15, pyramiding=1, calc_on_every_tick=true)
+
+//USER INPUTS
+ye  =       input(defval=2018, type=integer,title="Starting Year")
+mo1 =       input(defval=1, type=integer, title="Starting Month")
+day1 =      input(defval=1, type=integer, title="Starting Day")
+risk =      input(defval=1,type=float, minval=0.1, step = 0.1,title="Risk per Trade (%)")/100       //%
+leverage =  input(defval=400, type=integer, title="Available Leverage")
+minQty =    input(defval=0.01, type=float, minval=0.01, step = 0.01, title="Min. Lot Size")*100000
+fixedSL =   input(defval=5, type=integer, title= "Stop Loss (pips)")/10000    //DEFAULT value of stop loss in points
+fixedTP =   input(defval=10, type=integer, title="Take Profit (pips)")/10000  //DEFAULT value of take profit in point
+trailRange =input(defval=65, type=integer, step=5, title="Trailing Stop enable (%)")
+minTrail =  input(defval=5, type=integer, minval=2, title="Trailing Stop distance (pips)")/10000 //Minium accepted traling stop loss in points
+tf =        input(defval=0, type=integer,minval=5, title="Indicator Resolution (min)")
+length =    input(defval=34, type=integer,minval=1, title="Indicator Period (candles)")
+
+//STRATEGY CALCULATION
+source_tf = tf == 0 ? interval : tf
+src =   security(tickerid, tostring(source_tf), close)
+ema = ema(src, length)
+
+//POSITION LOGIC
+buy = change(ema,34)<0 and change(ema[1])<0 and crossover(close,ema)
+sell = change(ema,34)>0 and change(ema[1])>0 and crossunder(close,ema)
+
+//ORDER PLACEMENT & MODIFICAION
+if (time>timestamp(ye, mo1, day1 , 0, 0))
+    //LONG
+    balance = strategy.initial_capital + strategy.netprofit
+    qty = (risk/fixedSL) >= leverage ? leverage*balance : (risk/fixedSL)*balance < minQty ? minQty : (risk/fixedSL)*balance
+    strategy.entry("BUY", strategy.long, qty, oca_name="BUY", oca_type=strategy.oca.cancel, when=buy)
+    strategy.exit("B.Exit", "BUY", qty_percent = 100, profit=100000*fixedTP, loss=100000*fixedSL, trail_points=1000*trailRange*fixedTP, trail_offset=100000*minTrail)
+    //SHORT
+    qty2 = (risk/fixedSL) >= leverage ? leverage*balance : (risk/fixedSL)*balance < 1000 ? 1000 : (risk/fixedSL)*balance
+    strategy.entry("SELL", strategy.short, qty2, oca_name="SELL", oca_type=strategy.oca.cancel, when=sell)
+    strategy.exit("S.Exit", "SELL", qty_percent = 100, profit=100000*fixedTP, loss=100000*fixedSL, trail_points=1000*trailRange*fixedTP, trail_offset=100000*minTrail)
+
+//GRAPHICS
+plot(ema ,linewidth=2, color=green)
+
+

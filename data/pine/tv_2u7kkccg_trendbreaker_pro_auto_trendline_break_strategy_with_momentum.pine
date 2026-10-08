@@ -1,0 +1,291 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/2u7KKcCG-TrendBreaker-Pro-Auto-Trendline-Break-Strategy-with-Momentum/
+// id: PUB;51f26af9fe7b418189a203c2430e5563  kind: strategy
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © blitz_locked
+
+//@version=6
+strategy("Trendline Break Pro Strategy", shorttitle="TLB Pro", overlay=true, initial_capital=10000,
+     default_qty_type=strategy.percent_of_equity, default_qty_value=20,
+     commission_type=strategy.commission.percent, commission_value=0.04, slippage=2,
+     pyramiding=0, max_lines_count=200, max_labels_count=200)
+
+// =============================================================================
+// 1. INPUTS
+// =============================================================================
+grpTL = "Trendline Detection"
+int    pivLen     = input.int(5, "Pivot Length (left/right)", minval=2, group=grpTL, tooltip="Bars on each side needed to confirm a pivot. Larger = fewer, more significant lines.")
+int    minSpan    = input.int(8, "Min Bars Between Pivots", minval=1, group=grpTL, tooltip="Two pivots closer than this are ignored (avoids steep, noisy lines).")
+int    maxAge     = input.int(150, "Max Line Age (bars)", minval=10, group=grpTL, tooltip="Lines older than this (since their 2nd pivot) can no longer trigger a signal.")
+int    atrLen     = input.int(14, "ATR Length", minval=1, group=grpTL)
+float  bufAtr     = input.float(0.10, "Break Buffer (x ATR)", minval=0.0, step=0.05, group=grpTL, tooltip="Close must be beyond the line by this many ATRs to count as a break.")
+bool   showLines  = input.bool(true, "Draw Trendlines", group=grpTL)
+bool   showSig    = input.bool(true, "Show Signal Labels", group=grpTL)
+
+grpDir = "Direction"
+bool   enableLong  = input.bool(true, "Enable Longs (resistance break)", group=grpDir)
+bool   enableShort = input.bool(true, "Enable Shorts (support break)", group=grpDir)
+bool   reverseOpp  = input.bool(true, "Reverse on Opposite Signal", group=grpDir)
+
+grpFlt = "Confirmation Filters"
+bool   useMom      = input.bool(true,  "Momentum Filter (smoothed AO turning)", group=grpFlt)
+int    aoFast      = input.int(5,  "AO Fast", minval=1, group=grpFlt)
+int    aoSlow      = input.int(34, "AO Slow", minval=1, group=grpFlt)
+int    aoSmooth    = input.int(5,  "AO Smoothing", minval=1, group=grpFlt)
+bool   useEma      = input.bool(false, "Trend Filter (EMA)", group=grpFlt)
+int    emaLen      = input.int(100, "EMA Length", minval=1, group=grpFlt)
+bool   useAdx      = input.bool(false, "ADX Filter", group=grpFlt)
+int    adxThresh   = input.int(18, "ADX Threshold", minval=1, group=grpFlt)
+bool   useVol      = input.bool(false, "Volume Filter", group=grpFlt)
+float  volMult     = input.float(1.2, "Volume > SMA(20) x", minval=0.1, step=0.1, group=grpFlt)
+
+grpRisk = "Risk Management"
+string stopMode    = input.string("ATR", "Stop Mode", options=["ATR", "Swing"], group=grpRisk, tooltip="ATR: entry +/- ATR x multiplier. Swing: below/above the recent swing low/high.")
+float  atrStopMult = input.float(1.5, "ATR Stop Multiplier", minval=0.1, step=0.1, group=grpRisk)
+int    swingLB     = input.int(10, "Swing Lookback", minval=2, group=grpRisk)
+float  swingPad    = input.float(0.25, "Swing Stop Padding (x ATR)", minval=0.0, step=0.05, group=grpRisk)
+bool   useTP       = input.bool(true, "Use Take Profit", group=grpRisk)
+float  rrTarget    = input.float(2.0, "Take Profit (R multiple)", minval=0.1, step=0.1, group=grpRisk)
+float  tpPct       = input.float(100, "Take Profit Quantity %", minval=1, maxval=100, step=5, group=grpRisk, tooltip="Below 100 = partial TP; remainder keeps the (trailing) stop.")
+bool   useBE       = input.bool(true, "Move Stop to Break-Even", group=grpRisk)
+float  beR         = input.float(1.0, "Break-Even Trigger (R)", minval=0.1, step=0.1, group=grpRisk)
+bool   useTrail    = input.bool(true, "ATR Trailing Stop", group=grpRisk)
+float  trailStartR = input.float(1.5, "Trail Starts At (R)", minval=0.1, step=0.1, group=grpRisk)
+float  trailMult   = input.float(2.0, "Trail Distance (x ATR)", minval=0.1, step=0.1, group=grpRisk)
+int    maxBars     = input.int(0, "Max Bars In Trade (0 = off)", minval=0, group=grpRisk)
+
+grpVis = "Colors"
+color  colRes   = input.color(color.new(color.red, 10),    "Resistance Line", group=grpVis)
+color  colSup   = input.color(color.new(color.teal, 10),   "Support Line", group=grpVis)
+color  colBroke = input.color(color.new(color.gray, 40),   "Broken Line", group=grpVis)
+
+// =============================================================================
+// 2. INDICATORS
+// =============================================================================
+float atr       = ta.atr(atrLen)
+float emaTrend = ta.ema(close,emaLen)
+float aoVal = ta.ema(ta.sma(hl2,aoFast) - ta.ema(hl2,aoSlow),aoSmooth)
+[diPlus,diMinus,adxVal]=ta.dmi(14,14)
+float volMa = ta.sma(volume,20)
+float swLow = ta.lowest(low,swingLB)
+float swHigh = ta.highest(high,swingLB)
+
+float pH = ta.pivothigh(high, pivLen, pivLen)
+float pL = ta.pivotlow(low, pivLen, pivLen)
+
+// =============================================================================
+// 3. TRENDLINE CONSTRUCTION
+// Resistance = line through two consecutive LOWER pivot highs (downtrend line)
+// Support    = line through two consecutive HIGHER pivot lows (uptrend line)
+// Lines are only confirmed pivLen bars after the pivot, so signals do not repaint.
+// =============================================================================
+var int   ph1X = na
+var float ph1Y = na
+var int   ph2X = na
+var float ph2Y = na
+var float resSlope = na
+var bool  resValid = false
+var bool  resBroken = false
+var line  resLine = na
+
+var int   pl1X = na
+var float pl1Y = na
+var int   pl2X = na
+var float pl2Y = na
+var float supSlope = na
+var bool  supValid = false
+var bool  supBroken = false
+var line  supLine = na
+
+// ---- Resistance -------------------------------------------------------------
+if not na(pH)
+    bool wasBroken = resBroken
+    ph1X := ph2X
+    ph1Y := ph2Y
+    ph2X := bar_index - pivLen
+    ph2Y := pH
+    resValid := not na(ph1Y) and ph2Y < ph1Y and (ph2X - ph1X) >= minSpan
+    if not wasBroken
+        line.delete(resLine)
+    resLine := na
+    resBroken := false
+    if resValid
+        resSlope:=(ph2Y-ph1Y) / (ph2X-ph1X)
+        bool pierced=false
+        for i = 0 to pivLen
+            float lvl = ph2Y + resSlope * ((bar_index-i)-ph2X)
+            if close[i] > lvl
+                pierced := true
+        resBroken := pierced
+        if showLines
+            resLine := line.new(ph1X, ph1Y, ph2X, ph2Y, extend=extend.right, color=pierced ? colBroke : colRes, width=2)
+
+// ---- Support ----------------------------------------------------------------
+if not na(pL)
+    bool wasBroken = supBroken
+    pl1X := pl2X
+    pl1Y := pl2Y
+    pl2X := bar_index - pivLen
+    pl2Y := pL
+    supValid := not na(pl1Y) and pl2Y > pl1Y and (pl2X - pl1X) >= minSpan
+    if not wasBroken
+        line.delete(supLine)
+    supLine := na
+    supBroken := false
+    if supValid
+        supSlope := (pl2Y - pl1Y) / (pl2X - pl1X)
+        bool pierced = false
+        for i = 0 to pivLen
+            float lvl = pl2Y + supSlope * ((bar_index - i) - pl2X)
+            if close[i] < lvl
+                pierced := true
+        supBroken := pierced
+        if showLines
+            supLine := line.new(pl1X, pl1Y, pl2X, pl2Y, extend=extend.right, color=pierced ? colBroke : colSup, width=2)
+
+// Current line values (pure math, no dependence on drawing objects)
+float resLevel = resValid ? ph2Y + resSlope * (bar_index - ph2X) : na
+float supLevel = supValid ? pl2Y + supSlope * (bar_index - pl2X) : na
+bool  resFresh = not na(ph2X) and (bar_index - ph2X) <= maxAge
+bool  supFresh = not na(pl2X) and (bar_index - pl2X) <= maxAge
+
+// =============================================================================
+// 4. BREAK DETECTION
+// =============================================================================
+bool rawBreakUp   = resValid and not resBroken and resFresh and close > resLevel + atr * bufAtr
+bool rawBreakDown = supValid and not supBroken and supFresh and close < supLevel - atr * bufAtr
+
+// A line can only break once, even if the filters reject that break
+if rawBreakUp
+    resBroken := true
+    if not na(resLine)
+        line.set_extend(resLine, extend.none)
+        line.set_x2(resLine, bar_index)
+        line.set_y2(resLine, resLevel)
+        line.set_color(resLine, colBroke)
+        line.set_style(resLine, line.style_dotted)
+
+if rawBreakDown
+    supBroken := true
+    if not na(supLine)
+        line.set_extend(supLine, extend.none)
+        line.set_x2(supLine, bar_index)
+        line.set_y2(supLine, supLevel)
+        line.set_color(supLine, colBroke)
+        line.set_style(supLine, line.style_dotted)
+
+// =============================================================================
+// 5. FILTERS & SIGNALS
+// =============================================================================
+bool volOk = not useVol or na(volMa) or volume > volMa * volMult
+bool longOk   = (not useMom or aoVal > aoVal[1]) and (not useEma or close > emaTrend) and (not useAdx or adxVal > adxThresh) and volOk
+bool shortOk  = (not useMom or aoVal < aoVal[1]) and (not useEma or close < emaTrend) and (not useAdx or adxVal > adxThresh) and volOk
+
+bool longSignal  = enableLong  and rawBreakUp   and longOk
+bool shortSignal = enableShort and rawBreakDown and shortOk
+
+// =============================================================================
+// 6. ENTRIES
+// =============================================================================
+var float riskDist = na
+
+bool canLong  = longSignal  and (reverseOpp ? strategy.position_size <= 0 : strategy.position_size == 0)
+bool canShort = shortSignal and (reverseOpp ? strategy.position_size >= 0 : strategy.position_size == 0)
+
+if canLong
+    float slLong = stopMode == "ATR" ? close - atr * atrStopMult : swLow - atr * swingPad
+    riskDist := math.max(close - slLong, atr * 0.5)
+    strategy.entry("Long", strategy.long, comment="TLB Long")
+
+if canShort
+    float slShort = stopMode == "ATR" ? close + atr * atrStopMult : swHigh + atr * swingPad
+    riskDist := math.max(slShort - close, atr * 0.5)
+    strategy.entry("Short", strategy.short, comment="TLB Short")
+
+// =============================================================================
+// 7. POSITION MANAGEMENT (stop / break-even / trail / take profit)
+// =============================================================================
+var float stopLvl = na
+var float tpLvl   = na
+var bool  beDone  = false
+var bool  trailOn = false
+
+bool  inLong  = strategy.position_size > 0
+bool  inShort = strategy.position_size < 0
+bool  inPos   = inLong or inShort
+bool  newPos  = (inLong and not inLong[1]) or (inShort and not inShort[1])
+float avg     = strategy.position_avg_price
+
+if not inPos
+    stopLvl := na
+    tpLvl   := na
+    beDone  := false
+    trailOn := false
+else if newPos
+    stopLvl := inLong ? avg - riskDist : avg + riskDist
+    tpLvl   := inLong ? avg + riskDist * rrTarget : avg - riskDist * rrTarget
+    beDone  := false
+    trailOn := false
+else
+    if inLong
+        if useBE and not beDone and high >= avg + riskDist * beR
+            stopLvl := math.max(stopLvl, avg)
+            beDone := true
+        if useTrail and (trailOn or high >= avg + riskDist * trailStartR)
+            trailOn := true
+            stopLvl := math.max(stopLvl, close - atr * trailMult)
+    else
+        if useBE and not beDone and low <= avg - riskDist * beR
+            stopLvl := math.min(stopLvl, avg)
+            beDone := true
+        if useTrail and (trailOn or low <= avg - riskDist * trailStartR)
+            trailOn := true
+            stopLvl := math.min(stopLvl, close + atr * trailMult)
+
+if inLong and not na(stopLvl)
+    strategy.exit("XL", "Long", stop=stopLvl, limit=useTP ? tpLvl : na, qty_percent=useTP ? tpPct : 100, comment="L Exit")
+    if useTP and tpPct < 100
+        strategy.exit("XL-Rest", "Long", stop=stopLvl, comment="L Stop")
+
+if inShort and not na(stopLvl)
+    strategy.exit("XS", "Short", stop=stopLvl, limit=useTP ? tpLvl : na, qty_percent=useTP ? tpPct : 100, comment="S Exit")
+    if useTP and tpPct < 100
+        strategy.exit("XS-Rest", "Short", stop=stopLvl, comment="S Stop")
+
+if maxBars > 0 and inPos and strategy.opentrades > 0
+    int barsIn = bar_index - strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+    if barsIn >= maxBars
+        strategy.close_all(comment="Time Exit")
+
+// =============================================================================
+// 8. VISUALS
+// =============================================================================
+plotshape(showSig and longSignal,  "Long Break",  style=shape.labelup,   location=location.belowbar, color=color.new(color.green, 0), textcolor=color.white, text="BUY",  size=size.tiny)
+plotshape(showSig and shortSignal, "Short Break", style=shape.labeldown, location=location.abovebar, color=color.new(color.red, 0),   textcolor=color.white, text="SELL", size=size.tiny)
+
+plot(inPos ? stopLvl : na, "Stop",        color=color.new(color.red, 0),   style=plot.style_linebr, linewidth=1)
+plot(inPos and useTP ? tpLvl : na, "Take Profit", color=color.new(color.green, 0), style=plot.style_linebr, linewidth=1)
+plot(useEma ? emaTrend : na, "Trend EMA", color=color.new(color.orange, 20), linewidth=1)
+
+// =============================================================================
+// 9. DASHBOARD
+// =============================================================================
+var table dash = table.new(position.top_right, 2, 5, bgcolor=color.new(chart.bg_color, 10), border_width=1, border_color=color.new(color.gray, 60))
+
+if barstate.islast
+    string resTxt = resValid and not resBroken and resFresh ? str.tostring(resLevel, format.mintick) : "-"
+    string supTxt = supValid and not supBroken and supFresh ? str.tostring(supLevel, format.mintick) : "-"
+    string momTxt = aoVal > aoVal[1] ? "Rising" : "Falling"
+    string posTxt = inLong ? "LONG" : inShort ? "SHORT" : "FLAT"
+    color  posCol = inLong ? color.green : inShort ? color.red : color.gray
+
+    table.cell(dash, 0, 0, "Resistance", text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 1, 0, resTxt,       text_color=colRes,         text_size=size.small)
+    table.cell(dash, 0, 1, "Support",    text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 1, 1, supTxt,       text_color=colSup,         text_size=size.small)
+    table.cell(dash, 0, 2, "Momentum",   text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 1, 2, momTxt,       text_color=aoVal > aoVal[1] ? color.green : color.red, text_size=size.small)
+    table.cell(dash, 0, 3, "ADX",        text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 1, 3, str.tostring(adxVal, "#.0"), text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 0, 4, "Position",   text_color=chart.fg_color, text_size=size.small)
+    table.cell(dash, 1, 4, posTxt,       text_color=posCol,         text_size=size.small)

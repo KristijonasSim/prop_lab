@@ -1,0 +1,45 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/oMQRHgsD-Easy-to-Use-Stochastic-RSI-Strategy/
+// id: PUB;RouIYqse5VEWHqihc8Mrm3DUePzfwPoN  kind: strategy  likes: 296
+//@version=2
+strategy(title="Easy to Use Stochastic + RSI Strategy", overlay=false, default_qty_type=strategy.percent_of_equity, default_qty_value=100, initial_capital=5000, currency=currency.CAD)
+
+
+//// Only Enter Long Positions /////
+strategy.risk.allow_entry_in(strategy.direction.long)
+
+
+///// Backtest Start Date /////
+startDate   = input(title="Start Date",  type=integer, defval=1,    minval=1,    maxval=31)
+startMonth  = input(title="Start Month", type=integer, defval=1,    minval=1,    maxval=12)
+startYear   = input(title="Start Year",  type=integer, defval=2014, minval=1800, maxval=2100)
+
+afterStartDate = (time >= timestamp(syminfo.timezone, startYear, startMonth, startDate, 0, 0))
+
+
+///// Create inputs /////
+// Stochastics //
+periodK = input(14, title="K", minval=1)
+periodD = input(3, title="D", minval=1)
+smoothK = input(3, title="Smooth", minval=1)
+
+k = sma(stoch(close, high, low, periodK), smoothK)
+d = sma(k, periodD)
+
+// RSI Values //
+rsivalue = rsi(close, 14)
+
+
+///// Plot Stochastic Values and Lines /////
+plot(k, title="%K", color=lime)
+plot(d, title="%D", color=red)
+h0 = hline(80)
+h1 = hline(20)
+fill(h0, h1, color=purple, transp=80)
+
+
+///// Submit orders /////
+if (afterStartDate and crossover(k, d) and k<20 and rsivalue<50)
+    strategy.entry(id="BUY", long=true)
+if (afterStartDate and crossunder(k, d) and k>80 and rsivalue>60)
+    strategy.entry(id="SELL", long=false)

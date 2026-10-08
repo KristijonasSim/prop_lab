@@ -1,0 +1,34 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/Qd1agKJX-Amazing-Crossover-System-100-pips-per-day/
+// id: PUB;uW4ToJ1mh1ZngpM8Mj84cRbyakD6gqko  kind: strategy  likes: 710
+//@version=3
+strategy("Crossover 100-pips", overlay=false, currency = 'USD', commission_type=strategy.commission.cash_per_order , commission_value=0.1,initial_capital=100, default_qty_value=1000)
+
+Alternate = input(false)
+
+emaYellow = ema(close, 5)
+emaRed = ema(close, 10)
+s = rsi(hl2, 10)
+
+start     = timestamp(2018, 11, 30, 00, 00) 
+finish    = timestamp(2020, 1, 1, 23, 59)       
+window()  => time >= start and time <= finish ? true : false 
+
+buy = false
+sell = false
+buy := emaYellow > emaRed and s > 50.0 and window() 
+sell := emaYellow < emaRed and s < 50.0 and window() 
+
+fB = buy
+fS = sell
+
+if(Alternate)
+    fB := buy and not buy[1]
+    fS := sell and not sell[1]
+
+strategy.entry("BUY", strategy.long, when=fB )
+strategy.exit("BUY", profit=100, loss=100, trail_points=20)
+strategy.entry("SELL", strategy.short, when=fS ) 
+strategy.exit("SELL", profit=100, loss=100, trail_points=20)
+
+plot(s)

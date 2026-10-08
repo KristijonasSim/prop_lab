@@ -1,0 +1,24 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/z1WjikI3-quit-your-bullshit-Heikin-Ashi-Backtest-with-Real-Candle-Values/
+// id: PUB;gAPMAynrncgi8B3jDcQOqeREAUfYmSK9  kind: strategy  likes: 981
+//@version=3
+strategy("bt_heikinashi", overlay=true)
+
+h_a = heikinashi(tickerid)
+vp = input(3, "Validation Period")
+
+c = security(h_a, period, close)
+o = security(h_a, period, open)
+
+lt = true
+st = true
+
+for i = 0 to vp-1
+    lt:= lt and c[i] > o[i]
+    st:= st and c[i] < o[i]
+
+l = lt and c[vp] < o[vp]
+s = st and c[vp] > o[vp]
+
+strategy.entry("long", strategy.long, when=l)
+strategy.entry("short", strategy.short, when=s)

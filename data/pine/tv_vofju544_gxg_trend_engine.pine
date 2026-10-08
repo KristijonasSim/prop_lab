@@ -1,0 +1,92 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/VOFjU544-GXG-Trend-Engine/
+// id: PUB;7798784c63214972bbcbf3ef4438e397  kind: strategy  likes: 202
+//@version=6
+strategy(
+     title="GXG Trend Engine",
+     shorttitle="GXG Strategy",
+     overlay=true,
+     pyramiding=0,
+     initial_capital=10000,
+     default_qty_type=strategy.percent_of_equity,
+     default_qty_value=100
+)
+
+// Default set up is for 1D
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Config
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sensFactor = input.float(3.0, title="Reaction Factor")
+atrWindow  = input.int(1, title="Volatility Window", minval=1)
+useHAFeed  = input.bool(false, title="Use Heikin Ashi Source")
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Price source
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+haClose = request.security(ticker.heikinashi(syminfo.tickerid), timeframe.period, close, lookahead=barmerge.lookahead_off)
+priceFeed = useHAFeed ? haClose : close
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Dynamic volatility band
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+volatilityMeasure = ta.atr(atrWindow)
+bufferDistance    = sensFactor * volatilityMeasure
+
+var float trailLine = 0.0
+prevTrail = nz(trailLine[1], 0.0)
+
+trailLine := priceFeed > prevTrail and priceFeed[1] > prevTrail ? math.max(prevTrail, priceFeed - bufferDistance) :
+             priceFeed < prevTrail and priceFeed[1] < prevTrail ? math.min(prevTrail, priceFeed + bufferDistance) :
+             priceFeed > prevTrail ? priceFeed - bufferDistance : priceFeed + bufferDistance
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Bias state
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var int marketBias = 0
+marketBias := priceFeed[1] < prevTrail and priceFeed > prevTrail ? 1 :
+              priceFeed[1] > prevTrail and priceFeed < prevTrail ? -1 :
+              nz(marketBias[1], 0)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Trigger logic
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+fastTrigger = ta.ema(priceFeed, 1)
+
+bullCross = ta.crossover(fastTrigger, trailLine)
+bearCross = ta.crossover(trailLine, fastTrigger)
+
+longSignal  = priceFeed > trailLine and bullCross
+shortSignal = priceFeed < trailLine and bearCross
+
+isBullZone = priceFeed > trailLine
+isBearZone = priceFeed < trailLine
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Visual identity
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+trendTint = marketBias == 1 ? color.lime : marketBias == -1 ? color.maroon : color.navy
+
+plot(trailLine, title="GXG Adaptive Line", color=trendTint, linewidth=2, display=display.none)
+
+plotshape(longSignal,  title="GXG Long",  text="GXG LONG",  style=shape.labelup,   location=location.belowbar, color=color.lime,   textcolor=color.white, size=size.tiny)
+plotshape(shortSignal, title="GXG Exit",  text="GXG EXIT",  style=shape.labeldown, location=location.abovebar, color=color.maroon, textcolor=color.white, size=size.tiny)
+
+barcolor(isBullZone ? color.lime : na)
+barcolor(isBearZone ? color.maroon : na)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Strategy execution
+// Long only
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if longSignal
+    strategy.entry("GXG Long", strategy.long)
+
+if shortSignal
+    strategy.close("GXG Long")
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Alerts
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+alertcondition(longSignal, title="GXG Long", message="GXG Long")
+alertcondition(shortSignal, title="GXG Exit Long", message="GXG Exit Long")

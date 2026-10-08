@@ -1,0 +1,117 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/asmZOvXE-EMA-Fibonacci-Pivot-Break-Strategy/
+// id: PUB;d0b488f89978486fac99cc96cdb309ed  kind: strategy
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/ MPL-2.0
+//@version=6
+strategy("EMA + Fibonacci Pivot Break Strategy", overlay = true, pyramiding = 0, default_qty_type = strategy.fixed, default_qty_value = 1, initial_capital = 1000000, process_orders_on_close = true)
+
+// --- Inputs ---
+string GROUP_SIGNAL = "Signal"
+string GROUP_RISK = "Risk Management"
+string GROUP_TIME = "Time Filter"
+string GROUP_STYLE = "Style"
+
+pivotMethodInput = input.string("Fibonacci", "Pivot calculation", options = ["Fibonacci", "Traditional"], group = GROUP_SIGNAL, tooltip = "Choose Fibonacci or Traditional pivot calculations using the prior completed pivot period.")
+pivotTimeframeInput = input.timeframe("D", "Pivot timeframe", options = ["D", "W", "M"], group = GROUP_SIGNAL, tooltip = "Period used to calculate pivots from the previous completed candle.")
+longPivotInput = input.string("R1", "Long breakout level", options = ["P", "R1", "R2", "R3"], group = GROUP_SIGNAL, tooltip = "Selected resistance/pivot that the bullish signal candle must break and close above.")
+shortPivotInput = input.string("S1", "Short breakout level", options = ["P", "S1", "S2", "S3"], group = GROUP_SIGNAL, tooltip = "Selected support/pivot that the bearish signal candle must break and close below.")
+emaLengthInput = input.int(9, "EMA length (close source)", minval = 1, group = GROUP_SIGNAL, tooltip = "9-period EMA calculated from closing prices. The same signal candle must cross and close beyond it.")
+
+stopModeInput = input.string("Signal candle", "Stop-loss method", options = ["Signal candle", "ATR-based"], group = GROUP_RISK, tooltip = "Use the signal candle extreme or an ATR multiple for the stop distance.")
+stopBufferTicksInput = input.int(0, "Candle stop buffer (ticks)", minval = 0, group = GROUP_RISK, tooltip = "Extra ticks beyond the signal candle low/high when using the candle stop method.")
+atrLengthInput = input.int(14, "ATR length", minval = 1, group = GROUP_RISK, tooltip = "ATR lookback used by the ATR-based stop method.")
+atrMultiplierInput = input.float(1.0, "ATR stop multiplier", minval = 0.1, step = 0.1, group = GROUP_RISK, tooltip = "Stop distance from the signal close as a multiple of ATR.")
+riskRewardInput = input.float(2.0, "Take-profit reward/risk", minval = 0.1, step = 0.1, group = GROUP_RISK, tooltip = "Target distance as a multiple of the entry-to-stop risk. Default is 2R.")
+
+useTimeFilterInput = input.bool(false, "Enable time filter", group = GROUP_TIME, tooltip = "When enabled, new entries are allowed only during the selected session.")
+tradeSessionInput = input.session("0000-2359:1234567", "Allowed session", group = GROUP_TIME, tooltip = "Session in the selected timezone during which new entries may be opened.")
+timezoneInput = input.string("Etc/UTC", "Session timezone", group = GROUP_TIME, tooltip = "Timezone used to evaluate the allowed session, for example Etc/UTC or America/New_York.")
+
+showPivotLevelsInput = input.bool(true, "Show pivot levels", group = GROUP_STYLE, tooltip = "Display the calculated pivot and support/resistance levels.")
+showRiskLevelsInput = input.bool(true, "Show active stop and target", group = GROUP_STYLE, tooltip = "Display stop-loss and take-profit levels while a position is open.")
+
+// --- Pivot Calculations ---
+[priorHigh, priorLow, priorClose] = request.security(syminfo.tickerid, pivotTimeframeInput, [high[1], low[1], close[1]], gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+pivotRange = priorHigh - priorLow
+pivotPoint = (priorHigh + priorLow + priorClose) / 3.0
+
+float resistance1 = na
+float resistance2 = na
+float resistance3 = na
+float support1 = na
+float support2 = na
+float support3 = na
+
+if pivotMethodInput == "Fibonacci"
+    resistance1 := pivotPoint + pivotRange * 0.382
+    resistance2 := pivotPoint + pivotRange * 0.618
+    resistance3 := pivotPoint + pivotRange
+    support1 := pivotPoint - pivotRange * 0.382
+    support2 := pivotPoint - pivotRange * 0.618
+    support3 := pivotPoint - pivotRange
+else
+    resistance1 := 2.0 * pivotPoint - priorLow
+    resistance2 := pivotPoint + pivotRange
+    resistance3 := priorHigh + 2.0 * (pivotPoint - priorLow)
+    support1 := 2.0 * pivotPoint - priorHigh
+    support2 := pivotPoint - pivotRange
+    support3 := priorLow - 2.0 * (priorHigh - pivotPoint)
+
+float longPivotLevel = switch longPivotInput
+    "P" => pivotPoint
+    "R1" => resistance1
+    "R2" => resistance2
+    => resistance3
+
+float shortPivotLevel = switch shortPivotInput
+    "P" => pivotPoint
+    "S1" => support1
+    "S2" => support2
+    => support3
+
+// --- Signal Logic ---
+emaValue = ta.ema(close, emaLengthInput)
+atrValue = ta.atr(atrLengthInput)
+inSession = not na(time(timeframe.period, tradeSessionInput, timezoneInput))
+timeAllowed = not useTimeFilterInput or inSession
+
+// The signal candle must open on the pre-break side of BOTH levels and close beyond BOTH.
+longBreak = close > open and open <= emaValue and open <= longPivotLevel and close > emaValue and close > longPivotLevel
+shortBreak = close < open and open >= emaValue and open >= shortPivotLevel and close < emaValue and close < shortPivotLevel
+canEnter = strategy.position_size == 0 and timeAllowed
+longSignal = canEnter and longBreak
+shortSignal = canEnter and shortBreak
+
+// --- Orders ---
+var float activeStop = na
+var float activeTarget = na
+
+if longSignal
+    float proposedStop = stopModeInput == "Signal candle" ? low - stopBufferTicksInput * syminfo.mintick : close - atrValue * atrMultiplierInput
+    float riskDistance = close - proposedStop
+    if riskDistance > 0 and not na(riskDistance)
+        activeStop := proposedStop
+        activeTarget := close + riskDistance * riskRewardInput
+        strategy.entry("Long", strategy.long)
+        strategy.exit("Long TP/SL", from_entry = "Long", stop = activeStop, limit = activeTarget)
+
+if shortSignal
+    float proposedStop = stopModeInput == "Signal candle" ? high + stopBufferTicksInput * syminfo.mintick : close + atrValue * atrMultiplierInput
+    float riskDistance = proposedStop - close
+    if riskDistance > 0 and not na(riskDistance)
+        activeStop := proposedStop
+        activeTarget := close - riskDistance * riskRewardInput
+        strategy.entry("Short", strategy.short)
+        strategy.exit("Short TP/SL", from_entry = "Short", stop = activeStop, limit = activeTarget)
+
+// --- Visuals ---
+plot(emaValue, "EMA", color = #5b9cf6, linewidth = 2)
+plot(showPivotLevelsInput ? pivotPoint : na, "Pivot P", color = color.orange, linewidth = 1, style = plot.style_stepline)
+plot(showPivotLevelsInput ? resistance1 : na, "Pivot R1", color = color.new(color.orange, 15), style = plot.style_stepline)
+plot(showPivotLevelsInput ? resistance2 : na, "Pivot R2", color = color.new(color.orange, 30), style = plot.style_stepline)
+plot(showPivotLevelsInput ? resistance3 : na, "Pivot R3", color = color.new(color.orange, 45), style = plot.style_stepline)
+plot(showPivotLevelsInput ? support1 : na, "Pivot S1", color = color.new(color.orange, 15), style = plot.style_stepline)
+plot(showPivotLevelsInput ? support2 : na, "Pivot S2", color = color.new(color.orange, 30), style = plot.style_stepline)
+plot(showPivotLevelsInput ? support3 : na, "Pivot S3", color = color.new(color.orange, 45), style = plot.style_stepline)
+plot(showRiskLevelsInput and strategy.position_size != 0 ? activeStop : na, "Active stop", color = #f23645, linewidth = 2, style = plot.style_linebr)
+plot(showRiskLevelsInput and strategy.position_size != 0 ? activeTarget : na, "Active target", color = #089981, linewidth = 2, style = plot.style_linebr)

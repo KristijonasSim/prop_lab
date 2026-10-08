@@ -1,0 +1,11 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/BNXptz3U-Trend-trader-Strategy/
+// id: PUB;NhCFQKypAPG4Nh9Q02QPKDexQ9ctHfBx  kind: strategy  likes: 131
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © SoftKill21
+
+//@version=4
+strategy("My Script")
+plot(close)
+
+//if you want acess to the better version of this, just message me :)

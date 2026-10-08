@@ -1,0 +1,122 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/JDeL8FAl-Hulk-Grid-Algorithm-V2-The-Quant-Science/
+// id: PUB;a7a4a36eb3bb44f5b0f9e9e118576b69  kind: strategy  likes: 735
+//@version=6
+strategy(
+     title = 'Hulk Grid Algorithm V2 [The Quant Science]', 
+     overlay = true,
+     initial_capital = 10000, 
+     commission_type = strategy.commission.percent, 
+     commission_value = 0.70, 
+     pyramiding = 10,
+     close_entries_rule = 'ANY',
+     slippage = 5
+     )
+
+center_price = input.price(defval = 100.0, title = "Center Price - Start Grid [$]", group = "GRID SETTINGS", confirm = true)
+step_percent = input.float(defval = 0.6, title = "Grid Step Level [%]", step = 0.1, group = "GRID SETTINGS") / 100
+base_order_usd = input.float(defval = 100.0, title = "Start Order Price [$]", minval = 10, group = "POSITION SIZING")
+decay_percent = input.float(defval = 20.0, title = "Size Order Decay [%]", step = 0.1, group = "POSITION SIZING") / 100
+grid_destroyer = input.bool(defval = false, title = 'Grid Stop Loss', group = "STOP LOSS CONFIGURATION", inline = "SL")
+stop_level = input.price(defval = 0.00, title = '', group = "STOP LOSS CONFIGURATION", inline = "SL")
+
+grid_1  = center_price * (1 - step_percent * 5)
+grid_2  = center_price * (1 - step_percent * 4)
+grid_3  = center_price * (1 - step_percent * 3)
+grid_4  = center_price * (1 - step_percent * 2)
+grid_5  = center_price * (1 - step_percent * 1)
+grid_6  = center_price  
+grid_7  = center_price * (1 + step_percent * 1)
+grid_8  = center_price * (1 + step_percent * 2)
+grid_9  = center_price * (1 + step_percent * 3)
+grid_10 = center_price * (1 + step_percent * 4)
+
+take_profit_target = grid_10 * 1.05
+
+get_qty(float lvl_price, int grid_index) =>
+    float usd_amount = base_order_usd * math.pow(1.0 - decay_percent, grid_index)
+    float qty = (not na(lvl_price) and lvl_price > 0) ? (usd_amount / lvl_price) : 0.0
+    qty
+
+var bool f1 = false, var bool f2 = false, var bool f3 = false, var bool f4 = false, var bool f5 = false
+var bool f6 = false, var bool f7 = false, var bool f8 = false, var bool f9 = false, var bool f10 = false
+
+if strategy.position_size == 0 and strategy.position_size[1] != 0
+    f1 := false, f2 := false, f3 := false, f4 := false, f5 := false
+    f6 := false, f7 := false, f8 := false, f9 := false, f10 := false
+
+if not f1
+    strategy.entry("🧪GRID#1", strategy.long, qty = get_qty(grid_1, 0), limit = close > grid_1 ? grid_1 : na, stop = close < grid_1 ? grid_1 : na)
+    f1 := true
+
+if not f2
+    strategy.entry("🧪GRID#2", strategy.long, qty = get_qty(grid_2, 1), limit = close > grid_2 ? grid_2 : na, stop = close < grid_2 ? grid_2 : na)
+    f2 := true
+
+if not f3
+    strategy.entry("🧪GRID#3", strategy.long, qty = get_qty(grid_3, 2), limit = close > grid_3 ? grid_3 : na, stop = close < grid_3 ? grid_3 : na)
+    f3 := true
+
+if not f4
+    strategy.entry("🧪GRID#4", strategy.long, qty = get_qty(grid_4, 3), limit = close > grid_4 ? grid_4 : na, stop = close < grid_4 ? grid_4 : na)
+    f4 := true
+
+if not f5
+    strategy.entry("🧪GRID#5", strategy.long, qty = get_qty(grid_5, 4), limit = close > grid_5 ? grid_5 : na, stop = close < grid_5 ? grid_5 : na)
+    f5 := true
+
+if not f6
+    strategy.entry("🧪GRID#6", strategy.long, qty = get_qty(grid_6, 5), limit = close > grid_6 ? grid_6 : na, stop = close < grid_6 ? grid_6 : na)
+    f6 := true
+
+if not f7
+    strategy.entry("🧪GRID#7", strategy.long, qty = get_qty(grid_7, 6), limit = close > grid_7 ? grid_7 : na, stop = close < grid_7 ? grid_7 : na)
+    f7 := true
+
+if not f8
+    strategy.entry("🧪GRID#8", strategy.long, qty = get_qty(grid_8, 7), limit = close > grid_8 ? grid_8 : na, stop = close < grid_8 ? grid_8 : na)
+    f8 := true
+
+if not f9
+    strategy.entry("🧪GRID#9", strategy.long, qty = get_qty(grid_9, 8), limit = close > grid_9 ? grid_9 : na, stop = close < grid_9 ? grid_9 : na)
+    f9 := true
+
+if not f10
+    strategy.entry("🧪GRID#10", strategy.long, qty = get_qty(grid_10, 9), limit = close > grid_10 ? grid_10 : na, stop = close < grid_10 ? grid_10 : na)
+    f10 := true
+
+bool stop_crossed = ta.crossunder(close, stop_level)
+
+if close >= take_profit_target
+    strategy.close_all(comment = "💎💎💎 +5%")
+    f1 := false, f2 := false, f3 := false, f4 := false, f5 := false
+    f6 := false, f7 := false, f8 := false, f9 := false, f10 := false
+
+if grid_destroyer and stop_crossed
+    strategy.close_all(comment = "☄️ Grid Destroyed")
+    f1 := false, f2 := false, f3 := false, f4 := false, f5 := false
+    f6 := false, f7 := false, f8 := false, f9 := false, f10 := false
+
+p10 = plot(grid_10, "Grid Top (L10)", color = color.new(#03FF00, 30), linewidth = 2)
+p9  = plot(grid_9, "Grid Line 9", color = color.new(#03FF00, 70), linewidth = 1)
+p8  = plot(grid_8, "Grid Line 8", color = color.new(#03FF00, 75), linewidth = 1)
+p7  = plot(grid_7, "Grid Line 7", color = color.new(#03FF00, 80), linewidth = 1)
+p6  = plot(grid_6, "Grid Center (L6)", color = color.new(#03FF00, 10),linewidth = 2)
+p5  = plot(grid_5, "Grid Line 5", color = color.new(#03FF00, 80), linewidth = 1)
+p4  = plot(grid_4, "Grid Line 4", color = color.new(#03FF00, 75), linewidth = 1)
+p3  = plot(grid_3, "Grid Line 3", color = color.new(#03FF00, 70), linewidth = 1)
+p2  = plot(grid_2, "Grid Line 2", color = color.new(#03FF00, 65), linewidth = 1)
+p1  = plot(grid_1, "Grid Bottom (L1)", color = color.new(#03FF00, 30), linewidth = 2)
+
+fill(p10, p9, color = color.new(#03FF00, 92), title = "Zone 9-10")
+fill(p9, p8, color = color.new(#03FF00, 94), title = "Zone 8-9")
+fill(p8, p7, color = color.new(#03FF00, 95), title = "Zone 7-8")
+fill(p7, p6, color = color.new(#03FF00, 97), title = "Zone 6-7")
+fill(p6, p5, color = color.new(#03FF00, 97), title = "Zone 5-6")
+fill(p5, p4, color = color.new(#03FF00, 95), title = "Zone 4-5")
+fill(p4, p3, color = color.new(#03FF00, 94), title = "Zone 3-4")
+fill(p3, p2, color = color.new(#03FF00, 93), title = "Zone 2-3")
+fill(p2, p1, color = color.new(#03FF00, 92), title = "Zone 1-2")
+
+plot(take_profit_target, "Take Profit", color = #03FF00 , linewidth = 3, style = plot.style_linebr)
+plot(grid_destroyer ? stop_level : na, "Stop Loss", color = #FF3B30, linewidth = 2, style = plot.style_linebr)

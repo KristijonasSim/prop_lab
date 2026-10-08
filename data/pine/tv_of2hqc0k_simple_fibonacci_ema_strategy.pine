@@ -1,0 +1,22 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/of2Hqc0K-Simple-Fibonacci-EMA-Strategy/
+// id: PUB;z57AsudRlFtXHy86STtGHNGHzMXomFkk  kind: strategy  likes: 558
+//@version=3
+//Author: @aoeuaoeu
+strategy("Simple Fibonacci EMA Strategy", overlay=true, default_qty_type = strategy.percent_of_equity, default_qty_value = 100)
+
+s = input(title="Slow EMA", type=integer, defval=55)
+f = input(title="Fast EMA", type=integer, defval=21)
+strategy.entry("enter long", true, when = ema(close, f) > ema(close, s)) 
+strategy.entry("enter short", false, when = ema(close, f) < ema(close, s))
+
+plot(ema(close, 55), color=color(#0100E0, 20))
+plot(ema(close, 34), color=color(#0038E1, 30))
+plot(ema(close, 21), color=color(#0070E2, 40))
+plot(ema(close, 13), color=color(#00A8E3, 50))
+plot(ema(close, 8), color = color(#00E1E5, 60))
+
+bgcolor(ema(close, f) < ema(close, s) ? red : green, transp=100, editable = true)
+
+alertcondition(ema(close, 21) > ema(close, 55) and ema(close[1], 21) < ema(close[1], 55), title='Simple EMA Buy Signal', message='The 21 EMA has crossed over the 55 EMA!')
+alertcondition(ema(close, 21) < ema(close, 55) and ema(close[1], 21) > ema(close[1], 55), title='Simple EMA Sell Signal', message='The 21 EMA has crossed under the 55EMA!')

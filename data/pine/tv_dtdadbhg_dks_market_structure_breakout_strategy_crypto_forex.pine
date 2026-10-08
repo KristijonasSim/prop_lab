@@ -1,0 +1,213 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/DTdAdbHG-DkS-Market-Structure-Breakout-Strategy-Crypto-Forex/
+// id: PUB;5b9191b6398f45cb8325d63df8c0c8bd  kind: strategy  likes: 98
+//@version=6
+strategy(
+     title = "DkS Market Structure Breakout Strategy Crypto & Forex",
+     overlay = true,
+     initial_capital = 20000,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 2,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.08,
+     slippage = 1
+)
+
+//━━━━━━━━━━━━━━━━━━━
+// ⚙️ INPUTS
+//━━━━━━━━━━━━━━━━━━━
+mode = input.string("SAFE", options = ["SAFE", "AGGRESSIVE"], title = "Trading Mode")
+
+emaFastLen = input.int(21, "Fast EMA")
+emaSlowLen = input.int(50, "Slow EMA")
+emaMidLen  = input.int(34, "Mid EMA")
+rsiLen     = input.int(14, "RSI Length")
+volLen     = input.int(20, "Volume MA")
+
+// Risk management
+stopPerc = input.float(1.2, "Stop Loss % (SAFE)", step = 0.1)
+tpPerc   = input.float(2.0, "Take Profit % (SAFE)", step = 0.1)
+
+//━━━━━━━━━━━━━━━━━━━
+// 📈 INDICATORS
+//━━━━━━━━━━━━━━━━━━━
+emaFast = ta.ema(close, emaFastLen)
+emaMid  = ta.ema(close, emaMidLen)
+emaSlow = ta.ema(close, emaSlowLen)
+
+rsiVal = ta.rsi(close, rsiLen)
+volMA  = ta.sma(volume, volLen)
+
+//━━━━━━━━━━━━━━━━━━━
+// 📊 TREND LOGIC
+//━━━━━━━━━━━━━━━━━━━
+trendBull = emaFast > emaSlow
+trendBear = emaFast < emaSlow
+
+//━━━━━━━━━━━━━━━━━━━
+// 🔊 VOLUME CONFIRMATION
+//━━━━━━━━━━━━━━━━━━━
+volMult = mode == "SAFE" ? 1.5 : 1.2
+highVolume = volume > volMA * volMult
+
+//━━━━━━━━━━━━━━━━━━━
+// 🔎 STRUCTURE BREAKOUT
+//━━━━━━━━━━━━━━━━━━━
+swingHigh = ta.highest(high, 10)
+swingLow  = ta.lowest(low, 10)
+
+bullBreakout = close > swingHigh[1]
+bearBreakout = close < swingLow[1]
+
+//━━━━━━━━━━━━━━━━━━━
+// 🧠 MARKET STATE
+//━━━━━━━━━━━━━━━━━━━
+marketState =
+     bullBreakout and highVolume ? "BREAKOUT" :
+     (trendBull or trendBear ? "TREND" : "RANGE")
+
+//━━━━━━━━━━━━━━━━━━━
+// 🟢 BUY / 🔴 SELL CONDITIONS
+//━━━━━━━━━━━━━━━━━━━
+buyCond = (
+    trendBull and
+    close > emaFast and
+    rsiVal > (mode == "SAFE" ? 55 : 50) and
+    bullBreakout and
+    highVolume
+)
+
+sellCond = (
+    trendBear and
+    close < emaFast and
+    rsiVal < (mode == "SAFE" ? 45 : 50) and
+    bearBreakout and
+    highVolume
+)
+
+//━━━━━━━━━━━━━━━━━━━
+// 💰 EXECUTION + RISK CONTROL
+//━━━━━━━━━━━━━━━━━━━
+longStop = close * (1 - stopPerc / 100)
+longTP   = close * (1 + tpPerc / 100)
+
+shortStop = close * (1 + stopPerc / 100)
+shortTP   = close * (1 - tpPerc / 100)
+
+if buyCond
+    strategy.entry("BUY", strategy.long)
+    strategy.exit("BUY EXIT", "BUY", stop = longStop, limit = longTP)
+
+if sellCond
+    strategy.entry("SELL", strategy.short)
+    strategy.exit("SELL EXIT", "SELL", stop = shortStop, limit = shortTP)
+
+//━━━━━━━━━━━━━━━━━━━
+// 🎨 EMA RIBBON
+//━━━━━━━━━━━━━━━━━━━
+bullCol = color.new(color.green, 0)
+bearCol = color.new(color.red, 0)
+
+p1 = plot(emaFast, color = trendBull ? bullCol : bearCol, linewidth = 2)
+p2 = plot(emaMid,  color = trendBull ? color.new(color.green, 70) : color.new(color.red, 70))
+p3 = plot(emaSlow, color = trendBull ? color.new(color.green, 85) : color.new(color.red, 85))
+
+fill(p1, p2, color = trendBull ? color.new(color.green, 85) : color.new(color.red, 85))
+fill(p2, p3, color = trendBull ? color.new(color.green, 92) : color.new(color.red, 92))
+
+//━━━━━━━━━━━━━━━━━━━
+// 🌈 MARKET BACKGROUND
+//━━━━━━━━━━━━━━━━━━━
+bgcolor(
+    marketState == "BREAKOUT" ? color.new(color.orange, 85) :
+    trendBull ? color.new(color.green, 92) :
+    trendBear ? color.new(color.red, 92) :
+    color.new(color.gray, 95)
+)
+
+//━━━━━━━━━━━━━━━━━━━
+// 🔔 BUY / SELL LABELS
+//━━━━━━━━━━━━━━━━━━━
+plotshape(buyCond, title="BUY", text="BUY", style=shape.labelup,
+     location=location.belowbar, color=color.green, textcolor=color.white, size=size.small)
+
+plotshape(sellCond, title="SELL", text="SELL", style=shape.labeldown,
+     location=location.abovebar, color=color.red, textcolor=color.white, size=size.small)
+
+    //━━━━━━━━━━━━━━━━━━━
+// 🧾 MARKET STATE LABEL
+//━━━━━━━━━━━━━━━━━━━
+var label stateLabel = na
+label.delete(stateLabel)
+
+stateLabel := label.new(
+     bar_index,
+     high,
+     "STATE: " + marketState,
+     style = label.style_label_down,
+     textcolor = color.white,
+     color =
+         marketState == "BREAKOUT" ? color.orange :
+         marketState == "TREND" ? color.blue :
+         color.gray
+)
+
+//━━━━━━━━━━━━━━━━━━━
+// 🧱 MARKET STRUCTURE (HH / HL / LH / LL)
+//━━━━━━━━━━━━━━━━━━━
+pivotLen = input.int(5, "Structure Pivot Length", minval = 2)
+
+ph = ta.pivothigh(high, pivotLen, pivotLen)
+pl = ta.pivotlow(low, pivotLen, pivotLen)
+
+var float lastHigh = na
+var float lastLow  = na
+
+if not na(ph)
+    string hTxt = na(lastHigh) ? "H" : ph > lastHigh ? "HH" : "LH"
+    label.new(bar_index - pivotLen, ph, hTxt,
+        style=label.style_label_down, textcolor=color.white,
+        color=hTxt == "HH" ? color.green : color.red, size=size.tiny)
+    lastHigh := ph
+
+if not na(pl)
+    string lTxt = na(lastLow) ? "L" : pl > lastLow ? "HL" : "LL"
+    label.new(bar_index - pivotLen, pl, lTxt,
+        style=label.style_label_up, textcolor=color.white,
+        color=lTxt == "HL" ? color.green : color.red, size=size.tiny)
+    lastLow := pl
+
+//━━━━━━━━━━━━━━━━━━━
+// 🧪 DEBUG PANEL (OFF BY DEFAULT)
+//━━━━━━━━━━━━━━━━━━━
+showDebug = input.bool(true, "Show Debug Panel")
+
+// Calcular nivel de confianza
+confidence =
+     (trendBull or trendBear ? 25 : 0) +
+     (highVolume ? 25 : 0) +
+     ((bullBreakout or bearBreakout) ? 25 : 0) +
+     (rsiVal > 50 ? 25 : 0)
+
+// Variable para label
+var label debugLabel = na
+
+// Dibujar debug solo si está activado
+if showDebug
+    // Eliminar label anterior
+    label.delete(debugLabel)
+    
+    // Crear nuevo label
+    debugLabel := label.new(
+        bar_index,
+        low,
+        "Trend: " + ((trendBull or trendBear) ? "OK" : "NO") +
+        "\nVolume: " + (highVolume ? "OK" : "LOW") +
+        "\nBreakout: " + ((bullBreakout or bearBreakout) ? "YES" : "NO") +
+        "\nRSI: " + str.tostring(rsiVal, "#.##") +
+        "\nConfidence: " + str.tostring(confidence) + "%",
+        style = label.style_label_left,
+        color = confidence >= 60 ? color.new(color.green, 65) : color.new(color.red, 65),
+        textcolor = color.white,
+        size = size.small
+    )

@@ -1,0 +1,72 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/iVhgGLYt-ORB-PRO-FILTERS-elwinpoedeklapopsnoede/
+// id: PUB;9484a5eb48fb48489206e1149c362262  kind: strategy
+//@version=5
+strategy("ORB PRO + FILTERS", overlay=true)
+
+// === INPUTS ===
+startHour = input.int(7, "ORB Start")
+endHour   = input.int(8, "ORB End")
+
+atrLen  = input.int(14, "ATR Length")
+atrMult = input.float(1.5, "ATR Mult")
+
+// === SESSION (NL 14:00 - 23:00) ===
+sessionStart = timestamp("Europe/Amsterdam", year, month, dayofmonth, 14, 0)
+sessionEnd   = timestamp("Europe/Amsterdam", year, month, dayofmonth, 23, 0)
+inSession = time >= sessionStart and time <= sessionEnd
+
+// === ORB ===
+inORB = (hour >= startHour and hour < endHour)
+
+var float orbHigh = na
+var float orbLow  = na
+
+if inORB
+    orbHigh := na(orbHigh) ? high : math.max(orbHigh, high)
+    orbLow  := na(orbLow)  ? low  : math.min(orbLow, low)
+
+if ta.change(time("D"))
+    orbHigh := na
+    orbLow  := na
+
+// === TREND FILTER (EMA 50) ===
+ema = ta.ema(close, 50)
+
+// === ATR TRAIL + ORB MIX ===
+atr = ta.atr(atrLen)
+orbRange = orbHigh - orbLow
+trail = math.max(atr * atrMult, orbRange * 0.5)
+
+// === CONDITIONS (UPGRADED) ===
+longCond  = close > orbHigh and close[1] <= orbHigh and inSession and not inORB and close > ema
+shortCond = close < orbLow  and close[1] >= orbLow  and inSession and not inORB and close < ema
+
+// === ENTRIES ===
+if longCond
+    strategy.entry("BUY", strategy.long)
+
+if shortCond
+    strategy.entry("SELL", strategy.short)
+
+// === EXITS ===
+if strategy.position_size > 0
+    entry = strategy.position_avg_price
+    sl = orbLow
+    tp = entry + (entry - sl)
+
+    strategy.exit("TP BUY", from_entry="BUY", limit=tp, qty_percent=50)
+    strategy.exit("RUNNER BUY", from_entry="BUY", trail_points=trail, stop=sl)
+
+if strategy.position_size < 0
+    entry = strategy.position_avg_price
+    sl = orbHigh
+    tp = entry - (sl - entry)
+
+    strategy.exit("TP SELL", from_entry="SELL", limit=tp, qty_percent=50)
+    strategy.exit("RUNNER SELL", from_entry="SELL", trail_points=trail, stop=sl)
+
+// === VISUALS ===
+plot(orbHigh, color=color.green, linewidth=2)
+plot(orbLow, color=color.red, linewidth=2)
+plot(ema, color=color.blue, linewidth=2)

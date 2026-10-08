@@ -1,0 +1,165 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/CDhXq8DM-Nifty-Futures-ORB-Smart-Trail/
+// id: PUB;d5ea052baec34138a60f50cc31716410  kind: strategy
+//@version=6
+strategy("Nifty Futures ORB - Smart Trail", overlay=true, initial_capital=500000,
+     default_qty_type=strategy.fixed, default_qty_value=1,
+     pyramiding=0, commission_type=strategy.commission.percent, commission_value=0.03,
+     slippage=1)
+
+// ============================================================
+// INPUTS
+// ============================================================
+orStart         = input.session("0915-0930", "Opening Range Window (IST)", group="Opening Range")
+orMaxWidthPct   = input.float(0.5, "Max OR Width (% of price) — skip wider days", step=0.1, group="Opening Range")
+
+atrLen          = input.int(14, "ATR Length", group="Risk")
+initStopAtrMult = input.float(1.5, "Initial Stop = ATR x", step=0.1, group="Risk")
+riskPct         = input.float(1.0, "Risk % of Equity per Trade", step=0.1, group="Risk")
+
+// Step-down ATR trailing
+trailAtrMult1   = input.float(3.0, "Trail Mult: 0-1R profit", step=0.1, group="Trailing")
+trailAtrMult2   = input.float(2.0, "Trail Mult: 1R-2R profit", step=0.1, group="Trailing")
+trailAtrMult3   = input.float(1.0, "Trail Mult: beyond 2R profit", step=0.1, group="Trailing")
+
+// Structural swing trail
+swingLen        = input.int(5, "Structural Swing Lookback (bars)", group="Trailing")
+
+// Reversal candle backstop
+reversalAtrMult = input.float(1.0, "Reversal Exit: single candle moves x ATR against position", step=0.1, group="Trailing")
+
+squareOffTime   = input.session("1515-1530", "Square-Off Window (IST)", group="Session")
+noNewEntryAfter = input.session("1430-1530", "No New Entries After (IST)", group="Session")
+
+allowLongs      = input.bool(true, "Allow Longs", group="Direction")
+allowShorts     = input.bool(true, "Allow Shorts", group="Direction")
+
+// ============================================================
+// SESSION / TIME HELPERS
+// ============================================================
+inOrWindow      = not na(time(timeframe.period, orStart, "Asia/Kolkata"))
+inSquareOff     = not na(time(timeframe.period, squareOffTime, "Asia/Kolkata"))
+inNoEntryWindow = not na(time(timeframe.period, noNewEntryAfter, "Asia/Kolkata"))
+newDay = ta.change(time("D")) != 0
+
+// ============================================================
+// OPENING RANGE TRACKING
+// ============================================================
+var float orHigh = na
+var float orLow  = na
+var bool  orLocked = false
+
+if newDay
+    orHigh := na
+    orLow  := na
+    orLocked := false
+
+if inOrWindow
+    orHigh := na(orHigh) ? high : math.max(orHigh, high)
+    orLow  := na(orLow)  ? low  : math.min(orLow, low)
+
+if not inOrWindow and not orLocked and not na(orHigh)
+    orLocked := true
+
+orWidthPct = (not na(orHigh) and not na(orLow)) ? (orHigh - orLow) / close * 100 : na
+orValid = orLocked and not na(orWidthPct) and orWidthPct <= orMaxWidthPct
+
+// ============================================================
+// ATR
+// ============================================================
+atrVal = ta.atr(atrLen)
+
+// ============================================================
+// ENTRY LOGIC
+// ============================================================
+var bool tookLongToday  = false
+var bool tookShortToday = false
+
+if newDay
+    tookLongToday := false
+    tookShortToday := false
+
+canEnter = orValid and not inNoEntryWindow and strategy.position_size == 0
+
+longSignal  = allowLongs  and canEnter and not tookLongToday  and close > orHigh
+shortSignal = allowShorts and canEnter and not tookShortToday and close < orLow
+
+// ============================================================
+// POSITION SIZING
+// ============================================================
+longStopDist  = math.max(close - orLow,  atrVal * initStopAtrMult)
+shortStopDist = math.max(orHigh - close, atrVal * initStopAtrMult)
+
+riskAmount = strategy.equity * (riskPct / 100)
+longQty  = longStopDist  > 0 ? math.max(1, math.round(riskAmount / longStopDist))  : 1
+shortQty = shortStopDist > 0 ? math.max(1, math.round(riskAmount / shortStopDist)) : 1
+
+// ============================================================
+// STATE: entry price, R distance, stop price
+// ============================================================
+var float entryPrice  = na
+var float initRisk    = na
+var float stopPrice   = na
+
+if longSignal
+    strategy.entry("Long", strategy.long, qty=longQty)
+    entryPrice := close
+    initRisk   := longStopDist
+    stopPrice  := close - longStopDist
+    tookLongToday := true
+
+if shortSignal
+    strategy.entry("Short", strategy.short, qty=shortQty)
+    entryPrice := close
+    initRisk   := shortStopDist
+    stopPrice  := close + shortStopDist
+    tookShortToday := true
+
+// ============================================================
+// STEP-DOWN ATR TRAIL + STRUCTURAL SWING TRAIL
+// ============================================================
+swingHigh = ta.highest(high, swingLen)
+swingLow  = ta.lowest(low, swingLen)
+
+if strategy.position_size > 0
+    profitR = (high - entryPrice) / initRisk
+    trailMult = profitR >= 2 ? trailAtrMult3 : profitR >= 1 ? trailAtrMult2 : trailAtrMult1
+    atrTrail = high - atrVal * trailMult
+    structTrail = swingLow
+    newStop = math.max(atrTrail, structTrail)
+    stopPrice := math.max(stopPrice, newStop)
+    strategy.exit("L-Exit", "Long", stop=stopPrice)
+
+if strategy.position_size < 0
+    profitR = (entryPrice - low) / initRisk
+    trailMult = profitR >= 2 ? trailAtrMult3 : profitR >= 1 ? trailAtrMult2 : trailAtrMult1
+    atrTrail = low + atrVal * trailMult
+    structTrail = swingHigh
+    newStop = math.min(atrTrail, structTrail)
+    stopPrice := math.min(stopPrice, newStop)
+    strategy.exit("S-Exit", "Short", stop=stopPrice)
+
+// ============================================================
+// REVERSAL-CANDLE BACKSTOP
+// ============================================================
+if strategy.position_size > 0 and (close - open) < 0 and (open - close) > atrVal * reversalAtrMult
+    strategy.close("Long", comment="Reversal Candle")
+
+if strategy.position_size < 0 and (close - open) > 0 and (close - open) > atrVal * reversalAtrMult
+    strategy.close("Short", comment="Reversal Candle")
+
+// ============================================================
+// SQUARE OFF
+// ============================================================
+if inSquareOff and strategy.position_size != 0
+    strategy.close_all(comment="Square Off")
+
+// ============================================================
+// PLOTS
+// ============================================================
+plot(orHigh, "OR High", color=color.blue, style=plot.style_linebr)
+plot(orLow, "OR Low", color=color.blue, style=plot.style_linebr)
+plot(strategy.position_size != 0 ? stopPrice : na, "Stop/Trail", color=color.red, linewidth=2, style=plot.style_circles)
+
+plotshape(longSignal, title="Long Entry", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
+plotshape(shortSignal, title="Short Entry", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)

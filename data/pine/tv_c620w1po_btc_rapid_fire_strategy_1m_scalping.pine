@@ -1,0 +1,21 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/c620W1po-BTC-Rapid-fire-strategy-1M-Scalping/
+// id: PUB;dBdhJrQ0tWoBOpognfCmitogSnQqCjOc  kind: strategy  likes: 103
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © atakhadivi
+
+//@version=4
+strategy("rapid fire", overlay=true)
+
+longCondition = open > sar(0.02,0.02,0.2) and open[1] < sar(0.02,0.02,0.2)[1] and open > sma(close,50)
+takeprofit = strategy.position_avg_price * (1 + 0.005)
+stopLoss = strategy.position_avg_price * (1 - 0.015)
+if (longCondition)
+    strategy.entry("longEntry", strategy.long, limit = takeprofit, stop = stopLoss)
+
+
+shortCondition = open < sar(0.02,0.02,0.2) and open[1] > sar(0.02,0.02,0.2)[1] and open < sma(close,50)
+take_profit = strategy.position_avg_price * (1 - 0.005)
+stop_Loss = strategy.position_avg_price * (1 + 0.015)
+if (shortCondition)
+    strategy.entry("shortEntry", strategy.short, limit = take_profit, stop = stop_Loss)

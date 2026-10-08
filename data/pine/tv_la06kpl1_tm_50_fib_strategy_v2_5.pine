@@ -1,0 +1,1427 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/LA06Kpl1-TM-50-Fib-Strategy-v2-5/
+// id: PUB;a0f48cb56e1444ea9ef12f60b9de0430  kind: strategy
+//@version=6
+strategy("TM 50% Fib Strategy v2.5", shorttitle = "TM 50 Fib Strat v2.5", overlay = true, max_boxes_count = 500, max_lines_count = 500, max_labels_count = 500, initial_capital = 50000, default_qty_type = strategy.fixed, default_qty_value = 1, commission_type = strategy.commission.cash_per_contract, commission_value = 0.80, process_orders_on_close = true, pyramiding = 0, margin_long = 0, margin_short = 0)
+
+// =====================================================================
+//  STRATEGY TWIN of TM 50% Fib Bot v2.5 — FOR BACKTESTING ONLY (Strategy Tester / Deep Backtesting)
+//   • Same rules and same default settings as the bot. Every entry, stop, target and the
+//     end-of-day close is also sent to the Strategy Tester as an order
+//   • Webhooks are disabled in this script – it can never send anything to CrossTrade
+//   • Commission for the Strategy Report is set in the Properties tab ($0.80 per contract per
+//     side = $1.60 round trip). The on-chart P&L table still uses the commission input
+//   • Orders fill on the bar close, which matches the bot's 1M shift / FVG entries. "On the 50%
+//     touch" entries fill at the bar close here, not at the 50% price
+// =====================================================================
+
+// =====================================================================
+//  TM 50% FIB BOT  (Jen's model)
+//
+//  THE MODEL
+//   ① HTF candle (default 4H) closes as a signature -> bias
+//        Failed 2 / strong 2 / 3 (same TheStrat rules as the TM F2 Bot)
+//   ② Find the 15M swing in that direction
+//        short: from the highest high of the window down to the lowest low made after it
+//        long:  from the lowest low of the window up to the highest high made after it
+//   ③ Enter when price pulls back to the 50% of that swing
+//   ④ Stop past fib 0 (the swing start) · target fib 1 (the swing high/low)
+//        or 1:1 from the stop
+//
+//  RUN IT ON: 1m chart (bot) · 15m (map) · 4H (labels only)
+//  Separate from the TM F2 Bot (Mike's 15M failed 2 + 1M shift model).
+//
+//  VERSION HISTORY
+//   v1  2026-10-02  First build, split out of TM F2 Bot v2.9 so each model has its own
+//                   script, settings and P&L. Leg rule: window extreme + last 15M swing
+//                   before it (matches Jen's hand-drawn fibs on Sept 22, Sept 23, Oct 2).
+//                   Fresh-touch entry at the 50%, one trade per swing, auto min/max stop
+//                   by instrument, 16:00 close, CrossTrade bracket webhooks, P&L table,
+//                   Black/White theme toggle.
+//   v1.1 2026-10-02  • Entry option: on the 50% touch (default) / 50% touch + 1M shift (MSS) /
+//                     50% touch + 1M shift + FVG – waits for the 1M shift after the touch
+//                   • Discount/premium zone shading is now off by default (switch to show it)
+//   v1.2 2026-10-02  • MSS / FVG entries are marked on the chart: dashed MSS level from the touch,
+//                     "MSS" tag where it breaks, the FVG box used for the entry (on/off,
+//                     colors, size, fade); cancelled setups turn the MSS line gray
+//   v1.3 2026-10-02  • Jen's settings are now the defaults: White background, entry window
+//                     19:30–16:00 NY, 50% touch + 1M shift + FVG entry, touch tolerance 2 ticks,
+//                     take profit at 95%, manual min/max stop 10/120, max 5 trades/day,
+//                     READY tint 95, status + P&L tables at Normal size
+//                   • New shareable "Settings" table – every key setting on the chart (no key)
+//   v1.4 2026-10-02  Fixes from Jen's Oct 2 trade review:
+//                   • The fib is LOCKED once found: the swing start no longer moves as the
+//                     window rolls, and the whole fib freezes once the 50% is touched. It is
+//                     only replaced when price breaks the swing start, the bias changes, or the
+//                     swing has been traded
+//                   • MSS / FVG entries: stop now goes past the pullback low/high made after the
+//                     touch (option: swing start) – fixes 60-pt stops with 12-pt targets
+//                   • New "Min reward : risk" (default 0.75) – skips lopsided trades
+//                   • Fib 0 default = lowest low / highest high of the window (how you drew Oct 2)
+//   v1.5 2026-10-03  Fixes from Jen's Sept 29 review (bot sold a small bounce, her fib was the whole move):
+//                   • "Lowest low / highest high of the window" now anchors the WHOLE move:
+//                     shorts start at the highest high of the window and run to the lowest low
+//                     made AFTER it (longs mirrored). Before, it took the window's lowest low
+//                     first and the high before it, which could lock on a small, old leg
+//                   • A window-edge high/low that is only "highest" because the real one rolled
+//                     out of the window is not used as a swing start
+//                   • New "Min swing size (points)" (default 40) – no READY on tiny swings
+//                   • READY (status, tint, alert) now respects the entry window, the close time
+//                     and max trades/day. Status says why it is waiting (max trades hit, outside
+//                     window, swing too small, swing already traded)
+//                   • 15m map chart: the fib now freezes on the 50% touch like the 1m chart
+//                   • Settings table: "Stop buffer" row reworded, new "Min swing size" row
+//   v1.6 2026-10-03  • New Failed 2 rule option "F2 Tags script": the exact failed-2 test from Jen's
+//                     "Failed 2s Only – F2 Mini Tags" indicator (strict 2-up / 2-down, close back
+//                     inside OR exactly on the prior high/low). The two old rules are unchanged
+//                     and "Closes back inside prior range" is still the default
+//                   • New optional "F2" mini tags on the chart's own candles (off by default):
+//                     text color, background, size, gap from the wick and how many to keep
+//   v1.7 2026-10-03  • New optional step "Wait for a 15M failed 2 after the 50% touch" (off by default,
+//                     so nothing changes unless you switch it on). Longs wait for a 15M failed 2 DOWN,
+//                     shorts for a 15M failed 2 UP, closing at or after the touch and within a set
+//                     number of 15M candles. Then the Entry setting takes over (enter right away, or
+//                     wait for the 1M shift / FVG). Uses the same Failed 2 rule as the 4H signature
+//                   • "15M F2" tag on the chart where the failed 2 confirms; status shows the wait;
+//                     new Settings table row
+//   v1.8 2026-10-03  Jen's correction: the fib is not marked until the 15M failed 2 is complete.
+//                   • "15M failed 2 step" is now a 3-way choice: Off (default, same as before) /
+//                     Before the fib / After the 50% touch (the v1.7 behavior)
+//                   • Before the fib: after the 4H signature the bot waits for a closed 15M failed 2
+//                     in the trade direction (failed 2 DOWN for longs, failed 2 UP for shorts). Only
+//                     then is the swing found, the fib drawn and locked, and the 50% watched.
+//                     Every new fib needs its own new 15M failed 2
+//                   • Status shows "waiting for a 15M failed 2" and a "15M F2" tag marks the candle
+//   v1.9 2026-10-03  • F2 mini tags only show on the 4H, 1H and 15M charts (each can be switched
+//                     off); no F2 tags on the 1m or any other chart
+//                   • MSS is now marked with the dashed line only. The "MSS" text tag is off by
+//                     default (new switch "Show the MSS text tag" to bring it back)
+//   v2.0 2026-10-03  Jen's Oct 3 test settings are now the defaults (from her Settings table):
+//                     bias lasts until the opposite signature · entry level 51% · MSS window 80 bars ·
+//                     Fib 0 = last 15M swing before the high/low · min swing size off ·
+//                     MSS / FVG stop past the swing start (fib 0) · min reward:risk off ·
+//                     entry window 02:00–16:00 NY · quantity 4 · 15M failed 2 step = Before the fib.
+//                     No logic changes
+//   v2.1 2026-10-03  • New switch "Show the 15M F2 tag" (off by default) – hides the blue "15M F2"
+//                     tags on the chart. Display only: the bot still waits for the 15M failed 2
+//   v2.2 2026-10-04  • HTF ghost candles: new choice "Whole range (high to low)" – the shaded box covers
+//                     the full 4H candle from its high to its low. "Body + wick" is still the default
+//   v2.3 2026-10-04  Jen's Oct 4 settings (the 7W / 1L test run) are now the defaults:
+//                     bias lasts for the next HTF candle only · Failed 2 rule = F2 Tags script ·
+//                     Fib 0 = lowest low / highest high of the window · target 1:1 from the stop
+//                     (TP at 95%) · commission $1.60 round trip. Everything else as in v2.0.
+//                     No logic changes
+//   v2.4 2026-10-04  DISPLAY ONLY – no change to trades or results:
+//                   • When the newest 4H candle's time is up but the next candle has not opened yet
+//                     (weekend, daily break, or replay parked on the last bar), the status table and
+//                     the chart label now show it as CLOSED with its signature and bias, instead of
+//                     "(forming)". The bot's trade logic still switches bias when the next bar opens,
+//                     exactly as before
+//   v2.5 2026-10-04  Defaults from Jen's Deep Backtesting runs (strategy twin, MNQ 1m, 4 contracts):
+//                   • 15M failed 2 step = Off (was Before the fib)
+//                   • Entry level = 50% (was 51%)
+//                     Everything else unchanged – each was tested and kept: whole-move Fib 0, bias for
+//                     the next HTF candle only, F2 Tags rule, touch + 1M shift + FVG entry, stop past
+//                     fib 0, target 1:1 at 95%.
+//                     Results with these defaults (no slippage): last 365 days +$29,678 / 364 trades /
+//                     59.1% / PF 1.42 / max DD $6,480 · Oct 2024–Oct 2025 (unseen year) +$12,215 /
+//                     443 trades / 53.1% / PF 1.14 / max DD $9,223. No logic changes
+//   v2.5 strategy twin 2026-10-04  indicator() -> strategy(); orders mirrored to the Strategy Tester;
+//                     webhooks disabled; alertcondition lines removed
+// =====================================================================
+
+string VERSION = "v2.5"
+
+string F2_INSIDE = "Closes back inside prior range"
+string F2_COLOR  = "Closes opposite color"
+string F2S_OFF    = "Off"
+string F2S_BEFORE = "Before the fib (fib is marked after the 15M failed 2)"
+string F2S_AFTER  = "After the 50% touch"
+string F2_TAGS   = "F2 Tags script (strict 2, closes inside or on the prior high/low)"
+string HOLD_NEXT = "Next HTF candle only"
+string HOLD_OPP  = "Until opposite signature"
+string ORG_SWING = "Last 15M swing before the high/low"
+string ORG_ABS   = "Lowest low / highest high of the window"
+string TGT_FIB1  = "Fib 1 (the swing high / low)"
+string TGT_RR    = "1:1 from the stop"
+string EN_TOUCH  = "On the 50% touch"
+string EN_MSS    = "50% touch + 1M shift (MSS)"
+string EN_FVG    = "50% touch + 1M shift + FVG"
+string TL_FULL   = "Full text (prices + $)"
+string TL_SHORT  = "Short text (no prices)"
+string TL_MARK   = "Markers only"
+string TL_OFF    = "Off"
+
+// =====================================================================
+//  ⓪ QUICK SETUP
+// =====================================================================
+string G0 = "⓪ QUICK SETUP – start here (everything below is Advanced)"
+themeS    = input.string("White", "Chart background", options = ["Black", "White", "Custom (use table colors below)"], group = G0)
+paintBg   = input.bool(true, "Paint the chart background to match", group = G0)
+htfTf     = input.timeframe("240", "HTF candle (240 = 4H · 60 = 1H)", group = G0)
+dirFilter = input.string("Both", "Direction", options = ["Both", "Long only", "Short only"], group = G0)
+sessWin   = input.session("0200-1600", "Entry window (New York time)", group = G0)
+flatHHMM  = input.int(1600, "Close any open trade at (NY time HHMM, 0 = off)", minval = 0, maxval = 2359, group = G0)
+trLblMode = input.string(TL_SHORT, "Trade labels", options = [TL_FULL, TL_SHORT, TL_MARK, TL_OFF], group = G0)
+entryMode = input.string(EN_FVG, "Entry", options = [EN_TOUCH, EN_MSS, EN_FVG], tooltip = "On the touch: buys/sells the moment price reaches the 50%. + 1M shift: after the touch, waits for a 1M close back through the last opposite candle (MSS). + FVG: the shift must also leave a 1M fair value gap.", group = G0)
+f2Step    = input.string(F2S_OFF, "15M failed 2 step", options = [F2S_OFF, F2S_BEFORE, F2S_AFTER], tooltip = "Off = no 15M failed 2 needed. Before the fib = after the 4H signature, wait for a closed 15M failed 2 in the trade direction (failed 2 DOWN for longs, failed 2 UP for shorts); only then is the fib marked and the 50% watched. After the 50% touch = the fib is marked first, and the 15M failed 2 must come after the touch.", group = G0)
+bool reqF2  = f2Step == F2S_AFTER
+bool gateF2 = f2Step == F2S_BEFORE
+qty       = input.int(4, "Quantity (contracts)", minval = 1, group = G0)
+sendWh    = input.bool(false, "Send CrossTrade Webhook Alerts", group = G0)
+acctName  = input.string("", "Account (exact NT8 name, case-sensitive)", group = G0)
+autoInst  = input.bool(true, "Auto-Detect Instrument From Chart (dated contract charts only)", group = G0)
+manInst   = input.string("", "Manual instrument (e.g. MNQZ6, ESZ6)", group = G0)
+
+// ---------- ① HTF signature ----------
+string G1 = "① HTF Signature (bias)"
+useF2     = input.bool(true, "Use Failed 2", group = G1)
+use2      = input.bool(true, "Use strong 2", group = G1)
+use3      = input.bool(true, "Use 3 (outside bar)", group = G1)
+f2Mode    = input.string(F2_TAGS, "Failed 2 = a 2 that…", options = [F2_INSIDE, F2_COLOR, F2_TAGS], tooltip = "F2 Tags script = the same test as the Failed 2s Only – F2 Mini Tags indicator: the candle must be a strict 2 (takes one side only, the other side not equal) and close back inside or exactly on the prior high/low.", group = G1)
+strongPct = input.float(35, "Strong 2 = closes within top/bottom %", minval = 5, maxval = 50, group = G1)
+holdMode  = input.string(HOLD_NEXT, "Bias lasts", options = [HOLD_NEXT, HOLD_OPP], group = G1)
+
+// ---------- ② 15M swing & fib ----------
+string G2 = "② 15M Swing & Fib"
+stTf      = input.timeframe("15", "Swing timeframe", group = G2)
+pivLen    = input.int(3, "Swing strength (15M candles each side)", minval = 1, maxval = 10, group = G2)
+legWin    = input.int(24, "Swing window (15M candles, 24 = 6 hours)", minval = 4, maxval = 200, tooltip = "The swing is looked for inside this many 15M candles.", group = G2)
+orgMode   = input.string(ORG_ABS, "Fib 0 (where the swing starts)", options = [ORG_SWING, ORG_ABS], tooltip = "Lowest low / highest high of the window = the WHOLE move: shorts start at the highest high of the window and run to the lowest low made after it (longs mirrored). Last 15M swing before the high/low = the smaller leg, how you drew Sept 23.", group = G2)
+minLegPt  = input.float(0, "Min swing size (points, 0 = off)", minval = 0, tooltip = "No READY until the swing (fib 0 to fib 1) is at least this many points.", group = G2)
+zonePct   = input.float(50, "Entry level (% pullback of the swing)", minval = 10, maxval = 90, group = G2)
+zoneTolTk = input.int(2, "Touch tolerance (ticks)", minval = 0, maxval = 200, group = G2)
+mssWait   = input.int(80, "MSS entry: 1M shift must come within (bars) of the touch", minval = 3, maxval = 300, group = G2)
+f2Wait15  = input.int(8, "After-the-touch mode: 15M failed 2 must come within (15M candles) of the touch", minval = 1, maxval = 96, group = G2)
+showZone  = input.bool(false, "Shade the zone between the entry and the swing start", group = G2)
+showFib   = input.bool(true, "Draw the fib", group = G2)
+fibExtra  = input.string("0.62, 0.705, 0.79", "Extra fib levels (blank = none)", group = G2)
+fibLineC  = input.color(color.new(#787b86, 0), "Fib line color", group = G2)
+fibLblBg  = input.color(color.new(#787b86, 85), "Fib label background", group = G2)
+fibTxtC   = input.color(#787b86, "Fib label text", group = G2)
+fibSizeS  = input.string("Small", "Fib label size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G2)
+fibExtend = input.int(20, "Extend right (bars)", minval = 1, maxval = 200, group = G2)
+
+// ---------- ③ stop & target ----------
+string G3 = "③ Stop & Target"
+slBufTk   = input.int(4, "Stop buffer past the stop level (ticks)", minval = 0, maxval = 400, group = G3)
+tgtMode   = input.string(TGT_RR, "Target", options = [TGT_FIB1, TGT_RR], group = G3)
+mssStop   = input.string("Past the swing start (fib 0)", "MSS / FVG entries: stop", options = ["Past the pullback low/high after the touch", "Past the swing start (fib 0)"], group = G3)
+minRR     = input.float(0, "Min reward : risk (0 = off)", minval = 0, step = 0.25, tooltip = "Skips a trade when the target is closer than this multiple of the stop. 1.0 = target at least as far as the stop. Default 0.75 so 50%-touch trades with TP at 95% still qualify.", group = G3)
+tpPct     = input.float(95, "Take profit at % of the way to target", minval = 10, maxval = 100, step = 5, group = G3)
+autoStops = input.bool(false, "Auto min/max stop by instrument", tooltip = "NQ / MNQ use the NQ values, ES / MES use the ES values, anything else uses the manual values.", group = G3)
+nqMinPt   = input.float(10, "NQ/MNQ: min stop (points)", minval = 0, group = G3)
+nqMaxPt   = input.float(120, "NQ/MNQ: max stop (points, 0 = off)", minval = 0, group = G3)
+esMinPt   = input.float(3, "ES/MES: min stop (points)", minval = 0, group = G3)
+esMaxPt   = input.float(30, "ES/MES: max stop (points, 0 = off)", minval = 0, group = G3)
+minStopPt = input.float(10, "Manual min stop (points)", minval = 0, group = G3)
+maxStopPt = input.float(120, "Manual max stop (points, 0 = off)", minval = 0, group = G3)
+maxTrades = input.int(5, "Max trades per day", minval = 1, maxval = 20, group = G3)
+commRT    = input.float(1.6, "Commission per contract, round trip ($)", minval = 0, step = 0.01, group = G3)
+
+// ---------- ④ HTF overlay ----------
+string G4 = "④ HTF Overlay"
+showHtf   = input.bool(true, "Show HTF ghost candles", group = G4)
+ghostMode = input.string("Body + wick", "Ghost candle covers", options = ["Body + wick", "Whole range (high to low)"], tooltip = "Body + wick = box from open to close with a wick line. Whole range = one box from the candle's high to its low. Colors and transparency are set below.", group = G4)
+numHtf    = input.int(6, "How many HTF ghost candles", minval = 1, maxval = 60, group = G4)
+htfUpCol  = input.color(color.new(color.teal, 85), "HTF up body", group = G4)
+htfDnCol  = input.color(color.new(color.red, 85), "HTF down body", group = G4)
+htfWickC  = input.color(color.new(color.gray, 30), "HTF wick / border", group = G4)
+showSig   = input.bool(true, "Label HTF candles (F2U, 2D, 3…)", group = G4)
+showLive  = input.bool(true, "Label the forming HTF candle live", group = G4)
+liveT     = input.int(45, "Forming label fade", minval = 0, maxval = 90, group = G4)
+keep4h    = input.int(100, "On the HTF chart: labels to keep", minval = 5, maxval = 300, group = G4)
+showReady = input.bool(true, "Tint background while READY (waiting for the 50% touch)", group = G4)
+readyT    = input.int(95, "READY tint transparency", minval = 0, maxval = 100, group = G4)
+
+// ---------- ⑤ colors & text ----------
+string G5 = "⑤ Colors & Text"
+bullCol   = input.color(#089981, "Bull color", group = G5)
+bearCol   = input.color(#f23645, "Bear color", group = G5)
+waitCol   = input.color(#ff9800, "Waiting color", group = G5)
+neutCol   = input.color(color.gray, "Neutral color", group = G5)
+lblTxtCol = input.color(color.white, "Label text color", group = G5)
+sigSizeS  = input.string("Small", "HTF label size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G5)
+
+// ---------- ⑥ trade visuals ----------
+string G6 = "⑥ Trade Visuals"
+showTrades = input.bool(true, "Draw trades (entry / SL / PT)", group = G6)
+entCol     = input.color(#2962ff, "Entry line", group = G6)
+tpCol      = input.color(#089981, "Profit color", group = G6)
+slCol      = input.color(#f23645, "Loss color", group = G6)
+zoneT      = input.int(85, "Risk/reward shading transparency", minval = 0, maxval = 100, group = G6)
+trSizeS    = input.string("Small", "Trade label size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G6)
+showSkip   = input.bool(true, "Show \"Skipped\" tags with the reason", group = G6)
+skipBg     = input.color(color.new(color.gray, 60), "Skipped tag background", group = G6)
+skipTxt    = input.color(color.white, "Skipped tag text", group = G6)
+showMarks  = input.bool(true, "Mark the MSS level and FVG (MSS / FVG entries)", group = G6)
+show15F2   = input.bool(false, "Show the 15M F2 tag (the failed 2 that unlocks the fib)", tooltip = "Display only. The bot still waits for the 15M failed 2 when that step is on; the status table shows when it is waiting.", group = G6)
+showMssTag = input.bool(false, "Show the MSS text tag (off = line only)", group = G6)
+mssColI    = input.color(#2962ff, "MSS line / tag color", group = G6)
+fvgColI    = input.color(color.new(#089981, 75), "FVG box color", group = G6)
+markT      = input.int(0, "MSS mark fade (0 = solid)", minval = 0, maxval = 90, group = G6)
+markSizeS  = input.string("Tiny", "MSS / FVG tag size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G6)
+skipSizeS  = input.string("Tiny", "Skipped tag size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G6)
+
+// ---------- ⑥b F2 mini tags ----------
+string G6B = "⑥b F2 Mini Tags (failed 2s on this chart's candles)"
+showF2Tag  = input.bool(false, "Show F2 mini tags", tooltip = "Marks every failed 2 on the chart's own candles, same test as the F2 Mini Tags indicator. Above the candle = failed 2 up, below = failed 2 down. Display only – it does not change the bot's trades.", group = G6B)
+f2On4H     = input.bool(true, "Tags on the 4H chart", inline = "f2tf", group = G6B)
+f2On1H     = input.bool(true, "1H chart", inline = "f2tf", group = G6B)
+f2On15     = input.bool(true, "15M chart", inline = "f2tf", group = G6B)
+f2TagTxt   = input.color(color.fuchsia, "Tag text color", group = G6B)
+f2TagBg    = input.color(color.white, "Tag background", group = G6B)
+f2TagSizeS = input.string("Small", "Tag size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G6B)
+f2GapTk    = input.int(20, "Min gap (ticks off the wick)", minval = 0, group = G6B)
+f2GapPct   = input.float(0.20, "Gap as % of the candle range", minval = 0.0, step = 0.01, group = G6B)
+f2XOff     = input.int(0, "Horizontal offset (bars)", minval = -10, maxval = 10, group = G6B)
+f2Keep     = input.int(60, "Tags to keep on the chart", minval = 5, maxval = 300, tooltip = "Older tags are removed so they do not push the bot's trade labels off the chart.", group = G6B)
+
+// ---------- ⑦ tables ----------
+string G7 = "⑦ Tables"
+showTbl   = input.bool(true, "Show status table", group = G7)
+tblPosS   = input.string("Top Right", "Status table position", options = ["Top Left", "Top Center", "Top Right", "Middle Left", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"], group = G7)
+tblSizeS  = input.string("Normal", "Status table text size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G7)
+showPnl   = input.bool(true, "Show P&L table", group = G7)
+pnlPosS   = input.string("Bottom Right", "P&L table position", options = ["Top Left", "Top Center", "Top Right", "Middle Left", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"], group = G7)
+pnlSizeS  = input.string("Normal", "P&L table text size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G7)
+daysShown = input.int(10, "P&L days shown", minval = 1, maxval = 30, group = G7)
+showCfg   = input.bool(true, "Show Settings table (to screenshot / share)", group = G7)
+cfgPosS   = input.string("Bottom Left", "Settings table position", options = ["Top Left", "Top Center", "Top Right", "Middle Left", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"], group = G7)
+cfgSizeS  = input.string("Small", "Settings table text size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G7)
+tblBg     = input.color(color.new(#131722, 10), "Custom: table background", group = G7)
+tblHdrBg  = input.color(color.new(#2a2e39, 0), "Custom: header background", group = G7)
+tblTxt    = input.color(color.white, "Custom: table text", group = G7)
+
+// ---------- ⑧ alerts ----------
+string G8 = "⑧ Text Alerts (muted while webhooks are live)"
+alSig     = input.bool(true, "HTF signature sets a bias", group = G8)
+alReady   = input.bool(true, "READY – swing found, waiting for the 50%", group = G8)
+
+// ---------- ⑨ notes ----------
+string G9 = "⑨ My Notes"
+showNotes = input.bool(false, "Show My Notes on chart", group = G9)
+notesTxt  = input.text_area("Settings / reminders…", "Notes", group = G9)
+notePosS  = input.string("Middle Left", "Position", options = ["Top Left", "Top Center", "Top Right", "Middle Left", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"], group = G9)
+noteSizeS = input.string("Small", "Text size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = G9)
+
+// =====================================================================
+//  WEBHOOK KEY — paste your CrossTrade key between the quotes below.
+//  Nothing sends until it differs from KEY_PLACEHOLDER.
+// =====================================================================
+var string WEBHOOK_KEY = "PASTE_YOUR_KEY_HERE"
+string KEY_PLACEHOLDER = "PASTE_YOUR_KEY_HERE"
+
+// =====================================================================
+//  THEME
+// =====================================================================
+bool  isCustom = themeS == "Custom (use table colors below)"
+bool  isWhite  = themeS == "White"
+color themeBg  = isWhite ? #ffffff : #131722
+color tBg      = isCustom ? tblBg    : (isWhite ? color.new(#ffffff, 5) : color.new(#131722, 10))
+color tHdr     = isCustom ? tblHdrBg : (isWhite ? #e0e3eb : #2a2e39)
+color tTxt     = isCustom ? tblTxt   : (isWhite ? #131722 : #ffffff)
+bgcolor(paintBg and not isCustom ? themeBg : na, title = "Theme background")
+
+// =====================================================================
+//  HELPERS
+// =====================================================================
+f_size(s) =>
+    switch s
+        "Tiny"  => size.tiny
+        "Small" => size.small
+        "Large" => size.large
+        "Huge"  => size.huge
+        => size.normal
+
+f_pos(s) =>
+    switch s
+        "Top Left"      => position.top_left
+        "Top Center"    => position.top_center
+        "Middle Left"   => position.middle_left
+        "Middle Right"  => position.middle_right
+        "Bottom Left"   => position.bottom_left
+        "Bottom Center" => position.bottom_center
+        "Bottom Right"  => position.bottom_right
+        => position.top_right
+
+f_px(x) =>
+    str.tostring(x, format.mintick)
+
+// dated contract -> NT8 short form, e.g. MNQZ2026 -> MNQZ6 ("" if continuous)
+f_inst() =>
+    string t    = syminfo.ticker
+    string r    = syminfo.root
+    string rest = str.length(t) > str.length(r) ? str.substring(t, str.length(r)) : ""
+    bool dated  = str.length(rest) == 5 and str.contains("FGHJKMNQUVXZ", str.substring(rest, 0, 1)) and not na(str.tonumber(str.substring(rest, 1)))
+    dated ? r + str.substring(rest, 0, 1) + str.substring(rest, 4) : ""
+
+bool chartIsHtf = timeframe.in_seconds() == timeframe.in_seconds(htfTf)
+bool botTfOK    = timeframe.in_seconds() < timeframe.in_seconds(stTf)
+if barstate.isfirst and timeframe.in_seconds() > timeframe.in_seconds(htfTf)
+    runtime.error("Use the HTF chart (labels only) or a lower chart like 1m (bot) / 15m (map).")
+
+int    htfMs  = timeframe.in_seconds(htfTf) * 1000
+int    htfSec = timeframe.in_seconds(htfTf)
+string HTF    = htfSec % 86400 == 0 ? str.tostring(int(htfSec / 86400)) + "D" : htfSec % 3600 == 0 ? str.tostring(int(htfSec / 3600)) + "H" : str.tostring(int(htfSec / 60)) + "m"
+
+// =====================================================================
+//  HTF CANDLES — built from the chart's own bars
+// =====================================================================
+tH   = time(htfTf)
+newH = not na(tH) and (na(tH[1]) or tH != tH[1])
+
+var float cO = na
+var float cH = na
+var float cL = na
+var float cC = na
+var int   cT = na
+var float pO = na
+var float pH = na
+var float pL = na
+var float pC = na
+var int   pT = na
+var float qH = na
+var float qL = na
+var int   doneCount = 0
+
+bool htfClosed = false
+if newH and not na(cO)
+    qH := pH
+    qL := pL
+    pO := cO
+    pH := cH
+    pL := cL
+    pC := cC
+    pT := cT
+    doneCount += 1
+    htfClosed := true
+
+if newH or na(cO)
+    cO := open
+    cH := high
+    cL := low
+    cT := na(tH) ? time : tH
+else
+    cH := math.max(cH, high)
+    cL := math.min(cL, low)
+cC := close
+
+var array<box>   ghostB  = array.new<box>()
+var array<line>  ghostW  = array.new<line>()
+var array<label> sigLbls = array.new<label>()
+int midT = pT + int(htfMs / 2)
+
+if htfClosed and showHtf and not chartIsHtf
+    bool  gFull = ghostMode == "Whole range (high to low)"
+    float bTop  = gFull ? pH : math.max(pO, pC)
+    float bBot  = gFull ? pL : math.min(pO, pC)
+    array.push(ghostB, box.new(pT, bTop, pT + htfMs, bBot, xloc = xloc.bar_time, bgcolor = pC >= pO ? htfUpCol : htfDnCol, border_color = htfWickC))
+    if not gFull
+        array.push(ghostW, line.new(midT, pH, midT, bTop, xloc = xloc.bar_time, color = htfWickC))
+        array.push(ghostW, line.new(midT, bBot, midT, pL, xloc = xloc.bar_time, color = htfWickC))
+    while array.size(ghostB) > numHtf
+        box.delete(array.shift(ghostB))
+    while array.size(ghostW) > numHtf * 2
+        line.delete(array.shift(ghostW))
+
+// =====================================================================
+//  HTF SIGNATURE -> BIAS
+// =====================================================================
+var int    bias    = 0
+var string biasTxt = "None yet"
+var string sigTxt  = "—"
+int    newDir = 0
+string dirWhy = ""
+
+if htfClosed and doneCount >= 3
+    bool  is2U = pH > qH and pL >= qL
+    bool  is2D = pL < qL and pH <= qH
+    bool  is3  = pH > qH and pL < qL
+    float rng  = pH - pL
+    float cpos = rng > 0 ? (pC - pL) / rng : 0.5
+    bool  f2U  = false
+    bool  f2D  = false
+    if is2U
+        f2U := f2Mode == F2_INSIDE ? (pC < qH) : f2Mode == F2_TAGS ? (pL > qL and pC <= qH and pC >= qL) : (pC < pO)
+    if is2D
+        f2D := f2Mode == F2_INSIDE ? (pC > qL) : f2Mode == F2_TAGS ? (pH < qH and pC >= qL and pC <= qH) : (pC > pO)
+    bool s2U = is2U and not f2U and cpos >= 1.0 - strongPct / 100.0
+    bool s2D = is2D and not f2D and cpos <= strongPct / 100.0
+    string nm = is3 ? "3" : is2U ? (f2U ? "F2U" : "2U") : is2D ? (f2D ? "F2D" : "2D") : "1"
+    if useF2 and f2D
+        newDir := 1
+        dirWhy := "Failed 2 down"
+    else if useF2 and f2U
+        newDir := -1
+        dirWhy := "Failed 2 up"
+    else if use2 and s2U
+        newDir := 1
+        dirWhy := "Strong 2 up"
+    else if use2 and s2D
+        newDir := -1
+        dirWhy := "Strong 2 down"
+    else if use3 and is3 and cpos > 0.5
+        newDir := 1
+        dirWhy := "3 closing high"
+    else if use3 and is3 and cpos < 0.5
+        newDir := -1
+        dirWhy := "3 closing low"
+    sigTxt := nm + (newDir != 0 ? " → " + dirWhy : " (no setup)") + "  ·  closed at " + str.tostring(cpos * 100, "#") + "%"
+    if newDir != 0
+        bias    := newDir
+        biasTxt := (newDir == 1 ? "LONG – " : "SHORT – ") + dirWhy
+    else if holdMode == HOLD_NEXT
+        bias    := 0
+        biasTxt := "None – last " + HTF + " was " + nm
+    if showSig
+        int lx = chartIsHtf ? pT : midT
+        array.push(sigLbls, label.new(lx, newDir == 1 ? pL : pH, nm + (newDir == 1 ? " ▲" : newDir == -1 ? " ▼" : ""), xloc = xloc.bar_time, style = newDir == 1 ? label.style_label_up : label.style_label_down, color = newDir == 1 ? bullCol : newDir == -1 ? bearCol : color.new(neutCol, 40), textcolor = lblTxtCol, size = f_size(sigSizeS)))
+        while array.size(sigLbls) > (chartIsHtf ? keep4h : numHtf)
+            label.delete(array.shift(sigLbls))
+
+// forming HTF candle (live)
+string liveName = ""
+if doneCount >= 2 and not na(pH) and not na(cH)
+    bool l2U = cH > pH and cL >= pL
+    bool l2D = cL < pL and cH <= pH
+    bool l3  = cH > pH and cL < pL
+    bool lFU = l2U and (f2Mode == F2_INSIDE ? close < pH : f2Mode == F2_TAGS ? (cL > pL and close <= pH and close >= pL) : close < cO)
+    bool lFD = l2D and (f2Mode == F2_INSIDE ? close > pL : f2Mode == F2_TAGS ? (cH < pH and close >= pL and close <= pH) : close > cO)
+    liveName := l3 ? "3" : l2U ? (lFU ? "F2U" : "2U") : l2D ? (lFD ? "F2D" : "2D") : "1"
+
+// v2.4 (display only): signature of a candle as if it had closed
+f_sigOf(float h, float l, float o, float c, float ph, float pl) =>
+    bool  x2U  = h > ph and l >= pl
+    bool  x2D  = l < pl and h <= ph
+    bool  x3   = h > ph and l < pl
+    float xRng = h - l
+    float xPos = xRng > 0 ? (c - l) / xRng : 0.5
+    bool  xFU  = false
+    bool  xFD  = false
+    if x2U
+        xFU := f2Mode == F2_INSIDE ? (c < ph) : f2Mode == F2_TAGS ? (l > pl and c <= ph and c >= pl) : (c < o)
+    if x2D
+        xFD := f2Mode == F2_INSIDE ? (c > pl) : f2Mode == F2_TAGS ? (h < ph and c >= pl and c <= ph) : (c > o)
+    bool   xSU  = x2U and not xFU and xPos >= 1.0 - strongPct / 100.0
+    bool   xSD  = x2D and not xFD and xPos <= strongPct / 100.0
+    string xNm  = x3 ? "3" : x2U ? (xFU ? "F2U" : "2U") : x2D ? (xFD ? "F2D" : "2D") : "1"
+    int    xDir = 0
+    string xWhy = ""
+    if useF2 and xFD
+        xDir := 1
+        xWhy := "Failed 2 down"
+    else if useF2 and xFU
+        xDir := -1
+        xWhy := "Failed 2 up"
+    else if use2 and xSU
+        xDir := 1
+        xWhy := "Strong 2 up"
+    else if use2 and xSD
+        xDir := -1
+        xWhy := "Strong 2 down"
+    else if use3 and x3 and xPos > 0.5
+        xDir := 1
+        xWhy := "3 closing high"
+    else if use3 and x3 and xPos < 0.5
+        xDir := -1
+        xWhy := "3 closing low"
+    [xNm, xDir, xWhy, xPos]
+
+// the newest HTF candle's time is up, but the next candle has not opened yet
+bool   htfDone  = barstate.islast and doneCount >= 2 and not na(cT) and not na(pH) and time_close >= cT + htfMs and (barstate.isconfirmed or time_close <= timenow)
+string dSigTxt  = sigTxt
+string dBiasTxt = biasTxt
+int    dBias    = bias
+string dNm      = ""
+int    dDir     = 0
+if htfDone
+    [nmD, dirD, whyD, posD] = f_sigOf(cH, cL, cO, close, pH, pL)
+    dNm     := nmD
+    dDir    := dirD
+    dSigTxt := nmD + (dirD != 0 ? " → " + whyD : " (no setup)") + "  ·  closed at " + str.tostring(posD * 100, "#") + "%"
+    if dirD != 0
+        dBias    := dirD
+        dBiasTxt := (dirD == 1 ? "LONG – " : "SHORT – ") + whyD
+    else if holdMode == HOLD_NEXT
+        dBias    := 0
+        dBiasTxt := "None – last " + HTF + " was " + nmD
+
+var label liveLbl = na
+if barstate.islast
+    label.delete(liveLbl)
+    if htfDone and showSig
+        liveLbl := label.new(chartIsHtf ? cT : cT + int(htfMs / 2), dDir == 1 ? cL : cH, dNm + (dDir == 1 ? " ▲" : dDir == -1 ? " ▼" : ""), xloc = xloc.bar_time, style = dDir == 1 ? label.style_label_up : label.style_label_down, color = dDir == 1 ? bullCol : dDir == -1 ? bearCol : color.new(neutCol, 40), textcolor = lblTxtCol, size = f_size(sigSizeS))
+    else if showLive and showSig and liveName != ""
+        liveLbl := label.new(chartIsHtf ? cT : cT + int(htfMs / 2), cH, liveName + " (forming)", xloc = xloc.bar_time, style = label.style_label_down, color = color.new(neutCol, liveT), textcolor = lblTxtCol, size = f_size(sigSizeS))
+
+// =====================================================================
+//  15M CANDLES + SWINGS (built from chart bars)
+// =====================================================================
+t15   = time(stTf)
+new15 = not chartIsHtf and not na(t15) and (na(t15[1]) or t15 != t15[1])
+
+var float k15H = na
+var float k15L = na
+var int   k15T = na
+var array<int>   aT = array.new<int>()
+var array<float> aH = array.new<float>()
+var array<float> aL = array.new<float>()
+var int c15Count = 0
+int MAX15 = 600
+var float k15O = na
+var float d15O = na
+var float d15C = na
+
+bool c15Closed = false
+if new15 and not na(k15H)
+    d15O := k15O
+    d15C := close[1]
+    array.push(aT, k15T)
+    array.push(aH, k15H)
+    array.push(aL, k15L)
+    c15Count += 1
+    if array.size(aH) > MAX15
+        array.shift(aT)
+        array.shift(aH)
+        array.shift(aL)
+    c15Closed := true
+
+if not chartIsHtf
+    if new15 or na(k15H)
+        k15O := open
+        k15H := high
+        k15L := low
+        k15T := na(t15) ? time : t15
+    else
+        k15H := math.max(k15H, high)
+        k15L := math.min(k15L, low)
+
+// v1.7: was the 15M candle that just closed a failed 2? (same Failed 2 rule as the HTF signature)
+bool f2u15 = false
+bool f2d15 = false
+if c15Closed and array.size(aH) >= 2 and not na(d15C) and not na(d15O)
+    int   nq  = array.size(aH)
+    float h1q = array.get(aH, nq - 1)
+    float l1q = array.get(aL, nq - 1)
+    float h0q = array.get(aH, nq - 2)
+    float l0q = array.get(aL, nq - 2)
+    bool  u2q = h1q > h0q and l1q >= l0q
+    bool  d2q = l1q < l0q and h1q <= h0q
+    if u2q
+        f2u15 := f2Mode == F2_INSIDE ? (d15C < h0q) : f2Mode == F2_TAGS ? (l1q > l0q and d15C <= h0q and d15C >= l0q) : (d15C < d15O)
+    if d2q
+        f2d15 := f2Mode == F2_INSIDE ? (d15C > l0q) : f2Mode == F2_TAGS ? (h1q < h0q and d15C >= l0q and d15C <= h0q) : (d15C > d15O)
+
+f_idx(int serial) =>
+    math.max(0, serial - (c15Count - array.size(aH)))
+
+f_minLow(int s0, int s1) =>
+    float m  = na
+    int   ms = na
+    int n = array.size(aL)
+    if n > 0
+        int base = c15Count - n
+        int i0 = math.max(0, math.min(s0, s1) - base)
+        int i1 = math.min(n - 1, math.max(s0, s1) - base)
+        if i1 >= i0
+            for i = i0 to i1
+                float v = array.get(aL, i)
+                if na(m) or v < m
+                    m  := v
+                    ms := base + i
+    [m, ms]
+
+f_maxHigh(int s0, int s1) =>
+    float m  = na
+    int   ms = na
+    int n = array.size(aH)
+    if n > 0
+        int base = c15Count - n
+        int i0 = math.max(0, math.min(s0, s1) - base)
+        int i1 = math.min(n - 1, math.max(s0, s1) - base)
+        if i1 >= i0
+            for i = i0 to i1
+                float v = array.get(aH, i)
+                if na(m) or v > m
+                    m  := v
+                    ms := base + i
+    [m, ms]
+
+var array<int>   shSerA = array.new<int>()
+var array<float> shPxA  = array.new<float>()
+var array<int>   slSerA = array.new<int>()
+var array<float> slPxA  = array.new<float>()
+
+if c15Closed
+    int n = array.size(aH)
+    if n >= 2 * pivLen + 1
+        int   idx = n - 1 - pivLen
+        float phv = array.get(aH, idx)
+        float plv = array.get(aL, idx)
+        bool  isPH = true
+        bool  isPL = true
+        for j = n - 1 - 2 * pivLen to n - 1
+            if j < idx
+                if array.get(aH, j) > phv
+                    isPH := false
+                if array.get(aL, j) < plv
+                    isPL := false
+            else if j > idx
+                if array.get(aH, j) >= phv
+                    isPH := false
+                if array.get(aL, j) <= plv
+                    isPL := false
+        int pSer = c15Count - n + idx
+        if isPH
+            array.push(shSerA, pSer)
+            array.push(shPxA, phv)
+            if array.size(shSerA) > 100
+                array.shift(shSerA)
+                array.shift(shPxA)
+        if isPL
+            array.push(slSerA, pSer)
+            array.push(slPxA, plv)
+            if array.size(slSerA) > 100
+                array.shift(slSerA)
+                array.shift(slPxA)
+
+// last swing in a list with serial in [sMin, sMax)
+f_lastSwing(array<int> sers, array<float> pxs, int sMin, int sMax) =>
+    float px  = na
+    int   ser = na
+    int n = array.size(sers)
+    if n > 0
+        for i = n - 1 to 0
+            int sv = array.get(sers, i)
+            if sv < sMax and sv >= sMin
+                px  := array.get(pxs, i)
+                ser := sv
+                break
+    [px, ser]
+
+// =====================================================================
+//  THE SWING (leg):  fib 0 = where the move started, fib 1 = how far it has run
+//   Whole-move mode (v1.5): short = highest high of the window -> lowest low AFTER it
+//                           long  = lowest low of the window  -> highest high AFTER it
+//   Last-swing mode:        window extreme + the last 15M swing before it (smaller leg)
+// =====================================================================
+var float bullOrg = na
+var int   bullOrgS = na
+var int   bullOrgT = na
+var float bullExt = na
+var float bearOrg = na
+var int   bearOrgS = na
+var int   bearOrgT = na
+var float bearExt = na
+
+if c15Closed and array.size(aH) > 0
+    int s0 = math.max(c15Count - legWin, c15Count - array.size(aH))
+    int sN = c15Count - 1
+    // start clean every 15M close so an old candidate can never linger
+    bullOrg := na
+    bullExt := na
+    bearOrg := na
+    bearExt := na
+    if orgMode == ORG_ABS
+        // ---- LONG: lowest low of the window, then the highest high made after it ----
+        [wl, wls] = f_minLow(s0, sN)
+        if not na(wls)
+            int  lIdx  = f_idx(wls)
+            // window-edge low: only "lowest" because the real low rolled out of the window
+            bool edgeL = false
+            if lIdx > 0 and wls <= s0
+                edgeL := array.get(aL, lIdx - 1) < wl
+            [ah, ahs] = f_maxHigh(wls, sN)
+            float extL = na(ah) ? k15H : math.max(ah, k15H)
+            if not edgeL and extL > wl
+                bullOrg  := wl
+                bullOrgS := wls
+                bullExt  := extL
+                bullOrgT := array.get(aT, lIdx)
+        // ---- SHORT: highest high of the window, then the lowest low made after it ----
+        [wh, whs] = f_maxHigh(s0, sN)
+        if not na(whs)
+            int  hIdx  = f_idx(whs)
+            // window-edge high: only "highest" because the real high rolled out of the window
+            bool edgeS = false
+            if hIdx > 0 and whs <= s0
+                edgeS := array.get(aH, hIdx - 1) > wh
+            [al, als] = f_minLow(whs, sN)
+            float extS = na(al) ? k15L : math.min(al, k15L)
+            if not edgeS and extS < wh
+                bearOrg  := wh
+                bearOrgS := whs
+                bearExt  := extS
+                bearOrgT := array.get(aT, hIdx)
+    else
+        // ---- LONG: window high + the last 15M swing low before it ----
+        [hx, hxs] = f_maxHigh(s0, sN)
+        if not na(hxs)
+            [sx, ss] = f_lastSwing(slSerA, slPxA, s0, hxs)
+            float ox = sx
+            int   os = ss
+            if na(os)
+                [mx, ms] = f_minLow(s0, hxs)
+                ox := mx
+                os := ms
+            if not na(os) and hx > ox
+                bullOrg  := ox
+                bullOrgS := os
+                bullExt  := math.max(hx, k15H)
+                bullOrgT := array.get(aT, f_idx(os))
+        // ---- SHORT: window low + the last 15M swing high before it ----
+        [lx, lxs] = f_minLow(s0, sN)
+        if not na(lxs)
+            [sx2, ss2] = f_lastSwing(shSerA, shPxA, s0, lxs)
+            float ox2 = sx2
+            int   os2 = ss2
+            if na(os2)
+                [mx2, ms2] = f_maxHigh(s0, lxs)
+                ox2 := mx2
+                os2 := ms2
+            if not na(os2) and lx < ox2
+                bearOrg  := ox2
+                bearOrgS := os2
+                bearExt  := math.min(lx, k15L)
+                bearOrgT := array.get(aT, f_idx(os2))
+
+if not na(bullExt)
+    bullExt := math.max(bullExt, high)
+if not na(bearExt)
+    bearExt := math.min(bearExt, low)
+
+bool  longC  = not chartIsHtf and bias == 1 and not na(bullOrg) and not na(bullExt) and bullExt > bullOrg and close > bullOrg
+bool  shortC = not chartIsHtf and bias == -1 and not na(bearOrg) and not na(bearExt) and bearExt < bearOrg and close < bearOrg
+
+// ---- locked swing: found once, then it stays put ----
+var int   lkDir    = 0
+var float lkOrg    = na
+var float lkExt    = na
+var int   lkOrgT   = na
+var int   lkId     = na
+var bool  lkFrozen = false
+// v1.8: in "Before the fib" mode no fib is marked until a 15M failed 2 in the bias direction has closed
+var int   f2Gate   = 0
+if bias == 0 or (htfClosed and newDir != 0)
+    f2Gate := 0
+if gateF2 and lkDir == 0 and not htfClosed and ((bias == 1 and f2d15) or (bias == -1 and f2u15))
+    f2Gate := bias
+    if showMarks and show15F2
+        label.new(bar_index, bias == 1 ? low : high, "15M F2", style = bias == 1 ? label.style_label_up : label.style_label_down, color = color.new(mssColI, markT), textcolor = lblTxtCol, size = f_size(markSizeS))
+if lkDir != 0 and (bias != lkDir or (lkDir == 1 ? close < lkOrg : close > lkOrg))
+    lkDir    := 0
+    lkFrozen := false
+    f2Gate   := 0
+if lkDir == 0 and (longC or shortC) and (not gateF2 or f2Gate == (longC ? 1 : -1))
+    lkDir    := longC ? 1 : -1
+    lkOrg    := longC ? bullOrg : bearOrg
+    lkExt    := longC ? bullExt : bearExt
+    lkOrgT   := longC ? bullOrgT : bearOrgT
+    lkId     := longC ? bullOrgS : bearOrgS
+    lkFrozen := false
+if lkDir != 0 and not lkFrozen
+    lkExt := lkDir == 1 ? math.max(lkExt, high) : math.min(lkExt, low)
+
+int   legDir   = lkDir
+float fib0     = legDir != 0 ? lkOrg : na
+float fib1     = legDir != 0 ? lkExt : na
+int   fib0T    = lkOrgT
+int   legId    = legDir != 0 ? lkId : na
+float zLvl     = legDir != 0 ? fib1 + (fib0 - fib1) * zonePct / 100 : na
+float legPts   = legDir != 0 ? math.abs(fib0 - fib1) : na
+bool  legBig   = minLegPt == 0 or (not na(legPts) and legPts >= minLegPt)
+
+// =====================================================================
+//  WEBHOOK READINESS
+// =====================================================================
+string inst      = autoInst ? f_inst() : str.upper(str.replace_all(manInst, " ", ""))
+bool   keyOK     = WEBHOOK_KEY != KEY_PLACEHOLDER and str.length(WEBHOOK_KEY) > 0
+bool   whLive    = false   // strategy twin: webhooks are disabled, backtest only
+string whStatus  = "OFF (strategy = backtest only)"
+bool   txtAlerts = not whLive
+
+// =====================================================================
+//  BOT
+// =====================================================================
+bool  inWin    = not na(time(timeframe.period, sessWin, "America/New_York"))
+bool  botReady = botTfOK and not chartIsHtf
+int   closeHM  = hour(time_close, "America/New_York") * 100 + minute(time_close, "America/New_York")
+bool  pastFlat = flatHHMM > 0 and closeHM >= flatHHMM and closeHM < 1800
+bool  dirOK    = legDir == 1 ? dirFilter != "Short only" : legDir == -1 ? dirFilter != "Long only" : false
+
+string symRoot  = syminfo.root
+bool   isNQfam  = symRoot == "NQ" or symRoot == "MNQ"
+bool   isESfam  = symRoot == "ES" or symRoot == "MES"
+float  minStopE = autoStops and isNQfam ? nqMinPt : autoStops and isESfam ? esMinPt : minStopPt
+float  maxStopE = autoStops and isNQfam ? nqMaxPt : autoStops and isESfam ? esMaxPt : maxStopPt
+
+var int tradesToday = 0
+var int lastDayKey  = na
+if na(lastDayKey) or time_tradingday != lastDayKey
+    tradesToday := 0
+    lastDayKey  := time_tradingday
+
+var array<int>   dKey = array.new<int>()
+var array<int>   dW   = array.new<int>()
+var array<int>   dL   = array.new<int>()
+var array<float> dNet = array.new<float>()
+
+f_record(int key, bool win, float net) =>
+    int n = array.size(dKey)
+    if n == 0 or array.get(dKey, n - 1) != key
+        array.push(dKey, key)
+        array.push(dW, 0)
+        array.push(dL, 0)
+        array.push(dNet, 0.0)
+        n := n + 1
+    if win
+        array.set(dW, n - 1, array.get(dW, n - 1) + 1)
+    else
+        array.set(dL, n - 1, array.get(dL, n - 1) + 1)
+    array.set(dNet, n - 1, array.get(dNet, n - 1) + net)
+
+f_skip(string why, float y, bool up) =>
+    if showSkip
+        label.new(bar_index, y, "Skipped: " + why, style = up ? label.style_label_up : label.style_label_down, color = skipBg, textcolor = skipTxt, size = f_size(skipSizeS))
+
+var bool  inTrade = false
+var int   tDir    = 0
+var float tEntry  = na
+var float tSL     = na
+var float tTP     = na
+var int   tBar    = na
+var box   tRiskB  = na
+var box   tRewB   = na
+var line  tEntL   = na
+var line  tSlL    = na
+var line  tTpL    = na
+var int   usedLeg = na
+var int   lastEntryDay = na
+
+bool flatNow = false
+
+// ---- manage the open trade (confirmed bars) ----
+if barstate.isconfirmed and inTrade and bar_index > tBar
+    bool  hitSL = tDir == 1 ? low <= tSL : high >= tSL
+    bool  hitTP = tDir == 1 ? high >= tTP : low <= tTP
+    bool  eod   = pastFlat and not hitSL and not hitTP
+    if hitSL or hitTP or eod
+        bool  win = hitTP and not hitSL
+        float pts = eod ? (tDir == 1 ? close - tEntry : tEntry - close) : win ? math.abs(tTP - tEntry) : -math.abs(tEntry - tSL)
+        float net = pts * syminfo.pointvalue * qty - commRT * qty
+        f_record(time_tradingday, net > 0, net)
+        float ex  = eod ? close : win ? tTP : tSL
+        if showTrades
+            box.set_right(tRiskB, bar_index)
+            box.set_right(tRewB, bar_index)
+            line.set_x2(tEntL, bar_index)
+            line.set_x2(tSlL, bar_index)
+            line.set_x2(tTpL, bar_index)
+            color ec = net >= 0 ? tpCol : slCol
+            string money = (net >= 0 ? " +$" : " −$") + str.tostring(math.abs(net), "#,##0.00")
+            if trLblMode == TL_FULL
+                label.new(bar_index, ex, (eod ? "EOD" : win ? "PT ✔" : "SL ✖") + money, style = label.style_label_left, color = ec, textcolor = lblTxtCol, size = f_size(trSizeS))
+            else if trLblMode == TL_SHORT
+                label.new(bar_index, ex, eod ? "EOD" : win ? "PT ✔" : "SL ✖", style = label.style_label_left, color = ec, textcolor = lblTxtCol, size = f_size(trSizeS))
+            else if trLblMode == TL_MARK
+                label.new(bar_index, ex, "", style = eod ? label.style_square : win ? label.style_circle : label.style_xcross, color = ec, size = f_size(trSizeS))
+        inTrade := false
+        flatNow := eod
+    else if showTrades
+        box.set_right(tRiskB, bar_index + 1)
+        box.set_right(tRewB, bar_index + 1)
+        line.set_x2(tEntL, bar_index + 1)
+        line.set_x2(tSlL, bar_index + 1)
+        line.set_x2(tTpL, bar_index + 1)
+
+// ---- READY / touch / entry (fires on the touch, intrabar in real time) ----
+// v1.5: READY also needs the entry window, the close time and max trades/day to allow a trade,
+//       and the swing to be at least the min size
+bool  canTrade = inWin and not pastFlat and tradesToday < maxTrades
+bool  legFresh = na(usedLeg) or legId != usedLeg
+bool  ready    = botReady and legDir != 0 and dirOK and not inTrade and legFresh and legBig and canTrade
+float tol      = zoneTolTk * syminfo.mintick
+bool  crossZ   = not na(zLvl) and not na(zLvl[1]) and (legDir == 1 ? (low - tol <= zLvl and low[1] - tol > zLvl[1]) : (high + tol >= zLvl and high[1] + tol < zLvl[1]))
+bool  touched  = ready and crossZ
+// map charts (15m): no trades there, but freeze the fib on the touch so it matches the 1m chart
+bool  mapTouch = not botReady and not chartIsHtf and legDir != 0 and legBig and crossZ
+bool  entryNow = false
+if touched or mapTouch
+    lkFrozen := true
+float eEnt = na
+float eSL  = na
+float eTP  = na
+
+// stop / target for an entry price
+f_plan(int d, float ent, float stopFrom) =>
+    float buf  = slBufTk * syminfo.mintick
+    float base = na(stopFrom) ? fib0 : stopFrom
+    float stop = math.round_to_mintick(d == 1 ? base - buf : base + buf)
+    float risk = d == 1 ? ent - stop : stop - ent
+    float raw  = tgtMode == TGT_FIB1 ? fib1 : (d == 1 ? ent + risk : ent - risk)
+    float dist = math.abs(raw - ent) * tpPct / 100
+    float tgt  = math.round_to_mintick(d == 1 ? ent + dist : ent - dist)
+    [stop, tgt, risk, dist]
+
+// why an entry is blocked ("" = ok); burn = this swing is used up
+f_why(float risk, float dist) =>
+    string why = ""
+    bool   burn = false
+    if risk <= 0 or dist <= 0
+        why  := "bad stop/target"
+        burn := true
+    else if minRR > 0 and dist / risk < minRR
+        why  := "reward:risk " + str.tostring(dist / risk, "#.##") + " < " + str.tostring(minRR, "#.##")
+        burn := true
+    else if minStopE > 0 and risk < minStopE
+        why  := "stop " + str.tostring(risk, "#.##") + " pts < min " + str.tostring(minStopE, "#.##")
+        burn := true
+    else if maxStopE > 0 and risk > maxStopE
+        why  := "stop " + str.tostring(risk, "#.##") + " pts > max " + str.tostring(maxStopE, "#.##")
+        burn := true
+    else if not inWin
+        why := "outside entry window"
+    else if pastFlat
+        why := "after close time"
+    else if tradesToday >= maxTrades
+        why := "max trades hit"
+    [why, burn]
+
+// fast MSS level: high of the last down-candle (longs) / low of the last up-candle (shorts)
+f_fastLvl(int d) =>
+    float lv = na
+    for i = 0 to 30
+        if d == 1 and close[i] < open[i]
+            lv := high[i]
+            break
+        if d == -1 and close[i] > open[i]
+            lv := low[i]
+            break
+    lv
+
+// ---- A) entry right on the touch ----
+if touched and entryMode == EN_TOUCH and not reqF2
+    float ent = math.round_to_mintick(legDir == 1 ? math.min(open, zLvl) : math.max(open, zLvl))
+    [stop, tgt, risk, dist] = f_plan(legDir, ent, na)
+    [why, burn] = f_why(risk, dist)
+    if why == ""
+        entryNow := true
+        eEnt := ent
+        eSL  := stop
+        eTP  := tgt
+        usedLeg := legId
+    else
+        f_skip(why, legDir == 1 ? low : high, legDir == 1)
+        if burn
+            usedLeg := legId
+
+// ---- B) touch arms, then wait for the 1M shift (+ FVG) ----
+var bool  armed   = false
+var int   aDir    = 0
+var int   aLeg    = na
+var int   armBar  = na
+var float armExt  = na
+var int   armExtB = na
+var float mssLvl  = na
+var bool  fvgOK   = false
+var line  mssLn   = na
+var box   fvgBx   = na
+var bool  mssShown = false
+
+if touched and entryMode != EN_TOUCH and not reqF2 and not armed and barstate.isconfirmed
+    armed   := true
+    aDir    := legDir
+    aLeg    := legId
+    armBar  := bar_index
+    armExt  := legDir == 1 ? low : high
+    armExtB := bar_index
+    mssLvl  := f_fastLvl(legDir)
+    fvgOK   := false
+    usedLeg := legId
+    mssLn    := na
+    fvgBx    := na
+    mssShown := false
+    if showMarks and not na(mssLvl)
+        mssLn := line.new(bar_index, mssLvl, bar_index + 1, mssLvl, color = color.new(mssColI, markT), style = line.style_dashed, width = 1)
+
+// ---- C) v1.7: touch -> wait for a 15M failed 2 -> then the Entry setting takes over ----
+var bool  fWait = false
+var int   fDir  = 0
+var int   fLeg  = na
+var int   f15At = na
+var float fExt  = na
+var int   fExtB = na
+
+if touched and reqF2 and not fWait and not armed and barstate.isconfirmed
+    fWait   := true
+    fDir    := legDir
+    fLeg    := legId
+    f15At   := c15Count
+    fExt    := legDir == 1 ? low : high
+    fExtB   := bar_index
+    usedLeg := legId
+else if fWait and barstate.isconfirmed
+    if legDir != fDir or legId != fLeg
+        f_skip("swing broke before the 15M failed 2", fDir == 1 ? low : high, fDir == 1)
+        fWait := false
+    else
+        // pullback extreme since the touch (used for the stop on MSS / FVG entries)
+        if fDir == 1 ? low < fExt : high > fExt
+            fExt  := fDir == 1 ? low : high
+            fExtB := bar_index
+        bool gotF2 = fDir == 1 ? f2d15 : f2u15
+        if gotF2
+            fWait := false
+            if showMarks and show15F2
+                label.new(bar_index, fDir == 1 ? low : high, "15M F2", style = fDir == 1 ? label.style_label_up : label.style_label_down, color = color.new(mssColI, markT), textcolor = lblTxtCol, size = f_size(markSizeS))
+            if entryMode == EN_TOUCH
+                float ent3 = close
+                [stop3, tgt3, risk3, dist3] = f_plan(fDir, ent3, na)
+                [why3, burn3] = f_why(risk3, dist3)
+                if why3 == "" and not inTrade
+                    entryNow := true
+                    eEnt := ent3
+                    eSL  := stop3
+                    eTP  := tgt3
+                else
+                    f_skip(why3 == "" ? "already in a trade" : why3, fDir == 1 ? low : high, fDir == 1)
+            else
+                armed    := true
+                aDir     := fDir
+                aLeg     := fLeg
+                armBar   := bar_index
+                armExt   := fExt
+                armExtB  := fExtB
+                mssLvl   := f_fastLvl(fDir)
+                fvgOK    := false
+                mssLn    := na
+                fvgBx    := na
+                mssShown := false
+                if showMarks and not na(mssLvl)
+                    mssLn := line.new(bar_index, mssLvl, bar_index + 1, mssLvl, color = color.new(mssColI, markT), style = line.style_dashed, width = 1)
+        else if c15Count - f15At > f2Wait15
+            f_skip("no 15M failed 2 in time", fDir == 1 ? low : high, fDir == 1)
+            fWait := false
+
+if armed and barstate.isconfirmed and bar_index > armBar
+    // swing broke or changed -> cancel
+    if legDir != aDir or legId != aLeg
+        f_skip("swing broke before the 1M shift", aDir == 1 ? low : high, aDir == 1)
+        line.set_color(mssLn, color.new(neutCol, 50))
+        armed := false
+    else
+        // new extreme -> new shift level
+        if aDir == 1 ? low < armExt : high > armExt
+            armExt  := aDir == 1 ? low : high
+            armExtB := bar_index
+            mssLvl  := f_fastLvl(aDir)
+            fvgOK   := false
+            mssShown := false
+            box.delete(fvgBx)
+            if showMarks and not na(mssLvl)
+                if na(mssLn)
+                    mssLn := line.new(bar_index, mssLvl, bar_index + 1, mssLvl, color = color.new(mssColI, markT), style = line.style_dashed)
+                else
+                    line.set_xy1(mssLn, bar_index, mssLvl)
+                    line.set_xy2(mssLn, bar_index + 1, mssLvl)
+        bool newGap = (aDir == 1 and high[2] < low and bar_index - 2 >= armExtB) or (aDir == -1 and low[2] > high and bar_index - 2 >= armExtB)
+        if newGap and not fvgOK
+            fvgOK := true
+            if showMarks
+                float gTop = aDir == 1 ? low : low[2]
+                float gBot = aDir == 1 ? high[2] : high
+                fvgBx := box.new(bar_index - 2, gTop, bar_index + 3, gBot, bgcolor = fvgColI, border_color = color.new(fvgColI, 100), text = "FVG", text_color = color.new(mssColI, markT), text_size = f_size(markSizeS), text_halign = text.align_right)
+        if not mssShown
+            line.set_x2(mssLn, bar_index + 1)
+        bool shifted = not na(mssLvl) and (aDir == 1 ? close > mssLvl : close < mssLvl)
+        if shifted and showMarks and not na(mssLn) and not mssShown
+            mssShown := true
+            line.set_x2(mssLn, bar_index)
+            if showMssTag
+                label.new(bar_index, mssLvl, "MSS", style = aDir == 1 ? label.style_label_down : label.style_label_up, color = color.new(mssColI, markT), textcolor = lblTxtCol, size = f_size(markSizeS))
+        if shifted and (entryMode == EN_MSS or fvgOK)
+            float ent2 = close
+            [stop2, tgt2, risk2, dist2] = f_plan(aDir, ent2, mssStop == "Past the swing start (fib 0)" ? na : armExt)
+            [why2, burn2] = f_why(risk2, dist2)
+            if why2 == "" and not inTrade
+                entryNow := true
+                eEnt := ent2
+                eSL  := stop2
+                eTP  := tgt2
+            else
+                f_skip(why2 == "" ? "already in a trade" : why2, aDir == 1 ? low : high, aDir == 1)
+            armed := false
+        else if bar_index - armBar > mssWait
+            f_skip(shifted ? "no FVG" : "no 1M shift in time", aDir == 1 ? low : high, aDir == 1)
+            line.set_color(mssLn, color.new(neutCol, 50))
+            armed := false
+
+// release the locked swing once it has been used and nothing is pending
+if lkDir != 0 and not na(usedLeg) and usedLeg == lkId and not inTrade and not armed and not fWait and not entryNow
+    lkDir    := 0
+    lkFrozen := false
+    f2Gate   := 0
+
+int eDirN = entryMode == EN_TOUCH ? (reqF2 ? fDir : legDir) : aDir
+if entryNow
+    inTrade := true
+    tDir    := eDirN
+    tEntry  := eEnt
+    tSL     := eSL
+    tTP     := eTP
+    tBar    := bar_index
+    tradesToday += 1
+    // strategy twin: mirror the trade to the Strategy Tester (fills on this bar's close)
+    string sId = eDirN == 1 ? "Long" : "Short"
+    strategy.entry(sId, eDirN == 1 ? strategy.long : strategy.short, qty = qty)
+    strategy.exit("Exit", from_entry = sId, stop = eSL, limit = eTP)
+    if showTrades
+        tRiskB := box.new(bar_index, math.max(eEnt, eSL), bar_index + 1, math.min(eEnt, eSL), bgcolor = color.new(slCol, zoneT), border_color = color.new(slCol, 100))
+        tRewB  := box.new(bar_index, math.max(eEnt, eTP), bar_index + 1, math.min(eEnt, eTP), bgcolor = color.new(tpCol, zoneT), border_color = color.new(tpCol, 100))
+        tEntL  := line.new(bar_index, eEnt, bar_index + 1, eEnt, color = entCol, width = 2)
+        tSlL   := line.new(bar_index, eSL, bar_index + 1, eSL, color = slCol, style = line.style_dashed)
+        tTpL   := line.new(bar_index, eTP, bar_index + 1, eTP, color = tpCol, style = line.style_dashed)
+        if trLblMode == TL_FULL
+            label.new(bar_index, eEnt, (eDirN == 1 ? "LONG " : "SHORT ") + f_px(eEnt), style = label.style_label_right, color = entCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+            label.new(bar_index, eSL, "SL " + f_px(eSL) + " (" + str.tostring(math.abs(eEnt - eSL), "#.##") + " pts)", style = label.style_label_right, color = slCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+            label.new(bar_index, eTP, "PT " + f_px(eTP) + " (" + str.tostring(math.abs(eTP - eEnt), "#.##") + " pts)", style = label.style_label_right, color = tpCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+        else if trLblMode == TL_SHORT
+            label.new(bar_index, eEnt, eDirN == 1 ? "LONG" : "SHORT", style = label.style_label_right, color = entCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+            label.new(bar_index, eSL, "SL", style = label.style_label_right, color = slCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+            label.new(bar_index, eTP, "PT", style = label.style_label_right, color = tpCol, textcolor = lblTxtCol, size = f_size(trSizeS))
+        else if trLblMode == TL_MARK
+            label.new(bar_index, eEnt, "", yloc = eDirN == 1 ? yloc.belowbar : yloc.abovebar, style = eDirN == 1 ? label.style_triangleup : label.style_triangledown, color = eDirN == 1 ? tpCol : slCol, size = f_size(trSizeS))
+
+    bool firstOfDay = na(lastEntryDay) or time_tradingday != lastEntryDay
+    lastEntryDay := time_tradingday
+    if whLive
+        alert("key=" + WEBHOOK_KEY + ";command=place;account=" + acctName + ";instrument=" + inst + ";action=" + (eDirN == 1 ? "BUY" : "SELL") + ";qty=" + str.tostring(qty) + ";order_type=market;tif=day;take_profit=" + f_px(eTP) + ";stop_loss=" + f_px(eSL) + ";require_market_position=flat;" + (firstOfDay ? "flatten_first=true;" : ""), alert.freq_once_per_bar)
+    else if txtAlerts
+        alert(syminfo.ticker + " TM 50% Fib " + (eDirN == 1 ? "LONG" : "SHORT") + " @ " + f_px(eEnt) + "  SL " + f_px(eSL) + "  PT " + f_px(eTP) + " (webhooks off)", alert.freq_once_per_bar)
+
+if flatNow
+    strategy.close_all(comment = "EOD")
+    if whLive
+        alert("key=" + WEBHOOK_KEY + ";command=flatten;account=" + acctName + ";instrument=" + inst + ";", alert.freq_once_per_bar_close)
+    else if txtAlerts
+        alert(syminfo.ticker + " TM 50% Fib: end-of-day close at " + f_px(close) + " (webhooks off)", alert.freq_once_per_bar_close)
+
+bool readyStart = ready and not ready[1]
+bgcolor(showReady and ready ? color.new(legDir == 1 ? bullCol : bearCol, readyT) : na, title = "READY tint")
+
+if txtAlerts and alSig and htfClosed and newDir != 0
+    alert(syminfo.ticker + " " + HTF + " " + dirWhy + " → bias " + (newDir == 1 ? "LONG" : "SHORT") + ". Watch for the 15M swing.", alert.freq_once_per_bar_close)
+if txtAlerts and alReady and readyStart
+    alert(syminfo.ticker + " TM 50% Fib READY " + (legDir == 1 ? "LONG" : "SHORT") + ": swing " + f_px(fib0) + " → " + f_px(fib1) + ", entry at " + f_px(zLvl), alert.freq_once_per_bar_close)
+
+
+// =====================================================================
+//  F2 MINI TAGS (v1.6) — failed 2s on the chart's own candles, display only
+// =====================================================================
+var array<label> f2TagLbls = array.new<label>()
+bool  tg2U   = high > high[1] and low > low[1]
+bool  tg2D   = low < low[1] and high < high[1]
+bool  tgF2U  = tg2U and close <= high[1] and close >= low[1]
+bool  tgF2D  = tg2D and close >= low[1] and close <= high[1]
+int   tgSec  = timeframe.in_seconds()
+bool  tgTfOK = (f2On4H and tgSec == 14400) or (f2On1H and tgSec == 3600) or (f2On15 and tgSec == 900)
+if showF2Tag and tgTfOK and barstate.isconfirmed and (tgF2U or tgF2D)
+    float tgRng = math.max(high - low, 10 * syminfo.mintick)
+    float tgPad = math.max(f2GapTk * syminfo.mintick, tgRng * f2GapPct)
+    array.push(f2TagLbls, label.new(bar_index + f2XOff, tgF2U ? high + tgPad : low - tgPad, "F2", style = label.style_label_center, color = f2TagBg, textcolor = f2TagTxt, size = f_size(f2TagSizeS)))
+    while array.size(f2TagLbls) > f2Keep
+        label.delete(array.shift(f2TagLbls))
+
+// =====================================================================
+//  FIB DRAWING (last bar)
+// =====================================================================
+var array<float> fibLv = array.new<float>()
+if barstate.isfirst
+    array.push(fibLv, 0.0)
+    array.push(fibLv, zonePct / 100)
+    array.push(fibLv, 1.0)
+    if str.length(str.replace_all(fibExtra, " ", "")) > 0
+        for p in str.split(fibExtra, ",")
+            float v = str.tonumber(str.replace_all(p, " ", ""))
+            if not na(v)
+                array.push(fibLv, v)
+
+var box   zoneB    = na
+var array<line>  fibLines = array.new<line>()
+var array<label> fibLbls  = array.new<label>()
+
+if barstate.islast
+    box.delete(zoneB)
+    while array.size(fibLines) > 0
+        line.delete(array.pop(fibLines))
+    while array.size(fibLbls) > 0
+        label.delete(array.pop(fibLbls))
+    if showFib and legDir != 0 and not na(fib0T)
+        int   rightT = time + timeframe.in_seconds() * 1000 * fibExtend
+        color zc     = legDir == 1 ? bullCol : bearCol
+        if showZone
+            zoneB := box.new(fib0T, math.max(fib0, zLvl), rightT, math.min(fib0, zLvl), xloc = xloc.bar_time, bgcolor = color.new(zc, 88), border_color = color.new(zc, 100))
+        for lv in fibLv
+            // level as % pullback from fib 1 toward fib 0
+            float px    = fib1 + (fib0 - fib1) * (lv > 1.0 ? lv / 100 : lv)
+            bool  isEnt = math.abs(lv - zonePct / 100) < 0.0001
+            string nm   = lv == 0.0 ? "TARGET – swing " + (legDir == 1 ? "high" : "low") : lv == 1.0 ? "Swing start – stop side" : isEnt ? "ENTRY " + str.tostring(lv) : str.tostring(lv)
+            array.push(fibLines, line.new(fib0T, px, rightT, px, xloc = xloc.bar_time, color = isEnt ? zc : fibLineC, style = isEnt ? line.style_dashed : line.style_solid, width = isEnt ? 2 : 1))
+            array.push(fibLbls, label.new(rightT, px, nm + "  (" + f_px(px) + ")", xloc = xloc.bar_time, style = label.style_label_left, color = isEnt ? color.new(zc, 30) : fibLblBg, textcolor = isEnt ? lblTxtCol : fibTxtC, size = f_size(fibSizeS)))
+
+// =====================================================================
+//  STATUS TABLE
+// =====================================================================
+var table tb = table.new(f_pos(tblPosS), 2, 8, bgcolor = tBg, border_width = 1, border_color = color.new(neutCol, 60))
+if barstate.islast and showTbl
+    ts = f_size(tblSizeS)
+    table.cell(tb, 0, 0, "TM 50% FIB STRATEGY · " + VERSION + "  (" + HTF + " → 15M)", text_color = tTxt, bgcolor = tHdr, text_size = ts)
+    table.cell(tb, 1, 0, "", bgcolor = tHdr, text_size = ts)
+    table.merge_cells(tb, 0, 0, 1, 0)
+    color  bc      = dBias == 1 ? bullCol : dBias == -1 ? bearCol : neutCol
+    string legTxt  = legDir == 1 ? "Long swing  " + f_px(fib0) + " → " + f_px(fib1) : legDir == -1 ? "Short swing  " + f_px(fib0) + " → " + f_px(fib1) : bias == 0 ? "—" : "No valid swing yet"
+    // v1.5: the status says exactly why the bot is waiting
+    string stTxt   = ""
+    if chartIsHtf
+        stTxt := HTF + " chart – labels only. Use 1m for the bot"
+    else if not botTfOK
+        stTxt := "Use a 1m chart for entries"
+    else if inTrade
+        stTxt := "IN TRADE " + (tDir == 1 ? "LONG" : "SHORT") + "  SL " + f_px(tSL) + "  PT " + f_px(tTP)
+    else if fWait
+        stTxt := "50% touched – waiting for a 15M failed 2 " + (fDir == 1 ? "down" : "up")
+    else if armed
+        stTxt := "50% touched – waiting for 1M shift " + (aDir == 1 ? "above " : "below ") + f_px(mssLvl) + (entryMode == EN_FVG ? " + FVG" : "")
+    else if bias == 0
+        stTxt := "WAIT – no " + HTF + " bias"
+    else if legDir == 0 and gateF2 and f2Gate == 0
+        stTxt := "WAIT – waiting for a 15M failed 2 " + (bias == 1 ? "down" : "up") + " (then the fib is marked)"
+    else if legDir == 0
+        stTxt := "WAIT – no 15M swing in the bias direction"
+    else if not dirOK
+        stTxt := "Blocked by Direction setting"
+    else if not legFresh
+        stTxt := "Swing already traded – waiting for a new one"
+    else if not legBig
+        stTxt := "WAIT – swing only " + str.tostring(legPts, "#.##") + " pts (min " + str.tostring(minLegPt, "#.##") + ")"
+    else if tradesToday >= maxTrades
+        stTxt := "DONE – max trades hit (" + str.tostring(tradesToday) + " / " + str.tostring(maxTrades) + ")"
+    else if pastFlat
+        stTxt := "DONE – past the " + str.tostring(flatHHMM) + " NY close"
+    else if not inWin
+        stTxt := "WAIT – outside the entry window"
+    else if ready
+        stTxt := "READY – " + (legDir == 1 ? "buy" : "sell") + " at " + f_px(zLvl)
+    else
+        stTxt := "WAIT"
+    color  stCol   = inTrade ? (tDir == 1 ? bullCol : bearCol) : (fWait or armed) ? waitCol : ready ? (legDir == 1 ? bullCol : bearCol) : bias == 0 ? neutCol : waitCol
+    int    minsLeft = math.max(0, int((cT + htfMs - (chartIsHtf ? timenow : time_close)) / 60000))
+    table.cell(tb, 0, 1, "① " + HTF + " last candle", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 1, dSigTxt, text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 2, "   " + HTF + " bias", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 2, dBiasTxt, text_color = bc, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 3, "   " + HTF + " forming", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 3, htfDone ? "— (next candle not open yet)" : liveName == "" ? "—" : liveName, text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 4, "② 15M swing", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 4, legTxt, text_color = legDir != 0 ? bc : tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 5, "③ Entry level", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 5, na(zLvl) ? "—" : str.tostring(zonePct, "#") + "%  =  " + f_px(zLvl), text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 6, "④ STATUS", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 6, stTxt, text_color = lblTxtCol, bgcolor = color.new(stCol, 20), text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 0, 7, "Next " + HTF + " candle in", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+    table.cell(tb, 1, 7, str.tostring(minsLeft) + " min", text_color = tTxt, text_size = ts, text_halign = text.align_left)
+
+// =====================================================================
+//  DAILY P&L TABLE (day ends 18:00 NY)
+// =====================================================================
+int PNL_ROWS = daysShown + 7
+var table pt = table.new(f_pos(pnlPosS), 5, PNL_ROWS, bgcolor = tBg, border_width = 1, border_color = color.new(neutCol, 60))
+if barstate.islast and showPnl
+    ps = f_size(pnlSizeS)
+    table.clear(pt, 0, 0, 4, PNL_ROWS - 1)
+    table.cell(pt, 0, 0, "TM 50% Fib Strategy " + VERSION + " – Daily P&L", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.merge_cells(pt, 0, 0, 4, 0)
+    table.cell(pt, 0, 1, "Date", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 1, 1, "W", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 2, 1, "L", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 3, 1, "Win %", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 4, 1, "Net $", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    int   totW = 0
+    int   totL = 0
+    float totN = 0.0
+    int   nD   = array.size(dKey)
+    if nD > 0
+        for i = 0 to nD - 1
+            totW += array.get(dW, i)
+            totL += array.get(dL, i)
+            totN += array.get(dNet, i)
+    int row = 2
+    if nD > 0
+        for i = nD - 1 to math.max(0, nD - daysShown)
+            int   w  = array.get(dW, i)
+            int   l  = array.get(dL, i)
+            float nt = array.get(dNet, i)
+            table.cell(pt, 0, row, str.format_time(array.get(dKey, i), "MM/dd", "UTC"), text_color = tTxt, text_size = ps)
+            table.cell(pt, 1, row, str.tostring(w), text_color = tpCol, text_size = ps)
+            table.cell(pt, 2, row, str.tostring(l), text_color = slCol, text_size = ps)
+            table.cell(pt, 3, row, w + l > 0 ? str.tostring(100.0 * w / (w + l), "#") + "%" : "—", text_color = tTxt, text_size = ps)
+            table.cell(pt, 4, row, str.tostring(nt, "#,##0.00"), text_color = nt >= 0 ? tpCol : slCol, text_size = ps)
+            row += 1
+    table.cell(pt, 0, row, "TOTAL", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 1, row, str.tostring(totW), text_color = tpCol, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 2, row, str.tostring(totL), text_color = slCol, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 3, row, totW + totL > 0 ? str.tostring(100.0 * totW / (totW + totL), "#") + "%" : "—", text_color = tTxt, bgcolor = tHdr, text_size = ps)
+    table.cell(pt, 4, row, str.tostring(totN, "#,##0.00"), text_color = totN >= 0 ? tpCol : slCol, bgcolor = tHdr, text_size = ps)
+    row += 1
+    table.cell(pt, 0, row, "Today: " + str.tostring(tradesToday) + " / " + str.tostring(maxTrades) + " trades", text_color = tTxt, text_size = ps, text_halign = text.align_left)
+    table.merge_cells(pt, 0, row, 4, row)
+    row += 1
+    table.cell(pt, 0, row, inTrade ? "Open: " + (tDir == 1 ? "LONG " : "SHORT ") + f_px(tEntry) + "  SL " + f_px(tSL) + "  PT " + f_px(tTP) : "Open: flat", text_color = inTrade ? (tDir == 1 ? tpCol : slCol) : tTxt, text_size = ps, text_halign = text.align_left)
+    table.merge_cells(pt, 0, row, 4, row)
+    row += 1
+    table.cell(pt, 0, row, "Webhook: " + whStatus, text_color = whLive ? tpCol : waitCol, text_size = ps, text_halign = text.align_left)
+    table.merge_cells(pt, 0, row, 4, row)
+
+// =====================================================================
+//  SETTINGS TABLE — every key setting at a glance (safe to share: no webhook key)
+// =====================================================================
+var table cfgTbl = table.new(f_pos(cfgPosS), 2, 22, bgcolor = tBg, border_width = 1, border_color = color.new(neutCol, 60))
+f_cfg(int r, string k, string v, string sz) =>
+    table.cell(cfgTbl, 0, r, k, text_color = tTxt, text_size = sz, text_halign = text.align_left)
+    table.cell(cfgTbl, 1, r, v, text_color = tTxt, text_size = sz, text_halign = text.align_left)
+if barstate.islast and showCfg
+    cs = f_size(cfgSizeS)
+    table.cell(cfgTbl, 0, 0, "TM 50% Fib Strategy " + VERSION + " – Settings", text_color = tTxt, bgcolor = tHdr, text_size = cs)
+    table.cell(cfgTbl, 1, 0, "", bgcolor = tHdr, text_size = cs)
+    table.merge_cells(cfgTbl, 0, 0, 1, 0)
+    string sigs = (useF2 ? "F2 " : "") + (use2 ? "Strong2(" + str.tostring(strongPct, "#") + "%) " : "") + (use3 ? "3" : "")
+    string stopsTxt = autoStops ? (isNQfam ? "Auto NQ " : isESfam ? "Auto ES " : "Manual ") + str.tostring(minStopE, "#.##") + " / " + str.tostring(maxStopE, "#.##") + " pts" : "Manual " + str.tostring(minStopPt, "#.##") + " / " + str.tostring(maxStopPt, "#.##") + " pts"
+    f_cfg(1,  "Symbol / HTF", syminfo.ticker + "  ·  " + HTF + " → " + str.tostring(int(timeframe.in_seconds(stTf) / 60)) + "m", cs)
+    f_cfg(2,  "Bias signatures", sigs + "  ·  " + (holdMode == HOLD_NEXT ? "next HTF only" : "until opposite"), cs)
+    f_cfg(3,  "Failed 2 rule", f2Mode, cs)
+    f_cfg(4,  "Direction", dirFilter, cs)
+    f_cfg(5,  "Entry", entryMode, cs)
+    f_cfg(6,  "Entry level", str.tostring(zonePct, "#") + "%  ·  tolerance " + str.tostring(zoneTolTk) + " ticks", cs)
+    f_cfg(7,  "MSS window", str.tostring(mssWait) + " bars", cs)
+    f_cfg(8,  "15M swing", "strength " + str.tostring(pivLen) + "  ·  window " + str.tostring(legWin) + " (" + str.tostring(legWin * 15 / 60, "#.#") + " h)", cs)
+    f_cfg(9,  "Fib 0", orgMode, cs)
+    f_cfg(10, "Min swing size", minLegPt == 0 ? "off" : str.tostring(minLegPt, "#.##") + " pts", cs)
+    f_cfg(11, "Stop buffer", str.tostring(slBufTk) + " ticks past the stop level", cs)
+    f_cfg(12, "MSS / FVG stop", mssStop, cs)
+    f_cfg(13, "Target", tgtMode + "  ·  TP at " + str.tostring(tpPct, "#") + "%", cs)
+    f_cfg(14, "Min reward : risk", minRR == 0 ? "off" : str.tostring(minRR, "#.##"), cs)
+    f_cfg(15, "Min / max stop", stopsTxt, cs)
+    f_cfg(16, "Entry window (NY)", sessWin, cs)
+    f_cfg(17, "Close trades at", flatHHMM == 0 ? "off" : str.tostring(flatHHMM) + " NY", cs)
+    f_cfg(18, "Max trades / day", str.tostring(maxTrades), cs)
+    f_cfg(19, "Quantity", str.tostring(qty) + "  ·  commission $" + str.tostring(commRT, "#.##") + " RT", cs)
+    f_cfg(20, "Webhook", whLive ? "LIVE" : sendWh ? "ON – not ready" : "OFF", cs)
+    f_cfg(21, "15M failed 2 step", reqF2 ? f2Step + "  ·  within " + str.tostring(f2Wait15) + " candles" : f2Step, cs)
+
+// =====================================================================
+//  MY NOTES
+// =====================================================================
+var table notesTbl = table.new(f_pos(notePosS), 1, 1, bgcolor = tBg)
+if barstate.islast and showNotes
+    table.cell(notesTbl, 0, 0, notesTxt, text_color = tTxt, text_size = f_size(noteSizeS), text_halign = text.align_left)

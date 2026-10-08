@@ -1,0 +1,25 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/2Sd1S6MF-noro-s-accuracy-strategy-v1-0/
+// id: PUB;Q8kkdrfONwkBJKcE29sCF1t547xq3xE5  kind: strategy  likes: 400
+//@version=3
+strategy("Noro's Accuracy Strategy v1.0", shorttitle = "Accuracy str 1.0", overlay = true, default_qty_type = strategy.percent_of_equity, default_qty_value=100.0, pyramiding=10)
+
+accuracy = input(1, defval = 1, minval = 1, maxval = 20, title = "accuracy")
+smalen = input(1000, defval = 100, minval = 10, maxval = 1000, title = "MA Period")
+
+mac = sma(close, 30)
+len = abs(close - mac)
+sma = sma(len, smalen)
+max = max(open, close)
+min = min(open, close)
+up = close < open and len > sma * accuracy and close < mac ? 1 : 0
+dn = close >= open ? 1 : 0
+//dn = close > mac ? 1 : 0
+
+longCondition = up == 1
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+
+shortCondition = dn == 1
+if (shortCondition)
+    strategy.entry("Exit", strategy.short, 0)

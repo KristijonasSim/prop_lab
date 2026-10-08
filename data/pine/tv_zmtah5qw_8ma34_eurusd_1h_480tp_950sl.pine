@@ -1,0 +1,23 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/ZMTAh5qW-8ma34-EURUSD-1h-480tp-950sl/
+// id: PUB;4183  kind: strategy  likes: 156
+//@version=2
+strategy("8ma34 EURUSD 1h 480tp 950sl", shorttitle="MA", overlay=true, pyramiding=0, default_qty_value=10000, initial_capital=5000, currency="USD")
+fastLength = input(8)
+slowLength = input(34)
+price = close
+
+mafast = sma(price, fastLength)
+maslow = sma(price, slowLength)
+
+if (crossover(mafast, maslow))
+    strategy.entry("Long", strategy.long, comment=" ")
+
+if (crossunder(mafast, maslow))
+    strategy.entry("Short", strategy.short, comment=" ")
+
+strategy.exit("exit", "Long", profit = 480, loss = 950)
+strategy.exit("exit", "Short", profit = 480, loss = 950)
+
+
+

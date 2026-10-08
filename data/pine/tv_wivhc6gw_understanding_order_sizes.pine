@@ -1,0 +1,22 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/WivHc6GW-Understanding-order-sizes/
+// id: PUB;ediblmhKqQxoDXazubjF7Ej2bnEmKwXm  kind: strategy  likes: 204
+//@version=2
+strategy("BarUpDn time limited", overlay=true, default_qty_type = strategy.fixed, default_qty_value = 1)
+
+//input boxes for the limit date
+yearLimit = input(2016,title="year") 
+monthLimit = input(1, title="month")
+dayLimit = input(1, title="day")
+
+//function that checks if the current date is more recent than the limit
+dateOk(yl,ml,dl) =>
+//    ok = (year < yl) ? false : (yl == year and month < ml ) ? false : (yl == year and ml == month and dayofmonth < dl) ? false : true
+    ok = time > timestamp(yl,ml,dl,0,1)
+    
+    
+//applies dumb prebuilt strat limited to the date
+if (dateOk(yearLimit,monthLimit,dayLimit) and (close > open and open > close[1]) )
+    strategy.entry("BarDn", strategy.short)
+if (dateOk(yearLimit,monthLimit,dayLimit) and (close < open and open < close[1]) )
+    strategy.entry("BarUp", strategy.long)

@@ -1,0 +1,131 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/D2UwK8lK-NEXT-GEN-INSPIRED-BY-OLIVER-VELEZ/
+// id: PUB;f4326377ec8441fcb856cf73a592a809  kind: strategy  likes: 83
+//@version=6
+strategy("VELEZ 2025 - SL + TP + R:R LIVE PREDICTION vGOD", overlay=true,
+     initial_capital=10000,
+     default_qty_type=strategy.percent_of_equity,
+     default_qty_value=22,
+     commission_type=strategy.commission.percent,
+     commission_value=0.006,
+     pyramiding=15)
+
+// INPUTS
+fastEMA = input.int(9,  "Fast EMA")
+slowEMA = input.int(21, "Slow EMA")
+atrLen  = input.int(14, "ATR")
+minRR   = input.float(4.5, "Final R:R", minval=3.0)
+
+// INDICATORS
+e9  = ta.ema(close, fastEMA)
+e21 = ta.ema(close, slowEMA)
+atr = ta.atr(atrLen)
+
+// REJECT RANGING
+avgRange = ta.sma(high - low, 25)
+isRanging = (high - low) < avgRange * 0.4
+
+// COMBINED ELEPHANT LOGIC
+body = math.abs(close - open)
+candleRange = high - low
+
+bullMomentum3 = close > open and close[1] > open[1] and close[2] > open[2]
+bearMomentum3 = close < open and close[1] < open[1] and close[2] < open[2]
+bullMomentum2 = close > open and close[1] > open[1]
+bearMomentum2 = close < open and close[1] < open[1]
+
+combinedRange2 = candleRange + candleRange[1]
+combinedRange3 = combinedRange2 + candleRange[2]
+combinedBody2 = body + body[1]
+combinedBody3 = combinedBody2 + body[2]
+
+monsterSize = atr * 2.1
+
+bullCombined = (bullMomentum3 and combinedRange3 >= monsterSize and combinedBody3 > combinedRange3 * 0.6) or 
+               (bullMomentum2 and combinedRange2 >= monsterSize * 1.1 and combinedBody2 > combinedRange2 * 0.65)
+
+bearCombined = (bearMomentum3 and combinedRange3 >= monsterSize and combinedBody3 > combinedRange3 * 0.6) or 
+               (bearMomentum2 and combinedRange2 >= monsterSize * 1.1 and combinedBody2 > combinedRange2 * 0.65)
+
+bullFinal = bullCombined and close > e9 and e9 > e21 and close > close[2]
+bearFinal = bearCombined and close < e9 and e9 < e21 and close < close[2]
+
+trendOK = e9 > e21 ? close > e9 : close < e9
+noRange = not isRanging
+
+longSetup  = bullFinal and trendOK and noRange
+shortSetup = bearFinal and trendOK and noRange
+
+// DYNAMIC STOP & TARGET
+stopDist = atr * 1.2
+longSL  = low - stopDist
+shortSL = high + stopDist
+longTP  = close + stopDist * minRR
+shortTP = close - stopDist * minRR
+
+// PIP CALCULATIONS (5-digit broker)
+pipRiskLong  = (close - longSL)  / syminfo.mintick / 10
+pipRiskShort = (shortSL - close) / syminfo.mintick / 10
+pipRewardLong  = (longTP - close)  / syminfo.mintick / 10
+pipRewardShort = (close - shortTP) / syminfo.mintick / 10
+
+// LIVE LABEL WITH SL + TP + R:R + PIPS
+if longSetup
+    strategy.entry("COMBO LONG", strategy.long)
+    label.new(bar_index, low - stopDist*0.8,
+              text="LONG\n" +
+                   "SL: " + str.tostring(longSL, "#.#####") + "\n" +
+                   "TP: " + str.tostring(longTP, "#.#####") + "\n" +
+                   "Risk: " + str.tostring(pipRiskLong, "#.#") + " pips\n" +
+                   "Reward: " + str.tostring(pipRewardLong, "#.#") + " pips\n" +
+                   "R:R = 1:" + str.tostring(minRR, "#.#"),
+              style=label.style_label_up, color=#00FF00, textcolor=#000000, size=size.normal, yloc=yloc.belowbar)
+
+if shortSetup
+    strategy.entry("COMBO SHORT", strategy.short)
+    label.new(bar_index, high + stopDist*0.8,
+              text="SHORT\n" +
+                   "SL: " + str.tostring(shortSL, "#.#####") + "\n" +
+                   "TP: " + str.tostring(shortTP, "#.#####") + "\n" +
+                   "Risk: " + str.tostring(pipRiskShort, "#.#") + " pips\n" +
+                   "Reward: " + str.tostring(pipRewardShort, "#.#") + " pips\n" +
+                   "R:R = 1:" + str.tostring(minRR, "#.#"),
+              style=label.style_label_down, color=#FF0000, textcolor=#FFFFFF, size=size.normal, yloc=yloc.abovebar)
+
+// PYRAMID + MINI EXIT
+if strategy.position_size > 0 and close >= strategy.position_avg_price + stopDist
+    strategy.close("COMBO LONG", comment="+1R")
+    if close <= e9 * 1.002
+        strategy.entry("LONG RE", strategy.long)
+
+if strategy.position_size < 0 and close <= strategy.position_avg_price - stopDist
+    strategy.close("COMBO SHORT", comment="+1R")
+    if close >= e9 * 0.998
+        strategy.entry("SHORT RE", strategy.short)
+
+// FINAL EXITS
+strategy.exit("FINAL L", from_entry="COMBO LONG", limit=strategy.position_avg_price + stopDist*minRR, stop=strategy.position_avg_price - stopDist*1.3)
+strategy.exit("FINAL S", from_entry="COMBO SHORT", limit=strategy.position_avg_price - stopDist*minRR, stop=strategy.position_avg_price + stopDist*1.3)
+
+// TRAILING
+trailOffset = stopDist * 0.55
+trailPrice = strategy.position_size > 0 ? close - trailOffset : close + trailOffset
+strategy.exit("TRAIL", from_entry="LONG RE",  stop=trailPrice)
+strategy.exit("TRAIL", from_entry="SHORT RE", stop=trailPrice)
+
+// VISUALS
+plot(e9,  color=#00FF00, linewidth=3)
+plot(e21, color=#FF00FF, linewidth=3)
+barcolor(isRanging ? color.new(#808080, 85) : na)
+barcolor(bullCombined or bearCombined ? #FFD700 : na)
+
+plotshape(longSetup,  location=location.belowbar, color=#00FF00, style=shape.triangleup,   size=size.large,   text="COMBO")
+plotshape(shortSetup, location=location.abovebar, color=#FF0000, style=shape.triangledown, size=size.large,   text="COMBO")
+
+// RE-ENTRY
+plotshape(strategy.position_size > strategy.position_size[1] and strategy.position_size > 0, location=location.belowbar, color=#00FFFF, style=shape.diamond, size=size.small, text="+")
+plotshape(strategy.position_size < strategy.position_size[1] and strategy.position_size < 0, location=location.abovebar, color=#FF00FF, style=shape.diamond, size=size.small, text="+")
+
+// ALERTS
+alertcondition(longSetup,  "COMBO LONG",  "VELEZ COMBO LONG – FULL PLAN SHOWN!")
+alertcondition(shortSetup, "COMBO SHORT", "VELEZ COMBO SHORT – FULL PLAN SHOWN!")

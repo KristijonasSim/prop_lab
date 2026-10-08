@@ -1,0 +1,19 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/8V7fRfnB-MACD-SAR/
+// id: PUB;pwgU4RdviaDnWdK4ATvqGsKC17PnmeeL  kind: strategy  likes: 331
+//@version=3
+strategy(title="MACD_SAR",overlay=true,scale=scale.left)
+Slow=input(type=integer,defval=26,minval=1)
+Fast=input(type=integer,defval=12,minval=1)
+slowing=input(type=integer,defval=9,minval=1)
+
+[main,signal,histo]=macd(close,Fast,Slow,slowing)
+parsar=sar(0.02,0.02,0.2)
+
+buy_entry=main>signal and crossover(close,parsar) ?true:na
+sell_entry=main<signal and crossunder(close,parsar)?true:na
+
+strategy.entry("Buy",true , when=buy_entry)
+strategy.close("Buy",when=crossunder(close,parsar))
+strategy.entry("Sell",false,when=sell_entry)
+strategy.exit("Sell", when=crossover(close,parsar))

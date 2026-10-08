@@ -1,0 +1,48 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/xV3t2X7R-Trend-Bounce-racer8/
+// id: PUB;07994c29c87540e29ce0c7db6d2bfa2e  kind: strategy  likes: 586
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © racer8
+//@version=4
+// This Algo Strategy Has Only 3 rules and 62% Win Rate (Youtube) 
+
+strategy("Trend Bounce", overlay=true)
+
+nn = input(7,"Channel Length")
+hi = highest(high,nn)
+lo = lowest(low,nn)
+n2 = input(200,"Ma Length")
+ma = sma(close,n2)
+
+if close>ma and close<lo[1]
+    strategy.entry("Buy",strategy.long)
+if close>hi[1]
+    strategy.close("Buy") 
+    
+if close<ma and close>hi[1]
+    strategy.entry("Sell",strategy.short)
+if close<lo[1]
+    strategy.close("Sell")
+
+
+plot(hi,"high",color=color.aqua)
+plot(lo,"low",color=color.aqua)
+plot(ma,"sma",color=color.yellow)       
+
+//-----------------------------------------Stop Loss------------------------------------------------------
+
+atr = sma(tr,10)[1]
+bought = strategy.position_size[0] > strategy.position_size[1]
+sold = strategy.position_size[0] < strategy.position_size[1]
+slm = input(2.0,"ATR Stop Loss",minval=0)
+StopPrice_Long  = strategy.position_avg_price - slm*atr              // determines stop loss's price 
+StopPrice_Short  = strategy.position_avg_price + slm*atr              // determines stop loss's price 
+FixedStopPrice_Long = valuewhen(bought,StopPrice_Long,0)                  // stores original StopPrice  
+FixedStopPrice_Short = valuewhen(sold,StopPrice_Short,0)                  // stores original StopPrice  
+plot(FixedStopPrice_Long,"ATR Stop Loss Long",color=color.blue,linewidth=1,style=plot.style_cross)
+plot(FixedStopPrice_Short,"ATR Stop Loss Short",color=color.red,linewidth=1,style=plot.style_cross)
+if strategy.position_size > 0
+    strategy.exit(id="Stop", stop=FixedStopPrice_Long)    // commands stop loss order to exit!
+if strategy.position_size < 0
+    strategy.exit(id="Stop", stop=FixedStopPrice_Short)    // commands stop loss order to exit!
+

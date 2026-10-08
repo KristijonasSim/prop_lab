@@ -1,0 +1,23 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/L99FSlDB-GoldenCross-by-Puffy/
+// id: PUB;M4Zy6bX93iewEc3VoclX67l20dcQwSIc  kind: strategy  likes: 103
+//@version=2
+strategy("GoldenCross by Puffy", overlay=true)
+
+// INITIALIZE VARIABLES
+// determine ema values
+FastIndicator = ema(close, 50)
+SlowIndicator = ema(close, 200)
+
+
+// determine if ema50 is crossing under ema200
+CrossUnder = (FastIndicator[0]-SlowIndicator[0] < 0 and FastIndicator[1]-SlowIndicator[1] > 0)
+// determine if ema50 is crossing over ema200
+CrossOver = (FastIndicator[0]-SlowIndicator[0] > 0 and FastIndicator[1]-SlowIndicator[1] < 0)
+
+
+if (CrossOver)
+    strategy.entry("Buy", strategy.long)
+
+if (CrossUnder)
+    strategy.close("Buy")

@@ -1,0 +1,139 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/2dvhxn9p-EMA-VWAP-Strategy/
+// id: PUB;6953a00d011b4405be8217ee0616030d  kind: strategy  likes: 194
+//@version=5
+strategy("EMA + VWAP Strategy", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// === INPUTS ===
+emaFastLen = input.int(9, "Fast EMA Length", minval=1)
+emaSlowLen = input.int(21, "Slow EMA Length (Trend Filter)", minval=1)
+vwapFlatThreshold = input.float(0.01, "VWAP Flat Threshold (%)", minval=0.0001, step=0.0001, tooltip="If VWAP slope is below this %, consider it flat")
+vwapLookback = input.int(5, "VWAP Slope Lookback", minval=2, tooltip="Bars to calculate VWAP slope")
+
+// Trading Days Filter
+tradeWeekdaysOnly = input.bool(true, "Trade Weekdays Only (Mon-Fri)", tooltip="Disable trading on Saturday and Sunday")
+
+// Risk Management
+slType = input.string("ATR", "Stop Loss Type", options=["ATR", "Swing Low/High", "Slow EMA", "Fixed %"])
+atrLength = input.int(14, "ATR Length", minval=1)
+atrMultiplier = input.float(1.5, "ATR Multiplier", minval=0.1, step=0.1)
+swingLookback = input.int(10, "Swing Lookback Period", minval=2)
+fixedSlPercent = input.float(1.0, "Fixed Stop Loss %", minval=0.1, step=0.1)
+rrRatio = input.float(2.0, "Risk:Reward Ratio", minval=0.5, step=0.5, tooltip="Take Profit will be R multiplied by this ratio")
+
+// === CALCULATIONS ===
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+vwapValue = ta.vwap(close)
+
+// ATR for stop loss
+atrValue = ta.atr(atrLength)
+
+// Swing points for stop loss
+swingLow = ta.lowest(low, swingLookback)
+swingHigh = ta.highest(high, swingLookback)
+
+// Calculate VWAP slope (percentage change)
+vwapSlope = ((vwapValue - vwapValue[vwapLookback]) / vwapValue[vwapLookback]) * 100
+vwapIsFlat = math.abs(vwapSlope) < vwapFlatThreshold
+
+// Day of week filter (1=Sunday, 2=Monday, ..., 7=Saturday)
+isWeekday = dayofweek != dayofweek.saturday and dayofweek != dayofweek.sunday
+allowTrading = tradeWeekdaysOnly ? isWeekday : true
+
+// === STOP LOSS CALCULATION ===
+var float longSL = na
+var float shortSL = na
+
+calcLongSL(entryPrice) =>
+    sl = switch slType
+        "ATR" => entryPrice - (atrValue * atrMultiplier)
+        "Swing Low/High" => swingLow
+        "Slow EMA" => emaSlow
+        "Fixed %" => entryPrice * (1 - fixedSlPercent/100)
+    sl
+
+calcShortSL(entryPrice) =>
+    sl = switch slType
+        "ATR" => entryPrice + (atrValue * atrMultiplier)
+        "Swing Low/High" => swingHigh
+        "Slow EMA" => emaSlow
+        "Fixed %" => entryPrice * (1 + fixedSlPercent/100)
+    sl
+
+// === ENTRY CONDITIONS ===
+// Long: EMA9 crosses over VWAP, EMA9 > EMA21, VWAP sloping up, allowed trading day
+longCondition = ta.crossover(emaFast, vwapValue) and emaFast > emaSlow and vwapSlope > 0 and not vwapIsFlat and allowTrading
+
+// Short: EMA9 crosses under VWAP, EMA9 < EMA21, VWAP sloping down, allowed trading day
+shortCondition = ta.crossunder(emaFast, vwapValue) and emaFast < emaSlow and vwapSlope < 0 and not vwapIsFlat and allowTrading
+
+// === PLOTTING ===
+plot(emaFast, "Fast EMA", color=color.blue, linewidth=2)
+plot(emaSlow, "Slow EMA", color=color.orange, linewidth=2)
+plot(vwapValue, "VWAP", color=color.purple, linewidth=2)
+
+// Plot ATR bands to visualize stop loss placement
+showATRBands = input.bool(true, "Show ATR Bands", tooltip="Display ATR-based stop loss zones")
+atrUpper = close + (atrValue * atrMultiplier)
+atrLower = close - (atrValue * atrMultiplier)
+
+plot(showATRBands and slType == "ATR" ? atrUpper : na, "ATR Upper", color=color.new(color.red, 70), style=plot.style_circles, linewidth=1)
+plot(showATRBands and slType == "ATR" ? atrLower : na, "ATR Lower", color=color.new(color.green, 70), style=plot.style_circles, linewidth=1)
+
+// Plot actual stop loss levels when in position
+var float activeLongSL = na
+var float activeShortSL = na
+var float activeLongTP = na
+var float activeShortTP = na
+
+if strategy.position_size > 0
+    activeLongSL := longSL
+    activeLongTP := strategy.opentrades.entry_price(0) + ((strategy.opentrades.entry_price(0) - longSL) * rrRatio)
+else
+    activeLongSL := na
+    activeLongTP := na
+
+if strategy.position_size < 0
+    activeShortSL := shortSL
+    activeShortTP := strategy.opentrades.entry_price(0) - ((shortSL - strategy.opentrades.entry_price(0)) * rrRatio)
+else
+    activeShortSL := na
+    activeShortTP := na
+
+plot(activeLongSL, "Long Stop Loss", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(activeLongTP, "Long Take Profit", color=color.green, linewidth=2, style=plot.style_linebr)
+plot(activeShortSL, "Short Stop Loss", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(activeShortTP, "Short Take Profit", color=color.green, linewidth=2, style=plot.style_linebr)
+
+// Background color for trend
+bgcolor(emaFast > emaSlow ? color.new(color.green, 95) : color.new(color.red, 95))
+
+// Highlight weekends if filter is enabled
+bgcolor(tradeWeekdaysOnly and not isWeekday ? color.new(color.gray, 90) : na, title="Weekend")
+
+// Plot VWAP flat status
+plotshape(vwapIsFlat, "VWAP Flat", shape.diamond, location.top, color.gray, size=size.tiny)
+
+// === STRATEGY EXECUTION ===
+if longCondition
+    entryPrice = close
+    longSL := calcLongSL(entryPrice)
+    riskAmount = entryPrice - longSL
+    longTP = entryPrice + (riskAmount * rrRatio)
+    
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Long Exit", "Long", stop=longSL, limit=longTP)
+
+if shortCondition
+    entryPrice = close
+    shortSL := calcShortSL(entryPrice)
+    riskAmount = shortSL - entryPrice
+    shortTP = entryPrice - (riskAmount * rrRatio)
+    
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Short Exit", "Short", stop=shortSL, limit=shortTP)
+
+// === ALERTS ===
+alertcondition(longCondition, "Long Signal", "EMA crossed over VWAP - Long Entry")
+alertcondition(shortCondition, "Short Signal", "EMA crossed under VWAP - Short Entry")

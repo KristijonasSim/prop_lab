@@ -1,0 +1,904 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/KQpraXem-Backtest-Template-Backtest-Terminal/
+// id: PUB;fd7c447b07684e189be7dcf52951bde1  kind: strategy  likes: 742
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © BacktestTerminal
+//       ___           __   __          __ ______              _           __
+//      / _ )___ _____/ /__/ /____ ___ / //_  __/__ ______ _  (_)__  ___ _/ /
+//     / _  / _ `/ __/  '_/ __/ -_|_-</ __// / / -_) __/  ' \/ / _ \/ _ `/ / 
+//    /____/\_,_/\__/_/\_\\__/\__/___/\__//_/  \__/_/ /_/_/_/_/_//_/\_,_/_/  
+//
+// =============================================================================
+// BACKTEST TEMPLATE — Backtest Terminal
+// =============================================================================
+//
+// WHAT THIS SCRIPT IS:
+//   A ready-made backtest engine that lets you test any trading idea without
+//   building the strategy infrastructure from scratch.
+//   Stops, targets, session filters, alerts and trailing stops are all
+//   handled automatically once you plug in your signal.
+//
+// HOW TO USE IT:
+//   1. Open the Pine Editor and find the USER ZONE near the top of the script.
+//   2. Replace the pre-built Moving Average Cross trigger with your own signal.
+//   3. Replace the pre-built Moving Average Filter with your own condition.
+//   4. Add the script to your chart and open Strategy Tester to see results.
+//
+// WHAT THE ENGINE HANDLES AUTOMATICALLY:
+//   → Stop Loss & Take Profit  (Fixed, Trailing, or Breakeven modes)
+//   → Trade direction          (Long only, Short only, or Both)
+//   → Session filtering        (trading hours + blackout windows)
+//   → Backtest date range      (start and end date inputs)
+//   → Bot / app alerts         (App alert or custom JSON message)
+//
+// USER ZONE CONTRACT:
+//   Your signal connects to the engine through exactly four variable names.
+//   Do not rename these — the engine reads them directly:
+//
+//   userLong         → true on the bar you want to enter Long
+//   userShort        → true on the bar you want to enter Short
+//   userFilterLong   → true when Long  entries are allowed by your filter
+//   userFilterShort  → true when Short entries are allowed by your filter
+//
+// POSITION SIZING (default_qty_value):
+//   Default is 2% of equity per trade (strategy.percent_of_equity).
+//   This scales automatically as your account grows or shrinks.
+//   For lot-based markets (Forex, XAUUSD), consider switching to:
+//     default_qty_type  = strategy.fixed
+//     default_qty_value = 1    (1 unit = 1 oz on XAUUSD, 1 share on stocks)
+//   Typical lot equivalents on XAUUSD: 0.01 lot = 1 oz | 0.1 lot = 10 oz | 1.0 lot = 100 oz
+//
+// COMMISSION (commission_value):
+//   Default is 0.1% per side (strategy.commission.percent).
+//   Adjust to match your broker:
+//     Stocks zero-commission broker   → 0.0
+//     Stocks SET Thailand             → 0.16
+//     Crypto spot (Binance)           → 0.1
+//     Crypto futures (Binance taker)  → 0.04
+//     Forex spread-based              → 0.002  (approx 2 pip spread on EURUSD)
+//   For XAUUSD charging fixed fee per lot (e.g. $7 per standard lot):
+//     Change commission_type  to: strategy.commission.cash_per_contract
+//     Change commission_value to: fee_per_lot / oz_per_lot
+//     Example: $7 per standard lot (100 oz) → 7 / 100 = 0.07
+//
+// SLIPPAGE (slippage):
+//   Default is 2 ticks. One tick = syminfo.mintick of the instrument.
+//   Adjust to match your market conditions:
+//     XAUUSD  (mintick = $0.01)     → slippage = 2  ($0.02 per oz per side)
+//     EURUSD  (mintick = $0.00001)  → slippage = 2  (0.2 pip per side)
+//     SET stock (mintick = 0.25 THB)→ slippage = 1  (0.25 THB per share per side)
+//     Crypto BTC (mintick = $0.1)   → slippage = 2  ($0.20 per BTC per side)
+//
+// MARGIN / LEVERAGE (margin_long, margin_short):
+//   Both are set to 0 by default (no margin simulation).
+//   To simulate leverage, edit the values in strategy() below.
+//   Formula: margin value = 100 / leverage ratio
+//     No simulation (default)   → margin_long = 0,     margin_short = 0
+//     No leverage (spot / cash) → margin_long = 100,   margin_short = 100
+//     Crypto  1:10  leverage    → margin_long = 10,    margin_short = 10
+//     Forex   1:50  leverage    → margin_long = 2,     margin_short = 2
+//     Forex   1:100 leverage    → margin_long = 1,     margin_short = 1
+//     Forex   1:500 leverage    → margin_long = 0.2,   margin_short = 0.2
+//     Forex   1:3000 leverage   → margin_long = 0.033, margin_short = 0.033
+//   Note: margin_long and margin_short cannot be set from the input panel.
+//   You must edit the two numbers directly in the strategy() call below.
+//
+// =============================================================================
+
+//@version=6
+
+// ── COMMISSION & SLIPPAGE — edit to match your broker and market ─────────────
+// commission_type  : percent = % of trade value | cash_per_contract = fixed per unit
+// commission_value : 0.1 = 0.1% per side (see header comment for per-market guide)
+// slippage         : 2 ticks per fill (see header comment for per-market guide)
+//
+// ── POSITION SIZING — edit to match your risk preference ─────────────────────
+// default_qty_type  : percent_of_equity = % of account per trade (scales with equity)
+// default_qty_value : 2 = 2% of equity per trade (within TradingView guidelines)
+//
+// ── MARGIN / LEVERAGE — edit to match your broker (see header comment) ────────
+// margin_long = 0, margin_short = 0 → no margin simulation (default)
+// Formula: margin value = 100 / leverage   e.g. 1:500 → 100/500 = 0.2
+
+strategy(title             = "Backtest Template [Backtest Terminal]",
+         shorttitle        = "BTT",
+         overlay           = true,
+         default_qty_type  = strategy.fixed,
+         default_qty_value = 1,
+         initial_capital   = 10000,
+         commission_type   = strategy.commission.cash_per_contract,
+         commission_value  = 0.07,
+         slippage          = 2,
+         margin_long       = 0,
+         margin_short      = 0)
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// E N U M S ///////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+enum StopTargetMode
+    percentage  = "% (Percentage)"
+    forexCfd    = "Point - Forex / CFD"
+    cryptoStock = "Dollar - Crypto / Stock"
+
+enum StopMode
+    fixed     = "Fixed"
+    trailing  = "Trailing"
+    breakeven = "Breakeven"
+
+enum TradeDir
+    long  = "LONG"
+    short = "SHORT"
+    both  = "BOTH"
+
+enum SessionMode
+    off        = "Off"
+    blackout   = "Blackout"
+    tradeOnly  = "Trade Only"
+
+enum Timezone
+    utcMinus12 = "UTC-12"
+    utcMinus11 = "UTC-11"
+    utcMinus10 = "UTC-10 (Hawaii)"
+    utcMinus9  = "UTC-9  (Alaska)"
+    utcMinus8  = "UTC-8  (Los Angeles)"
+    utcMinus7  = "UTC-7  (Denver / Phoenix)"
+    utcMinus6  = "UTC-6  (Chicago / Mexico City)"
+    utcMinus5  = "UTC-5  (New York / Toronto)"
+    utcMinus4  = "UTC-4  (New York DST / Santiago)"
+    utcMinus3  = "UTC-3  (São Paulo / Buenos Aires)"
+    utcMinus2  = "UTC-2"
+    utcMinus1  = "UTC-1  (Azores)"
+    utc0       = "UTC+0  (London / Lisbon)"
+    utcPlus1   = "UTC+1  (London DST / Paris / Frankfurt)"
+    utcPlus2   = "UTC+2  (Cairo / Johannesburg)"
+    utcPlus3   = "UTC+3  (Moscow / Riyadh / Istanbul)"
+    utcPlus4   = "UTC+4  (Dubai / Baku)"
+    utcPlus5   = "UTC+5  (Karachi / Tashkent)"
+    utcPlus530 = "UTC+5:30 (Mumbai / New Delhi)"
+    utcPlus6   = "UTC+6  (Dhaka / Almaty)"
+    utcPlus7   = "UTC+7  (Bangkok / Jakarta / Hanoi)"
+    utcPlus8   = "UTC+8  (Singapore / Hong Kong)"
+    utcPlus9   = "UTC+9  (Tokyo / Seoul)"
+    utcPlus930 = "UTC+9:30 (Adelaide)"
+    utcPlus10  = "UTC+10 (Sydney / Melbourne)"
+    utcPlus11  = "UTC+11 (Solomon Islands)"
+    utcPlus12  = "UTC+12 (Auckland / Fiji)"
+
+
+// Defined before the User Zone so the pre-built trigger can use it
+confirmed = barstate.isconfirmed
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ╔══════════════════════════════════════════════════════════════════════════╗ //
+// ║                    🎯  U S E R   Z O N E                              ║ //
+// ║              This is the ONLY section you need to edit                ║ //
+// ╠══════════════════════════════════════════════════════════════════════════╣ //
+// ║                                                                        ║ //
+// ║  TRIGGER  — the event that says "look at a trade now"                 ║ //
+// ║             → produces  userLong  and  userShort  (true / false)      ║ //
+// ║                                                                        ║ //
+// ║  FILTER   — the condition that says "is the market right?"            ║ //
+// ║             → produces  userFilterLong  and  userFilterShort          ║ //
+// ║                                                                        ║ //
+// ║  HOW THE ENGINE READS YOUR ZONE:                                      ║ //
+// ║  Long  entry fires when → userLong  is true  AND  userFilterLong      ║ //
+// ║  Short entry fires when → userShort is true  AND  userFilterShort     ║ //
+// ║                                                                        ║ //
+// ╚══════════════════════════════════════════════════════════════════════════╝ //
+////////////////////////////////////////////////////////////////////////////////
+
+
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  🔵  T R I G G E R — Moving Average Cross (pre-built example)         ║
+// ║  Replace this block with your own indicator signal.                    ║
+// ╠══════════════════════════════════════════════════════════════════════════╣
+// ║  HOW TO REPLACE:                                                       ║
+// ║  1. Edit or replace the inputs below  (keep group = g_Trig)           ║
+// ║  2. Edit or replace the calculation below                              ║
+// ║  3. Assign your conditions to userLong and userShort                   ║
+// ║     Add [and confirmed] to avoid signals on unfinished bars            ║
+// ║  4. Update the plot() lines to match your new indicator                ║
+// ║                                                                        ║
+// ║  ⚠️  Do not rename: userLong  userShort                               ║
+// ║      The engine reads exactly these two variable names.                ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+
+var g_Trig  = "🔵 Trigger — Your Signal Inputs"
+fast_len    = input.int(9,  "Fast MA Length", minval=1, group=g_Trig,
+              tooltip="Length of the fast EMA.\nWhen the fast MA crosses ABOVE the slow MA → Long signal.\nWhen the fast MA crosses BELOW the slow MA → Short signal.")
+slow_len    = input.int(21, "Slow MA Length", minval=1, group=g_Trig,
+              tooltip="Length of the slow EMA.\nAct as the reference line for the fast MA to cross.")
+
+// ── Calculation ──────────────────────────────────────────────────────────────
+fast_ma     = ta.ema(close, fast_len)
+slow_ma     = ta.ema(close, slow_len)
+
+// ── Signal assignment — keep these variable names ────────────────────────────
+userLong    = ta.crossover(fast_ma,  slow_ma) and confirmed  // ← keep this name
+userShort   = ta.crossunder(fast_ma, slow_ma) and confirmed  // ← keep this name
+
+// ── Indicator plot (sits here so you can see it next to its calculation) ──────
+plot(fast_ma, "Fast MA", color.new(color.aqua,    0), 2)
+plot(slow_ma, "Slow MA", color.new(color.fuchsia, 0), 2)
+
+
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  🟡  F I L T E R — Moving Average Trend (pre-built example)           ║
+// ║  Replace this block with your own market condition.                    ║
+// ╠══════════════════════════════════════════════════════════════════════════╣
+// ║                                                                        ║
+// ║  HOW THE ENGINE USES YOUR FILTER:                                      ║
+// ║                                                                        ║
+// ║  Think of each filter variable as a GATE:                             ║
+// ║                                                                        ║
+// ║    userFilterLong  = true            → gate OPEN  (Long  allowed)     ║
+// ║    userFilterLong  = false           → gate CLOSED (Long  blocked)    ║
+// ║    userFilterLong  = close > ma      → gate opens and closes          ║
+// ║                                        with price — dynamic filter    ║
+// ║                                                                        ║
+// ║  The engine AND's your filter with your trigger:                       ║
+// ║    Long  fires when → userLong  is true  AND  userFilterLong  is true ║
+// ║    Short fires when → userShort is true  AND  userFilterShort is true ║
+// ║                                                                        ║
+// ║  WHY ARE THERE TWO FILTER VARIABLES?                                  ║
+// ║  Long and Short trade in opposite directions, so they need             ║
+// ║  opposite filter conditions:                                           ║
+// ║    Long  → safe when price is ABOVE the trend MA (uptrend)            ║
+// ║    Short → safe when price is BELOW the trend MA (downtrend)          ║
+// ║                                                                        ║
+// ║  HOW TO REPLACE:                                                       ║
+// ║  1. Edit or replace the inputs below  (keep group = g_Filt)           ║
+// ║  2. Edit or replace the calculation below                              ║
+// ║  3. Choose STATE 1 or STATE 2 for userFilterLong / userFilterShort    ║
+// ║                                                                        ║
+// ║  ⚠️  Do not rename: userFilterLong  userFilterShort                   ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+
+var g_Filt      = "🟡 Filter — Your Filter Inputs"
+trend_len       = input.int(200, "Trend MA Length", minval=1, group=g_Filt,
+                  tooltip="Length of the trend EMA used as the filter reference line.\nLong  entries are only allowed when price is above this MA.\nShort entries are only allowed when price is below this MA.\nSet both filter variables to [true] to disable filtering entirely.")
+
+// ── Calculation ──────────────────────────────────────────────────────────────
+trend_ma        = ta.ema(close, trend_len)
+
+// ── STATE 1 : Filter ON — trades allowed only in the trend direction ──────────
+// Long  entries : only when price is ABOVE the trend MA (uptrend environment)
+// Short entries : only when price is BELOW the trend MA (downtrend environment)
+userFilterLong  = close > trend_ma
+userFilterShort = close < trend_ma
+
+// ── STATE 2 : Filter OFF — trades allowed in any direction ────────────────────
+// To switch to STATE 2 (disable the filter):
+//   Step 1 → Add '//' to the front of both STATE 1 lines above
+//   Step 2 → Remove '//' from both lines below
+//userFilterLong  = true   // no Long  filter — all Long  entries pass through
+//userFilterShort = true   // no Short filter — all Short entries pass through
+
+// ── Indicator plot (sits here so you can see it next to its calculation) ──────
+plot(trend_ma, "Trend Filter MA", color.new(color.orange, 0), 2)
+
+
+// ╚══════════════════════════════════════════════════════════════════════════╝
+// ║   ↑  USER ZONE — your edits go above this line                        ║
+// ╠══════════════════════════════════════════════════════════════════════════╣
+// ║   ↓  ENGINE   — do not edit below this line                           ║
+// ╠══════════════════════════════════════════════════════════════════════════╣
+// ║                                                                        ║
+// ║  The engine reads your signal through these four variable names:       ║
+// ║                                                                        ║
+// ║  userLong         → your long  entry condition   (true / false)       ║
+// ║  userShort        → your short entry condition   (true / false)       ║
+// ║  userFilterLong   → your long  filter condition  (true = allowed)     ║
+// ║  userFilterShort  → your short filter condition  (true = allowed)     ║
+// ║                                                                        ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// ENGINE INPUTS //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Backtest Date Range
+
+var g_Backtest  = "SELECT DATE RANGE"
+start_date      = input.time(timestamp("01 1 2000 00:00 +0000"), "Backtest Start", group=g_Backtest,
+                  tooltip="The strategy will only place trades on or after this date.\nDefault Jan 1 2000 = from the beginning of available data.")
+end_date        = input.time(timestamp("01 1 2050 00:00 +0000"), "Backtest End",   group=g_Backtest,
+                  tooltip="The strategy will stop placing trades after this date.\nDefault Jan 1 2050 = no end limit.")
+timeOk          = time >= start_date and time <= end_date
+
+
+//------------------------------------------------------------------------------
+// Trading Day & Session
+
+var g_days      = "SELECT TRADING DAY"
+tradeSession    = input.session("0000-0000", "Trade Session", group=g_days,
+                  tooltip="Allowed trading hours in exchange server time (HHMM-HHMM).\nDefault 0000-0000 = 24 hours, no restriction.\nExample: 0900-1700 = trade only between 9 AM and 5 PM exchange time.\nNote: uses exchange server time, not your local time.")
+d_sunday        = input.bool(true,  "Sun.", group=g_days, inline="days",
+                  tooltip="Check the days the strategy is allowed to trade.\nUnchecking a day prevents new entries — open positions are still managed on unchecked days.")
+d_monday        = input.bool(true,  "Mon.", group=g_days, inline="days")
+d_tuesday       = input.bool(true,  "Tue.", group=g_days, inline="days")
+d_wednesday     = input.bool(true,  "Wed.", group=g_days, inline="days")
+d_thursday      = input.bool(true,  "Thu.", group=g_days, inline="days")
+d_friday        = input.bool(true,  "Fri.", group=g_days, inline="days")
+d_saturday      = input.bool(true,  "Sat.", group=g_days, inline="days")
+
+
+//------------------------------------------------------------------------------
+// Trade Windows
+// Each window can be set to one of three modes:
+//   Off        → window has no effect on entries (default)
+//   Blackout   → block all new entries while current time is inside this window
+//   Trade Only → ONLY allow new entries while current time is inside this window
+//
+// If multiple windows are set to "Trade Only", entries are allowed when the
+// current time falls inside ANY ONE of those windows (OR logic).
+// If no windows are set to "Trade Only", time has no restriction on entries.
+//
+// Blackout and Trade Only can be combined:
+//   e.g. Tokyo = Blackout, New York = Trade Only
+//   → entries blocked during Tokyo, entries only allowed during New York
+
+var g_Windows   = "🕐 TRADE WINDOWS  (enter times in your local timezone)"
+tzInput         = input.enum(Timezone.utcPlus7, "My Timezone", group=g_Windows,
+                  tooltip="Select your local timezone.\nAll window times below must be entered in this timezone.")
+
+sessionMode_1   = input.enum(SessionMode.off, "Tokyo   ", group=g_Windows, inline="s1",
+                  tooltip="Tokyo open reference times:\nUTC+9=07:00 | UTC+7=05:00 | UTC+0=22:00 | UTC-5=17:00\n\nOff        : this window has no effect\nBlackout   : block entries while inside this window\nTrade Only : only allow entries while inside this window")
+s1_start        = input.string("0200", "", group=g_Windows, inline="s1")
+s1_end          = input.string("0400", "", group=g_Windows, inline="s1")
+
+sessionMode_2   = input.enum(SessionMode.off, "London  ", group=g_Windows, inline="s2",
+                  tooltip="London open reference times:\nUTC+0=08:00 | UTC+1=09:00 | UTC+7=15:00 | UTC-5=03:00\n\nOff        : this window has no effect\nBlackout   : block entries while inside this window\nTrade Only : only allow entries while inside this window")
+s2_start        = input.string("1500", "", group=g_Windows, inline="s2")
+s2_end          = input.string("1700", "", group=g_Windows, inline="s2")
+
+sessionMode_3   = input.enum(SessionMode.off, "New York", group=g_Windows, inline="s3",
+                  tooltip="New York open reference times:\nUTC-5=09:30 | UTC+0=14:30 | UTC+7=21:30 | UTC+9=23:30\n\nOff        : this window has no effect\nBlackout   : block entries while inside this window\nTrade Only : only allow entries while inside this window")
+s3_start        = input.string("1930", "", group=g_Windows, inline="s3")
+s3_end          = input.string("2130", "", group=g_Windows, inline="s3")
+
+sessionMode_4   = input.enum(SessionMode.off, "Custom  ", group=g_Windows, inline="s4",
+                  tooltip="Define your own custom time window in your local timezone.\n\nOff        : this window has no effect\nBlackout   : block entries while inside this window\nTrade Only : only allow entries while inside this window")
+s4_start        = input.string("0000", "", group=g_Windows, inline="s4")
+s4_end          = input.string("0000", "", group=g_Windows, inline="s4")
+
+
+//------------------------------------------------------------------------------
+// Trade Direction
+
+var g_TD        = "SELECT TRADE DIRECTION"
+tradeDirection  = input.enum(TradeDir.both, "Trade Direction", group=g_TD)
+
+
+//------------------------------------------------------------------------------
+// Stop Mode
+// Each offset and trailing distance input has three unit variants — [%], [P], [$] —
+// matching the same unit system as Stop / Target Mode above.
+// Only the inputs matching your chosen Stop / Target Mode are active.
+
+var g_SM         = "STOP MODE"
+stopMode         = input.enum(StopMode.fixed, "Stop Mode", group=g_SM,
+                   tooltip="Fixed     : Stop loss stays at the original level until hit or TP reached.\nTrailing  : Stop loss follows price — locks in profit as price moves.\nBreakeven : Stop loss moves to entry price once price moves in your favour.")
+useNoTp          = input.bool(false, "Disable Take Profit (trailing stop manages exit)", group=g_SM,
+                   tooltip="When ON : no fixed Take Profit level is placed — the Trailing Stop is the only exit.\nWhen OFF: Take Profit fires at the level set in the Stop / Target Mode section.\nHas no effect when Stop Mode = Fixed or Breakeven.")
+
+// ── Trailing Stop distance — how far behind price the stop trails ─────────────
+// Active only when Stop Mode = Trailing.
+// Use the input that matches your Stop / Target Mode selection.
+trailingStopPerc = input.float(3.0,   "[%] Trailing Stop ( % )",    minval=0.0, step=0.1,   group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = % (Percentage).\nThe stop trails this % below price (Long) or above price (Short).") * 0.01
+trailingStopPt   = input.int(50,      "[P] Trailing Stop (point)",  minval=1,   step=10,    group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = Point - Forex / CFD.\nThe stop trails this many points behind price.\nExample: 50 points on EURUSD (tick=0.00001) = 5 pip trailing distance.")
+trailingStopDol  = input.float(100.0, "[$] Trailing Stop ($)",      minval=0.1, step=10.0,  group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = Dollar - Crypto / Stock.\nThe stop trails this dollar amount behind price.\nExample: 100 on BTCUSD = $100 trailing distance.")
+
+// ── Trailing Offset — how far price must move before trailing activates ────────
+// Set to 0 to trail immediately from entry.
+// Use the input that matches your Stop / Target Mode selection.
+trailingStopOff  = input.float(0.0,   "[%] Trailing Offset ( % )",  minval=0.0, step=0.05,  group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = % (Percentage).\nPrice must move this % from entry before trailing activates.\nSet to 0 to trail immediately.\nShown as a yellow line on the chart.")
+trailingOffPt    = input.int(0,       "[P] Trailing Offset (point)", minval=0,   step=10,    group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = Point - Forex / CFD.\nPrice must move this many points before trailing activates.\nSet to 0 to trail immediately.\nShown as a yellow line on the chart.")
+trailingOffDol   = input.float(0.0,   "[$] Trailing Offset ($)",    minval=0.0, step=10.0,  group=g_SM,
+                   tooltip="Active when Stop Mode = Trailing  AND  Stop/Target Mode = Dollar - Crypto / Stock.\nPrice must move this dollar amount before trailing activates.\nSet to 0 to trail immediately.\nShown as a yellow line on the chart.")
+
+// ── Breakeven Offset — how far price must move before stop moves to entry ──────
+// Once triggered, the stop moves to the exact entry price.
+// Use the input that matches your Stop / Target Mode selection.
+breakevenStopOff = input.float(1.00,  "[%] Breakeven Offset ( % )", minval=0.0, step=0.05,  group=g_SM,
+                   tooltip="Active when Stop Mode = Breakeven  AND  Stop/Target Mode = % (Percentage).\nPrice must move this % from entry before the stop moves to entry price.\nShown as a white line on the chart.")
+breakevenOffPt   = input.int(10,      "[P] Breakeven Offset (point)",minval=0,   step=10,    group=g_SM,
+                   tooltip="Active when Stop Mode = Breakeven  AND  Stop/Target Mode = Point - Forex / CFD.\nPrice must move this many points before the stop moves to entry price.\nShown as a white line on the chart.")
+breakevenOffDol  = input.float(50.0,  "[$] Breakeven Offset ($)",   minval=0.0, step=10.0,  group=g_SM,
+                   tooltip="Active when Stop Mode = Breakeven  AND  Stop/Target Mode = Dollar - Crypto / Stock.\nPrice must move this dollar amount before the stop moves to entry price.\nShown as a white line on the chart.")
+
+
+//------------------------------------------------------------------------------
+// Take Profit & Stop Loss
+
+var g_ST          = "TAKE PROFIT & STOP LOSS"
+positionType      = input.enum(StopTargetMode.forexCfd, "Stop / Target Mode", group=g_ST,
+                    tooltip="How Stop Loss and Take Profit distances are calculated.\n% (Percentage)          : % of price — uses [%] inputs below.\nPoint - Forex / CFD     : instrument tick size — uses [P] inputs below.\nDollar - Crypto / Stock : direct price distance — uses [$] inputs below.")
+positionSrc       = input.string("Close", "[%] Fixed Stop Source", options=["Close", "High/Low"], group=g_ST,
+                    tooltip="Active when Stop/Target Mode = % (Percentage).\nClose    : stop distance is calculated from the close price.\nHigh/Low : stop distance is calculated from the candle High (short) or Low (long).")
+stopLoss          = input.float(3.00,  "[%] Stop Loss ( % )",         minval=0.05, step=0.05, group=g_ST)
+riskReward        = input.float(2.00,  "[%] Risk : Reward ( 1 : ? )", minval=0.10, step=0.05, group=g_ST,
+                    tooltip="Take profit is derived from stop loss distance × this ratio.")
+stoploss_point    = input.int(100,    "[P] Stop Loss (point)",   minval=1, step=10, group=g_ST,
+                    tooltip="Active when Stop/Target Mode = Point - Forex / CFD.\nExample: 100 points on EURUSD (tick=0.00001) = 0.00100 price distance.")
+takeProfit_point  = input.int(200,    "[P] Take Profit (point)", minval=1, step=10, group=g_ST,
+                    tooltip="Active when Stop/Target Mode = Point - Forex / CFD.\nExample: 200 points on EURUSD (tick=0.00001) = 0.00200 price distance.")
+stoploss_dollar   = input.float(100.0, "[$] Stop Loss ($)",   minval=0.1, step=10.0, group=g_ST,
+                    tooltip="Active when Stop/Target Mode = Dollar - Crypto / Stock.\nExample: 100 on BTCUSD = $100 stop distance from entry.")
+takeProfit_dollar = input.float(200.0, "[$] Take Profit ($)", minval=0.1, step=10.0, group=g_ST,
+                    tooltip="Active when Stop/Target Mode = Dollar - Crypto / Stock.\nExample: 200 on BTCUSD = $200 take profit distance from entry.")
+
+
+//------------------------------------------------------------------------------
+// Display
+
+var g_Disp      = "HIDE / SHOW SIGNALS"
+hideAllSignals  = input.bool(false, "🚫 Hide Entry Signals On Chart", group=g_Disp,
+                  tooltip="Hides the green / red triangle markers on the chart.\nDoes not affect strategy logic or backtest results.")
+
+
+//------------------------------------------------------------------------------
+// Alert / Bot Messages
+//
+// HOW THE ALERT SYSTEM WORKS:
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 1: Set "App Alert / Custom message" to your preferred mode.
+// Step 2: Create an alert on TradingView (right-click chart → Add Alert).
+// Step 3: In the alert message box, paste:  {{strategy.order.alert_message}}
+//         This placeholder delivers the correct message for each order event.
+//
+// APP ALERT MODE:
+//   Sends a pre-formatted text message automatically:
+//   [TICKER : EXCHANGE]
+//   🟢 ENTRY LONG   : {price}
+//   🟡 STOP LOSS    : {stop}
+//   🔵 TARGET PRICE : {target}
+//   No setup needed — just paste {{strategy.order.alert_message}} in the alert box.
+//
+// CUSTOM MODE (JSON webhook for bot integration):
+//   Paste your JSON as a SINGLE LINE into each input below.
+//   input.string stores it as one line — valid for all webhook receivers.
+//   There are four separate inputs — one per order event:
+//     Long Entry  → fires when a Long position opens
+//     Long Exit   → fires when a Long position closes (TP, SL, or trailing)
+//     Short Entry → fires when a Short position opens
+//     Short Exit  → fires when a Short position closes (TP, SL, or trailing)
+//
+// JSON EXAMPLE (adapt to your bot platform — delete example before use):
+// {"secret":"your_bot_token","timestamp":"{{timenow}}","trigger_price":"{{close}}","tv_exchange":"{{exchange}}","tv_instrument":"{{ticker}}","action":"enter_long","bot_uuid":"your_bot_uuid","order":{"amount":"your_amount","currency_type":"quote"}}
+//
+// TRADINGVIEW PLACEHOLDERS AVAILABLE IN JSON:
+//   {{timenow}}                    → current UTC timestamp
+//   {{close}}                      → bar close price
+//   {{ticker}}                     → symbol name (e.g. BTCUSDT)
+//   {{exchange}}                   → exchange name (e.g. BINANCE)
+//   {{strategy.order.action}}      → "buy" or "sell"
+//   {{strategy.order.contracts}}   → position size in units
+//   {{strategy.order.price}}       → fill price
+//   {{strategy.order.id}}          → order id (e.g. "LONG" or "SHORT EXIT")
+// ─────────────────────────────────────────────────────────────────────────────
+
+var g_Alert     = "⏰ SELECT ALERT MODE"
+alertMode       = input.string("App Alert", "App Alert / Custom message",
+                  options=["App Alert", "Custom"], group=g_Alert,
+                  tooltip="App Alert : sends a pre-formatted text message with ticker, direction, stop and target.\nCustom    : sends the JSON string you paste into the four inputs below.\n\nFor both modes: create a TradingView alert and paste {{strategy.order.alert_message}} into the alert message box.")
+
+var g_longEn    = "🤖🟢 LONG ENTRY (CUSTOM MESSAGE)"
+LongEntryCode   = input.string("", "", group=g_longEn,
+                  tooltip="Paste your single-line JSON here for the Long Entry event.\nThis fires when a Long position opens.\nExample action value: enter_long")
+
+var g_longEx    = "🤖🟢 LONG EXIT (CUSTOM MESSAGE)"
+LongExitCode    = input.string("", "", group=g_longEx,
+                  tooltip="Paste your single-line JSON here for the Long Exit event.\nThis fires when a Long position closes via TP, SL, or trailing stop.\nExample action value: exit_long")
+
+var g_shortEn   = "🤖🔴 SHORT ENTRY (CUSTOM MESSAGE)"
+ShortEntryCode  = input.string("", "", group=g_shortEn,
+                  tooltip="Paste your single-line JSON here for the Short Entry event.\nThis fires when a Short position opens.\nExample action value: enter_short")
+
+var g_shortEx   = "🤖🔴 SHORT EXIT (CUSTOM MESSAGE)"
+ShortExitCode   = input.string("", "", group=g_shortEx,
+                  tooltip="Paste your single-line JSON here for the Short Exit event.\nThis fires when a Short position closes via TP, SL, or trailing stop.\nExample action value: exit_short")
+
+var g_AltMsg    = "COPY THIS AND PASTE IN ALERT MESSAGE BOX"
+altMsg_copy     = input.string("{{strategy.order.alert_message}}", "Select all and copy this ➤",
+                  group=g_AltMsg,
+                  tooltip="Copy this string exactly and paste it into the TradingView alert message box.\nThis is required for both App Alert mode and Custom JSON mode.\nWithout this, alerts will not deliver the correct message.")
+
+
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////// E N G I N E   C A L C U L A T I O N ////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Trade Windows Calculation
+
+utcOffsetHours = switch tzInput
+    Timezone.utcMinus12 => -12.0
+    Timezone.utcMinus11 => -11.0
+    Timezone.utcMinus10 => -10.0
+    Timezone.utcMinus9  =>  -9.0
+    Timezone.utcMinus8  =>  -8.0
+    Timezone.utcMinus7  =>  -7.0
+    Timezone.utcMinus6  =>  -6.0
+    Timezone.utcMinus5  =>  -5.0
+    Timezone.utcMinus4  =>  -4.0
+    Timezone.utcMinus3  =>  -3.0
+    Timezone.utcMinus2  =>  -2.0
+    Timezone.utcMinus1  =>  -1.0
+    Timezone.utc0       =>   0.0
+    Timezone.utcPlus1   =>   1.0
+    Timezone.utcPlus2   =>   2.0
+    Timezone.utcPlus3   =>   3.0
+    Timezone.utcPlus4   =>   4.0
+    Timezone.utcPlus5   =>   5.0
+    Timezone.utcPlus530 =>   5.5
+    Timezone.utcPlus6   =>   6.0
+    Timezone.utcPlus7   =>   7.0
+    Timezone.utcPlus8   =>   8.0
+    Timezone.utcPlus9   =>   9.0
+    Timezone.utcPlus930 =>   9.5
+    Timezone.utcPlus10  =>  10.0
+    Timezone.utcPlus11  =>  11.0
+    Timezone.utcPlus12  =>  12.0
+    =>                       0.0
+
+// Parse "HHMM" string into minutes from midnight
+parseTime(t) =>
+    h = math.floor(str.tonumber(t) / 100)
+    m = str.tonumber(t) - h * 100
+    h * 60 + m
+
+// Return true when the current UTC bar falls inside a local-time window
+inWindow(startStr, endStr, offsetHours) =>
+    startLocal = parseTime(startStr)
+    endLocal   = parseTime(endStr)
+    offsetMins = math.round(offsetHours * 60)
+    startUtc   = (startLocal - offsetMins) % (24 * 60)
+    endUtc     = (endLocal   - offsetMins) % (24 * 60)
+    startUtc  := startUtc < 0 ? startUtc + 24 * 60 : startUtc
+    endUtc    := endUtc   < 0 ? endUtc   + 24 * 60 : endUtc
+    nowUtc     = hour(time, "UTC") * 60 + minute(time, "UTC")
+    startUtc >= endUtc ?
+         nowUtc >= startUtc or  nowUtc < endUtc :
+         nowUtc >= startUtc and nowUtc < endUtc
+
+// BLACKOUT GATE — block entries when inside any Blackout window
+isBlackedOut =
+     (sessionMode_1 == SessionMode.blackout  and inWindow(s1_start, s1_end, utcOffsetHours)) or
+     (sessionMode_2 == SessionMode.blackout  and inWindow(s2_start, s2_end, utcOffsetHours)) or
+     (sessionMode_3 == SessionMode.blackout  and inWindow(s3_start, s3_end, utcOffsetHours)) or
+     (sessionMode_4 == SessionMode.blackout  and inWindow(s4_start, s4_end, utcOffsetHours))
+
+// TRADE ONLY GATE — if any window is set to Trade Only, only allow entries inside them
+// If no windows are set to Trade Only → no time restriction (gate is always open)
+anyTradeOnly =
+     sessionMode_1 == SessionMode.tradeOnly or
+     sessionMode_2 == SessionMode.tradeOnly or
+     sessionMode_3 == SessionMode.tradeOnly or
+     sessionMode_4 == SessionMode.tradeOnly
+
+isInTradeWindow =
+     not anyTradeOnly or
+     (sessionMode_1 == SessionMode.tradeOnly and inWindow(s1_start, s1_end, utcOffsetHours)) or
+     (sessionMode_2 == SessionMode.tradeOnly and inWindow(s2_start, s2_end, utcOffsetHours)) or
+     (sessionMode_3 == SessionMode.tradeOnly and inWindow(s3_start, s3_end, utcOffsetHours)) or
+     (sessionMode_4 == SessionMode.tradeOnly and inWindow(s4_start, s4_end, utcOffsetHours))
+
+
+//------------------------------------------------------------------------------
+// Trading Day Session
+
+days        = d_sunday    ? "1" : ""
+days       := days + (d_monday    ? "2" : "")
+days       := days + (d_tuesday   ? "3" : "")
+days       := days + (d_wednesday ? "4" : "")
+days       := days + (d_thursday  ? "5" : "")
+days       := days + (d_friday    ? "6" : "")
+days       := days + (d_saturday  ? "7" : "")
+inSession(sess) => na(time(timeframe.period, sess + ":" + days)) == false
+
+
+////////////////////////////////////////////////////////////////////////////////
+//==============================================================================
+//==  ==  ==  ==  ==  ==  ==  E N T R Y   G A T E  ==  ==  ==  ==  ==  ==  ==
+//==============================================================================
+// All conditions that must be true for an entry to fire are in ONE place.
+// Triangle on chart = trade fires. No triangle = no trade. Always.
+//
+// userLong / userShort / userFilterLong / userFilterShort → from User Zone above.
+////////////////////////////////////////////////////////////////////////////////
+
+entryLong   = userLong  and userFilterLong  and        // your trigger + your filter gate
+              tradeDirection != TradeDir.short and     // direction gate
+              not isBlackedOut               and       // blackout window gate
+              isInTradeWindow                and       // trade only window gate
+              inSession(tradeSession)        and       // trading hours gate
+              timeOk                                   // backtest date range gate
+
+entryShort  = userShort and userFilterShort and
+              tradeDirection != TradeDir.long  and
+              not isBlackedOut                and
+              isInTradeWindow                 and
+              inSession(tradeSession)          and
+              timeOk
+
+
+////////////////////////////////////////////////////////////////////////////////
+//==============================================================================
+//==  ==  ==  ==  ==  S T O P  &  T A R G E T   E N G I N E  ==  ==  ==  ==  ==
+//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+
+var float t_stop         = 0.0
+var float t_target       = 0.0
+var float entry          = 0.0
+var float longStopPrice  = 0.0
+var float shortStopPrice = 0.0
+
+// position_size[1] (previous bar) gates stop initialisation — intentionally
+// different from position_size (current bar) used in strategy.entry below.
+// Both checks are necessary and must not be merged.
+validLong   = entryLong  and strategy.position_size[1] == 0 and confirmed
+validShort  = entryShort and strategy.position_size[1] == 0 and confirmed
+
+//------------------------------------------------------------------------------
+// Stop & Target Levels
+
+longStopSrc      = positionSrc == "Close" ? close : low
+L_Stop_Perc      = low  - (stopLoss * longStopSrc / 100)
+divider          = positionType == StopTargetMode.forexCfd ? 1 / syminfo.mintick : 1
+sl_points        = positionType == StopTargetMode.forexCfd ? stoploss_point   / divider : stoploss_dollar
+tp_points        = positionType == StopTargetMode.forexCfd ? takeProfit_point / divider : takeProfit_dollar
+L_Stop_Point     = close - sl_points
+longStop         = positionType == StopTargetMode.percentage ? L_Stop_Perc  : L_Stop_Point
+longStopDist     = close - longStop
+L_Target_Perc    = close + (longStopDist * riskReward)
+L_Target_Point   = close + tp_points
+longTarget       = positionType == StopTargetMode.percentage ? L_Target_Perc : L_Target_Point
+
+// Trailing activation offset — unit matches positionType
+brStopOff_Long   = positionType == StopTargetMode.percentage ? close + (close * breakevenStopOff / 100) :
+                   positionType == StopTargetMode.forexCfd    ? close + breakevenOffPt  * syminfo.mintick :
+                   close + breakevenOffDol
+trStopOff_Long   = positionType == StopTargetMode.percentage ? close + (close * trailingStopOff  / 100) :
+                   positionType == StopTargetMode.forexCfd    ? close + trailingOffPt   * syminfo.mintick :
+                   close + trailingOffDol
+
+shortStopSrc     = positionSrc == "Close" ? close : high
+S_Stop_Perc      = high + (stopLoss * shortStopSrc / 100)
+S_Stop_Point     = close + sl_points
+shortStop        = positionType == StopTargetMode.percentage ? S_Stop_Perc  : S_Stop_Point
+shortStopDist    = shortStop - close
+S_Target_Perc    = close - (shortStopDist * riskReward)
+S_Target_Point   = close - tp_points
+shortTarget      = positionType == StopTargetMode.percentage ? S_Target_Perc : S_Target_Point
+
+// Trailing activation offset — unit matches positionType
+brStopOff_Short  = positionType == StopTargetMode.percentage ? close - (close * breakevenStopOff / 100) :
+                   positionType == StopTargetMode.forexCfd    ? close - breakevenOffPt  * syminfo.mintick :
+                   close - breakevenOffDol
+trStopOff_Short  = positionType == StopTargetMode.percentage ? close - (close * trailingStopOff  / 100) :
+                   positionType == StopTargetMode.forexCfd    ? close - trailingOffPt   * syminfo.mintick :
+                   close - trailingOffDol
+
+// Trailing Stop
+// trailDist is the price distance the stop sits behind price.
+// Unit matches positionType — % of price, fixed points, or fixed dollar amount.
+trailDist       = positionType == StopTargetMode.percentage ? close * trailingStopPerc :
+                  positionType == StopTargetMode.forexCfd    ? trailingStopPt * syminfo.mintick :
+                  trailingStopDol
+
+longStopPrice := if strategy.position_size > 0
+    math.max(close - trailDist, longStopPrice[1])
+else
+    0
+
+shortStopPrice := if strategy.position_size < 0
+    math.min(close + trailDist, shortStopPrice[1])
+else
+    999999
+
+tr_act_lev      = 0.0
+tr_act_lev     := validLong  ? trStopOff_Long  :
+                  validShort ? trStopOff_Short  :
+                  nz(tr_act_lev[1])
+
+tr_act_status   = false
+tr_act_status  := validLong or validShort ? false :
+                  strategy.position_size[1] > 0 and high > tr_act_lev or
+                  strategy.position_size[1] < 0 and low  < tr_act_lev ? true :
+                  tr_act_status[1]
+
+tr_stop_lev     = 0.0
+tr_stop_lev    := validLong  ? longStop  :
+                  validShort ? shortStop :
+                  tr_act_status and strategy.position_size[1] > 0 ? longStopPrice  :
+                  tr_act_status and strategy.position_size[1] < 0 ? shortStopPrice :
+                  nz(tr_stop_lev[1])
+
+//------------------------------------------------------------------------------
+// Breakeven Stop
+
+br_lev          = 0.0
+br_lev         := validLong or validShort       ? close :
+                  validLong[1] or validShort[1] ? open  :
+                  nz(br_lev[1])
+
+act_lev         = 0.0
+act_lev        := validLong  ? brStopOff_Long  :
+                  validShort ? brStopOff_Short  :
+                  nz(act_lev[1])
+
+act_status      = false
+act_status     := validLong or validShort ? false :
+                  strategy.position_size[1] > 0 and high > act_lev or
+                  strategy.position_size[1] < 0 and low  < act_lev ? true :
+                  act_status[1]
+
+sl_lev          = 0.0
+sl_lev         := validLong  ? longStop  :
+                  validShort ? shortStop :
+                  act_status and strategy.position_size[1] != 0 ? br_lev :
+                  nz(sl_lev[1])
+
+//------------------------------------------------------------------------------
+// Save stops & targets on new entry
+
+if (validLong or validShort) and strategy.position_size[1] == 0
+    t_stop   := validLong ? longStop   : shortStop
+    t_target := validLong ? longTarget : shortTarget
+    entry    := close
+
+
+////////////////////////////////////////////////////////////////////////////////
+//==============================================================================
+//==  ==  ==  ==  ==  ==  ==  S T R A T E G Y   O R D E R S  ==  ==  ==  ==  ==
+//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Entry Alert Messages
+
+alertLongEntry  = "[ {{ticker}} : {{exchange}} ]\n" +
+                  "🟢 ENTRY LONG   : {{close}}\n" +
+                  "🟡 STOP LOSS    : " + str.tostring(longStop,   format.mintick) + "\n" +
+                  "🔵 TARGET PRICE : " + str.tostring(longTarget, format.mintick) + "\n"
+
+alertShortEntry = "[ {{ticker}} : {{exchange}} ]\n" +
+                  "🔴 ENTRY SHORT  : {{close}}\n" +
+                  "🟡 STOP LOSS    : " + str.tostring(shortStop,   format.mintick) + "\n" +
+                  "🔵 TARGET PRICE : " + str.tostring(shortTarget, format.mintick) + "\n"
+
+//------------------------------------------------------------------------------
+// Entry Orders
+// strategy.position_size == 0 (current bar) is intentionally different from
+// strategy.position_size[1] == 0 in validLong. The current-bar check prevents
+// a double-entry on the same bar an exit fires.
+
+if validLong and strategy.position_size == 0
+    strategy.entry(id="LONG", direction=strategy.long,
+                   alert_message = alertMode == "Custom" ? LongEntryCode : alertLongEntry)
+    t_stop   := longStop
+    t_target := longTarget
+
+if validShort and strategy.position_size == 0
+    strategy.entry(id="SHORT", direction=strategy.short,
+                   alert_message = alertMode == "Custom" ? ShortEntryCode : alertShortEntry)
+    t_stop   := shortStop
+    t_target := shortTarget
+
+//------------------------------------------------------------------------------
+// Exit Alert Messages
+
+long_PNL        = ((close - entry) / entry) * 100
+short_PNL       = ((entry - close) / entry) * 100
+
+alertLongExit   = "[ {{ticker}} : {{exchange}} ]\n" +
+                  "🟢 EXIT LONG  : {{close}}\n" +
+                  " 💰[ＰＮＬ ：" + str.tostring(long_PNL,  format.mintick) + "％ ]\n"
+
+alertShortExit  = "[ {{ticker}} : {{exchange}} ]\n" +
+                  "🔴 EXIT SHORT : {{close}}\n" +
+                  " 💰[ＰＮＬ ：" + str.tostring(short_PNL, format.mintick) + "％ ]\n"
+
+//------------------------------------------------------------------------------
+// Exit Orders
+
+if strategy.position_size > 0
+    strategy.exit(id="LONG EXIT", from_entry="LONG",
+                  limit = useNoTp ? na : t_target,
+                  stop  = stopMode == StopMode.trailing  ? tr_stop_lev :
+                          stopMode == StopMode.breakeven ? sl_lev      : t_stop,
+                  alert_message = alertMode == "Custom" ? LongExitCode : alertLongExit)
+
+if strategy.position_size < 0
+    strategy.exit(id="SHORT EXIT", from_entry="SHORT",
+                  limit = useNoTp ? na : t_target,
+                  stop  = stopMode == StopMode.trailing  ? tr_stop_lev :
+                          stopMode == StopMode.breakeven ? sl_lev      : t_stop,
+                  alert_message = alertMode == "Custom" ? ShortExitCode : alertShortExit)
+
+
+////////////////////////////////////////////////////////////////////////////////
+//==============================================================================
+//==  ==  ==  ==  ==  ==  S T R A T E G Y   P L O T S  ==  ==  ==  ==  ==  ==
+//==============================================================================
+// Only strategy-level visuals live here.
+// Indicator plots (fast_ma, slow_ma, trend_ma) live in the User Zone above.
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Entry Signal Markers
+// Reads entryLong / entryShort — triangle appears only when ALL conditions
+// pass: your signal, your filter, direction, session, blackout, date range.
+// No triangle = no trade. Always consistent.
+
+plotshape(hideAllSignals ? false : entryLong,
+          title="Long Entry Signal",  style=shape.triangleup,   location=location.belowbar,
+          color=color.rgb(0,   255, 0, 0), size=size.tiny, editable=false)
+plotshape(hideAllSignals ? false : entryShort,
+          title="Short Entry Signal", style=shape.triangledown, location=location.abovebar,
+          color=color.rgb(255, 0,   0, 0), size=size.tiny, editable=false)
+
+
+//------------------------------------------------------------------------------
+// Long Position — Stop Loss / Entry / Take Profit Lines
+
+slL = plot(strategy.position_size > 0 and stopMode != StopMode.trailing ? t_stop   : na,
+           "Long Stop Loss",   style=plot.style_linebr, color=color.rgb(255, 0,   0,   90), linewidth=1, editable=false)
+enL = plot(strategy.position_size > 0                                   ? entry    : na,
+           "Long Entry",       style=plot.style_linebr, color=color.rgb(255, 255, 0,   90), linewidth=1, editable=false)
+tpL = plot(strategy.position_size > 0                                   ? t_target : na,
+           "Long Take Profit", style=plot.style_linebr, color=color.rgb(0,   255, 0,   90), linewidth=1, editable=false)
+trL = plot(strategy.position_size > 0 and stopMode == StopMode.trailing ? tr_stop_lev : na,
+           "Long Trail Stop",  style=plot.style_linebr, color=color.new(color.red, 60),     linewidth=1, editable=false)
+
+trailColL = tr_stop_lev < entry ? color.rgb(204, 45, 45, 80) : color.rgb(204, 45, 45, 100)
+
+fill(tpL, enL, color=color.rgb(32,  140, 118, 80), title="Long TP Background",      editable=false)
+fill(enL, slL, color=color.rgb(204, 45,  45,  80), title="Long SL Background",      editable=false)
+fill(enL, trL, color=trailColL,                    title="Long Trailing Background", editable=false)
+
+plot(strategy.position_size > 0 and stopMode == StopMode.trailing  ? tr_act_lev : na,
+     "Long Trail Offset",     color=color.new(color.yellow, 70), style=plot.style_linebr, linewidth=1, editable=false)
+plot(strategy.position_size > 0 and stopMode == StopMode.breakeven ? act_lev    : na,
+     "Long Breakeven Offset", color=color.new(color.white,  70), style=plot.style_linebr, linewidth=1, editable=false)
+
+
+//------------------------------------------------------------------------------
+// Short Position — Stop Loss / Entry / Take Profit Lines
+
+slS = plot(strategy.position_size < 0 and stopMode != StopMode.trailing ? t_stop   : na,
+           "Short Stop Loss",   style=plot.style_linebr, color=color.rgb(255, 0,   0,   90), linewidth=1, editable=false)
+enS = plot(strategy.position_size < 0                                    ? entry    : na,
+           "Short Entry",       style=plot.style_linebr, color=color.rgb(255, 255, 0,   90), linewidth=1, editable=false)
+tpS = plot(strategy.position_size < 0                                    ? t_target : na,
+           "Short Take Profit", style=plot.style_linebr, color=color.rgb(0,   255, 0,   90), linewidth=1, editable=false)
+trS = plot(strategy.position_size < 0 and stopMode == StopMode.trailing  ? tr_stop_lev : na,
+           "Short Trail Stop",  style=plot.style_linebr, color=color.new(color.red, 60),     linewidth=1, editable=false)
+
+trailColS = tr_stop_lev > entry ? color.rgb(204, 45, 45, 80) : color.rgb(204, 45, 45, 100)
+
+fill(tpS, enS, color=color.rgb(32,  140, 118, 80), title="Short TP Background",      editable=false)
+fill(enS, slS, color=color.rgb(204, 45,  45,  80), title="Short SL Background",      editable=false)
+fill(enS, trS, color=trailColS,                    title="Short Trailing Background", editable=false)
+
+plot(strategy.position_size < 0 and stopMode == StopMode.trailing  ? tr_act_lev : na,
+     "Short Trail Offset",    color=color.new(color.yellow, 70), style=plot.style_linebr, linewidth=1, editable=false)
+plot(strategy.position_size < 0 and stopMode == StopMode.breakeven ? act_lev    : na,
+     "Short Breakeven Offset",color=color.new(color.white,  70), style=plot.style_linebr, linewidth=1, editable=false)
+
+
+//------------------------------------------------------------------------------
+// END OF CODE
+//------------------------------------------------------------------------------

@@ -1,0 +1,40 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/DSB0583M-WEEKLY-BTC-TRADING-SCRYPT/
+// id: PUB;3cba67a3b67b48958836736cf0e8c3b1  kind: strategy  likes: 104
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © taberandwords
+//developer: taberandwords
+//author: taberandwords
+//@version=4
+
+strategy("WEEKLY BTC TRADING SCRYPT","WBTS",overlay=false,default_qty_type=strategy.fixed)
+
+source=input(defval=close,title="source",group="STRATEGY")
+
+btc=security('BTCUSDT','1W', source)
+ma=sma(btc,8)
+
+buy_condition= crossover(btc,ma) 
+sell_condition= crossunder(btc,ma)
+
+ma_color=input(defval=#FF3232,title="COLOR",group="MA")
+ma_linewidth=input(defval=2,title="LINE WIDTH",group="MA")
+graphic_color=input(defval=#6666FF,title="COLOR",group="GRAPHIC")
+graphic_linewidth=input(defval=2,title="LINE WIDTH",group="GRAPHIC")
+
+start_date=input(defval=2020,title="YEAR",group="STRATEGY EXECUTION YEAR")
+
+loss_ratio=input(defval=1,title="LOSS RATIO", group="STRATEGY")
+reward_ratio=input(defval=3,title="REWARD RATIO", group="STRATEGY")
+
+if(year>=start_date)
+    strategy.entry('BUY',long=true,when=buy_condition,alert_message='Price came to buying value!')
+
+    if(strategy.long)
+        alert('BTC buy order trigerred!',alert.freq_once_per_bar)
+    strategy.exit(id="SELL",loss=loss_ratio,profit=reward_ratio,when=sell_condition,alert_message='Price came to position closing value!')
+    if(sell_condition)
+        alert('BTC sell order trigerred!',alert.freq_once_per_bar)
+plot(series=source,title="WEEKLY CLOSE",color=graphic_color,linewidth=graphic_linewidth)
+plot(ma,title="SMA8 WEEKLY",color=ma_color,linewidth=ma_linewidth)
+plot(strategy.equity,display=0)

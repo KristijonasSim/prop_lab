@@ -1,0 +1,330 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/8YopUUSO-Monthly-Performance-Table-Drop-in/
+// id: PUB;d6771ea9fe90496ab97a678ebe37397f  kind: strategy
+// © hamsung
+//@version=6
+// Monthly Performance Table (Drop-in) — open source
+strategy("Monthly Performance Table", overlay = true,
+     initial_capital        = 10000,
+     default_qty_type       = strategy.percent_of_equity,
+     default_qty_value      = 100,
+     commission_type        = strategy.commission.percent,
+     commission_value       = 0.05,
+     slippage               = 2,
+     margin_long            = 100,
+     margin_short           = 100,
+     process_orders_on_close = false)
+
+// ============================================================
+// DEMO SIGNAL — replace this with your own entry/exit logic.
+// It exists only so the script runs out of the box, and is
+// deliberately kept trivial and free of inputs. It is not the
+// point of this publication.
+// ============================================================
+float demo_rsi = ta.rsi(close, 14)
+if ta.crossover(demo_rsi, 35)
+    strategy.entry("Long", strategy.long)
+if ta.crossunder(demo_rsi, 70)
+    strategy.close("Long")
+// ============================================================
+// END OF DEMO SIGNAL
+// ============================================================
+
+
+// ===================== COPY FROM HERE =====================
+// Monthly Performance Table (Drop-in)
+// Paste this whole block anywhere inside a strategy() script.
+// It has no dependencies on the rest of your code — it only
+// reads strategy.equity and close.
+
+var string MPT_GRP = "Monthly Performance Table"
+
+mpt_show       = input.bool(true, "Show table", group = MPT_GRP)
+mpt_theme      = input.string("Dark", "Theme", options = ["Dark", "Light"], group = MPT_GRP, active = mpt_show)
+mpt_pos_opt    = input.string("bottom_right", "Position / Size",
+     options = ["top_left", "top_center", "top_right", "middle_left", "middle_right", "bottom_left", "bottom_center", "bottom_right"],
+     group = MPT_GRP, inline = "mpt_look", active = mpt_show)
+mpt_size_opt   = input.string("small", "", options = ["tiny", "small", "normal", "large"],
+     group = MPT_GRP, inline = "mpt_look", tooltip = "Table position / text size", active = mpt_show)
+mpt_mode       = input.string("Percent", "Cell value", options = ["Percent", "Net profit", "Both"],
+     group = MPT_GRP,
+     tooltip = "Percent: return on equity at the start of the period. Net profit: change in equity, in the account currency. Both: net profit on the first line, percent underneath.",
+     active = mpt_show)
+mpt_years_max  = input.int(0, "Years to show (0 = all)", minval = 0, group = MPT_GRP, active = mpt_show)
+mpt_show_bh    = input.bool(true, "Buy & Hold column", group = MPT_GRP,
+     tooltip = "Return of simply holding the chart symbol over the same period, for comparison. In Net profit mode it is measured on a buy & hold equity curve started with the same initial capital. It carries no commission or slippage.",
+     active = mpt_show)
+mpt_color_rel  = input.bool(false, "Scale cell colors by magnitude", group = MPT_GRP,
+     tooltip = "Fades each cell in proportion to its size against the largest value on screen, so you can see where the returns actually came from. Off by default: a single outlier washes everything else out.",
+     active = mpt_show)
+mpt_hilite     = input.bool(true, "Highlight best / worst month", group = MPT_GRP, active = mpt_show)
+mpt_summary    = input.bool(true, "Summary row", group = MPT_GRP, active = mpt_show)
+mpt_cagr_short = input.bool(false, "Show CAGR on periods under one year", group = MPT_GRP,
+     tooltip = "Off by default. Annualising a few months of data produces a number that looks precise but means very little.",
+     active = mpt_show and mpt_summary)
+
+// fixed, not inputs: these are taste settings whose checkboxes cost more
+// clutter than they are worth. change the value here if you disagree.
+bool MPT_FRAME_ON = true
+int  MPT_DECIMALS = 1
+
+// palette — self-contained on purpose, so the block can be pasted as is
+bool  mpt_dark  = mpt_theme == "Dark"
+color MPT_UP    = #26a69a
+color MPT_DN    = #ef5350
+color MPT_BG    = mpt_dark ? #131722 : #ffffff
+color MPT_HEAD  = mpt_dark ? #1e222d : #f0f3fa
+color MPT_TXT   = mpt_dark ? #d1d4dc : #131722
+color MPT_DIM   = mpt_dark ? #787b86 : #6a6d78
+color MPT_FRAME = mpt_dark ? #2a2e39 : #d1d4dc
+color MPT_BEST  = mpt_dark ? #ffd54f : #8d6e00
+color MPT_WORST = mpt_dark ? #ff8a80 : #b71c1c
+// fill strength per theme. on white the tint has to stay strong enough that
+// green and red are told apart at a glance, while dark text still reads
+int   MPT_FILL   = mpt_dark ? 55 : 40   // month cells
+int   MPT_FILL_Y = mpt_dark ? 35 : 28   // Year column
+int   MPT_FILL_T = mpt_dark ? 20 : 18   // whole-period totals
+int   MPT_FILL0  = mpt_dark ? 85 : 80   // faintest, relative colouring
+int   MPT_FILL1  = mpt_dark ? 25 : 18   // strongest, relative colouring
+
+mpt_pos(string o) =>
+    switch o
+        "top_left" => position.top_left
+        "top_center" => position.top_center
+        "top_right" => position.top_right
+        "middle_left" => position.middle_left
+        "middle_right" => position.middle_right
+        "bottom_left" => position.bottom_left
+        "bottom_center" => position.bottom_center
+        => position.bottom_right
+
+mpt_txt_size(string o) =>
+    switch o
+        "tiny" => size.tiny
+        "small" => size.small
+        "normal" => size.normal
+        => size.large
+
+mpt_fmt_str(int dec) =>
+    dec > 0 ? "0." + str.repeat("0", dec) : "0"
+
+string MPT_FS = mpt_fmt_str(MPT_DECIMALS)
+
+// cell text for the three display modes
+mpt_cell_text(float pctv, float pnlv, string mode, string fs) =>
+    string out = ""
+    if mode == "Both"
+        out := na(pctv) and na(pnlv) ? "" : (na(pnlv) ? "" : str.tostring(pnlv, fs)) + "\n" + (na(pctv) ? "" : "(" + str.tostring(pctv, fs) + "%)")
+    else if mode == "Percent"
+        out := na(pctv) ? "" : str.tostring(pctv, fs) + "%"
+    else
+        out := na(pnlv) ? "" : str.tostring(pnlv, fs)
+    out
+
+// row = year, col = month index 0-11
+var array<int>    mpt_yrs    = array.new<int>()
+var matrix<float> mpt_pct    = matrix.new<float>(0, 12, na)
+var matrix<float> mpt_pnl    = matrix.new<float>(0, 12, na)
+var array<float>  mpt_yr_pct = array.new<float>()
+var array<float>  mpt_yr_pnl = array.new<float>()
+var array<float>  mpt_yr_bh  = array.new<float>()   // buy & hold, %
+var array<float>  mpt_yr_bhp = array.new<float>()   // buy & hold, currency
+
+var float mpt_m_eq0 = na  // equity at the start of the current month
+var float mpt_y_eq0 = na  // equity at the start of the current year
+var float mpt_y_px0 = na  // close at the start of the current year (buy & hold)
+var float mpt_eq0   = na  // equity on the first bar of the backtest
+var float mpt_px0   = na  // close on the first bar of the backtest (buy & hold, whole period)
+var int   mpt_t0    = na  // time of the first bar of the backtest
+var float mpt_peak  = na  // running equity high
+var float mpt_maxdd = 0.0 // max drawdown from that high, in %
+
+mpt_row(int y) =>
+    int idx = mpt_yrs.indexof(y)
+    if idx == -1
+        mpt_yrs.push(y)
+        mpt_pct.add_row(mpt_pct.rows())
+        mpt_pnl.add_row(mpt_pnl.rows())
+        mpt_yr_pct.push(na)
+        mpt_yr_pnl.push(na)
+        mpt_yr_bh.push(na)
+        mpt_yr_bhp.push(na)
+        idx := mpt_yrs.size() - 1
+    idx
+
+if barstate.isfirst
+    mpt_m_eq0 := strategy.equity
+    mpt_y_eq0 := strategy.equity
+    mpt_y_px0 := close
+    mpt_eq0   := strategy.equity
+    mpt_px0   := close
+    mpt_t0    := time
+
+// drawdown is tracked on every bar, not only at period boundaries
+mpt_peak  := na(mpt_peak) ? strategy.equity : math.max(mpt_peak, strategy.equity)
+mpt_maxdd := math.max(mpt_maxdd, mpt_peak > 0 ? (mpt_peak - strategy.equity) / mpt_peak * 100 : 0.0)
+
+// first bar of a new month closes out the previous one.
+// bar 0 is skipped because time[1] is na there.
+if not barstate.isfirst and month(time) != month(time[1])
+    int mr = mpt_row(year(time[1]))
+    int mc = month(time[1]) - 1
+    mpt_pct.set(mr, mc, mpt_m_eq0 != 0 ? (strategy.equity[1] / mpt_m_eq0 - 1) * 100 : na)
+    mpt_pnl.set(mr, mc, strategy.equity[1] - mpt_m_eq0)
+    mpt_m_eq0 := strategy.equity[1]
+
+if not barstate.isfirst and year(time) != year(time[1])
+    int yr = mpt_row(year(time[1]))
+    mpt_yr_pct.set(yr, mpt_y_eq0 != 0 ? (strategy.equity[1] / mpt_y_eq0 - 1) * 100 : na)
+    mpt_yr_pnl.set(yr, strategy.equity[1] - mpt_y_eq0)
+    mpt_yr_bh.set(yr, mpt_y_px0 != 0 ? (close[1] / mpt_y_px0 - 1) * 100 : na)
+    mpt_yr_bhp.set(yr, mpt_px0 > 0 ? mpt_eq0 / mpt_px0 * (close[1] - mpt_y_px0) : na)
+    mpt_y_eq0 := strategy.equity[1]
+    mpt_y_px0 := close[1]
+
+mpt_cell_color(float v, float vmax) =>
+    color base = v >= 0 ? MPT_UP : MPT_DN
+    int tr = mpt_color_rel and vmax > 0 ? int(MPT_FILL0 - (MPT_FILL0 - MPT_FILL1) * math.min(1.0, math.abs(v) / vmax)) : MPT_FILL
+    color.new(base, tr)
+
+var table mpt_tbl = na
+// a strategy only executes a realtime bar when it closes, so islast alone can
+// leave the table invisible for a whole bar on high timeframes
+bool mpt_draw = barstate.islast or barstate.islastconfirmedhistory
+
+if mpt_show and mpt_draw
+    // the month and year in progress are shown as running values
+    int cr = mpt_row(year(time))
+    mpt_pct.set(cr, month(time) - 1, mpt_m_eq0 != 0 ? (strategy.equity / mpt_m_eq0 - 1) * 100 : na)
+    mpt_pnl.set(cr, month(time) - 1, strategy.equity - mpt_m_eq0)
+    mpt_yr_pct.set(cr, mpt_y_eq0 != 0 ? (strategy.equity / mpt_y_eq0 - 1) * 100 : na)
+    mpt_yr_pnl.set(cr, strategy.equity - mpt_y_eq0)
+    mpt_yr_bh.set(cr, mpt_y_px0 != 0 ? (close / mpt_y_px0 - 1) * 100 : na)
+    mpt_yr_bhp.set(cr, mpt_px0 > 0 ? mpt_eq0 / mpt_px0 * (close - mpt_y_px0) : na)
+
+    // percent drives colour and best/worst even in Net profit mode: it is the
+    // only scale-free measure, so the heat map stays comparable across years
+    bool   by_pct = mpt_mode != "Net profit"
+    string fs     = MPT_FS
+
+    int n_all  = mpt_yrs.size()
+    int n_show = mpt_years_max > 0 ? math.min(mpt_years_max, n_all) : n_all
+    int r_from = n_all - n_show
+
+    // scan the visible cells once: magnitude for relative colouring, best/worst month
+    float vmax    = 0.0
+    float best    = na
+    float worst   = na
+    int   best_r  = -1
+    int   best_c  = -1
+    int   worst_r = -1
+    int   worst_c = -1
+    for rr = r_from to n_all - 1
+        for cc = 0 to 11
+            float v = by_pct ? mpt_pct.get(rr, cc) : mpt_pnl.get(rr, cc)
+            if not na(v)
+                vmax := math.max(vmax, math.abs(v))
+                if na(best) or v > best
+                    best   := v
+                    best_r := rr
+                    best_c := cc
+                if na(worst) or v < worst
+                    worst   := v
+                    worst_r := rr
+                    worst_c := cc
+
+    int c_year = 13
+    int c_bh   = mpt_show_bh ? 14 : -1
+    int ncols  = 14 + (mpt_show_bh ? 1 : 0)
+    int nrows  = 1 + n_show + (mpt_summary ? 1 : 0)
+
+    if not na(mpt_tbl)
+        table.delete(mpt_tbl)
+    // widths stay at 1 whether or not the frame is shown, so the frame setting
+    // changes only what you see and never the size of the table
+    mpt_tbl := table.new(mpt_pos(mpt_pos_opt), ncols, nrows,
+         bgcolor      = MPT_BG,
+         frame_color  = MPT_FRAME_ON ? MPT_FRAME : color.new(MPT_FRAME, 100),
+         frame_width  = 1,
+         border_color = MPT_FRAME_ON ? color.new(MPT_FRAME, 40) : color.new(MPT_FRAME, 100),
+         border_width = 1)
+
+    string ts = mpt_size_opt
+    var array<string> mpt_mn = array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+    // header
+    table.cell(mpt_tbl, 0, 0, "", text_color = MPT_DIM, text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+    for cc = 0 to 11
+        table.cell(mpt_tbl, cc + 1, 0, mpt_mn.get(cc), text_color = MPT_DIM, text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+    table.cell(mpt_tbl, c_year, 0, "Year", text_color = MPT_TXT, text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+    if c_bh >= 0
+        table.cell(mpt_tbl, c_bh, 0, "B&H", text_color = MPT_DIM, text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+
+    // one row per year
+    for rr = r_from to n_all - 1
+        int tr = rr - r_from + 1
+        table.cell(mpt_tbl, 0, tr, str.tostring(mpt_yrs.get(rr)), text_color = MPT_DIM, text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+        for cc = 0 to 11
+            float pv = mpt_pct.get(rr, cc)
+            float nv = mpt_pnl.get(rr, cc)
+            float v  = by_pct ? pv : nv
+            color bg = na(v) ? color.new(MPT_BG, 100) : mpt_cell_color(v, vmax)
+            color tc = MPT_TXT
+            if mpt_hilite and not na(v)
+                if rr == best_r and cc == best_c
+                    tc := MPT_BEST
+                if rr == worst_r and cc == worst_c
+                    tc := MPT_WORST
+            table.cell(mpt_tbl, cc + 1, tr, mpt_cell_text(pv, nv, mpt_mode, fs),
+                 text_color = tc, text_size = mpt_txt_size(ts), bgcolor = bg)
+        float ypv = mpt_yr_pct.get(rr)
+        float ynv = mpt_yr_pnl.get(rr)
+        float yv  = by_pct ? ypv : ynv
+        table.cell(mpt_tbl, c_year, tr, mpt_cell_text(ypv, ynv, mpt_mode, fs),
+             text_color = MPT_TXT, text_size = mpt_txt_size(ts),
+             bgcolor = na(yv) ? color.new(MPT_BG, 100) : color.new(yv >= 0 ? MPT_UP : MPT_DN, MPT_FILL_Y))
+        if c_bh >= 0
+            table.cell(mpt_tbl, c_bh, tr, mpt_cell_text(mpt_yr_bh.get(rr), mpt_yr_bhp.get(rr), mpt_mode, fs),
+                 text_color = MPT_DIM, text_size = mpt_txt_size(ts), bgcolor = color.new(MPT_BG, 100))
+
+    // summary
+    if mpt_summary
+        int    sr   = nrows - 1
+        float  yrs  = (time - mpt_t0) / 31557600000.0
+        float  tot  = mpt_eq0 != 0 ? (strategy.equity / mpt_eq0 - 1) * 100 : na
+        bool   long_enough = yrs >= 1 or mpt_cagr_short
+        float  cagr = yrs > 0 and mpt_eq0 > 0 and strategy.equity > 0 ? (math.pow(strategy.equity / mpt_eq0, 1 / yrs) - 1) * 100 : na
+        float  mar  = long_enough and not na(cagr) and mpt_maxdd > 0 ? cagr / mpt_maxdd : na
+        int    ntr  = strategy.closedtrades
+        float  wr   = ntr > 0 ? strategy.wintrades / ntr * 100 : na
+        float  pf   = strategy.grossloss > 0 ? strategy.grossprofit / strategy.grossloss : na
+
+        // the stats strip spans the label column plus the twelve months;
+        // the Year and B&H columns keep their own totals under their yearly values
+        string txt = "CAGR " + (long_enough and not na(cagr) ? str.tostring(cagr, fs) + "%" : "< 1y")
+        txt := txt + "    Max DD " + str.tostring(mpt_maxdd, fs) + "%"
+        txt := txt + "    MAR " + (na(mar) ? "-" : str.tostring(mar, fs))
+        txt := txt + "    Trades " + str.tostring(ntr)
+        txt := txt + "    Win " + (na(wr) ? "-" : str.tostring(wr, fs) + "%")
+        txt := txt + "    PF " + (na(pf) ? "-" : str.tostring(pf, fs))
+
+        for cc = 0 to 12
+            table.cell(mpt_tbl, cc, sr, "", text_size = mpt_txt_size(ts), bgcolor = MPT_HEAD)
+        table.cell(mpt_tbl, 0, sr, txt, text_color = MPT_TXT, text_size = mpt_txt_size(ts),
+             bgcolor = MPT_HEAD, text_halign = text.align_left)
+        table.merge_cells(mpt_tbl, 0, sr, 12, sr)
+
+        // whole-period totals, in the same unit as the cells above
+        float tot_pnl = strategy.equity - mpt_eq0
+        table.cell(mpt_tbl, c_year, sr, mpt_cell_text(tot, tot_pnl, mpt_mode, fs),
+             text_color = MPT_TXT, text_size = mpt_txt_size(ts),
+             bgcolor = na(tot) ? MPT_HEAD : color.new(tot >= 0 ? MPT_UP : MPT_DN, MPT_FILL_T))
+
+        if c_bh >= 0
+            float bh_ret = mpt_px0 > 0 ? close / mpt_px0 - 1 : na
+            float bh_pct = na(bh_ret) ? na : bh_ret * 100
+            float bh_pnl = na(bh_ret) ? na : mpt_eq0 * bh_ret
+            table.cell(mpt_tbl, c_bh, sr, mpt_cell_text(bh_pct, bh_pnl, mpt_mode, fs),
+                 text_color = MPT_TXT, text_size = mpt_txt_size(ts),
+                 bgcolor = na(bh_pct) ? MPT_HEAD : color.new(bh_pct >= 0 ? MPT_UP : MPT_DN, MPT_FILL_T))
+// ====================== TO HERE ===========================

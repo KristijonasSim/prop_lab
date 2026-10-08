@@ -1,0 +1,2059 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/f09TPuYj-Smart-Trader-Episode-1-by-Ata-Sabanci-Unified-Matrix/
+// id: PUB;93646e4ef91b42058a3d136e83fe6055  kind: strategy  likes: 998
+// @version=6
+// ─────────────────────────────────────────────────────────────────────────────
+// SMART TRADER, Episode 1,by Ata Sabanci  
+// ─────────────────────────────────────────────────────────────────────────────
+
+strategy("Smart Trader,Episode 1, by Ata Sabanci  | Unified Matrix", shorttitle="ST-EP1", overlay=true,
+     calc_on_every_tick=true,
+     calc_on_order_fills=false,
+     use_bar_magnifier=true,
+     initial_capital=10000,
+     default_qty_type=strategy.percent_of_equity,
+     default_qty_value=10,
+     max_lines_count=500,
+     max_labels_count=500)
+
+import TradingView/ta/10 as tvta
+
+float atr14 = ta.atr(14)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ─────────────────────────────────────────────────────────────────────────────
+string GRP_CFG = "⚙️ General"
+string calc_method   = input.string("Geometry (Source File)", "Calculation Method",
+     options=["Geometry (Source File)", "Intrabar (Precise)"], group=GRP_CFG,
+     tooltip="Settings must remain valid for your Lookback Length. Intrabar (Precise) is strict: if any bar inside the lookback window is missing LTF data, outputs halt. For maximum accuracy use 1T (one-tick) if your TradingView plan/version and symbol data support it.")
+
+string ltf_input     = input.timeframe("15S", "Intrabar Resolution", group=GRP_CFG,
+     tooltip="Choose an intrabar resolution that stays valid for your Lookback Length. The most accurate option is 1T (one-tick), depending on your TradingView plan/version and symbol data availability.")
+
+int    universal_len = input.int(20, "Lookback Length", minval=10, maxval=150, group=GRP_CFG,
+     tooltip="This is the validity window. In Intrabar (Precise) strict mode, every bar in this window must have LTF data or outputs halt. If you see invalid data warnings, reduce Lookback Length or increase Intrabar Resolution.")
+float  time_offset   = input.float(3.0, "Timezone Offset (UTC±)", step=0.5, group=GRP_CFG)
+
+string GRP_VIS = "📊 Matrix Display"
+bool   show_matrix    = input.bool(true, "Show Unified Matrix", group=GRP_VIS)
+bool   show_lines     = input.bool(true, "Show Event Lines", group=GRP_VIS)
+string panel_size     = input.string("Small", "Panel Size", options=["Tiny", "Small", "Normal"], group=GRP_VIS)
+string panel_pos      = input.string("Bottom Right", "Panel Position",
+     options=["Top Right", "Middle Right", "Middle Center", "Middle Left", "Bottom Right", "Bottom Left"], group=GRP_VIS)
+int    proj_bars      = input.int(13, "Projection Bars", minval=0, maxval=100, group=GRP_VIS)
+int    line_transp    = input.int(40, "Line Transparency", minval=0, maxval=100, group=GRP_VIS)
+
+string GRP_LBL = "🏷️ Rank Labels"
+bool   show_rank_labels = input.bool(true, "Show Rank Labels (HB/HS)", group=GRP_LBL)
+bool   show_low_labels  = input.bool(true, "Show Low Labels (LB/LS)", group=GRP_LBL)
+int    ranks_to_show    = input.int(1, "Ranks (Top/Low) Count", minval=1, maxval=5, group=GRP_LBL)
+string rank_label_size  = input.string("Tiny", "Rank Label Size", options=["Tiny", "Small", "Normal"], group=GRP_LBL)
+
+string GRP_TREND = "📐 Trend Channel"
+bool   show_trend_channel = input.bool(true, "Show Trend Channel", group=GRP_TREND,
+     tooltip="Display 5-point linear regression channel based on Lookback Length.")
+color  trend_line_color   = input.color(#ff7b00, "Trend Line Color", group=GRP_TREND)
+color  trend_fill_color   = input.color(#ff7b00, "Trend Fill Color", group=GRP_TREND)
+int    trend_line_width   = input.int(2, "Trend Line Width", minval=1, maxval=5, group=GRP_TREND)
+string trend_line_style   = input.string("dashed", "Trend Line Style", options=["solid", "dashed", "dotted"], group=GRP_TREND)
+
+string GRP_SIGNAL = "🎯 Trade Signals"
+float  long_power_min    = input.float(50.0, "Long: Min Remaining Power %", minval=0, maxval=100, step=5, group=GRP_SIGNAL,
+     tooltip="Minimum remaining power % for LONG signal. Below this, buyers are too weak.")
+float  short_power_max   = input.float(30.0, "Short: Max Remaining Power %", minval=-500, maxval=100, step=5, group=GRP_SIGNAL,
+     tooltip="Maximum remaining power % for SHORT signal. When power falls below this, SHORT is triggered.")
+float  opp_dom_threshold = input.float(0.0, "Opponent Dominance Threshold %", minval=-500, maxval=0, step=10, group=GRP_SIGNAL,
+     tooltip="When remaining power falls below this (negative = opponent dominance), signal strengthens.")
+float  max_decay_angle   = input.float(60.0, "Max Decay Angle for Entry °", minval=0, maxval=90, step=5, group=GRP_SIGNAL,
+     tooltip="Maximum decay angle for valid entry. Higher angles mean faster consumption.")
+bool   show_signal_eval  = input.bool(true, "Show Signal Evaluation", group=GRP_SIGNAL,
+     tooltip="Display trade signal evaluation in status panel.")
+
+string GRP_STRAT = "📈 Strategy Execution"
+bool   enable_strategy    = input.bool(true, "Enable Strategy", group=GRP_STRAT,
+     tooltip="Enable automatic strategy entries based on signals.")
+bool   allow_long         = input.bool(true, "Allow LONG Entries", group=GRP_STRAT)
+bool   allow_short        = input.bool(true, "Allow SHORT Entries", group=GRP_STRAT)
+int    max_pyramid        = input.int(2, "Max Pyramid Entries", minval=1, maxval=3, group=GRP_STRAT,
+     tooltip="Maximum number of entries in same direction. Each entry is 10% of equity.")
+float  sl_buffer_pct      = input.float(0.15, "SL Buffer %", minval=0, maxval=1, step=0.05, group=GRP_STRAT,
+     tooltip="Buffer percentage below/above event line for Stop Loss.")
+float  tp_buffer_pct      = input.float(0.05, "TP Buffer %", minval=0, maxval=1, step=0.05, group=GRP_STRAT,
+     tooltip="Buffer percentage at event line for Take Profit.")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLORS & STYLES
+// ─────────────────────────────────────────────────────────────────────────────
+color C_BG        = color.new(#0a0a0a, 5)
+color C_BG_HEADER = color.new(#1a1a2e, 10)
+color C_BG_ROW    = color.new(#111111, 5)
+color C_TXT       = color.new(#ffffff, 0)
+color C_TXT_DIM   = color.new(#888888, 0)
+color C_FRAME     = color.new(#333333, 50)
+
+color C_TOP_BUY   = color.rgb(41, 98, 255)
+color C_TOP_SELL  = color.rgb(255, 82, 82)
+color C_BOT_BUY   = color.rgb(0, 229, 255)
+color C_BOT_SELL  = color.rgb(255, 145, 0)
+
+color C_ATTACK    = color.rgb(255, 50, 50)
+color C_DEFENSE   = color.rgb(50, 255, 100)
+color C_WARNING   = color.rgb(255, 200, 50)
+color C_LONG      = color.rgb(0, 200, 100)
+color C_SHORT     = color.rgb(255, 80, 80)
+color C_NEUTRAL   = color.rgb(150, 150, 150)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VOLUME ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+type VolData
+    float buy_vol
+    float sell_vol
+    float total_vol
+    float delta
+    bool  is_valid
+
+var int   ltf_cov_bars      = 0
+var float series_buy_vol    = na
+var float series_sell_vol   = na
+var float series_total_vol  = na
+var float series_delta      = na
+var bool  series_is_valid   = false
+
+max_bars_back(series_buy_vol,    150)
+max_bars_back(series_sell_vol,   150)
+max_bars_back(series_total_vol,  150)
+max_bars_back(series_delta,      150)
+max_bars_back(series_is_valid,   150)
+
+// Geometry-based volume split (approximation using candle position)
+f_get_geo_volume() =>
+    float range_i = high - low
+    float v_b = 0.0, float v_s = 0.0
+    if range_i == 0
+        v_b := volume * 0.5
+        v_s := volume * 0.5
+    else
+        v_b := volume * ((close - low) / range_i)
+        v_s := volume * ((high - close) / range_i)
+    VolData.new(v_b, v_s, volume, v_b - v_s, true)
+
+// Intrabar up/down volume (more precise, depends on data availability)
+f_get_ltf_volume(string _ltf) =>
+    [u, d, dl] = tvta.requestUpAndDownVolume(_ltf)
+    float v_b = math.abs(u)
+    float v_s = math.abs(d)
+    VolData.new(v_b, v_s, v_b + v_s, dl, not na(u) and not na(d))
+
+VolData _intr = f_get_ltf_volume(ltf_input)
+VolData _geo  = f_get_geo_volume()
+
+// True ONLY when real intrabar data exists for this bar
+bool intrabar_ok = (calc_method == "Intrabar (Precise)") and _intr.is_valid
+
+// S/R philosophy (STRICT):
+// If "Intrabar (Precise)" is selected, use intrabar values ONLY (even if they are na).
+// Do NOT fallback to Geometry in the "Precise" path.
+VolData current_vol = (calc_method == "Intrabar (Precise)") ? _intr : _geo
+
+series_buy_vol    := current_vol.buy_vol
+series_sell_vol   := current_vol.sell_vol
+series_total_vol  := current_vol.total_vol
+series_delta      := current_vol.delta
+
+// This flag must represent "intrabar validity" only (not fallback validity)
+series_is_valid   := intrabar_ok
+
+
+var int _cov_last_bar = na
+if calc_method == "Intrabar (Precise)" and (na(_cov_last_bar) or bar_index != _cov_last_bar)
+    _cov_last_bar := bar_index
+    if intrabar_ok
+        ltf_cov_bars += 1
+
+
+// ───────────── Price series buffers (for variable historical indexing) ─────────────
+var float series_high = na
+var float series_low  = na
+
+series_high := high
+series_low  := low
+
+max_bars_back(series_high, 150)
+max_bars_back(series_low,  150)
+
+// ───────────── Ring buffers (avoid dynamic series [k] runtime limits) ─────────────
+int BUF = 150
+
+var float[] buf_buy   = array.new_float()
+var float[] buf_sell  = array.new_float()
+var bool[]  buf_valid = array.new_bool()
+
+var float[] buf_high  = array.new_float()
+var float[] buf_low   = array.new_float()
+var float[] buf_close = array.new_float()
+var float[] buf_vol   = array.new_float()
+
+var int _buf_last_bar = na
+
+// Push ONCE per bar (new candle)
+if na(_buf_last_bar) or bar_index != _buf_last_bar
+    array.unshift(buf_buy,  series_buy_vol)
+    array.unshift(buf_sell, series_sell_vol)
+
+    array.unshift(buf_valid, intrabar_ok)
+  
+    array.unshift(buf_high,  high)
+    array.unshift(buf_low,   low)
+    array.unshift(buf_close, close)
+    array.unshift(buf_vol,   volume)
+
+    while array.size(buf_buy) > BUF
+        array.pop(buf_buy)
+        array.pop(buf_sell)
+        array.pop(buf_valid)
+        array.pop(buf_high)
+        array.pop(buf_low)
+        array.pop(buf_close)
+        array.pop(buf_vol)
+
+    _buf_last_bar := bar_index
+
+// Update current bar (index 0) on EVERY tick (realtime-safe)
+if array.size(buf_buy) > 0
+    array.set(buf_buy,  0, series_buy_vol)
+    array.set(buf_sell, 0, series_sell_vol)
+    array.set(buf_valid, 0, intrabar_ok)
+    array.set(buf_high,  0, high)
+    array.set(buf_low,   0, low)
+    array.set(buf_close, 0, close)
+    array.set(buf_vol,   0, volume)
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ★★★ WINDOW DATA VALIDITY CHECK (NEW) ★★★
+// For Intrabar (Precise): ALL bars in lookback window must be valid
+// If even ONE bar is invalid → window_data_ok = false → HALT all outputs
+// ─────────────────────────────────────────────────────────────────────────────
+var bool window_data_ok = true
+var int  window_invalid_count = 0
+
+// Recompute on each update cycle
+bool _is_intrabar_mode = (calc_method == "Intrabar (Precise)")
+
+if _is_intrabar_mode
+    int check_len = math.min(universal_len, array.size(buf_valid))
+    int invalid_cnt = 0
+    
+    if check_len > 0
+        for i = 0 to check_len - 1
+            if not array.get(buf_valid, i)
+                invalid_cnt += 1
+    
+    window_invalid_count := invalid_cnt
+    window_data_ok := (invalid_cnt == 0)
+else
+    // Geometry mode: always valid (it's an approximation, not strict)
+    window_data_ok := true
+    window_invalid_count := 0
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+f_get_size(string s) =>
+    switch s
+        "Tiny"   => size.tiny
+        "Small"  => size.small
+        "Normal" => size.normal
+        => size.small
+
+f_get_pos(string p) =>
+    switch p
+        "Top Right"     => position.top_right
+        "Middle Right"  => position.middle_right
+        "Middle Center" => position.middle_center
+        "Middle Left"   => position.middle_left
+        "Bottom Right"  => position.bottom_right
+        "Bottom Left"   => position.bottom_left
+        => position.bottom_right
+
+// Compact numeric formatting
+f_fmt(float v) =>
+    if na(v) or v == 0
+        "-"
+    else
+        float a = math.abs(v)
+        a >= 1e9 ? str.tostring(v / 1e9, "#.##") + "B" :
+         a >= 1e6 ? str.tostring(v / 1e6, "#.##") + "M" :
+         a >= 1e3 ? str.tostring(v / 1e3, "#.##") + "K" :
+         str.tostring(v, "#.##")
+
+f_fmt_price(float v) => na(v) ? "-" : str.tostring(v, format.mintick)
+
+// Health bar (10 blocks, each block = 10%)
+f_health_bar(float pct) =>
+    int blocks = 10
+    int filled = math.min(blocks, math.max(0, int(pct / 10)))
+    string bar = ""
+    for i = 0 to blocks - 1
+        bar += i < filled ? "▮" : "▯"
+    bar
+
+// Angle arrow for readability
+f_angle_arrow(float angle_deg) =>
+    if na(angle_deg)
+        "─"
+    else if angle_deg > 50
+        "⬆"
+    else if angle_deg > 10
+        "↗"
+    else if angle_deg > -10
+        "→"
+    else if angle_deg > -50
+        "↘"
+    else
+        "⬇"
+
+// Line style converter
+f_get_line_style(string style) =>
+    switch style
+        "solid"  => line.style_solid
+        "dashed" => line.style_dashed
+        "dotted" => line.style_dotted
+        => line.style_dashed
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5-POINT TREND CHANNEL CALCULATION
+// Uses universal_len for lookback window, linear regression on 5 segment extremes
+// ─────────────────────────────────────────────────────────────────────────────
+f_calc_trend_channel(int len_window) =>
+    float slope_hi = na
+    float intercept_hi = na
+    float slope_lo = na
+    float intercept_lo = na
+
+    bool enough_bars = bar_index >= len_window
+
+    if enough_bars
+        float sum_x_hi  = 0.0, float sum_y_hi  = 0.0
+        float sum_xy_hi = 0.0, float sum_x2_hi = 0.0
+        int   n_hi      = 0
+
+        float sum_x_lo  = 0.0, float sum_y_lo  = 0.0
+        float sum_xy_lo = 0.0, float sum_x2_lo = 0.0
+        int   n_lo      = 0
+
+        int seg_len_base = math.max(1, math.floor(len_window / 5))
+
+        for k = 0 to 4
+            int seg_start = k * seg_len_base
+            int remaining = len_window - seg_start
+            if remaining <= 0
+                break
+
+            int seg_len_k = k < 4 ? math.min(seg_len_base, remaining) : remaining
+
+            // High segment
+            float max_hi = na
+            int   barsAgo_hi = na
+            for i = 0 to seg_len_k - 1
+                int   sh = seg_start + i
+                float v  = high[sh]
+                if not na(v) and (na(max_hi) or v > max_hi)
+                    max_hi     := v
+                    barsAgo_hi := sh
+            if not na(barsAgo_hi)
+                float x_hi = bar_index - barsAgo_hi
+                float y_hi = high[barsAgo_hi]
+                sum_x_hi  += x_hi
+                sum_y_hi  += y_hi
+                sum_xy_hi += x_hi * y_hi
+                sum_x2_hi += x_hi * x_hi
+                n_hi      += 1
+
+            // Low segment
+            float min_lo = na
+            int   barsAgo_lo = na
+            for i = 0 to seg_len_k - 1
+                int   sl = seg_start + i
+                float v2 = low[sl]
+                if not na(v2) and (na(min_lo) or v2 < min_lo)
+                    min_lo     := v2
+                    barsAgo_lo := sl
+            if not na(barsAgo_lo)
+                float x_lo = bar_index - barsAgo_lo
+                float y_lo = low[barsAgo_lo]
+                sum_x_lo  += x_lo
+                sum_y_lo  += y_lo
+                sum_xy_lo += x_lo * y_lo
+                sum_x2_lo += x_lo * x_lo
+                n_lo      += 1
+
+        // Linear regression for highs
+        if n_hi >= 2
+            float nf_hi    = n_hi
+            float denom_hi = nf_hi * sum_x2_hi - sum_x_hi * sum_x_hi
+            slope_hi     := denom_hi != 0.0 ? (nf_hi * sum_xy_hi - sum_x_hi * sum_y_hi) / denom_hi : 0.0
+            intercept_hi := nf_hi != 0.0 ? (sum_y_hi - slope_hi * sum_x_hi) / nf_hi : na
+
+        // Linear regression for lows
+        if n_lo >= 2
+            float nf_lo    = n_lo
+            float denom_lo = nf_lo * sum_x2_lo - sum_x_lo * sum_x_lo
+            slope_lo     := denom_lo != 0.0 ? (nf_lo * sum_xy_lo - sum_x_lo * sum_y_lo) / denom_lo : 0.0
+            intercept_lo := nf_lo != 0.0 ? (sum_y_lo - slope_lo * sum_x_lo) / nf_lo : na
+
+    [slope_hi, intercept_hi, slope_lo, intercept_lo]
+
+// Trend direction detection
+f_detect_trend(float slope_hi, float slope_lo, float atr) =>
+    float threshold = atr * 0.001  // Normalize slope threshold by ATR
+    bool both_up   = slope_hi > threshold and slope_lo > threshold
+    bool both_down = slope_hi < -threshold and slope_lo < -threshold
+    string trend = both_up ? "UPTREND" : both_down ? "DOWNTREND" : "RANGING"
+    string emoji = both_up ? "📈" : both_down ? "📉" : "➡️"
+    [trend, emoji]
+
+// HB position in channel (0-100%)
+f_get_channel_position(float price, float hi_price, float lo_price) =>
+    float range_ch = hi_price - lo_price
+    float pos_pct = range_ch > 0 ? ((price - lo_price) / range_ch) * 100 : 50.0
+    string zone = pos_pct >= 100 ? "TOP" : pos_pct >= 75 ? "UPPER" : pos_pct >= 25 ? "MIDDLE" : pos_pct > 0 ? "LOWER" : "BOTTOM"
+    string zone_emoji = pos_pct >= 100 ? "🔝" : pos_pct >= 75 ? "⬆️" : pos_pct >= 25 ? "↔️" : pos_pct > 0 ? "⬇️" : "🔻"
+    [zone, zone_emoji, pos_pct]
+
+// Generate trend analysis message
+f_get_trend_message(string trend, string trend_emoji, string zone, string zone_emoji) =>
+    string msg = ""
+    if trend == "UPTREND"
+        if zone == "TOP" or zone == "UPPER"
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Strong bullish momentum"
+        else if zone == "BOTTOM" or zone == "LOWER"
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Possible pullback entry"
+        else
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Mid-channel consolidation"
+    else if trend == "DOWNTREND"
+        if zone == "TOP" or zone == "UPPER"
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Potential reversal or trap"
+        else if zone == "BOTTOM" or zone == "LOWER"
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Trend continuation risk"
+        else
+            msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Mid-channel weakness"
+    else
+        msg := trend_emoji + " " + trend + " | HB at " + zone_emoji + " " + zone + " — Wait for breakout direction"
+    msg
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIGNAL EVALUATION FUNCTION
+// Evaluates all conditions and returns signal type with reason
+// ─────────────────────────────────────────────────────────────────────────────
+f_evaluate_signal(string trend, string zone, float remaining_pct, float decay_angle, 
+                  bool price_above_hb, bool price_above_hs, float cum_delta,
+                  float long_min, float short_max, float opp_threshold, float max_angle) =>
+    string signal = "NO_TRADE"
+    string reason = ""
+    
+    bool is_opp_dom = remaining_pct < opp_threshold
+    bool power_strong = remaining_pct >= long_min
+    bool power_weak = remaining_pct <= short_max
+    bool angle_ok = math.abs(decay_angle) <= max_angle
+    bool delta_positive = cum_delta > 0
+    bool delta_negative = cum_delta < 0
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CUMULATIVE DELTA OVERRIDE (Most Important Factor)
+    // If power is negative but delta is positive → new buyers came in
+    // ═══════════════════════════════════════════════════════════════
+    
+    // ═══════════════════════════════════════════════════════════════
+    // LONG CONDITIONS
+    // ═══════════════════════════════════════════════════════════════
+    if trend == "UPTREND"
+        if (zone == "BOTTOM" or zone == "LOWER" or zone == "MIDDLE")
+            if delta_positive
+                signal := "LONG"
+                reason := "Uptrend + Δ positive — buyers accumulating"
+            else if power_strong and angle_ok
+                signal := "LONG"
+                reason := "Trend aligned, buyers strong at " + zone
+            else if power_strong and not angle_ok
+                signal := "NO_TRADE"
+                reason := "Power OK but decay too fast"
+            else if delta_negative and is_opp_dom
+                signal := "NO_TRADE"
+                reason := "Δ negative + OppDom — wait for confirmation"
+            else
+                signal := "NO_TRADE"
+                reason := "Power insufficient (" + str.tostring(remaining_pct, "#") + "%)"
+        else if zone == "TOP" or zone == "UPPER"
+            if is_opp_dom and delta_negative
+                signal := "SHORT"
+                reason := "Buyer Trap: OppDom + Δ negative at TOP"
+            else if is_opp_dom and delta_positive
+                signal := "NO_TRADE"
+                reason := "OppDom but Δ positive — conflicting signals"
+            else if delta_positive
+                signal := "LONG"
+                reason := "At TOP but Δ positive — momentum continues"
+            else
+                signal := "NO_TRADE"
+                reason := "Wait: watch for pullback or breakout"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // SHORT CONDITIONS
+    // ═══════════════════════════════════════════════════════════════
+    else if trend == "DOWNTREND"
+        if (zone == "TOP" or zone == "UPPER")
+            if delta_negative
+                signal := "SHORT"
+                reason := "Downtrend + Δ negative — sellers in control"
+            else if is_opp_dom and delta_negative
+                signal := "SHORT"
+                reason := "Trend aligned, buyers trapped at " + zone
+            else if delta_positive
+                signal := "NO_TRADE"
+                reason := "Downtrend but Δ positive — possible reversal"
+            else
+                signal := "NO_TRADE"
+                reason := "Downtrend but buyers still have power"
+        else if zone == "BOTTOM" or zone == "LOWER"
+            if delta_positive and power_strong
+                signal := "LONG"
+                reason := "Reversal: Δ positive + strong buyers at BOTTOM"
+            else if delta_positive
+                signal := "NO_TRADE"
+                reason := "Δ positive at BOTTOM — watch for reversal"
+            else
+                signal := "NO_TRADE"
+                reason := "Downtrend continuation risk"
+        else
+            if delta_negative and is_opp_dom
+                signal := "SHORT"
+                reason := "Mid-channel + Δ negative + OppDom"
+            else
+                signal := "NO_TRADE"
+                reason := "Mixed signals in downtrend"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // RANGING - USE DELTA AS TIE-BREAKER
+    // ═══════════════════════════════════════════════════════════════
+    else
+        if delta_positive and power_strong
+            signal := "LONG"
+            reason := "Ranging but Δ positive + power strong"
+        else if delta_negative and is_opp_dom
+            signal := "SHORT"
+            reason := "Ranging but Δ negative + OppDom"
+        else
+            signal := "NO_TRADE"
+            reason := "Market ranging — wait for breakout"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // PRICE vs EVENT LINES (Final Filter)
+    // ═══════════════════════════════════════════════════════════════
+    if signal == "LONG" and not price_above_hb and delta_negative
+        signal := "NO_TRADE"
+        reason := "Price below HB + Δ negative — avoid"
+    
+    if signal == "SHORT" and price_above_hb and price_above_hs and delta_positive
+        signal := "NO_TRADE"
+        reason := "Price above lines + Δ positive — wait"
+    
+    [signal, reason]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEAREST EVENT FINDER
+// Finds which of the 8 scenarios is closest to current candle
+// Returns: [nearest_name, nearest_shift, nearest_type]
+// type: "BULLISH_EVENT" (HB, LB, HS100, HS200) or "BEARISH_EVENT" (HS, LS, HB100, HB200)
+// ─────────────────────────────────────────────────────────────────────────────
+f_find_nearest_event(int sh_hb, int sh_hs, int sh_lb, int sh_ls, 
+                     int sh_hb100, int sh_hb200, int sh_hs100, int sh_hs200) =>
+    string nearest_name = "NONE"
+    int    nearest_shift = 9999
+    string nearest_type = "NEUTRAL"
+    
+    // Check each scenario and find minimum shift
+    if not na(sh_hb) and sh_hb < nearest_shift
+        nearest_shift := sh_hb
+        nearest_name := "HB"
+        nearest_type := "BULLISH_EVENT"
+    
+    if not na(sh_hs) and sh_hs < nearest_shift
+        nearest_shift := sh_hs
+        nearest_name := "HS"
+        nearest_type := "BEARISH_EVENT"
+    
+    if not na(sh_lb) and sh_lb < nearest_shift
+        nearest_shift := sh_lb
+        nearest_name := "LB"
+        nearest_type := "BULLISH_EVENT"  // Low buyers = potential bounce
+    
+    if not na(sh_ls) and sh_ls < nearest_shift
+        nearest_shift := sh_ls
+        nearest_name := "LS"
+        nearest_type := "BEARISH_EVENT"  // Low sellers = potential drop
+    
+    if not na(sh_hb100) and sh_hb100 < nearest_shift
+        nearest_shift := sh_hb100
+        nearest_name := "HB🔋"
+        nearest_type := "BEARISH_EVENT"  // Buyers depleted
+    
+    if not na(sh_hb200) and sh_hb200 < nearest_shift
+        nearest_shift := sh_hb200
+        nearest_name := "HB🚨"
+        nearest_type := "BEARISH_EVENT"  // Buyers overtaken
+    
+    if not na(sh_hs100) and sh_hs100 < nearest_shift
+        nearest_shift := sh_hs100
+        nearest_name := "HS🪫"
+        nearest_type := "BULLISH_EVENT"  // Sellers depleted
+    
+    if not na(sh_hs200) and sh_hs200 < nearest_shift
+        nearest_shift := sh_hs200
+        nearest_name := "HS⚠️"
+        nearest_type := "BULLISH_EVENT"  // Sellers overtaken
+    
+    [nearest_name, nearest_shift, nearest_type]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST-EVENT MOMENTUM ANALYZER
+// Analyzes candles AFTER an event to determine bullish/bearish momentum
+// Returns: [bullish_count, bearish_count, momentum_bias, momentum_strength]
+// ─────────────────────────────────────────────────────────────────────────────
+f_analyze_post_event_momentum(int event_shift) =>
+    int bullish_count = 0
+    int bearish_count = 0
+    string momentum_bias = "NEUTRAL"
+    float momentum_strength = 0.0
+    
+    if event_shift > 0 and event_shift < array.size(buf_close)
+        // Analyze candles from event_shift-1 down to 0 (most recent)
+        int analyze_len = math.min(event_shift, 5)  // Max 5 candles
+        
+        for k = 0 to analyze_len - 1
+            if k < array.size(buf_close) and k < array.size(buf_high) and k < array.size(buf_low)
+                float cl_k = array.get(buf_close, k)
+                float hi_k = array.get(buf_high, k)
+                float lo_k = array.get(buf_low, k)
+                
+                // Simple bullish/bearish determination
+                // Open approximation: use previous close or midpoint
+                float op_k = k + 1 < array.size(buf_close) ? array.get(buf_close, k + 1) : (hi_k + lo_k) / 2
+                
+                if cl_k > op_k
+                    bullish_count += 1
+                else if cl_k < op_k
+                    bearish_count += 1
+        
+        int total = bullish_count + bearish_count
+        if total > 0
+            momentum_strength := math.abs(bullish_count - bearish_count) / total * 100
+            
+            if bullish_count > bearish_count
+                momentum_bias := "BULLISH"
+            else if bearish_count > bullish_count
+                momentum_bias := "BEARISH"
+            else
+                momentum_bias := "MIXED"
+    
+    [bullish_count, bearish_count, momentum_bias, momentum_strength]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SMART SIGNAL EVALUATOR (Enhanced with Nearest Event + Post-Momentum)
+// Combines all factors for final signal
+// ─────────────────────────────────────────────────────────────────────────────
+f_smart_evaluate_signal(string trend, string zone, float remaining_pct, float decay_angle,
+                        bool price_above_hb, bool price_above_hs, float cum_delta,
+                        string nearest_name, int nearest_shift, string nearest_type,
+                        string post_momentum, int post_bullish, int post_bearish,
+                        float long_min, float short_max, float opp_threshold, float max_angle) =>
+    string signal = "NO_TRADE"
+    string reason = ""
+    
+    bool is_opp_dom = remaining_pct < opp_threshold
+    bool power_strong = remaining_pct >= long_min
+    bool power_weak = remaining_pct <= short_max
+    bool delta_positive = cum_delta > 0
+    bool delta_negative = cum_delta < 0
+    
+    // Post-momentum factors
+    bool post_bullish_momentum = post_momentum == "BULLISH"
+    bool post_bearish_momentum = post_momentum == "BEARISH"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // NEAREST EVENT OVERRIDE (Most Important Factor)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // If nearest event is very recent (0-2 bars) and has clear post-momentum
+    bool recent_event = nearest_shift <= 2
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CASE 1: Recent Bearish Event + Post-Bullish Momentum = CONFLICT
+    // ═══════════════════════════════════════════════════════════════
+    if recent_event and nearest_type == "BEARISH_EVENT" and post_bullish_momentum
+        if post_bullish >= 3
+            signal := "LONG"
+            reason := nearest_name + " occurred but " + str.tostring(post_bullish) + " bullish candles after — reversal likely"
+        else
+            signal := "NO_TRADE"
+            reason := nearest_name + " recent + post-bullish — conflicting, wait"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CASE 2: Recent Bearish Event + Post-Bearish Momentum = SHORT
+    // ═══════════════════════════════════════════════════════════════
+    else if recent_event and nearest_type == "BEARISH_EVENT" and post_bearish_momentum
+        signal := "SHORT"
+        reason := nearest_name + " + " + str.tostring(post_bearish) + " bearish candles — sellers in control"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CASE 3: Recent Bullish Event + Post-Bullish Momentum = LONG
+    // ═══════════════════════════════════════════════════════════════
+    else if recent_event and nearest_type == "BULLISH_EVENT" and post_bullish_momentum
+        signal := "LONG"
+        reason := nearest_name + " + " + str.tostring(post_bullish) + " bullish candles — buyers in control"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CASE 4: Recent Bullish Event + Post-Bearish Momentum = CONFLICT
+    // ═══════════════════════════════════════════════════════════════
+    else if recent_event and nearest_type == "BULLISH_EVENT" and post_bearish_momentum
+        if post_bearish >= 3
+            signal := "SHORT"
+            reason := nearest_name + " occurred but " + str.tostring(post_bearish) + " bearish candles after — trap likely"
+        else
+            signal := "NO_TRADE"
+            reason := nearest_name + " recent + post-bearish — conflicting, wait"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CASE 5: No recent event OR mixed momentum — Use standard logic
+    // ═══════════════════════════════════════════════════════════════
+    else
+        // Standard trend-based logic with delta
+        if trend == "UPTREND"
+            if delta_positive and (power_strong or post_bullish_momentum)
+                signal := "LONG"
+                reason := "Uptrend + Δ positive + " + (post_bullish_momentum ? "bullish momentum" : "power strong")
+            else if is_opp_dom and delta_negative and post_bearish_momentum
+                signal := "SHORT"
+                reason := "Uptrend but OppDom + Δ negative + bearish momentum"
+            else if delta_positive
+                signal := "LONG"
+                reason := "Uptrend + Δ positive — buyers accumulating"
+            else
+                signal := "NO_TRADE"
+                reason := "Uptrend but mixed signals — wait for confirmation"
+        
+        else if trend == "DOWNTREND"
+            if delta_negative and (is_opp_dom or post_bearish_momentum)
+                signal := "SHORT"
+                reason := "Downtrend + Δ negative + " + (post_bearish_momentum ? "bearish momentum" : "OppDom")
+            else if delta_positive and power_strong and post_bullish_momentum
+                signal := "LONG"
+                reason := "Downtrend but Δ positive + power strong + bullish momentum — reversal"
+            else if delta_negative
+                signal := "SHORT"
+                reason := "Downtrend + Δ negative — sellers in control"
+            else
+                signal := "NO_TRADE"
+                reason := "Downtrend but mixed signals — wait"
+        
+        else  // RANGING
+            if delta_positive and post_bullish_momentum
+                signal := "LONG"
+                reason := "Ranging but Δ positive + bullish momentum"
+            else if delta_negative and post_bearish_momentum
+                signal := "SHORT"
+                reason := "Ranging but Δ negative + bearish momentum"
+            else
+                signal := "NO_TRADE"
+                reason := "Market ranging — wait for breakout"
+    
+    // ═══════════════════════════════════════════════════════════════
+    // FINAL FILTER: Price vs Lines
+    // ═══════════════════════════════════════════════════════════════
+    if signal == "LONG" and not price_above_hb and not price_above_hs
+        signal := "NO_TRADE"
+        reason := "LONG signal but price below both lines — risky"
+    
+    if signal == "SHORT" and price_above_hb and price_above_hs
+        signal := "NO_TRADE"
+        reason := "SHORT signal but price above both lines — wait for breakdown"
+    
+    [signal, reason]
+
+
+// ──────────────── PLUG & PLAY HELPERS (Signals Table) ────────────────
+f_max_int(int a, int b) =>
+    na(a) ? b : na(b) ? a : math.max(a, b)
+
+f_min_int(int a, int b) =>
+    na(a) ? b : na(b) ? a : math.min(a, b)
+
+f_tbl_row_clear(tbl, int r) =>
+    table.merge_cells(tbl, 0, r, 5, r)
+    table.cell(tbl, 0, r, "", bgcolor=C_BG)
+
+f_get_close_at_shift(int sh) =>
+    (sh >= 0 and sh < array.size(buf_close)) ? array.get(buf_close, sh) : na
+
+f_get_buy_at_shift(int sh) =>
+    (sh >= 0 and sh < array.size(buf_buy)) ? array.get(buf_buy, sh) : na
+
+f_get_sell_at_shift(int sh) =>
+    (sh >= 0 and sh < array.size(buf_sell)) ? array.get(buf_sell, sh) : na
+
+f_angle_to_now_deg(float statusClose, int sh, float atr) =>
+    if na(statusClose) or na(atr) or atr == 0
+        na
+    else if sh <= 0
+        0.0
+    else
+        float slope = (close - statusClose) / sh
+        math.atan(slope / atr) * 180 / math.pi
+
+f_tbl_sys_row(tbl, int r, string msg, color txtColor) =>
+    tSz = f_get_size(panel_size)
+    table.merge_cells(tbl, 0, r, 5, r)
+    table.cell(tbl, 0, r, msg, text_color=txtColor, bgcolor=C_BG, text_size=tSz, text_halign=text.align_left)
+
+
+// ──────────────── CLOCK (Local time via time_offset) ────────────────
+f_pad2(int x) =>
+    x < 10 ? "0" + str.tostring(x) : str.tostring(x)
+
+// Use live clock on realtime bars, otherwise bar time on history
+int  _base_ts   = barstate.isrealtime ? timenow : time
+int  _offset_ms = int(time_offset * 3600000.0)
+int  _local_ts  = _base_ts + _offset_ms
+
+string local_clock = f_pad2(hour(_local_ts, "UTC")) + ":" + f_pad2(minute(_local_ts, "UTC"))
+// ────────────────────────────────────────────────────────────────────
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RANKING HELPERS (Top N / Low N)
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// BULLETPROOF RANK INSERT (DESC / ASC) — Pine v6 (NO 'return')
+// Fixed-size arrays, safe indexing, handles na, syncs vals/shs sizes.
+// Tie-break: if v equal, smaller sh (newer) ranks higher.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Keep shs aligned with vals size
+f__sync_sizes(float[] vals, int[] shs) =>
+    int n = array.size(vals)
+    while array.size(shs) < n
+        array.push(shs, 0)
+    while array.size(shs) > n
+        array.pop(shs)
+
+
+// Insert into DESC ranking (Top N): bigger is better
+f_insert_desc(float v, int sh, float[] vals, int[] shs) =>
+    int n = array.size(vals)
+
+    // Only run when inputs are valid (NO return in Pine)
+    if n > 0 and not na(v) and sh >= 0
+        f__sync_sizes(vals, shs)
+
+        int pos = na
+        for j = 0 to n - 1
+            float cur   = array.get(vals, j)
+            int   curSh = array.get(shs,  j)
+
+            bool better = na(cur) or (v > cur) or (v == cur and sh < curSh)
+            if better
+                pos := j
+                break
+
+        if not na(pos)
+            array.insert(vals, pos, v)
+            array.insert(shs,  pos, sh)
+
+            // Trim back to fixed size n
+            while array.size(vals) > n
+                array.pop(vals)
+            while array.size(shs) > n
+                array.pop(shs)
+
+
+// Insert into ASC ranking (Low N): smaller is better
+f_insert_asc(float v, int sh, float[] vals, int[] shs) =>
+    int n = array.size(vals)
+
+    // Only run when inputs are valid (NO return in Pine)
+    if n > 0 and not na(v) and sh >= 0
+        f__sync_sizes(vals, shs)
+
+        int pos = na
+        for j = 0 to n - 1
+            float cur   = array.get(vals, j)
+            int   curSh = array.get(shs,  j)
+
+            bool better = na(cur) or (v < cur) or (v == cur and sh < curSh)
+            if better
+                pos := j
+                break
+
+        if not na(pos)
+            array.insert(vals, pos, v)
+            array.insert(shs,  pos, sh)
+
+            // Trim back to fixed size n
+            while array.size(vals) > n
+                array.pop(vals)
+            while array.size(shs) > n
+                array.pop(shs)
+
+
+// Two-line rank text: "#n" + "\n" + code
+f_rank_text(int n, string code) =>
+    "#" + str.tostring(n) + "\n" + code
+
+var label[] rank_labels = array.new_label()
+
+f_clear_rank_labels() =>
+    while array.size(rank_labels) > 0
+        label.delete(array.pop(rank_labels))
+
+f_draw_rank_label(int evBar, float y, string txt, color c, bool above, string tip) =>
+    label_style = above ? label.style_label_down : label.style_label_up
+    label lb = label.new(evBar, y, txt,
+        xloc=xloc.bar_index, yloc=yloc.price,
+        style=label_style, size=f_get_size(rank_label_size),
+        textcolor=color.white, color=color.new(c,80),
+        tooltip=tip)
+    array.push(rank_labels, lb)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRACKER LOGIC (Attrition model: Start Power -> Opposing Consumption -> Net Lead)
+// ─────────────────────────────────────────────────────────────────────────────
+type PathTracker
+    int    eventBar
+    float  X_Val
+    float  eventPrice
+    bool   isBuy
+    bool   isTop
+
+    int    age
+    float  Y_Val
+    float  Z_Val
+
+    float  progress
+    float  avgRate
+    float  angle_deg
+    float  eta_bars
+
+    float  prev_Y
+    float  prev_angle
+    
+    // Cumulative metrics (from event to now)
+    float  cum_buy      // Total buy volume since event
+    float  cum_sell     // Total sell volume since event
+    float  cum_delta    // cum_buy - cum_sell
+
+var PathTracker tr_top_buy  = PathTracker.new(na, na, na, true,  true,  0, 0, 0, 0, 0, 0, na, 0, na, 0, 0, 0)
+var PathTracker tr_top_sell = PathTracker.new(na, na, na, false, true,  0, 0, 0, 0, 0, 0, na, 0, na, 0, 0, 0)
+var PathTracker tr_bot_buy  = PathTracker.new(na, na, na, true,  false, 0, 0, 0, 0, 0, 0, na, 0, na, 0, 0, 0)
+var PathTracker tr_bot_sell = PathTracker.new(na, na, na, false, false, 0, 0, 0, 0, 0, 0, na, 0, na, 0, 0, 0)
+
+// ★★★ STRICT MODE: Tracker update ONLY if window_data_ok ★★★
+// NO fallback to Geometry when Intrabar mode is selected
+f_update_tracker(PathTracker tr, bool dataOk, bool isIntrabarMode) =>
+    // If Intrabar mode and data invalid → skip entirely (no fallback)
+    if isIntrabarMode and not dataOk
+        // Leave tracker unchanged, do not compute
+        na
+    else if not na(tr.eventBar)
+        tr.age := bar_index - tr.eventBar
+        int sh = tr.age
+        float y = 0.0
+        float cb = 0.0  // Cumulative Buy
+        float cs = 0.0  // Cumulative Sell
+        int avail = array.size(buf_buy)
+
+        if sh > 0 and avail > 0
+            int maxk = math.min(sh - 1, avail - 1)
+            for k = 0 to maxk
+                float vb_k = na
+                float vs_k = na
+
+                // ★★★ STRICT: In Intrabar mode, ONLY use valid intrabar data ★★★
+                // (If we reach here, dataOk=true, so all bars are valid)
+                if isIntrabarMode
+                    vb_k := array.get(buf_buy,  k)
+                    vs_k := array.get(buf_sell, k)
+                else
+                    // Geometry mode: use geometry values (always available)
+                    float hi_k  = array.get(buf_high,  k)
+                    float lo_k  = array.get(buf_low,   k)
+                    float cl_k  = array.get(buf_close, k)
+                    float vol_k = array.get(buf_vol,   k)
+                    float r = hi_k - lo_k
+                    vb_k := r == 0 ? vol_k * 0.5 : vol_k * ((cl_k - lo_k) / r)
+                    vs_k := r == 0 ? vol_k * 0.5 : vol_k * ((hi_k - cl_k) / r)
+
+                y += tr.isBuy ? vs_k : vb_k
+                
+                // Accumulate total buy/sell volumes
+                cb += nz(vb_k)
+                cs += nz(vs_k)
+
+            tr.prev_Y     := tr.Y_Val
+            tr.prev_angle := tr.angle_deg
+
+            tr.Y_Val := y
+            tr.Z_Val := tr.X_Val - tr.Y_Val
+            
+            // Store cumulative metrics
+            tr.cum_buy   := cb
+            tr.cum_sell  := cs
+            tr.cum_delta := cb - cs
+
+            tr.progress := tr.X_Val > 0 ? (tr.Y_Val / tr.X_Val) * 100 : 0.0
+            tr.avgRate  := tr.age > 0 ? tr.progress / tr.age : 0.0
+
+            float remaining_pct = 100 - tr.progress
+            tr.eta_bars := (tr.avgRate > 0 and remaining_pct > 0) ? (remaining_pct / tr.avgRate) : 0.0
+
+            float slope = tr.age > 0 ? tr.progress / tr.age : 0.0
+            tr.angle_deg := math.atan(slope / 5) * 180 / math.pi * -1
+
+// Reset tracker on a new detected event (rank #1)
+f_reset_tracker(PathTracker tr, int newBar, float newX, float newPrice, bool isBuy, bool isTop) =>
+    tr.eventBar   := newBar
+    tr.X_Val      := newX
+    tr.eventPrice := newPrice
+    tr.isBuy      := isBuy
+    tr.isTop      := isTop
+    tr.age        := bar_index - newBar
+    tr.Y_Val      := 0.0
+    tr.Z_Val      := newX
+    tr.progress   := 0.0
+    tr.avgRate    := 0.0
+    tr.angle_deg  := 0.0
+    tr.eta_bars   := na
+    tr.prev_Y     := 0.0
+    tr.cum_buy    := 0.0
+    tr.cum_sell   := 0.0
+    tr.cum_delta  := 0.0
+
+// ★★★ Clear tracker to empty state (for invalid data) ★★★
+f_clear_tracker(PathTracker tr) =>
+    tr.eventBar   := na
+    tr.X_Val      := na
+    tr.eventPrice := na
+    tr.age        := 0
+    tr.Y_Val      := 0.0
+    tr.Z_Val      := 0.0
+    tr.progress   := 0.0
+    tr.avgRate    := 0.0
+    tr.angle_deg  := 0.0
+    tr.eta_bars   := na
+    tr.prev_Y     := 0.0
+    tr.prev_angle := na
+    tr.cum_buy    := 0.0
+    tr.cum_sell   := 0.0
+    tr.cum_delta  := 0.0
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEARCH + RANK SCAN (Top/Low buyers/sellers)
+// ★★★ STRICT MODE: Skip entirely if Intrabar mode and window_data_ok = false ★★★
+// ─────────────────────────────────────────────────────────────────────────────
+var float[] lines_topB_vals = array.new_float()
+var int[]   lines_topB_shs  = array.new_int()
+var float[] lines_topS_vals = array.new_float()
+var int[]   lines_topS_shs  = array.new_int()
+
+var float[] lines_lowB_vals = array.new_float()
+var int[]   lines_lowB_shs  = array.new_int()
+var float[] lines_lowS_vals = array.new_float()
+var int[]   lines_lowS_shs  = array.new_int()
+
+// System status: track if current candle is #1 HB
+var int last_top_buy_sh = na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIGNAL EVALUATION VARIABLES (Always evaluate, no state machine)
+// ─────────────────────────────────────────────────────────────────────────────
+var string current_signal = "NO_TRADE"
+var string signal_reason  = ""
+
+// UI updates can still run on realtime, but ranking must freeze until bar close
+bool do_update      = barstate.isconfirmed or barstate.islast
+bool do_rank_update = barstate.isconfirmed
+
+// ★★★ STRICT: Only run scan if data is valid (or Geometry mode) ★★★
+bool can_run_scan = (not _is_intrabar_mode) or window_data_ok
+
+if do_rank_update and can_run_scan
+    // Rank arrays (Top/Low) — size = ranks_to_show
+    float[] topB_vals = array.new_float(ranks_to_show, -1.0)
+    int[]   topB_shs  = array.new_int(ranks_to_show, 0)
+
+    float[] topS_vals = array.new_float(ranks_to_show, -1.0)
+    int[]   topS_shs  = array.new_int(ranks_to_show, 0)
+
+    float[] lowB_vals = array.new_float(ranks_to_show, 1e18)
+    int[]   lowB_shs  = array.new_int(ranks_to_show, 0)
+
+    float[] lowS_vals = array.new_float(ranks_to_show, 1e18)
+    int[]   lowS_shs  = array.new_int(ranks_to_show, 0)
+
+    int scanLen = math.min(math.min(universal_len, 149), array.size(buf_buy))
+
+    float vb = na
+    float vs = na
+
+    float hi_i  = na
+    float lo_i  = na
+    float cl_i  = na
+    float vol_i = na
+    float r     = na
+  
+    vb := na
+    vs := na
+
+    for i = 0 to scanLen - 1
+        // ★★★ STRICT: In Intrabar mode, use ONLY intrabar values (no fallback) ★★★
+        if _is_intrabar_mode
+            // window_data_ok is true here (checked above), so all bars are valid
+            vb := array.get(buf_buy,  i)
+            vs := array.get(buf_sell, i)
+        else
+            // Geometry mode: compute from OHLC
+            hi_i  := array.get(buf_high,  i)
+            lo_i  := array.get(buf_low,   i)
+            cl_i  := array.get(buf_close, i)
+            vol_i := array.get(buf_vol,   i)
+            r := hi_i - lo_i
+            vb := r == 0 ? vol_i * 0.5 : vol_i * ((cl_i - lo_i) / r)
+            vs := r == 0 ? vol_i * 0.5 : vol_i * ((hi_i - cl_i) / r)
+
+        if not na(vb)
+            f_insert_desc(vb, i, topB_vals, topB_shs)
+        if not na(vs)
+            f_insert_desc(vs, i, topS_vals, topS_shs)
+
+        if not na(vb) and vb > 0
+            f_insert_asc(vb, i, lowB_vals, lowB_shs)
+        if not na(vs) and vs > 0
+            f_insert_asc(vs, i, lowS_vals, lowS_shs)
+
+
+    array.clear(lines_topB_vals)
+    array.clear(lines_topB_shs)
+    array.clear(lines_topS_vals)
+    array.clear(lines_topS_shs)
+
+    array.clear(lines_lowB_vals)
+    array.clear(lines_lowB_shs)
+    array.clear(lines_lowS_vals)
+    array.clear(lines_lowS_shs)
+    
+    for rk = 0 to ranks_to_show - 1
+        // Highest
+        float vB = array.get(topB_vals, rk)
+        int   sB = array.get(topB_shs, rk)
+        if vB >= 0
+            array.push(lines_topB_vals, vB)
+            array.push(lines_topB_shs, sB)
+        
+        float vS = array.get(topS_vals, rk)
+        int   sS = array.get(topS_shs, rk)
+        if vS >= 0
+            array.push(lines_topS_vals, vS)
+            array.push(lines_topS_shs, sS)
+
+        // Lowest
+        float vLB = array.get(lowB_vals, rk)
+        int   sLB = array.get(lowB_shs, rk)
+        if vLB < 1e18
+            array.push(lines_lowB_vals, vLB)
+            array.push(lines_lowB_shs, sLB)
+
+        float vLS = array.get(lowS_vals, rk)
+        int   sLS = array.get(lowS_shs, rk)
+        if vLS < 1e18
+            array.push(lines_lowS_vals, vLS)
+            array.push(lines_lowS_shs, sLS)
+
+    // Rank #1 drives the trackers (main events)
+    float top_buy_val  = array.get(topB_vals, 0)
+    int   top_buy_sh   = array.get(topB_shs, 0)
+    last_top_buy_sh   := top_buy_sh
+
+    float top_sell_val = array.get(topS_vals, 0)
+    int   top_sell_sh  = array.get(topS_shs, 0)
+
+    float bot_buy_val  = array.get(lowB_vals, 0)
+    int   bot_buy_sh   = array.get(lowB_shs, 0)
+
+    float bot_sell_val = array.get(lowS_vals, 0)
+    int   bot_sell_sh  = array.get(lowS_shs, 0)
+
+    int new_tb = bar_index - top_buy_sh
+    bool buy_pool_empty = (not na(tr_top_buy.eventBar)) and (tr_top_buy.Z_Val == 0)
+    bool hb_event_changed = na(tr_top_buy.eventBar) or tr_top_buy.eventBar != new_tb
+
+    if hb_event_changed or buy_pool_empty
+        f_reset_tracker(tr_top_buy, new_tb, top_buy_val, array.get(buf_high, top_buy_sh), true, true)
+
+
+    int new_ts = bar_index - top_sell_sh
+    bool sell_pool_empty = (not na(tr_top_sell.eventBar)) and (tr_top_sell.Z_Val == 0)
+    bool hs_event_changed = na(tr_top_sell.eventBar) or tr_top_sell.eventBar != new_ts
+
+    if hs_event_changed or sell_pool_empty
+        f_reset_tracker(tr_top_sell, new_ts, top_sell_val, array.get(buf_low, top_sell_sh), false, true)
+
+
+    int new_bb = bar_index - bot_buy_sh
+    if na(tr_bot_buy.eventBar) or tr_bot_buy.eventBar != new_bb
+        f_reset_tracker(tr_bot_buy,  new_bb, bot_buy_val,  array.get(buf_high, bot_buy_sh), true,  false)
+
+    int new_bs = bar_index - bot_sell_sh
+    if na(tr_bot_sell.eventBar) or tr_bot_sell.eventBar != new_bs
+        f_reset_tracker(tr_bot_sell, new_bs, bot_sell_val, array.get(buf_low,  bot_sell_sh), false, false)
+    
+    // Rank labels on event candles
+    // Mapping: HB → HIGH | HS → LOW | LB → HIGH | LS → LOW
+    // If any rank labels are enabled, clear previously drawn rank labels before redrawing
+    if show_rank_labels or show_low_labels
+        f_clear_rank_labels()
+        
+        for rk = 0 to ranks_to_show - 1
+            // HB (Highest Buyers) — anchored to HIGH
+            // For each rank (1..ranks_to_show), fetch the ranked buyer volume and its shift (bars ago).
+            // If the value is valid, compute the event bar index and the corresponding HIGH price,
+            // then draw an HB rank label with a tooltip showing rank number and formatted volume.
+            if show_rank_labels
+                float vHB = array.get(topB_vals, rk)
+                int   sHB = array.get(topB_shs, rk)
+                if vHB >= 0
+                    int   evBar_HB = bar_index - sHB
+                    float price_HB = array.get(buf_high, sHB)
+                    f_draw_rank_label(evBar_HB, price_HB, f_rank_text(rk + 1, "HB"), C_TOP_BUY, true, "rank " + str.tostring(rk + 1) + " of highest buyers\nVolume: " + f_fmt(vHB))
+
+            // HS (Highest Sellers) — anchored to LOW
+            // For each rank (1..ranks_to_show), fetch the ranked seller volume and its shift (bars ago).
+            // If the value is valid, compute the event bar index and the corresponding LOW price,
+            // then draw an HS rank label with a tooltip showing rank number and formatted volume.
+            if show_rank_labels
+                float vHS = array.get(topS_vals, rk)
+                int   sHS = array.get(topS_shs, rk)
+                if vHS >= 0
+                    int   evBar_HS = bar_index - sHS
+                    float price_HS = array.get(buf_low, sHS)
+                    f_draw_rank_label(evBar_HS, price_HS, f_rank_text(rk + 1, "HS"), C_TOP_SELL, false, "rank " + str.tostring(rk + 1) + " of highest sellers\nVolume: " + f_fmt(vHS))
+
+            // LB (Lowest Buyers) — anchored to HIGH
+            // For each rank (1..ranks_to_show), fetch the lowest buyer volume and its shift (bars ago).
+            // If the value is within the initialized sentinel range, compute the event bar index and HIGH price,
+            // then draw an LB rank label with a tooltip showing rank number and formatted volume.
+            if show_low_labels
+                float vLB = array.get(lowB_vals, rk)
+                int   sLB = array.get(lowB_shs, rk)
+                if vLB < 1e18
+                    int   evBar_LB = bar_index - sLB
+                    float price_LB = array.get(buf_high, sLB)
+                    f_draw_rank_label(evBar_LB, price_LB, f_rank_text(rk + 1, "LB"), C_BOT_BUY, true, "rank " + str.tostring(rk + 1) + " of lowest buyers\nVolume: " + f_fmt(vLB))
+
+            // LS (Lowest Sellers) — anchored to LOW
+            // For each rank (1..ranks_to_show), fetch the lowest seller volume and its shift (bars ago).
+            // If the value is within the initialized sentinel range, compute the event bar index and LOW price,
+            // then draw an LS rank label with a tooltip showing rank number and formatted volume.
+            if show_low_labels
+                float vLS = array.get(lowS_vals, rk)
+                int   sLS = array.get(lowS_shs, rk)
+                if vLS < 1e18
+                    int   evBar_LS = bar_index - sLS
+                    float price_LS = array.get(buf_low, sLS)
+                    f_draw_rank_label(evBar_LS, price_LS, f_rank_text(rk + 1, "LS"), C_BOT_SELL, false, "rank " + str.tostring(rk + 1) + " of lowest sellers\nVolume: " + f_fmt(vLS))
+
+// ★★★ STRICT: If Intrabar mode and data invalid → clear all outputs ★★★
+if do_update and _is_intrabar_mode and not window_data_ok
+    // Clear line arrays
+    array.clear(lines_topB_vals)
+    array.clear(lines_topB_shs)
+    array.clear(lines_topS_vals)
+    array.clear(lines_topS_shs)
+
+    array.clear(lines_lowB_vals)
+    array.clear(lines_lowB_shs)
+    array.clear(lines_lowS_vals)
+    array.clear(lines_lowS_shs)
+    
+    // Clear trackers
+    f_clear_tracker(tr_top_buy)
+    f_clear_tracker(tr_top_sell)
+    f_clear_tracker(tr_bot_buy)
+    f_clear_tracker(tr_bot_sell)
+    
+    // Clear labels
+    f_clear_rank_labels()
+
+// Tracker recompute should run on each calculation (realtime-safe via barstate.islast inside function)
+// ★★★ Pass window_data_ok and mode flags to tracker update ★★★
+f_update_tracker(tr_top_buy,  window_data_ok, _is_intrabar_mode)
+f_update_tracker(tr_top_sell, window_data_ok, _is_intrabar_mode)
+f_update_tracker(tr_bot_buy,  window_data_ok, _is_intrabar_mode)
+f_update_tracker(tr_bot_sell, window_data_ok, _is_intrabar_mode)
+
+// Keep HB shift stable across realtime bars by anchoring it to the tracker eventBar
+last_top_buy_sh := not na(tr_top_buy.eventBar) ? (bar_index - tr_top_buy.eventBar) : na
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 🔋 ZERO-DEPLETION MARKER (STABLE)
+// Marks the exact candle where Consumed reaches a threshold for the FIRST time.
+// - SELL tracker (HS-like): marker BELOW the candle
+// - BUY  tracker (HB-like): marker ABOVE the candle
+//
+// 200% stage (Opponent Dominance = 100%):
+// - SELL: ONLY one marker BELOW the candle → ⚠️
+// - BUY : ONLY one marker BELOW the candle → 🚨
+// ─────────────────────────────────────────────────────────────────────────────
+
+float depletion_pct = input.float(100.0, "Depletion Threshold (%)", step=0.1, group="📊 Matrix Display")
+
+f_find_depletion_shift(PathTracker tr, float thresholdPct) =>
+    float need = (not na(tr.X_Val) and tr.X_Val > 0) ? tr.X_Val * (thresholdPct / 100.0) : na
+    int shHit = na
+
+    if not na(tr.eventBar) and not na(need)
+        int age   = bar_index - tr.eventBar
+        int avail = array.size(buf_buy)
+        int maxk  = math.min(age - 1, avail - 1)
+
+        if maxk >= 0
+            float cum = 0.0
+            for k = maxk to 0
+                float vb   = array.get(buf_buy,  k)
+                float vs   = array.get(buf_sell, k)
+                float cons = tr.isBuy ? vs : vb
+                cum += cons
+                if cum >= need and na(shHit)
+                    shHit := k
+
+    shHit
+
+// ─────────────────────────────
+// Highest Sellers (Top Sell)
+// ─────────────────────────────
+var int  ts_event_bar   = na
+var bool ts_marked      = false
+var bool ts_dom_marked  = false
+
+bool ts_event_changed =
+     (na(ts_event_bar) and not na(tr_top_sell.eventBar)) or
+     (not na(ts_event_bar) and na(tr_top_sell.eventBar)) or
+     (not na(ts_event_bar) and not na(tr_top_sell.eventBar) and tr_top_sell.eventBar != ts_event_bar)
+
+if ts_event_changed
+    ts_event_bar  := tr_top_sell.eventBar
+    ts_marked     := false
+    ts_dom_marked := false
+
+// 100% threshold marker (Sell) → 🪫 below candle
+if not ts_marked
+    int sh = f_find_depletion_shift(tr_top_sell, depletion_pct)
+    if not na(sh) and sh < array.size(buf_low)
+        int   hitBar = bar_index - sh
+        float y      = array.get(buf_low, sh)
+        label.new(hitBar, y, "🪫",
+            xloc=xloc.bar_index, yloc=yloc.price,
+            style=label.style_label_up,
+            size=f_get_size(rank_label_size),
+            textcolor=color.white,
+            color=color.new(C_TOP_SELL, 90),
+            tooltip="Highest Sellers: Consumed ≥ " + str.tostring(depletion_pct, "#.##") + "%"
+        )
+        ts_marked := true
+
+// 200% stage marker (Sell) → ⚠️ below candle ONLY
+if not ts_dom_marked
+    int sh2 = f_find_depletion_shift(tr_top_sell, depletion_pct + 100.0)
+    if not na(sh2) and sh2 < array.size(buf_low)
+        int   hitBar2 = bar_index - sh2
+        float y2      = array.get(buf_low, sh2)
+        label.new(hitBar2, y2, "⚠️",
+            xloc=xloc.bar_index, yloc=yloc.price,
+            style=label.style_label_up,
+            size=f_get_size(rank_label_size),
+            textcolor=color.white,
+            color=color.new(C_TOP_SELL, 90),
+            tooltip="Highest Sellers: Opponent Dominance ≥ 100% (Consumed ≥ " + str.tostring(depletion_pct + 100.0, "#.##") + "%)"
+        )
+        ts_dom_marked := true
+
+
+// ─────────────────────────────
+// Highest Buyers (Top Buy)
+// ─────────────────────────────
+var int  tb_event_bar   = na
+var bool tb_marked      = false
+var bool tb_dom_marked  = false
+
+bool tb_event_changed =
+     (na(tb_event_bar) and not na(tr_top_buy.eventBar)) or
+     (not na(tb_event_bar) and na(tr_top_buy.eventBar)) or
+     (not na(tb_event_bar) and not na(tr_top_buy.eventBar) and tr_top_buy.eventBar != tb_event_bar)
+
+if tb_event_changed
+    tb_event_bar  := tr_top_buy.eventBar
+    tb_marked     := false
+    tb_dom_marked := false
+
+// 100% threshold marker (Buy) → 🔋 above candle
+if not tb_marked
+    int sh = f_find_depletion_shift(tr_top_buy, depletion_pct)
+    if not na(sh) and sh < array.size(buf_high)
+        int   hitBar = bar_index - sh
+        float y      = array.get(buf_high, sh)
+        label.new(hitBar, y, "🔋",
+            xloc=xloc.bar_index, yloc=yloc.price,
+            style=label.style_label_down,
+            size=f_get_size(rank_label_size),
+            textcolor=color.white,
+            color=color.new(C_TOP_BUY, 90),
+            tooltip="Highest Buyers: Consumed ≥ " + str.tostring(depletion_pct, "#.##") + "%"
+        )
+        tb_marked := true
+
+// 200% stage marker (Buy) → 🚨 below candle ONLY
+if not tb_dom_marked
+    int sh2 = f_find_depletion_shift(tr_top_buy, depletion_pct + 100.0)
+    if not na(sh2) and sh2 < array.size(buf_low)
+        int   hitBar2 = bar_index - sh2
+        float y2      = array.get(buf_low, sh2)
+        label.new(hitBar2, y2, "🚨",
+            xloc=xloc.bar_index, yloc=yloc.price,
+            style=label.style_label_up,
+            size=f_get_size(rank_label_size),
+            textcolor=color.white,
+            color=color.new(C_TOP_BUY, 90),
+            tooltip="Highest Buyers: Opponent Dominance ≥ 100% (Consumed ≥ " + str.tostring(depletion_pct + 100.0, "#.##") + "%)"
+        )
+        tb_dom_marked := true
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TREND CHANNEL VARIABLES (must be declared before use in UNIFIED MATRIX)
+// ─────────────────────────────────────────────────────────────────────────────
+var line     trend_hi_line = na
+var line     trend_lo_line = na
+var linefill trend_fill_id = na
+
+// Persistent trend data for status display
+var float trend_slope_hi = na
+var float trend_slope_lo = na
+var float trend_intercept_hi = na
+var float trend_intercept_lo = na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UNIFIED MATRIX (Descriptive dashboard labels, two-line cells)
+// ★★★ STRICT MODE: Show warning row if data invalid ★★★
+// ─────────────────────────────────────────────────────────────────────────────
+var table m_tbl = na
+var int   m_tbl_rows = na
+
+// Persistent review marker (set when HB event is Rank #1)
+var int   hb_review_bar   = na
+var float hb_review_close = na
+
+f_draw_matrix_row(tbl, r, tr, name, colorC) =>
+    tSz = f_get_size(panel_size)
+
+    float consumedPct  = tr.X_Val > 0 ? (tr.Y_Val / tr.X_Val) * 100 : na
+    float remainingPct = tr.X_Val > 0 ? (tr.Z_Val / tr.X_Val) * 100 : na
+    
+    // In Opponent Dominance (Z<0), fill the bar by "dominance beyond parity":
+    // parity = 100% consumed, dominance 100% = 200% consumed
+    float dominancePct = (tr.X_Val > 0 and tr.Z_Val < 0) ? (consumedPct - 100) : na
+    float hpBase       = tr.Z_Val >= 0 ? remainingPct : dominancePct
+    float hpPct        = math.max(0, math.min(100, na(hpBase) ? 0 : hpBase))
+
+    // Row label
+    string n_str = name + "\n" + "(" + str.tostring(tr.age) + " bars)"
+    table.cell(tbl, 0, r, n_str, text_color=colorC, bgcolor=C_BG_ROW, text_size=tSz, text_halign=text.align_left)
+
+    // Start power + price
+    string start_str = "Start Power\n" + f_fmt(tr.X_Val) + " @ " + f_fmt_price(tr.eventPrice)
+    table.cell(tbl, 1, r, start_str, text_color=C_TXT, bgcolor=C_BG_ROW, text_size=tSz)
+
+    // Consumed by opponent (volume + percent)
+    string cons_str = "Consumed\n" + str.tostring(consumedPct, "#") + "% | " + f_fmt(tr.Y_Val)
+    table.cell(tbl, 2, r, cons_str, text_color=C_ATTACK, bgcolor=C_BG_ROW, text_size=tSz)
+
+    // Remaining power / opponent dominance
+    string warn = (tr.Z_Val < 0 and not na(dominancePct) and dominancePct >= 100) ? " ⚠️" : ""
+    string domTitle = tr.Z_Val >= 0 ? "Remaining Power" : ("Opponent Dominance" + warn)
+    color domColor  = tr.Z_Val >= 0 ? C_DEFENSE : C_ATTACK
+    string rem_str  = domTitle + "\n" + str.tostring(remainingPct, "#") + "% | " + f_fmt(tr.Z_Val) + " " + f_health_bar(hpPct)
+    table.cell(tbl, 3, r, rem_str, text_color=domColor, bgcolor=C_BG_ROW, text_size=tSz)
+
+    // Visual decay direction + angle
+    string ang_str = "Decay Angle\n" + f_angle_arrow(tr.angle_deg) + " " + str.tostring(math.abs(tr.angle_deg), "#") + "°"
+    table.cell(tbl, 4, r, ang_str, text_color=C_TXT_DIM, bgcolor=C_BG_ROW, text_size=tSz)
+
+    // ETA to parity (Z=0)
+    string eta_title = tr.Z_Val < 0 ? "Overtaken" : (tr.Z_Val == 0 ? "Parity" : "To Parity")
+    string eta_val   = tr.Z_Val <= 0 ? "🚨" : "~" + str.tostring(tr.eta_bars, "#") + " bars"
+    string eta_str   = eta_title + "\n" + eta_val
+    table.cell(tbl, 5, r, eta_str, text_color=C_TXT, bgcolor=C_BG_ROW, text_size=tSz)
+
+// ★★★ Draw warning row for invalid data ★★★
+f_draw_warning_row(tbl, r, invalidCount, totalBars) =>
+    tSz = f_get_size(panel_size)
+    string warn_msg = "⚠️ INTRABAR DATA INVALID\n" + str.tostring(invalidCount) + " of " + str.tostring(totalBars) + " bars missing LTF data — outputs halted"
+    table.merge_cells(tbl, 0, r, 5, r)
+    table.cell(tbl, 0, r, warn_msg, text_color=C_WARNING, bgcolor=color.new(#3d2800, 10), text_size=tSz)
+
+if show_matrix and (barstate.islastconfirmedhistory or barstate.islast)
+    tSz = f_get_size(panel_size)
+
+    // Rows: 0 Header, 1 Snapshot, 2 Col/Warn, 3-4 Matrix rows, 5 System Status
+    int needed_rows = 6
+
+    // (Re)create table when row count changes
+    if na(m_tbl) or m_tbl_rows != needed_rows
+        if not na(m_tbl)
+            table.delete(m_tbl)
+        m_tbl := table.new(f_get_pos(panel_pos), 6, needed_rows, bgcolor=C_BG, border_width=1, border_color=C_FRAME)
+        m_tbl_rows := needed_rows
+
+    // Header
+    table.merge_cells(m_tbl, 0, 0, 5, 0)
+    string utc_str = "UTC" + (time_offset >= 0 ? "+" : "") + str.tostring(time_offset)
+    string title = "SMART TRADER MATRIX | " + syminfo.ticker + " | " + ltf_input + " | 🕒 " + local_clock
+
+    table.cell(m_tbl, 0, 0, title, text_color=C_TXT, bgcolor=C_BG_HEADER, text_size=tSz)
+
+    // Market snapshot (descriptive terms)
+    string scan_str = calc_method == "Intrabar (Precise)" ? "Intrabar Valid Bars: " + str.tostring(ltf_cov_bars) : "Lookback Bars: " + str.tostring(universal_len)
+
+    string vol_stat = scan_str + " | V: " + f_fmt(series_total_vol) + " | B: " + f_fmt(series_buy_vol) + " | S: " + f_fmt(series_sell_vol) + " | Δ: " + f_fmt(series_delta)
+
+    table.merge_cells(m_tbl, 0, 1, 5, 1)
+    table.cell(m_tbl, 0, 1, vol_stat,
+         text_color=series_delta > 0 ? C_TOP_BUY : C_TOP_SELL, bgcolor=C_BG, text_size=tSz)
+
+    // ★★★ STRICT MODE: Show warning OR data rows, never both ★★★
+    if _is_intrabar_mode and not window_data_ok
+        // Show warning row instead of column headers and data
+        f_draw_warning_row(m_tbl, 2, window_invalid_count, math.min(universal_len, array.size(buf_valid)))
+        
+        // Clear remaining rows (3..last)
+        for rr = 3 to (m_tbl_rows - 1)
+            f_tbl_row_clear(m_tbl, rr)
+    else
+        // Column headers (no X/Y/Z/Δ wording)
+        table.cell(m_tbl, 0, 2, "EVENT",          text_color=C_TXT_DIM, bgcolor=C_BG_HEADER, text_size=tSz)
+        table.cell(m_tbl, 1, 2, "START",          text_color=C_TXT_DIM, bgcolor=C_BG_HEADER, text_size=tSz)
+        table.cell(m_tbl, 2, 2, "CONSUMED",       text_color=C_ATTACK,  bgcolor=C_BG_HEADER, text_size=tSz)
+        table.cell(m_tbl, 3, 2, "POWER / LEAD",   text_color=C_DEFENSE, bgcolor=C_BG_HEADER, text_size=tSz)
+        table.cell(m_tbl, 4, 2, "DECAY",          text_color=C_TXT_DIM, bgcolor=C_BG_HEADER, text_size=tSz)
+        table.cell(m_tbl, 5, 2, "PARITY ETA",     text_color=C_TXT_DIM, bgcolor=C_BG_HEADER, text_size=tSz)
+
+        // Data rows (descriptive event names)
+        f_draw_matrix_row(m_tbl, 3, tr_top_buy,  "Highest Buyers",  C_TOP_BUY)
+        f_draw_matrix_row(m_tbl, 4, tr_top_sell, "Highest Sellers", C_TOP_SELL)
+    
+    // ────────────────────────────────────────────────────────────────────────
+    // SMART SIGNAL EVALUATION (Enhanced with Nearest Event + Post-Momentum)
+    // ────────────────────────────────────────────────────────────────────────
+    
+    // Get HB data
+    int   sh_hb = last_top_buy_sh
+    float hb_price = (not na(sh_hb) and sh_hb >= 0 and sh_hb < array.size(buf_high)) ? array.get(buf_high, sh_hb) : na
+    int   hb_bar = not na(sh_hb) ? bar_index - sh_hb : na
+    
+    // Get HS data
+    int   sh_hs = not na(tr_top_sell.eventBar) ? (bar_index - tr_top_sell.eventBar) : na
+    float hs_price = tr_top_sell.eventPrice
+    
+    // Get LB/LS data
+    int   sh_lb = not na(tr_bot_buy.eventBar) ? (bar_index - tr_bot_buy.eventBar) : na
+    int   sh_ls = not na(tr_bot_sell.eventBar) ? (bar_index - tr_bot_sell.eventBar) : na
+    
+    // Get depletion shifts
+    int sh_hb100 = f_find_depletion_shift(tr_top_buy, depletion_pct)
+    int sh_hb200 = f_find_depletion_shift(tr_top_buy, depletion_pct + 100.0)
+    int sh_hs100 = f_find_depletion_shift(tr_top_sell, depletion_pct)
+    int sh_hs200 = f_find_depletion_shift(tr_top_sell, depletion_pct + 100.0)
+    
+    // Calculate remaining power %
+    float remaining_pct = (not na(tr_top_buy.X_Val) and tr_top_buy.X_Val > 0) ? 
+                          (tr_top_buy.Z_Val / tr_top_buy.X_Val) * 100 : na
+    
+    // Price vs Event Lines
+    bool price_above_hb = not na(hb_price) ? close > hb_price : true
+    bool price_above_hs = not na(hs_price) ? close > hs_price : true
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    // FIND NEAREST EVENT
+    // ─────────────────────────────────────────────────────────────────────────
+    [nearest_name, nearest_shift, nearest_type] = f_find_nearest_event(
+        sh_hb, sh_hs, sh_lb, sh_ls, sh_hb100, sh_hb200, sh_hs100, sh_hs200)
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    // ANALYZE POST-EVENT MOMENTUM
+    // ─────────────────────────────────────────────────────────────────────────
+    [post_bullish, post_bearish, post_momentum, post_strength] = f_analyze_post_event_momentum(nearest_shift)
+    
+    // Trend Analysis
+    string trend_dir = "RANGING"
+    string trend_emoji = "➡️"
+    string zone = "MIDDLE"
+    string zone_emoji = "↔️"
+    float zone_pct = 50.0
+    
+    if show_trend_channel and not na(trend_slope_hi) and not na(trend_slope_lo)
+        [t_dir, t_emoji] = f_detect_trend(trend_slope_hi, trend_slope_lo, atr14)
+        trend_dir := t_dir
+        trend_emoji := t_emoji
+        
+        // Calculate channel at HB bar
+        float hi_at_hb = not na(hb_bar) and not na(trend_intercept_hi) ? trend_slope_hi * hb_bar + trend_intercept_hi : na
+        float lo_at_hb = not na(hb_bar) and not na(trend_intercept_lo) ? trend_slope_lo * hb_bar + trend_intercept_lo : na
+        
+        if not na(hb_price) and not na(hi_at_hb) and not na(lo_at_hb)
+            [z, z_emoji, z_pct] = f_get_channel_position(hb_price, hi_at_hb, lo_at_hb)
+            zone := z
+            zone_emoji := z_emoji
+            zone_pct := z_pct
+    
+    // Decay angle
+    float decay_angle = not na(tr_top_buy.angle_deg) ? tr_top_buy.angle_deg : 0.0
+    
+    // Get cumulative delta from tracker
+    float cum_delta = nz(tr_top_buy.cum_delta)
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    // SMART EVALUATE SIGNAL
+    // ─────────────────────────────────────────────────────────────────────────
+    string sig = "NO_TRADE"
+    string sig_reason = ""
+    
+    if show_signal_eval and not na(remaining_pct)
+        [s, r] = f_smart_evaluate_signal(trend_dir, zone, remaining_pct, decay_angle,
+                                         price_above_hb, price_above_hs, cum_delta,
+                                         nearest_name, nearest_shift, nearest_type,
+                                         post_momentum, post_bullish, post_bearish,
+                                         long_power_min, short_power_max, opp_dom_threshold, max_decay_angle)
+        sig := s
+        sig_reason := r
+    
+    current_signal := sig
+    signal_reason := sig_reason
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    // BUILD 6-LINE STATUS MESSAGE (Enhanced)
+    // ─────────────────────────────────────────────────────────────────────────
+    string status_msg = ""
+    color  status_clr = C_NEUTRAL
+    
+    // Line 1: Header
+    string line1 = "📊 SMART TRADER SIGNAL EVALUATION"
+    
+    // Line 2: HB Base Info + Power + Delta
+    int bars_ago = not na(sh_hb) ? sh_hb : 0
+    string power_str = not na(remaining_pct) ? str.tostring(remaining_pct, "#") + "%" : "N/A"
+    string delta_emoji = cum_delta > 0 ? "🟢" : cum_delta < 0 ? "🔴" : "⚪"
+    string line2 = "HB: " + str.tostring(bars_ago) + " bars @ " + f_fmt_price(hb_price) + " | Pwr: " + power_str + " | " + delta_emoji + "Δ: " + f_fmt(cum_delta)
+    
+    // Line 3: Trend + Zone + Price Position
+    string price_pos = price_above_hb ? "Above HB" : "Below HB"
+    string line3 = trend_emoji + " " + trend_dir + " | HB at " + zone_emoji + " " + zone + " | " + price_pos
+    
+    // Line 4: Nearest Event + Post-Momentum (NEW!)
+    string post_emoji = post_momentum == "BULLISH" ? "🟢" : post_momentum == "BEARISH" ? "🔴" : "⚪"
+    string post_detail = str.tostring(post_bullish) + "🟢 / " + str.tostring(post_bearish) + "🔴"
+    string line4 = "⭐ NEAREST: " + nearest_name + " (" + str.tostring(nearest_shift) + " bars) → Post: " + post_emoji + post_momentum + " [" + post_detail + "]"
+    
+    // Line 5: Signal
+    string sig_emoji = sig == "LONG" ? "🟢" : sig == "SHORT" ? "🔴" : "⏳"
+    string line5 = sig_emoji + " " + sig + " — " + sig_reason
+    
+    // Line 6: Disclaimer
+    string line6 = "⚠️ Not financial advice. Use additional analysis tools."
+    
+    // Combine
+    status_msg := line1 + "\n" + line2 + "\n" + line3 + "\n" + line4 + "\n" + line5 + "\n" + line6
+    
+    // Set color based on signal
+    status_clr := sig == "LONG" ? C_LONG : sig == "SHORT" ? C_SHORT : C_NEUTRAL
+    
+    table.merge_cells(m_tbl, 0, 5, 5, 5)
+    table.cell(m_tbl, 0, 5, status_msg, text_color=status_clr, bgcolor=C_BG_ROW, text_size=tSz, text_halign=text.align_left)
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVENT LINES (horizontal price marks + optional projection)
+// ★★★ STRICT MODE: Skip if data invalid ★★★
+// ─────────────────────────────────────────────────────────────────────────────
+
+var line[] event_lines = array.new_line()
+
+f_draw_event_line(PathTracker tr, color lineColor) =>
+    if not na(tr.eventBar) and not na(tr.eventPrice)
+        int x1 = tr.eventBar
+        int x2 = bar_index
+        int x3 = bar_index + proj_bars
+        line l1 = line.new(x1, tr.eventPrice, x2, tr.eventPrice,
+            xloc=xloc.bar_index, color=color.new(lineColor, line_transp), width=1)
+        array.push(event_lines, l1)
+        if proj_bars > 0
+            line l2 = line.new(x2, tr.eventPrice, x3, tr.eventPrice,
+                xloc=xloc.bar_index, color=color.new(lineColor, 60), width=1, style=line.style_dashed)
+            array.push(event_lines, l2)
+
+// ★★★ Only draw lines if data is valid (or Geometry mode) ★★★
+if show_lines and do_rank_update and can_run_scan
+    while array.size(event_lines) > 0
+        line.delete(array.pop(event_lines))
+    
+    // Highest Buyers (HB) — HIGH
+    for idx = 0 to array.size(lines_topB_shs) - 1
+        int sh = array.get(lines_topB_shs, idx)
+        if sh >= 0 and sh < array.size(buf_high)
+            float price = array.get(buf_high, sh)
+            int evBar = bar_index - sh
+            if not na(evBar) and not na(price)
+                line l1 = line.new(evBar, price, bar_index, price,
+                    xloc=xloc.bar_index, color=color.new(C_TOP_BUY, line_transp), width=1)
+                array.push(event_lines, l1)
+                if proj_bars > 0
+                    line l2 = line.new(bar_index, price, bar_index + proj_bars, price,
+                        xloc=xloc.bar_index, color=color.new(C_TOP_BUY, 60), width=1, style=line.style_dashed)
+                    array.push(event_lines, l2)
+    
+    // Highest Sellers (HS) — LOW
+    for idx = 0 to array.size(lines_topS_shs) - 1
+        int sh = array.get(lines_topS_shs, idx)
+        if sh >= 0 and sh < array.size(buf_low)
+            float price = array.get(buf_low, sh)
+            int evBar = bar_index - sh
+            if not na(evBar) and not na(price)
+                line l1 = line.new(evBar, price, bar_index, price,
+                    xloc=xloc.bar_index, color=color.new(C_TOP_SELL, line_transp), width=1)
+                array.push(event_lines, l1)
+                if proj_bars > 0
+                    line l2 = line.new(bar_index, price, bar_index + proj_bars, price,
+                        xloc=xloc.bar_index, color=color.new(C_TOP_SELL, 60), width=1, style=line.style_dashed)
+                    array.push(event_lines, l2)
+
+    // Lowest Buyers (LB) — HIGH
+    for idx = 0 to array.size(lines_lowB_shs) - 1
+        int sh = array.get(lines_lowB_shs, idx)
+        if sh >= 0 and sh < array.size(buf_high)
+            float price = array.get(buf_high, sh)
+            int evBar = bar_index - sh
+            if not na(evBar) and not na(price)
+                line l1 = line.new(evBar, price, bar_index, price,
+                    xloc=xloc.bar_index, color=color.new(C_BOT_BUY, line_transp), width=1)
+                array.push(event_lines, l1)
+                if proj_bars > 0
+                    line l2 = line.new(bar_index, price, bar_index + proj_bars, price,
+                        xloc=xloc.bar_index, color=color.new(C_BOT_BUY, 60), width=1, style=line.style_dashed)
+                    array.push(event_lines, l2)
+
+    // Lowest Sellers (LS) — LOW
+    for idx = 0 to array.size(lines_lowS_shs) - 1
+        int sh = array.get(lines_lowS_shs, idx)
+        if sh >= 0 and sh < array.size(buf_low)
+            float price = array.get(buf_low, sh)
+            int evBar = bar_index - sh
+            if not na(evBar) and not na(price)
+                line l1 = line.new(evBar, price, bar_index, price,
+                    xloc=xloc.bar_index, color=color.new(C_BOT_SELL, line_transp), width=1)
+                array.push(event_lines, l1)
+                if proj_bars > 0
+                    line l2 = line.new(bar_index, price, bar_index + proj_bars, price,
+                        xloc=xloc.bar_index, color=color.new(C_BOT_SELL, 60), width=1, style=line.style_dashed)
+                    array.push(event_lines, l2)
+
+// ★★★ Clear lines if data invalid ★★★
+if show_lines and do_update and _is_intrabar_mode and not window_data_ok
+    while array.size(event_lines) > 0
+        line.delete(array.pop(event_lines))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TREND CHANNEL DRAWING (uses universal_len)
+// ─────────────────────────────────────────────────────────────────────────────
+if show_trend_channel and do_update and can_run_scan
+    [s_hi, i_hi, s_lo, i_lo] = f_calc_trend_channel(universal_len)
+    
+    trend_slope_hi := s_hi
+    trend_slope_lo := s_lo
+    trend_intercept_hi := i_hi
+    trend_intercept_lo := i_lo
+    
+    bool can_draw_hi = not na(s_hi) and not na(i_hi)
+    bool can_draw_lo = not na(s_lo) and not na(i_lo)
+    
+    int   x1_tr = bar_index - universal_len + 1
+    int   x2_tr = bar_index
+    float x1f   = x1_tr
+    float x2f   = x2_tr
+    
+    // Upper trend line
+    if can_draw_hi
+        float y1_hi = s_hi * x1f + i_hi
+        float y2_hi = s_hi * x2f + i_hi
+        if na(trend_hi_line)
+            trend_hi_line := line.new(x1_tr, y1_hi, x2_tr, y2_hi,
+                 xloc=xloc.bar_index, extend=extend.none,
+                 color=trend_line_color, width=trend_line_width,
+                 style=f_get_line_style(trend_line_style))
+        else
+            line.set_xy1(trend_hi_line, x1_tr, y1_hi)
+            line.set_xy2(trend_hi_line, x2_tr, y2_hi)
+            line.set_color(trend_hi_line, trend_line_color)
+            line.set_width(trend_hi_line, trend_line_width)
+            line.set_style(trend_hi_line, f_get_line_style(trend_line_style))
+    else
+        if not na(trend_hi_line)
+            line.delete(trend_hi_line)
+        trend_hi_line := na
+    
+    // Lower trend line
+    if can_draw_lo
+        float y1_lo = s_lo * x1f + i_lo
+        float y2_lo = s_lo * x2f + i_lo
+        if na(trend_lo_line)
+            trend_lo_line := line.new(x1_tr, y1_lo, x2_tr, y2_lo,
+                 xloc=xloc.bar_index, extend=extend.none,
+                 color=trend_line_color, width=trend_line_width,
+                 style=f_get_line_style(trend_line_style))
+        else
+            line.set_xy1(trend_lo_line, x1_tr, y1_lo)
+            line.set_xy2(trend_lo_line, x2_tr, y2_lo)
+            line.set_color(trend_lo_line, trend_line_color)
+            line.set_width(trend_lo_line, trend_line_width)
+            line.set_style(trend_lo_line, f_get_line_style(trend_line_style))
+    else
+        if not na(trend_lo_line)
+            line.delete(trend_lo_line)
+        trend_lo_line := na
+    
+    // Fill between lines
+    if not na(trend_hi_line) and not na(trend_lo_line)
+        color fill_col = color.new(trend_fill_color, 90)
+        if na(trend_fill_id)
+            trend_fill_id := linefill.new(trend_hi_line, trend_lo_line, fill_col)
+        else
+            linefill.set_color(trend_fill_id, fill_col)
+    else
+        if not na(trend_fill_id)
+            linefill.delete(trend_fill_id)
+            trend_fill_id := na
+
+// Clear trend lines if disabled or data invalid
+if not show_trend_channel or (_is_intrabar_mode and not window_data_ok)
+    if not na(trend_hi_line)
+        line.delete(trend_hi_line)
+        trend_hi_line := na
+    if not na(trend_lo_line)
+        line.delete(trend_lo_line)
+        trend_lo_line := na
+    if not na(trend_fill_id)
+        linefill.delete(trend_fill_id)
+        trend_fill_id := na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ★★★ SIGNAL EVALUATION (Runs on EVERY bar for Strategy) ★★★
+// This must run independently of Matrix display for backtest/replay to work
+// ─────────────────────────────────────────────────────────────────────────────
+if barstate.isconfirmed
+    // Get HB data
+    int   eval_sh_hb = last_top_buy_sh
+    float eval_hb_price = (not na(eval_sh_hb) and eval_sh_hb >= 0 and eval_sh_hb < array.size(buf_high)) ? array.get(buf_high, eval_sh_hb) : na
+    int   eval_hb_bar = not na(eval_sh_hb) ? bar_index - eval_sh_hb : na
+    
+    // Get HS data
+    int   eval_sh_hs = not na(tr_top_sell.eventBar) ? (bar_index - tr_top_sell.eventBar) : na
+    float eval_hs_price = tr_top_sell.eventPrice
+    
+    // Get LB/LS data
+    int   eval_sh_lb = not na(tr_bot_buy.eventBar) ? (bar_index - tr_bot_buy.eventBar) : na
+    int   eval_sh_ls = not na(tr_bot_sell.eventBar) ? (bar_index - tr_bot_sell.eventBar) : na
+    
+    // Get depletion shifts
+    int eval_sh_hb100 = f_find_depletion_shift(tr_top_buy, depletion_pct)
+    int eval_sh_hb200 = f_find_depletion_shift(tr_top_buy, depletion_pct + 100.0)
+    int eval_sh_hs100 = f_find_depletion_shift(tr_top_sell, depletion_pct)
+    int eval_sh_hs200 = f_find_depletion_shift(tr_top_sell, depletion_pct + 100.0)
+    
+    // Calculate remaining power %
+    float eval_remaining_pct = (not na(tr_top_buy.X_Val) and tr_top_buy.X_Val > 0) ? 
+                               (tr_top_buy.Z_Val / tr_top_buy.X_Val) * 100 : na
+    
+    // Price vs Event Lines
+    bool eval_price_above_hb = not na(eval_hb_price) ? close > eval_hb_price : true
+    bool eval_price_above_hs = not na(eval_hs_price) ? close > eval_hs_price : true
+    
+    // Find Nearest Event
+    [eval_nearest_name, eval_nearest_shift, eval_nearest_type] = f_find_nearest_event(
+        eval_sh_hb, eval_sh_hs, eval_sh_lb, eval_sh_ls, eval_sh_hb100, eval_sh_hb200, eval_sh_hs100, eval_sh_hs200)
+    
+    // Analyze Post-Event Momentum
+    [eval_post_bullish, eval_post_bearish, eval_post_momentum, eval_post_strength] = f_analyze_post_event_momentum(eval_nearest_shift)
+    
+    // Trend Analysis
+    string eval_trend_dir = "RANGING"
+    string eval_zone = "MIDDLE"
+    
+    if show_trend_channel and not na(trend_slope_hi) and not na(trend_slope_lo)
+        [eval_t_dir, eval_t_emoji] = f_detect_trend(trend_slope_hi, trend_slope_lo, atr14)
+        eval_trend_dir := eval_t_dir
+        
+        float eval_hi_at_hb = not na(eval_hb_bar) and not na(trend_intercept_hi) ? trend_slope_hi * eval_hb_bar + trend_intercept_hi : na
+        float eval_lo_at_hb = not na(eval_hb_bar) and not na(trend_intercept_lo) ? trend_slope_lo * eval_hb_bar + trend_intercept_lo : na
+        
+        if not na(eval_hb_price) and not na(eval_hi_at_hb) and not na(eval_lo_at_hb)
+            [eval_z, eval_z_emoji, eval_z_pct] = f_get_channel_position(eval_hb_price, eval_hi_at_hb, eval_lo_at_hb)
+            eval_zone := eval_z
+    
+    // Decay angle
+    float eval_decay_angle = not na(tr_top_buy.angle_deg) ? tr_top_buy.angle_deg : 0.0
+    
+    // Get cumulative delta
+    float eval_cum_delta = nz(tr_top_buy.cum_delta)
+    
+    // Evaluate Signal
+    if not na(eval_remaining_pct)
+        [eval_sig, eval_reason] = f_smart_evaluate_signal(eval_trend_dir, eval_zone, eval_remaining_pct, eval_decay_angle,
+                                                          eval_price_above_hb, eval_price_above_hs, eval_cum_delta,
+                                                          eval_nearest_name, eval_nearest_shift, eval_nearest_type,
+                                                          eval_post_momentum, eval_post_bullish, eval_post_bearish,
+                                                          long_power_min, short_power_max, opp_dom_threshold, max_decay_angle)
+        current_signal := eval_sig
+        signal_reason := eval_reason
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ★★★ STRATEGY EXECUTION BLOCK (PLUG & PLAY) ★★★
+// Based on Smart Trader Signal Evaluation
+// Entry: LONG/SHORT signals | Exit: Opposite signal only
+// SL/TP: Event Line Based (HB/HS lines)
+// Pyramid: Up to max_pyramid entries in same direction
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Get event line prices for SL/TP
+float strat_hb_price = tr_top_buy.eventPrice
+float strat_hs_price = tr_top_sell.eventPrice
+
+// Validate prices exist
+bool valid_lines = not na(strat_hb_price) and not na(strat_hs_price)
+
+// Position tracking
+bool in_long  = strategy.position_size > 0
+bool in_short = strategy.position_size < 0
+bool flat     = strategy.position_size == 0
+
+int  current_entries = strategy.opentrades
+bool can_pyramid     = current_entries < max_pyramid
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENTRY CONDITIONS (Only on confirmed bars to prevent multiple entries per candle)
+// ═══════════════════════════════════════════════════════════════════════════
+bool bar_confirmed = barstate.isconfirmed
+
+// Track last entry bar to prevent multiple entries on same candle
+var int last_long_entry_bar  = na
+var int last_short_entry_bar = na
+
+bool already_entered_long  = (last_long_entry_bar == bar_index)
+bool already_entered_short = (last_short_entry_bar == bar_index)
+
+bool long_entry_condition  = enable_strategy and allow_long and 
+                             current_signal == "LONG" and 
+                             valid_lines and bar_confirmed and
+                             not already_entered_long and
+                             (flat or (in_long and can_pyramid))
+
+bool short_entry_condition = enable_strategy and allow_short and 
+                             current_signal == "SHORT" and 
+                             valid_lines and bar_confirmed and
+                             not already_entered_short and
+                             (flat or (in_short and can_pyramid))
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SL/TP CALCULATION (Event Line Based)
+// ═══════════════════════════════════════════════════════════════════════════
+// Buffer calculations
+float sl_buffer = close * (sl_buffer_pct / 100)
+float tp_buffer = close * (tp_buffer_pct / 100)
+
+// LONG: SL below HS line (support), TP at HB line (resistance)
+float long_sl_price = strat_hs_price - sl_buffer
+float long_tp_price = strat_hb_price - tp_buffer  // Slightly below HB
+
+// SHORT: SL above HB line (resistance), TP at HS line (support)
+float short_sl_price = strat_hb_price + sl_buffer
+float short_tp_price = strat_hs_price + tp_buffer  // Slightly above HS
+
+// Validate SL/TP makes sense
+bool long_sl_valid  = long_sl_price < close
+bool long_tp_valid  = long_tp_price > close
+bool short_sl_valid = short_sl_price > close
+bool short_tp_valid = short_tp_price < close
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXIT CONDITIONS (Only on opposite signal + confirmed bar)
+// ═══════════════════════════════════════════════════════════════════════════
+bool exit_long_condition  = in_long and current_signal == "SHORT" and bar_confirmed
+bool exit_short_condition = in_short and current_signal == "LONG" and bar_confirmed
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STRATEGY EXECUTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+// LONG Entry
+if long_entry_condition and long_sl_valid and long_tp_valid
+    string entry_comment = "LONG #" + str.tostring(current_entries + 1) + " | " + signal_reason
+    strategy.entry("LONG", strategy.long, comment=entry_comment)
+    strategy.exit("LONG Exit", "LONG", stop=long_sl_price, limit=long_tp_price,
+                  comment_profit="TP Hit", comment_loss="SL Hit")
+    last_long_entry_bar := bar_index  // Mark this bar as entered
+
+// SHORT Entry
+if short_entry_condition and short_sl_valid and short_tp_valid
+    string entry_comment = "SHORT #" + str.tostring(current_entries + 1) + " | " + signal_reason
+    strategy.entry("SHORT", strategy.short, comment=entry_comment)
+    strategy.exit("SHORT Exit", "SHORT", stop=short_sl_price, limit=short_tp_price,
+                  comment_profit="TP Hit", comment_loss="SL Hit")
+    last_short_entry_bar := bar_index  // Mark this bar as entered
+
+// Signal-based exits (opposite signal)
+if exit_long_condition
+    strategy.close("LONG", comment="Exit: Signal → SHORT")
+
+if exit_short_condition
+    strategy.close("SHORT", comment="Exit: Signal → LONG")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VISUAL: Entry/Exit markers on chart
+// ═══════════════════════════════════════════════════════════════════════════
+plotshape(long_entry_condition and flat, title="LONG Entry", style=shape.triangleup, 
+          location=location.belowbar, color=C_LONG, size=size.small)
+plotshape(short_entry_condition and flat, title="SHORT Entry", style=shape.triangledown, 
+          location=location.abovebar, color=C_SHORT, size=size.small)
+
+plotshape(long_entry_condition and in_long and can_pyramid, title="LONG Pyramid", 
+          style=shape.triangleup, location=location.belowbar, color=color.new(C_LONG, 50), size=size.tiny)
+plotshape(short_entry_condition and in_short and can_pyramid, title="SHORT Pyramid", 
+          style=shape.triangledown, location=location.abovebar, color=color.new(C_SHORT, 50), size=size.tiny)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEBUG: Show SL/TP levels when in position
+// ═══════════════════════════════════════════════════════════════════════════
+plot(in_long ? long_sl_price : na, title="Long SL", color=color.new(C_SHORT, 70), style=plot.style_linebr, linewidth=1)
+plot(in_long ? long_tp_price : na, title="Long TP", color=color.new(C_LONG, 70), style=plot.style_linebr, linewidth=1)
+plot(in_short ? short_sl_price : na, title="Short SL", color=color.new(C_SHORT, 70), style=plot.style_linebr, linewidth=1)
+plot(in_short ? short_tp_price : na, title="Short TP", color=color.new(C_LONG, 70), style=plot.style_linebr, linewidth=1)
+

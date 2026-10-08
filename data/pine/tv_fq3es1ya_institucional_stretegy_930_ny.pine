@@ -1,0 +1,80 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/fq3Es1YA-Institucional-Stretegy-930-NY/
+// id: PUB;622dd90b34ff447ba5ef3c95a6c51732  kind: strategy  likes: 74
+//@version=5
+strategy("Estrategia 9:30 AM - PRECISIÓN TOTAL", overlay=true, initial_capital=10000, process_orders_on_close=true)
+
+// ==========================================
+// CONFIGURACIÓN DE PARÁMETROS
+// ==========================================
+session_ref = input.session("0930-0935", "Vela Referencia (NY)", group="Horario")
+tp_ratio    = input.float(2.0, "Ratio R/B", group="Riesgo")
+min_sl_fx   = 10.0 
+min_sl_idx  = 1500.0 
+
+// Control de una sola operación
+var int trades_count = 0
+var bool trade_active = false
+if ta.change(time("D", "America/New_York"))
+    trades_count := 0
+    trade_active := false
+
+// ==========================================
+// CAPTURA DE LA VELA INSTITUCIONAL
+// ==========================================
+var float hi_930 = na
+var float lo_930 = na
+
+if ta.change(time("D", "America/New_York"))
+    hi_930 := na
+    lo_930 := na
+
+in_ref = time(timeframe.period, session_ref, "America/New_York")
+if not na(in_ref)
+    hi_930 := na(hi_930) ? high : math.max(hi_930, high)
+    lo_930 := na(lo_930) ? low : math.min(lo_930, low)
+
+// Dibujo de niveles (Líneas Azules)
+plot(hi_930, "Zona Alta", color=color.blue, linewidth=2, style=plot.style_linebr)
+plot(lo_930, "Zona Baja", color=color.blue, linewidth=2, style=plot.style_linebr)
+
+// ==========================================
+// LÓGICA DE RUPTURA POR CUERPO (1 MINUTO)
+// ==========================================
+is_forex = syminfo.type == "forex"
+min_sl = is_forex ? (min_sl_fx * syminfo.mintick * 10) : (min_sl_idx * syminfo.mintick)
+sl_dist = math.max(hi_930 - lo_930, min_sl)
+
+// Condición de entrada: Solo si el cuerpo Cierra (close) fuera del rango
+can_trade = time(timeframe.period, "0936-1550", "America/New_York") and trades_count == 0
+
+long_body_break  = can_trade and close > hi_930
+short_body_break = can_trade and close < lo_930
+
+// --- EJECUCIÓN COMPRA ---
+if long_body_break
+    sl_p = hi_930 - sl_dist
+    tp_p = hi_930 + (sl_dist * tp_ratio)
+    
+    strategy.entry("L", strategy.long, comment="ENTRY")
+    
+    // Cuadro visual pegado EXACTAMENTE a la zona
+    box.new(bar_index, tp_p, bar_index + 40, hi_930, bgcolor=color.new(color.green, 80), border_color=color.green)
+    box.new(bar_index, hi_930, bar_index + 40, sl_p, bgcolor=color.new(color.red, 80), border_color=color.red)
+    
+    strategy.exit("Exit L", "L", stop=sl_p, limit=tp_p)
+    trades_count := 1
+
+// --- EJECUCIÓN VENTA ---
+if short_body_break
+    sl_p = lo_930 + sl_dist
+    tp_p = lo_930 - (sl_dist * tp_ratio)
+    
+    strategy.entry("S", strategy.short, comment="ENTRY")
+    
+    // Cuadro visual pegado EXACTAMENTE a la zona
+    box.new(bar_index, lo_930, bar_index + 40, tp_p, bgcolor=color.new(color.green, 80), border_color=color.green)
+    box.new(bar_index, sl_p, bar_index + 40, lo_930, bgcolor=color.new(color.red, 80), border_color=color.red)
+    
+    strategy.exit("Exit S", "S", stop=sl_p, limit=tp_p)
+    trades_count := 1

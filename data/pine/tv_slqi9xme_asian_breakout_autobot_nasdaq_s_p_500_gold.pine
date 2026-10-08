@@ -1,0 +1,111 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/slqi9xMe-Asian-Breakout-AutoBot-NASDAQ-S-P-500-Gold/
+// id: PUB;ffcf1f5967e94ce1a91aabcf9d1284aa  kind: strategy  likes: 382
+//@version=5
+strategy("Asian Breakout - AutoBot & Visuals", overlay=true, default_qty_type=strategy.fixed, default_qty_value=1)
+
+// ==============================================================================
+// 1. INPUTS
+// ==============================================================================
+asia_sess = input.session("0000-0800", title="Asian Session (UTC)", group="Timings")
+uk_sess   = input.session("0800-1330", title="UK Session (UTC)", group="Timings")
+us_sess   = input.session("1330-2000", title="US Session (UTC)", group="Timings")
+tz = "UTC"
+
+rr_target = input.float(2.0, title="Risk/Reward Target", step=0.5, group="Strategy Rules")
+
+asia_bg = input.color(color.new(color.blue, 85), title="Asia Box", group="Appearance")
+asia_br = input.color(color.new(color.blue, 30), title="Asia Border", group="Appearance")
+uk_bg   = input.color(color.new(color.red, 90), title="UK Box", group="Appearance")
+us_bg   = input.color(color.new(color.green, 90), title="US Box", group="Appearance")
+
+// ==============================================================================
+// 2. SESSION BOX DRAWING FUNCTION
+// ==============================================================================
+in_asia = time(timeframe.period, asia_sess, tz)
+in_uk   = time(timeframe.period, uk_sess, tz)
+in_us   = time(timeframe.period, us_sess, tz)
+
+draw_session_box(in_session, bg_col, border_col) =>
+    var box sess_box = na
+    var float sess_high = na
+    var float sess_low = na
+    
+    is_new = na(in_session[1]) and not na(in_session)
+    is_act = not na(in_session)
+    
+    if is_new
+        sess_high := high
+        sess_low  := low
+        sess_box  := box.new(left=bar_index, top=sess_high, right=bar_index, bottom=sess_low, bgcolor=bg_col, border_color=border_col, border_style=line.style_solid)
+    else if is_act
+        sess_high := math.max(sess_high, high)
+        sess_low  := math.min(sess_low, low)
+        box.set_top(sess_box, sess_high)
+        box.set_bottom(sess_box, sess_low)
+        box.set_right(sess_box, bar_index)
+        
+    [sess_high, sess_low, is_new, is_act]
+
+[a_high, a_low, a_start, a_active] = draw_session_box(in_asia, asia_bg, asia_br)
+[u_high, u_low, u_start, u_active] = draw_session_box(in_uk, uk_bg, color.new(color.red, 100))
+[s_high, s_low, s_start, s_active] = draw_session_box(in_us, us_bg, color.new(color.green, 100))
+
+// ==============================================================================
+// 3. STRATEGY EXECUTION LOGIC & VISUAL SIGNALS
+// ==============================================================================
+trade_window = not na(in_uk) or not na(in_us)
+asia_range_size = a_high - a_low
+
+// Triggers
+long_cond = trade_window and ta.crossover(close, a_high) and strategy.position_size == 0
+short_cond = trade_window and ta.crossunder(close, a_low) and strategy.position_size == 0
+
+// Variables to hold the dynamic lines for our Position Tool visuals
+var line current_entry = na
+var line current_sl = na
+var line current_tp = na
+
+// --- LONG EXECUTION ---
+if long_cond
+    long_tp = a_high + (asia_range_size * rr_target)
+    
+    // 1. Enter the trade
+    strategy.entry("Long", strategy.long)
+    // 2. Set the Stop Loss and Take Profit
+    strategy.exit("Exit Long", "Long", stop=a_low, limit=long_tp)
+    
+    // 3. Draw the Visuals
+    current_entry := line.new(bar_index, close, bar_index, close, color=color.gray, style=line.style_solid, width=2)
+    current_sl    := line.new(bar_index, a_low, bar_index, a_low, color=color.red, style=line.style_dashed, width=2)
+    current_tp    := line.new(bar_index, long_tp, bar_index, long_tp, color=color.green, style=line.style_solid, width=2)
+
+// --- SHORT EXECUTION ---
+if short_cond
+    short_tp = a_low - (asia_range_size * rr_target)
+    
+    // 1. Enter the trade
+    strategy.entry("Short", strategy.short)
+    // 2. Set the Stop Loss and Take Profit
+    strategy.exit("Exit Short", "Short", stop=a_high, limit=short_tp)
+    
+    // 3. Draw the Visuals
+    current_entry := line.new(bar_index, close, bar_index, close, color=color.gray, style=line.style_solid, width=2)
+    current_sl    := line.new(bar_index, a_high, bar_index, a_high, color=color.red, style=line.style_dashed, width=2)
+    current_tp    := line.new(bar_index, short_tp, bar_index, short_tp, color=color.green, style=line.style_solid, width=2)
+
+// --- DYNAMIC LINE EXTENSION ---
+// Keep dragging the SL/TP lines to the right as long as the trade is open
+if strategy.position_size != 0
+    line.set_x2(current_entry, bar_index)
+    line.set_x2(current_sl, bar_index)
+    line.set_x2(current_tp, bar_index)
+
+// Time-based Failsafe: Close everything at the end of the US Session
+us_end = not na(in_us[1]) and na(in_us)
+if us_end
+    strategy.close_all(comment="EOD Close")
+
+// --- BIG VISUAL LABELS ---
+plotshape(long_cond, title="Buy Signal", text="BUY", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.small)
+plotshape(short_cond, title="Sell Signal", text="SELL", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.small)

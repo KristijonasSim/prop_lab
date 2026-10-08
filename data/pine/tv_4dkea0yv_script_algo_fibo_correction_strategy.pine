@@ -1,0 +1,82 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/4DkeA0yv-script-algo-fibo-correction-strategy/
+// id: PUB;a2ee7fad33db4f258af64bedcba131ea  kind: strategy  likes: 171
+//@version=5
+strategy("Script_Algo - Fibo Correction Strategy", overlay=true, margin_long=100, margin_short=100)
+
+// Author: Script_Algo
+// License: MIT
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// === Parameters ===
+atr_length          = input.int(14, "ATR Length")
+atr_multiplier      = input.float(5, "ATR Multiplier")
+fib_level           = input.float(0.618, "Fibonacci Level", step=0.01)
+trend_filter_length = input.int(20, "Trend Filter Length")
+min_body_size       = input.float(0.0005, "Min Body Size")
+
+// === Indicator calculations ===
+atr          = ta.atr(atr_length)
+ema_fast     = ta.ema(close, 9)
+ema_slow     = ta.ema(close, 21)
+trend_filter = ta.sma(close, trend_filter_length)
+
+// === Candle pattern detection ===
+green_candle = close > open
+red_candle   = close < open
+body_size    = math.abs(close - open)
+upper_shadow = high - math.max(open, close)
+lower_shadow = math.min(open, close) - low
+
+// Condition for a valid green candle (no large upper shadow)
+valid_green_candle = green_candle and 
+                     body_size >= min_body_size and 
+                     upper_shadow <= body_size * 0.3
+
+// Condition for a valid red candle (no large lower shadow)
+valid_red_candle = red_candle and 
+                   body_size >= min_body_size and 
+                   lower_shadow <= body_size * 0.3
+
+// === Fibonacci levels calculation ===
+prev_high         = high[1]
+prev_low          = low[1]
+fib_retrace_long  = prev_high - (prev_high - prev_low) * fib_level
+fib_retrace_short = prev_low + (prev_high - prev_low) * fib_level
+
+// === Entry conditions ===
+long_condition = valid_green_candle[1] and 
+                 low <= fib_retrace_long and 
+                 close > fib_retrace_long and
+                 close > trend_filter and 
+                 strategy.position_size == 0
+
+short_condition = valid_red_candle[1] and 
+                  high >= fib_retrace_short and 
+                  close < fib_retrace_short and
+                  close < trend_filter and 
+                  strategy.position_size == 0
+
+// === Stop loss and take profit ===
+stop_loss   = atr * atr_multiplier
+take_profit = atr * atr_multiplier
+
+// === Orders execution ===
+if long_condition
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Long Exit", "Long", stop=close - stop_loss, limit=close + take_profit)
+
+if short_condition
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Short Exit", "Short", stop=close + stop_loss, limit=close - take_profit)
+
+// === Visualization ===
+plot(fib_retrace_long, color=color.green, style=plot.style_circles, linewidth=2)
+plot(fib_retrace_short, color=color.red, style=plot.style_circles, linewidth=2)
+plot(trend_filter, color=color.blue, title="Trend Filter")

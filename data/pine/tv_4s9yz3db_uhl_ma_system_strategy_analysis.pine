@@ -1,0 +1,30 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/4S9Yz3DB-Uhl-MA-System-Strategy-Analysis/
+// id: PUB;f7UaPsIQ895xgZFLMK1kao76S5GiSwoz  kind: strategy  likes: 1120
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © alexgrover
+
+//@version=4
+strategy("Uhl MA System - Strategy Analysis")
+length = input(100),mult = input(1.),src = input(close)
+//----
+out = 0., cma = 0., cts = 0.
+Var = variance(src,length)           ,sma = sma(src,length)
+secma = pow(nz(sma - cma[1]),2)      ,sects = pow(nz(src - cts[1]),2) 
+ka = Var < secma ? 1 - Var/secma : 0 ,kb = Var < sects ? 1 - Var/sects : 0
+cma := ka*sma+(1-ka)*nz(cma[1],src)  ,cts := kb*src+(1-kb)*nz(cts[1],src)
+//----
+if crossover(cts,cma)
+    strategy.entry("Buy", strategy.long)
+if crossunder(cts,cma)
+    strategy.entry("Sell", strategy.short)
+//----
+cap = strategy.initial_capital
+eq = strategy.equity
+rmax = 0.
+rmax := max(eq,nz(rmax[1]))
+//----
+css = eq > cap ? #0cb51a : #e65100
+a = plot(eq,"Equity",#2196f3,2,transp=0)
+b = plot(rmax,"Maximum",css,2,transp=0)
+fill(a,b,css,80)

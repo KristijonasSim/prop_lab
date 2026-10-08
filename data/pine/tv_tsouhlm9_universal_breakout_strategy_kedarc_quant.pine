@@ -1,0 +1,181 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/tSoUhlM9-Universal-Breakout-Strategy-KedArc-Quant/
+// id: PUB;0b5f8a73449048daa1889680c7df20f4  kind: strategy  likes: 1216
+//@version=6
+strategy("Universal Breakout Strategy [KedArc Quant]",
+     overlay=true,
+     default_qty_type=strategy.percent_of_equity,
+     default_qty_value=100,
+     calc_on_every_tick=true)
+
+//@author: [KedArc Quant]
+//@createdOn: [30-Sep-2025]
+
+// ================= Inputs (unchanged) =================
+len    = input.int(20, "Lookback Period", minval=1)
+bbMult = input.float(2.0, "Bollinger Multiplier", minval=0.1, step=0.1)
+mode   = input.string("Prev Day",
+     title="Breakout Mode",
+     options=["Prev Day", "Bollinger", "Volume", "ATR Stop", "Time Filter", "EMA Trend", "RSI Confirm", "Candle Confirm"])
+sess   = input.session("0900-1500", "Session (exchange time)")
+intrabar = input.bool(false, "Evaluate intrabar (simulate tick mode)")
+
+// Table/Stats toggles (non-invasive)
+showTable   = input.bool(true,  "Show Info Table")
+showStats   = input.bool(true,  "Show P&L Stats")
+tableCorner = input.string("Top Right", "Table Corner", options=["Top Right","Top Left","Bottom Right","Bottom Left"])
+
+// ================= Core Levels (unchanged) =================
+// Use previous-bar extremes so breakouts can occur on current bar
+hhPrev = ta.highest(high[1], len)
+llPrev = ta.lowest(low[1],  len)
+
+// Prev Day (yesterday values available from session open)
+prevHigh = request.security(syminfo.tickerid, "D", high[1], lookahead=barmerge.lookahead_on)
+prevLow  = request.security(syminfo.tickerid, "D", low[1],  lookahead=barmerge.lookahead_on)
+
+// Bollinger (basis, upper, lower)
+[basis, bbUpper, bbLower] = ta.bb(close, len, bbMult)
+
+// ================= Filters/Helpers (unchanged) =================
+volSma     = ta.sma(volume, len)
+volConfirm = volume > volSma
+
+atr        = ta.atr(len)
+
+inSession  = not na(time(timeframe.period, sess))
+
+emaFast    = ta.ema(close, 9)
+emaSlow    = ta.ema(close, 21)
+trendUp    = emaFast > emaSlow
+trendDown  = emaFast < emaSlow
+
+rsiVal     = ta.rsi(close, len)
+
+bullishCndl = close > open and close > close[1]
+bearishCndl = close < open and close < close[1]
+candleType  = bullishCndl ? "Bullish" : bearishCndl ? "Bearish" : "Neutral"
+
+// ================= Breakout Logic (UNCHANGED) =================
+// Intrabar toggle affects only how the base breakout is detected; logic stays the same
+longBase  = intrabar ? high > hhPrev  : ta.crossover(close, hhPrev)
+shortBase = intrabar ? low  < llPrev  : ta.crossunder(close, llPrev)
+
+longCond =
+     mode == "Prev Day"       ? ta.crossover(close, prevHigh) :
+     mode == "Bollinger"      ? ta.crossover(close, bbUpper)  :
+     mode == "Volume"         ? longBase  and volConfirm :
+     mode == "ATR Stop"       ? longBase  and (high - close[1] > atr) :
+     mode == "Time Filter"    ? longBase  and inSession :
+     mode == "EMA Trend"      ? longBase  and trendUp :
+     mode == "RSI Confirm"    ? longBase  and (rsiVal > 55) :
+     mode == "Candle Confirm" ? longBase  and bullishCndl :
+     false
+
+shortCond =
+     mode == "Prev Day"       ? ta.crossunder(close, prevLow) :
+     mode == "Bollinger"      ? ta.crossunder(close, bbLower) :
+     mode == "Volume"         ? shortBase and volConfirm :
+     mode == "ATR Stop"       ? shortBase and (close[1] - low > atr) :
+     mode == "Time Filter"    ? shortBase and inSession :
+     mode == "EMA Trend"      ? shortBase and trendDown :
+     mode == "RSI Confirm"    ? shortBase and (rsiVal < 45) :
+     mode == "Candle Confirm" ? shortBase and bearishCndl :
+     false
+
+// ================= Orders (unchanged) =================
+if longCond
+    strategy.entry("Long", strategy.long)
+if shortCond
+    strategy.entry("Short", strategy.short)
+
+// ================= Plots (unchanged) =================
+plot(mode == "Prev Day" ? prevHigh : na, "Prev High", color=color.new(color.green, 0))
+plot(mode == "Prev Day" ? prevLow  : na, "Prev Low",  color=color.new(color.red,   0))
+
+plot(mode != "Bollinger" and mode != "Prev Day" ? hhPrev : na, "HH prev (len)", color=color.new(color.teal, 0))
+plot(mode != "Bollinger" and mode != "Prev Day" ? llPrev : na, "LL prev (len)", color=color.new(color.orange, 0))
+
+plot(mode == "Bollinger" ? bbUpper : na, "BB Upper", color=color.new(color.fuchsia, 0))
+plot(mode == "Bollinger" ? basis   : na, "BB Basis", color=color.new(color.gray, 60))
+plot(mode == "Bollinger" ? bbLower : na, "BB Lower", color=color.new(color.aqua, 0))
+
+plotshape(longCond,  title="Long",  location=location.belowbar, color=color.green, style=shape.triangleup,   size=size.tiny, text="↗︎")
+plotshape(shortCond, title="Short", location=location.abovebar, color=color.red,   style=shape.triangledown, size=size.tiny, text="↘︎")
+
+// ================= Right-Side INFO TABLE (streamlined & const position) =================
+var table infoTbl = na
+if barstate.isfirst
+    if tableCorner == "Top Right"
+        infoTbl := table.new(position.top_right,  columns=2, rows=9, border_width=1)
+    else if tableCorner == "Top Left"
+        infoTbl := table.new(position.top_left,   columns=2, rows=9, border_width=1)
+    else if tableCorner == "Bottom Right"
+        infoTbl := table.new(position.bottom_right, columns=2, rows=9, border_width=1)
+    else
+        infoTbl := table.new(position.bottom_left, columns=2, rows=9, border_width=1)
+
+f_set(row, label, value, txtColor=color.white) =>
+    table.cell(infoTbl, 0, row, label, text_color=color.white, text_halign=text.align_left,  bgcolor=color.black)
+    table.cell(infoTbl, 1, row, value, text_color=txtColor,    text_halign=text.align_right, bgcolor=color.black)
+
+f_clear(row) =>
+    table.cell(infoTbl, 0, row, "", bgcolor=color.black)
+    table.cell(infoTbl, 1, row, "", bgcolor=color.black)
+
+fmtPrice(x) => str.tostring(x, format.mintick)
+fmtVol(x)   => str.tostring(x, format.volume)
+fmt2(x)     => str.tostring(x, "#.##")
+
+// Optional extra stats (safe, non-invasive)
+totalTrades = strategy.closedtrades
+winTrades   = strategy.wintrades
+lossTrades  = strategy.losstrades
+winRate     = totalTrades > 0 ? 100.0 * winTrades / totalTrades : na
+avgTrade    = totalTrades > 0 ? (strategy.netprofit / totalTrades) : na
+
+// Single build block (no logic changes)
+if barstate.islast and showTable
+    // Header + common rows
+    f_set(0, "Universal Breakout", syminfo.ticker)
+    f_set(1, "Mode", mode)
+    f_set(2, "Current Price", fmtPrice(close))
+
+    // Clear mode rows
+    f_clear(3), f_clear(4)
+
+    // Mode-specific rows (values only; logic untouched)
+    if mode == "Prev Day"
+        f_set(3, "Prev High", fmtPrice(prevHigh))
+        f_set(4, "Prev Low",  fmtPrice(prevLow))
+    else if mode == "Bollinger"
+        f_set(3, "Upper BB", fmtPrice(bbUpper))
+        f_set(4, "Lower BB", fmtPrice(bbLower))
+    else if mode == "Volume"
+        f_set(3, "Avg Volume", fmtVol(volSma))
+        f_set(4, "Volume",     fmtVol(volume))
+    else if mode == "ATR Stop"
+        f_set(3, "ATR (" + str.tostring(len) + ")", fmt2(atr))
+    else if mode == "Time Filter"
+        // Only current price requested (already at row 2)
+        na
+    else if mode == "EMA Trend"
+        f_set(3, "EMA Fast (9)",  fmtPrice(emaFast))
+        f_set(4, "EMA Slow (21)", fmtPrice(emaSlow))
+    else if mode == "RSI Confirm"
+        rsiColor = rsiVal > 55 ? color.green : rsiVal < 45 ? color.red : color.white
+        f_set(3, "RSI (" + str.tostring(len) + ")", fmt2(rsiVal), rsiColor)
+    else if mode == "Candle Confirm"
+        cCol = candleType == "Bullish" ? color.green : candleType == "Bearish" ? color.red : color.white
+        f_set(3, "Candle", candleType, cCol)
+
+    // ====== P&L STATS (optional) ======
+    if showStats
+        netCol = strategy.netprofit >= 0 ? color.green : color.red
+        f_set(5, "Net Profit",  str.tostring(strategy.netprofit, "#.##"), netCol)
+        f_set(6, "Trades (W/L)", str.tostring(winTrades) + "/" + str.tostring(lossTrades))
+        f_set(7, "Win Rate %",  na(winRate) ? "—" : str.tostring(winRate, "#.##"))
+        f_set(8, "Avg Trade",   na(avgTrade) ? "—" : str.tostring(avgTrade, "#.##"))
+    else
+        // Clear stats rows when hidden
+        f_clear(5), f_clear(6), f_clear(7), f_clear(8)

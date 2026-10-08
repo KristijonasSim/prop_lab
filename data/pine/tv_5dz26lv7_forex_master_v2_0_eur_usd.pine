@@ -1,0 +1,24 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/5Dz26lv7-Forex-Master-v2-0-EUR-USD/
+// id: PUB;2531  kind: strategy  likes: 260
+//@version=2
+strategy("FX Master v2.0", overlay=true)
+
+price = close
+
+basis = rsi(price, input(20))
+rsiema = ema(basis, input(5))
+
+trigger = input(50)
+
+long_profit = input(500)
+long_loss = input(500)
+
+short_profit = input(500)
+short_loss = input(500)
+
+strategy.entry("enter long", true, when = crossover(rsiema, trigger))
+strategy.exit("exit long", "enter long", profit = long_profit, loss = long_loss)
+
+strategy.entry("enter short", false, when = crossunder(rsiema, trigger))
+strategy.exit("exit short", "enter short", profit = short_profit, loss = short_loss)

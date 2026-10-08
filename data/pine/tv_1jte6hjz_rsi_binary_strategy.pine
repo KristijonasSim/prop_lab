@@ -1,0 +1,26 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/1jTE6hJz-RSI-Binary-Strategy/
+// id: PUB;880P5Bq5KjGqKi4yBSpF1zRIZkpFTjBM  kind: strategy  likes: 1961
+//@version=3
+strategy("RSI Binary Strategy", overlay=false, pyramiding=0)
+length = input(6)
+overSold = input(13)
+overBought = input(82)
+timeframe = input(title="Timeframe", type=integer, minval=1, defval=3)
+price = input(title="Source", type=source, defval=close)
+
+vrsi = rsi(price, length)
+
+// plot rsi and limits
+plot(vrsi, title="RSI", linewidth=2, color=purple)
+hline(overSold, linestyle=dashed, color=gray, editable=false)
+hline(overBought, linestyle=dashed, color=gray, editable=false)
+
+if (not na(vrsi))
+    if (crossunder(vrsi, overSold))
+        strategy.entry("RSI long", strategy.long)
+    if (crossover(vrsi, overBought))
+        strategy.entry("RSI short", strategy.short)
+
+bars = barssince(strategy.opentrades == 0)
+strategy.close_all(when=(bars>=timeframe))

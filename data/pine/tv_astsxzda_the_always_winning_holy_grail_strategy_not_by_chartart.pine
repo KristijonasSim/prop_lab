@@ -1,0 +1,18 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/aStSXzDa-The-Always-Winning-Holy-Grail-Strategy-Not-by-ChartArt/
+// id: PUB;2932  kind: strategy  likes: 2416
+//@version=2
+strategy("The Always Winning Holy Grail Strategy - Not (by ChartArt)", shorttitle="CA_-_Not_The_Holy_Grail_Strat", pyramiding = 0, overlay=true)
+
+// Strategy entry condition:
+if 1+1 == 2   // go long if 1+1 = 2
+    strategy.entry("long", strategy.long, comment="long", qty = 10)
+
+
+// Money management of the strategy:
+TakeProfit = input(100,step=25)
+StopLoss = input(999999999999999,step=999999999999999)
+
+
+// Strategy exit condition: (always take profit and use a super extreme ridiculous wide stop loss)
+strategy.exit("exit", "long", profit = TakeProfit, loss = StopLoss)

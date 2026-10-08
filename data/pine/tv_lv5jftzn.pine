@@ -1,0 +1,77 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/lv5jFTZN/
+// id: PUB;1a734767ff704db4bf757b5f7a914d1c  kind: strategy  likes: 126
+//@version=5
+strategy("XAUUSD Elliott V17 - H4 Filter Edition", overlay=true,
+     initial_capital=10000,
+     default_qty_type=strategy.fixed,
+     default_qty_value=1,
+     commission_type=strategy.commission.cash_per_order,
+     commission_value=0.10,
+     pyramiding=15)
+
+// --- [CONFIGURACIÓN DE PRECISIÓN] ---
+step_dist = input.float(24.0, "Distancia de Recuperación ($)", group="Recovery")
+mult      = input.float(1.6, "Multiplicador Progresivo", group="Recovery", tooltip="Bajado a 1.6 para reducir el Drawdown masivo visto en el backtest")
+tp_global = input.float(200.0, "Objetivo de Ganancia Ciclo ($)", group="Recovery")
+
+// --- [FILTRO H4 - NUEVO] ---
+h4_timeframe = input.timeframe("240", "Temporalidad del Filtro", group="Filtro H4")
+ema_length   = input.int(200, "EMA Periodos H4", group="Filtro H4")
+h4_ema       = request.security(syminfo.tickerid, h4_timeframe, ta.ema(close, ema_length), lookahead=barmerge.lookahead_on)
+
+// Visualización del filtro H4 (opcional)
+plot(h4_ema, color=color.new(color.gray, 50), title="EMA H4 Trend", linewidth=2)
+
+// --- [DRAWDOWN STOP] ---
+dd_pct = input.float(5.0, "Max Open Loss (% of Capital)", minval=0.1, maxval=100.0, step=0.1, group="Drawdown Stop")
+dd_limit = -(strategy.initial_capital * dd_pct / 100)
+
+// --- [FILTROS DE ALTA PROBABILIDAD] ---
+ewo = ta.sma(close, 5) - ta.sma(close, 35)
+[plusDI, minusDI, adxValue] = ta.dmi(14, 14)
+upper = ta.highest(high, 40)[1]
+lower = ta.lowest(low, 40)[1]
+
+// Lógica de entradas con Filtro H4
+trend_up   = close > h4_ema
+trend_down = close < h4_ema
+
+long_sniper  = adxValue > 25 and ta.crossover(close, upper) and ewo > 0 and trend_up
+short_sniper = adxValue > 25 and ta.crossunder(close, lower) and ewo < 0 and trend_down
+
+// --- [GESTIÓN DINÁMICA] ---
+var float last_p = na
+var int cycle_count = 0
+
+// --- [DRAWDOWN CHECK] ---
+if strategy.openprofit <= dd_limit and strategy.position_size != 0
+    strategy.close_all(comment="DD_Stop")
+    cycle_count := 0
+    last_p := na
+
+// --- [LÓGICA DE ENTRADA Y RECUPERACIÓN] ---
+if strategy.position_size == 0
+    cycle_count := 0
+    if long_sniper
+        strategy.entry("L", strategy.long, qty=1)
+        last_p := close
+    else if short_sniper
+        strategy.entry("S", strategy.short, qty=1)
+        last_p := close
+
+// Recuperación para Compras
+if strategy.position_size > 0 and close < last_p - step_dist and adxValue > 20
+    cycle_count := cycle_count + 1
+    strategy.entry("L_Rec" + str.tostring(cycle_count), strategy.long, qty=math.pow(mult, cycle_count))
+    last_p := close
+
+// Recuperación para Ventas
+if strategy.position_size < 0 and close > last_p + step_dist and adxValue > 20
+    cycle_count := cycle_count + 1
+    strategy.entry("S_Rec" + str.tostring(cycle_count), strategy.short, qty=math.pow(mult, cycle_count))
+    last_p := close
+
+// --- [SALIDA POR OBJETIVO DE PROFIT] ---
+if strategy.openprofit >= tp_global
+    strategy.close_all(comment="Sniper_Success")

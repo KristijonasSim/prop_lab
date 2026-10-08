@@ -1,0 +1,105 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/Bgceb4if-FluxVector-Liquidity-Universal-Trendline/
+// id: PUB;182cfdd47d6c4f1d985d883126ad446a  kind: strategy  likes: 123
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © exlux
+//@version=6
+strategy("FluxVector Liquidity Trendline — FFTL", shorttitle="FFTL Trendline", margin_short =0, margin_long=0)//, overlay=true, precision=5, max_labels_count=500)
+
+//============================= CONFIG =============================
+grp_src   = "Inputs"
+grp_len   = "Windows"
+grp_gain  = "Adaptive Gain"
+grp_view  = "View"
+
+src           = input.source(close, "Price source", group=grp_src)
+len_flow      = input.int(34,  "Flow window", 5, 500, group=grp_len, tooltip="Sampling for liquidity pulse & density")
+len_vol       = input.int(55,  "Vol window",  5, 500, group=grp_len, tooltip="Sampling for realized volatility")
+len_energy    = input.int(34,  "Energy z-score window", 10, 500, group=grp_len)
+k_min         = input.float(0.04, "Min gain", 0.0, 1.0, step=0.01, group=grp_gain)
+k_max         = input.float(0.68, "Max gain", 0.0, 1.0, step=0.01, group=grp_gain)
+proj_on       = input.bool(true, "Show 1-bar projection", group=grp_view)
+col_up        = input.color(color.teal,  "Up color",   group=grp_view)
+col_dn        = input.color(color.red,   "Down color", group=grp_view)
+col_flat      = input.color(color.silver,"Flat color", group=grp_view)
+
+eps = 1e-10
+rng = math.max(high - low, eps)
+body = close - open
+wick_imb = ((high - close) - (close - low)) / rng   // upper vs lower wick pressure
+body_imb = body / rng                               // directional body pressure
+
+//---------------- Directional Liquidity Pulse (unique volume calculus)
+vol_norm   = volume / math.max(ta.sma(volume, len_flow), eps)
+liquidity_density = vol_norm / math.max(rng / nz(close, 1.0), eps)  // vol per unit range per price
+dlp_raw = (0.6 * body_imb + 0.4 * (-wick_imb)) * vol_norm           // sign from candles, corrected by wicks
+// Variance-stabilize volume effect
+dlp = dlp_raw / math.sqrt(math.max(vol_norm, eps))
+
+//---------------- Realized Volatility & Curvature (unique vol calc)
+ret = math.log(src / nz(src[1], src))
+rv  = ta.stdev(ret, len_vol)
+curv = nz(rv - 2*rv[1] + rv[2])   // second finite difference = curvature of realized vol
+
+//---------------- Impact Efficiency (move per unit participation)
+impact_eff = math.abs(ta.change(src)) / (rng + eps) * math.sqrt(math.max(vol_norm, eps))
+
+//---------------- Energy score (z-scores without ta.zscore to keep control)
+z(series, n) =>
+    m = ta.sma(series, n)
+    s = ta.stdev(series, n)
+    s > 0 ? (series - m) / s : 0.0
+
+energy = z(dlp, len_energy) + z(liquidity_density, len_energy) - z(curv, len_energy)
+// Bound via logistic; modulate with impact efficiency
+sigmoid(x) => 1.0 / (1.0 + math.exp(-x))
+gain_raw = sigmoid(energy)
+gain = k_min + (k_max - k_min) * math.min(1.0, gain_raw * (0.5 + 0.5 * sigmoid(impact_eff)))
+
+//---------------- Velocity assist (flow-derived)
+flow_vel = ta.ema(dlp, math.max(5, len_flow/3))
+flow_push = flow_vel * (rng)  // convert flow into price units via current range
+
+//---------------- State update (Kalman-like one-dimensional filter)
+var float trend = na
+trend := na(trend[1]) ? src : trend[1] + gain * ((src - trend[1]) + 0.25 * flow_push)
+
+//---------------- Slope & projection
+slope = trend - nz(trend[1], trend)
+proj  = trend + slope
+
+//---------------- Regime ribbon (energy)
+regime = energy
+is_up   = slope > 0 and trend >= nz(trend[1])
+is_down = slope < 0 and trend <= nz(trend[1])
+
+//============================= PLOTS (global scope only) =============================
+col_t = is_up ? col_up : is_down ? col_dn : col_flat
+p_trend = plot(trend, "FFTL Trendline", color=col_t, linewidth=3)
+p_proj  = plot(proj_on ? proj : na, "Projection(1)", color=color.new(col_t, 35), linewidth=2, style=plot.style_linebr)
+p_src   = plot(src, "Price", color=color.new(color.gray, 80))
+
+// Regime background
+r_col = regime >  0.8 ? color.new(col_up, 85) :
+         regime < -0.8 ? color.new(col_dn, 85) :
+         color.new(color.silver, 92)
+// bgcolor(r_col, title="Regime energy background")
+
+//============================= ALERTS =============================
+alertcondition(ta.crossover(src, trend), "Cross Up", "Price crossed above FFTL")
+alertcondition(ta.crossunder(src, trend), "Cross Down", "Price crossed below FFTL")
+alertcondition(ta.crossover(slope, 0), "Slope Up", "FFTL slope turned up")
+alertcondition(ta.crossunder(slope, 0), "Slope Down", "FFTL slope turned down")
+
+//============================= NOTES =============================
+// • No ATR, no VWAP, no standard moving averages used for the line.
+// • All plots stay in global scope as requested. 
+// • Gain strictly respects lookahead-off by using only current/previous data.
+// • Use the ribbon + slope to filter chop; projection is just 1-bar for planning.
+
+if close < trend and proj > trend
+    strategy.entry('long',strategy.long)
+
+if close > trend and proj < trend
+    strategy.close("long")
+    strategy.entry('short',strategy.short)  

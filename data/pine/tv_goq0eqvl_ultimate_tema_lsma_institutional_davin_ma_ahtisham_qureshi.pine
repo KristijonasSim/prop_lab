@@ -1,0 +1,575 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/gOQ0eQvL-ULTIMATE-TEMA-LSMA-INSTITUTIONAL-DAVIN-MA-Ahtisham-Qureshi/
+// id: PUB;f173cae314844be8bfefa96f5f315699  kind: strategy  likes: 103
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © AhtishamQureshi
+//@version=6
+strategy("ULTIMATE TEMA/LSMA + IDEAL + REVERSAL + INSTITUTIONAL + DAVIN MA [DYNAMIC]", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10, max_bars_back=1000, calc_on_every_tick=true, process_orders_on_close=true, pyramiding=0)
+
+// === INPUTS - TEMA/LSMA ===
+temaLength        = input.int(9,     "TEMA Length",              minval=1,      maxval=50)
+lsmaLength        = input.int(25,    "LSMA Length",              minval=1,      maxval=50)
+ema100Length      = input.int(100,   "EMA 100 Length",           minval=50,     maxval=200)
+takeProfitATRMult = input.float(3.0, "TP ATR Mult",              minval=2.0,    maxval=5.0)
+stopLossATRMult   = input.float(1.5, "SL ATR Mult",              minval=1.0,    maxval=3.0)
+trailATRMult      = input.float(1.0, "Trail ATR Mult",           minval=0.5,    maxval=3.0)
+maxBarsInTrade    = input.int(25,    "Max Bars in Trade",        minval=10,     maxval=50)
+volLength         = input.int(20,    "Volume MA Length",         minval=10,     maxval=30)
+minVolMultiplier  = input.float(1.2, "Volume Multiplier",        minval=0.8,    maxval=2.0)
+showPanel         = input.bool(true, "Show Info Panel",          group="Visual Settings")
+lineThickness     = input.int(2,     "Indicator Line Thickness", minval=1,      maxval=4,   group="Visual Settings")
+
+// === TREND FILTERS ===
+useTrendExhaustion     = input.bool(true,  "Use Trend Exhaustion Filter",    group="Trend Filters")
+minTrendBars           = input.int(10,     "Min Trend Bars",                 minval=5,   maxval=30,  group="Trend Filters")
+momentumDivergence     = input.bool(true,  "Use Momentum Divergence",        group="Trend Filters")
+requireTrendAlignment  = input.bool(true,  "Require All Indicators Aligned", group="Trend Filters")
+useTrendStrength       = input.bool(true,  "Use Trend Strength Filter",      group="Trend Filters")
+trendStrengthThreshold = input.float(0.5,  "Trend Strength Threshold",       minval=0.1, maxval=1.0, group="Trend Filters")
+
+// === IDEAL CONDITIONS ===
+useIdealConditions = input.bool(true,   "Use IDEAL Conditions (Priority)", group="Ideal Conditions")
+pivotLookback      = input.int(5,       "Pivot Lookback for Sweeps",       minval=3,      maxval=20,   group="Ideal Conditions")
+minSweepSizeATR    = input.float(0.3,   "Min Sweep Size (ATR %)",          minval=0.1,    maxval=1.0,  group="Ideal Conditions")
+retestTolerance    = input.float(0.001, "Retest Tolerance (%)",            minval=0.0005, maxval=0.01, group="Ideal Conditions")
+maxTestCount       = input.int(3,       "Max Tests Before Failure",        minval=2,      maxval=5,    group="Ideal Conditions")
+atrTestPercent     = input.float(0.2,   "ATR Test %",                      minval=0.1,    maxval=0.5,  group="Ideal Conditions")
+
+// === REVERSAL STRATEGY ===
+enableReversals     = input.bool(true,   "Enable Reversal Trades?",  group="Reversal Strategy")
+kamaLengthRev       = input.int(10,      "KAMA Length",              minval=5,   maxval=20,  group="Reversal Strategy")
+adxLength           = input.int(14,      "ADX Length",               minval=10,  maxval=30,  group="Reversal Strategy")
+adxStrongTrend      = input.float(20.0,  "ADX Strong Trend",         minval=15,  maxval=30,  group="Reversal Strategy")
+rsiLength           = input.int(14,      "RSI Length",               minval=10,  maxval=30,  group="Reversal Strategy")
+rsiOB               = input.float(70.0,  "RSI Overbought",           minval=60,  maxval=80,  group="Reversal Strategy")
+rsiOS               = input.float(30.0,  "RSI Oversold",             minval=20,  maxval=40,  group="Reversal Strategy")
+williamsLength      = input.int(14,      "Williams %R Length",       minval=10,  maxval=30,  group="Reversal Strategy")
+williamsOB          = input.float(-20.0, "Williams %R OB",           minval=-30, maxval=-10, group="Reversal Strategy")
+williamsOS          = input.float(-80.0, "Williams %R OS",           minval=-90, maxval=-70, group="Reversal Strategy")
+williamsHTF_tf      = input.timeframe("30", "Williams HTF",          group="Reversal Strategy")
+liquidityZoneBars   = input.int(8,       "Liquidity Zone Bars",      minval=5,   maxval=15,  group="Reversal Strategy")
+minVolMultiplierRev = input.float(1.0,   "Volume Multiplier (Rev)",  minval=0.5, maxval=1.5, group="Reversal Strategy")
+filterLong          = input(true,        "Enable Long Filter?",      group="Reversal Strategy")
+filterShort         = input(true,        "Enable Short Filter?",     group="Reversal Strategy")
+activeHours         = input(true,        "Active Hours Filter?",     group="Reversal Strategy")
+
+// === INSTITUTIONAL LOGIC [DYNAMIC] ===
+useInstitutional  = input.bool(true,  "Use Institutional Logic (Overrides All)", group="Institutional [DYNAMIC]")
+instSwingLookback = input.int(20,     "Swing Lookback (Zone Anchor)",            minval=10,  maxval=100, group="Institutional [DYNAMIC]", tooltip="Looks back N bars to find swing high/low anchoring the zones. Higher = longer memory.")
+instZoneATRWidth  = input.float(0.5,  "Zone Width (x ATR)",                      minval=0.1, maxval=2.0, group="Institutional [DYNAMIC]", tooltip="Zone width in ATR multiples. 0.5 = tight, 1.5 = wide.")
+instMidATRBuffer  = input.float(0.25, "Mid Zone Buffer (x ATR)",                 minval=0.1, maxval=1.0, group="Institutional [DYNAMIC]", tooltip="Dead zone around VWAP. No directional trade taken here.")
+instBaseSize      = input.float(10.0, "Institutional Base Position %",           minval=1.0, maxval=50.0, group="Institutional [DYNAMIC]")
+instSizeScaling   = input.bool(true,  "Scale Size Within Zone?",                 group="Institutional [DYNAMIC]", tooltip="Buy heavier at zone bottom, sell heavier at zone top.")
+useVWAPMid        = input.bool(true,  "Use VWAP as Mid Price?",                  group="Institutional [DYNAMIC]", tooltip="True = VWAP as midpoint. False = midpoint between swing H/L.")
+
+// === DAVIN'S MA STRATEGY INPUTS ===
+useDavinMA        = input.bool(true,  "Use Davin's MA Strategy", group="Davin MA Strategy")
+davinMALong       = input.int(200,    "Davin Long MA",           minval=100, maxval=300, group="Davin MA Strategy")
+davinMAShort      = input.int(10,     "Davin Short MA",          minval=5,   maxval=50,  group="Davin MA Strategy")
+davinMABuyDip     = input.bool(true,  "Davin Buy the Dip",       group="Davin MA Strategy")
+davinDipTrigger   = input.int(14,     "Davin Dip Trigger %",     minval=5,   maxval=30,  group="Davin MA Strategy")
+davinLowerClose   = input.bool(true,  "Davin Exit on Lower Close", group="Davin MA Strategy")
+
+// === AUTO-INSTRUMENT DETECTION ===
+string instrumentType = "UNKNOWN"
+string ticker         = syminfo.tickerid
+string baseCurrency   = syminfo.basecurrency
+
+isGoldFutures = str.contains(ticker, "GC") or str.contains(ticker, "MGC") or str.contains(ticker, "GOLD")
+isGoldSpot    = ticker == "XAUUSD" or (baseCurrency == "XAU" and syminfo.currency == "USD")
+isBitcoin     = str.contains(ticker, "BTC") or baseCurrency == "BTC" or str.contains(ticker, "BITCOIN")
+isEthereum    = str.contains(ticker, "ETH") or baseCurrency == "ETH" or str.contains(ticker, "ETHEREUM")
+
+if isGoldFutures or isGoldSpot
+    instrumentType := "GOLD"
+else if isBitcoin
+    instrumentType := "BITCOIN"
+else if isEthereum
+    instrumentType := "ETHEREUM"
+else
+    instrumentType := "OTHER"
+
+adaptivePivotLookback   = instrumentType == "GOLD" ? 5     : instrumentType == "BITCOIN" ? 10    : instrumentType == "ETHEREUM" ? 8     : pivotLookback
+adaptiveMinSweepATR     = instrumentType == "GOLD" ? 0.3   : instrumentType == "BITCOIN" ? 0.5   : instrumentType == "ETHEREUM" ? 0.4   : minSweepSizeATR
+adaptiveRetestTolerance = instrumentType == "GOLD" ? 0.001 : instrumentType == "BITCOIN" ? 0.005 : instrumentType == "ETHEREUM" ? 0.006 : retestTolerance
+adaptiveATRTestPercent  = instrumentType == "GOLD" ? 0.2   : instrumentType == "BITCOIN" ? 0.5   : instrumentType == "ETHEREUM" ? 0.6   : atrTestPercent
+
+// === CORE CALCULATIONS ===
+src    = close
+lsma   = ta.linreg(src, lsmaLength, 0)
+xEMA1  = ta.ema(close, temaLength)
+xEMA2  = ta.ema(xEMA1, temaLength)
+xEMA3  = ta.ema(xEMA2, temaLength)
+tema   = 3 * xEMA1 - 3 * xEMA2 + xEMA3
+ema100 = ta.ema(close, ema100Length)
+atr    = ta.atr(14)
+rsi    = ta.rsi(close, 14)
+volMA  = ta.sma(volume, volLength)
+vwapValue = ta.vwap(close)
+
+// === DAVIN'S MA CALCULATIONS ===
+davinMA1 = ta.sma(close, davinMALong)
+davinMA2 = ta.sma(close, davinMAShort)
+davinHighest52 = ta.highest(high, 52)
+davinOverallChange = ((davinHighest52 - close[0]) / davinHighest52) * 100
+var float davinBuyPrice = 0
+davinBuyCondition = useDavinMA ? ((close > davinMA1 and close < davinMA2 and strategy.position_size == 0) or (strategy.position_size == 0 and davinMABuyDip == true and davinOverallChange > davinDipTrigger)) : false
+davinSellCondition = useDavinMA ? (close > davinMA2 and strategy.position_size > 0 and (not davinLowerClose or close < low[1])) : false
+davinStopDistance = strategy.position_size > 0 ? ((davinBuyPrice - close)/close) : na
+davinStopCondition = (strategy.position_size > 0 and davinStopDistance > 0.15)
+
+// === DYNAMIC INSTITUTIONAL ZONES ===
+dynamicSwingHigh = ta.highest(high, instSwingLookback)
+dynamicSwingLow  = ta.lowest(low,   instSwingLookback)
+dynBuyZoneLow    = dynamicSwingLow
+dynBuyZoneHigh   = dynamicSwingLow  + (atr * instZoneATRWidth)
+dynSellZoneHigh  = dynamicSwingHigh
+dynSellZoneLow   = dynamicSwingHigh - (atr * instZoneATRWidth)
+dynMidPrice      = useVWAPMid ? vwapValue : (dynamicSwingHigh + dynamicSwingLow) / 2
+dynMidZoneLow    = dynMidPrice - (atr * instMidATRBuffer)
+dynMidZoneHigh   = dynMidPrice + (atr * instMidATRBuffer)
+dynRangeWidth    = atr * instZoneATRWidth
+
+// === REVERSAL INDICATORS ===
+rsiRev   = ta.rsi(close, rsiLength)
+stochK   = ta.sma(ta.stoch(close, high, low, 9), 6)
+stochD   = ta.sma(stochK, 3)
+rsi1     = ta.rsi(close, 14)
+stochRsi = (rsi1 - ta.lowest(rsi1, 14)) / (ta.highest(rsi1, 14) - ta.lowest(rsi1, 14)) * 100
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
+dmiPlus  = ta.rma(math.max(ta.change(high), 0), adxLength)
+dmiMinus = ta.rma(-math.min(ta.change(low), 0), adxLength)
+trur     = ta.rma(ta.tr, adxLength)
+plusDI   = 100 * dmiPlus / trur
+minusDI  = 100 * dmiMinus / trur
+dx       = 100 * math.abs(plusDI - minusDI) / (plusDI + minusDI)
+adx      = ta.rma(dx, adxLength)
+williams    = -100 * (ta.highest(high, williamsLength) - close) / (ta.highest(high, williamsLength) - ta.lowest(low, williamsLength))
+williamsHTF = request.security(syminfo.tickerid, williamsHTF_tf, williams)
+cci         = (close - ta.sma(close, 14)) / (0.015 * ta.dev(close, 14))
+kamaRev     = ta.ema(close, kamaLengthRev)
+kamaRising  = kamaRev > kamaRev[1]
+kamaFalling = kamaRev < kamaRev[1]
+volMARev    = ta.sma(volume, volLength)
+
+// === MARKET SENTIMENT SCORING ===
+rsiBearish      = rsiRev < 50
+stochBearish    = stochK < 50 or stochK < stochD
+stochRsiBearish = stochRsi < 50
+macdBearish     = macdLine < signalLine
+williamsBearish = williams < -50
+cciBearish      = cci < 0
+bearishScore           = (rsiBearish ? 1 : 0) + (stochBearish ? 1 : 0) + (stochRsiBearish ? 1 : 0) + (macdBearish ? 1 : 0) + (williamsBearish ? 1 : 0) + (cciBearish ? 1 : 0)
+strongBearishConsensus = bearishScore >= 3
+
+rsiBullish      = rsiRev > 50
+stochBullish    = stochK > 50 or stochK > stochD
+stochRsiBullish = stochRsi > 50
+macdBullish     = macdLine > signalLine
+williamsBullish = williams > -50
+cciBullish      = cci > 0
+bullishScore           = (rsiBullish ? 1 : 0) + (stochBullish ? 1 : 0) + (stochRsiBullish ? 1 : 0) + (macdBullish ? 1 : 0) + (williamsBullish ? 1 : 0) + (cciBullish ? 1 : 0)
+strongBullishConsensus = bullishScore >= 3
+
+// === REVERSAL TREND LOGIC ===
+longTrendRev  = close > kamaRev and kamaRising  and (adx > adxStrongTrend or plusDI > minusDI)
+shortTrendRev = close < kamaRev and kamaFalling and (adx > adxStrongTrend or minusDI > plusDI)
+
+var float chochSwingHigh = na
+var float chochSwingLow  = na
+isSwingHigh = ta.pivothigh(high, 3, 3)
+isSwingLow  = ta.pivotlow(low, 3, 3)
+if not na(isSwingHigh)
+    chochSwingHigh := high[3]
+if not na(isSwingLow)
+    chochSwingLow := low[3]
+
+var float liquidityZoneHigh = na
+var float liquidityZoneLow  = na
+if not na(isSwingHigh)
+    liquidityZoneHigh := ta.highest(high, liquidityZoneBars)
+if not na(isSwingLow)
+    liquidityZoneLow  := ta.lowest(low, liquidityZoneBars)
+
+volumeOKRev = volume > volMARev * minVolMultiplierRev
+
+// === PIVOT DETECTION ===
+pivotHigh = ta.pivothigh(high, adaptivePivotLookback, adaptivePivotLookback)
+pivotLow  = ta.pivotlow(low,  adaptivePivotLookback, adaptivePivotLookback)
+
+var float lastPivotHigh = na
+var float lastPivotLow  = na
+if not na(pivotHigh)
+    lastPivotHigh := pivotHigh
+if not na(pivotLow)
+    lastPivotLow := pivotLow
+
+// === LIQUIDITY SWEEP DETECTION ===
+float minSweepSize = atr * adaptiveMinSweepATR
+liquiditySweepDown = low < lastPivotLow   and close > high[1] and (high[1] - low) > minSweepSize
+liquiditySweepUp   = high > lastPivotHigh and close < low[1]  and (high - low[1]) > minSweepSize
+
+// === BREAK OF STRUCTURE ===
+bullishBoS = ta.crossover(close, ema100)  and close > ema100
+bearishBoS = ta.crossunder(close, ema100) and close < ema100
+
+var float lastBullishBoSLevel = na
+var float lastBearishBoSLevel = na
+if bullishBoS
+    lastBullishBoSLevel := ema100
+if bearishBoS
+    lastBearishBoSLevel := ema100
+
+bullishBoSRetest = not na(lastBullishBoSLevel) and close < lastBullishBoSLevel * (1 + adaptiveRetestTolerance) and close > lastBullishBoSLevel * (1 - adaptiveRetestTolerance) and close > open
+bearishBoSRetest = not na(lastBearishBoSLevel) and close > lastBearishBoSLevel * (1 - adaptiveRetestTolerance) and close < lastBearishBoSLevel * (1 + adaptiveRetestTolerance) and close < open
+
+// === EMA100 TEST COUNTER ===
+var int   ema100TestCount = 0
+var float lastTestPrice   = na
+var int   testBarIndex    = na
+
+if math.abs(close - ema100) < atr * adaptiveATRTestPercent
+    if na(lastTestPrice) or (bar_index != testBarIndex and lastTestPrice != close)
+        ema100TestCount := ema100TestCount + 1
+        lastTestPrice   := close
+        testBarIndex    := bar_index
+
+if math.abs(close - ema100) > atr * 0.5
+    ema100TestCount := 0
+
+lowerHigh = high < lastPivotHigh and high > high[1]
+higherLow = low  > lastPivotLow  and low  < low[1]
+
+// === ZONE SCORING ===
+float priceToTEMA   = (close - tema)   / tema   * 100
+float priceToLSMA   = (close - lsma)   / lsma   * 100
+float priceToEMA100 = (close - ema100) / ema100 * 100
+zoneScore = (priceToTEMA + priceToLSMA + priceToEMA100) / 3
+
+float zoneThreshold1 = instrumentType == "GOLD" ? 2.0 : instrumentType == "BITCOIN" ? 5.0 : instrumentType == "ETHEREUM" ? 6.0 : 2.0
+float zoneThreshold2 = instrumentType == "GOLD" ? 1.0 : instrumentType == "BITCOIN" ? 2.5 : instrumentType == "ETHEREUM" ? 3.0 : 1.0
+
+string zone = zoneScore <= -zoneThreshold1 ? "EXTREME_OVERSOLD" : zoneScore <= -zoneThreshold2 ? "OVERSOLD" : zoneScore <= 0.5 ? "NEUTRAL_LOW" : zoneScore <= 1.5 ? "NEUTRAL_HIGH" : zoneScore <= zoneThreshold2 ? "OVERBOUGHT" : "EXTREME_OVERBOUGHT"
+
+// === TREND DIRECTION ===
+isTemaBullish   = tema   > tema[1]
+isLsmaBullish   = lsma   > lsma[1]
+isEma100Bullish = ema100 > ema100[1]
+allBullish = isTemaBullish  and isLsmaBullish  and isEma100Bullish
+allBearish = not isTemaBullish and not isLsmaBullish and not isEma100Bullish
+
+bool longAllowed  = false
+bool shortAllowed = false
+if requireTrendAlignment
+    longAllowed  := allBullish
+    shortAllowed := allBearish
+else
+    longAllowed  := tema > lsma and close > ema100
+    shortAllowed := tema < lsma and close < ema100
+
+// === TREND STRENGTH ===
+temaSlope          = tema   - tema[5]
+lsmaSlope          = lsma   - lsma[10]
+ema100Slope        = ema100 - ema100[20]
+trendStrength      = (temaSlope + lsmaSlope + ema100Slope) / 3
+normalizedStrength = math.abs(trendStrength) / atr
+
+// === TREND DURATION TRACKING ===
+var int   trendBars           = 0
+var bool  currentTrendBullish = false
+var float trendStartPrice     = 0.0
+
+if bar_index == 0
+    trendBars           := 0
+    currentTrendBullish := false
+    trendStartPrice     := 0.0
+else
+    if allBullish and (not currentTrendBullish or trendStartPrice == 0.0)
+        trendBars           := 1
+        currentTrendBullish := true
+        trendStartPrice     := close
+    else if allBearish and (currentTrendBullish or trendStartPrice == 0.0)
+        trendBars           := 1
+        currentTrendBullish := false
+        trendStartPrice     := close
+    else if (currentTrendBullish and allBullish) or (not currentTrendBullish and allBearish)
+        trendBars := trendBars + 1
+    else
+        trendBars           := 0
+        currentTrendBullish := false
+        trendStartPrice     := 0.0
+
+// === TREND EXHAUSTION ===
+trendExhausted = false
+if trendBars > 0 and trendStartPrice > 0.0
+    condition1    = trendBars > minTrendBars * 2
+    condition2    = normalizedStrength < trendStrengthThreshold
+    condition3    = (currentTrendBullish and not allBullish) or (not currentTrendBullish and not allBearish)
+    rsiDivergence = false
+    if momentumDivergence
+        if currentTrendBullish
+            rsiDivergence := close > close[10] and rsi < rsi[10]
+        else
+            rsiDivergence := close < close[10] and rsi > rsi[10]
+    trendExhausted := condition1 and (condition2 or condition3 or rsiDivergence)
+
+volumeOK           = volume > volMA * minVolMultiplier
+temaCrossAboveLsma = ta.crossover(tema, lsma)
+temaCrossBelowLsma = ta.crossunder(tema, lsma)
+
+// === REVERSAL ENTRY CONDITIONS ===
+reversalLongCondition  = enableReversals ? longTrendRev  and strongBullishConsensus and volumeOKRev and activeHours : false
+reversalShortCondition = enableReversals ? shortTrendRev and strongBearishConsensus and volumeOKRev and activeHours : false
+
+// === IDEAL CONDITIONS SIGNALS ===
+string idealScenario = "WAIT"
+string idealAction   = "WAIT"
+
+if useIdealConditions
+    if liquiditySweepDown and close > ema100 and volumeOK
+        idealScenario := "IDEAL B2: Liquidity Sweep"
+        idealAction   := "BUY"
+    else if bullishBoSRetest and tema > lsma and volumeOK
+        idealScenario := "IDEAL B3: BoS Retest"
+        idealAction   := "BUY"
+    else if (zone == "EXTREME_OVERSOLD" or zone == "OVERSOLD") and close > ema100 and tema > lsma and volumeOK
+        idealScenario := "IDEAL B4: Oversold Confluence"
+        idealAction   := "BUY"
+    if bearishBoSRetest and tema < lsma and volumeOK
+        idealScenario := "IDEAL S1: Broken Support"
+        idealAction   := "SELL"
+    else if lowerHigh and (zone == "OVERBOUGHT" or zone == "EXTREME_OVERBOUGHT") and tema < lsma
+        idealScenario := "IDEAL S2: Lower High"
+        idealAction   := "SELL"
+    else if ema100TestCount >= maxTestCount and close < ema100 and tema < lsma and ta.crossunder(close, ema100)
+        idealScenario := "IDEAL S4: 3rd Test Failure"
+        idealAction   := "SELL"
+
+// === INSTITUTIONAL STATE DETECTION [DYNAMIC] ===
+string institutionalAction = "WAIT"
+float  institutionalSize   = instBaseSize
+
+if close >= dynBuyZoneLow and close <= dynBuyZoneHigh
+    institutionalAction := "ACCUMULATE"
+    institutionalSize   := instSizeScaling and dynRangeWidth > 0 ? instBaseSize * (1 + (dynBuyZoneHigh - close) / dynRangeWidth) : instBaseSize
+else if close >= dynSellZoneLow and close <= dynSellZoneHigh
+    institutionalAction := "DISTRIBUTE"
+    institutionalSize   := instSizeScaling and dynRangeWidth > 0 ? instBaseSize * (1 + (close - dynSellZoneLow) / dynRangeWidth) : instBaseSize
+else if close >= dynMidZoneLow and close <= dynMidZoneHigh
+    institutionalAction := "PROVIDE_LIQUIDITY"
+
+// === INSTITUTIONAL SIGNAL GENERATION ===
+bool   institutionalLong   = false
+bool   institutionalShort  = false
+string institutionalSignal = ""
+
+if useInstitutional
+    if institutionalAction == "ACCUMULATE"
+        institutionalLong   := true
+        institutionalSignal := "INST: Accumulate @ " + str.tostring(math.round(close, 2)) + " | Zone: " + str.tostring(math.round(dynBuyZoneLow, 2)) + "-" + str.tostring(math.round(dynBuyZoneHigh, 2))
+    else if institutionalAction == "DISTRIBUTE"
+        institutionalShort  := true
+        institutionalSignal := "INST: Distribute @ " + str.tostring(math.round(close, 2)) + " | Zone: " + str.tostring(math.round(dynSellZoneLow, 2)) + "-" + str.tostring(math.round(dynSellZoneHigh, 2))
+    else if institutionalAction == "PROVIDE_LIQUIDITY"
+        institutionalSignal := "INST: Liquidity @ VWAP " + str.tostring(math.round(dynMidPrice, 2))
+
+// === DAVIN MA SIGNAL GENERATION ===
+bool   davinLong   = false
+bool   davinShort  = false
+string davinSignal = ""
+
+if useDavinMA
+    if davinBuyCondition
+        davinLong := true
+        davinSignal := "DAVIN: Pullback Buy @ " + str.tostring(math.round(close, 2))
+    if davinSellCondition or davinStopCondition
+        davinShort := true
+        davinSignal := "DAVIN: Exit @ " + str.tostring(math.round(close, 2))
+
+// === FINAL SIGNAL PRIORITY ===
+bool   longCondition  = false
+bool   shortCondition = false
+string activeScenario = ""
+string signalSource   = ""
+
+if useInstitutional and institutionalLong
+    longCondition  := true
+    activeScenario := institutionalSignal
+    signalSource   := "INSTITUTIONAL"
+else if useInstitutional and institutionalShort
+    shortCondition := true
+    activeScenario := institutionalSignal
+    signalSource   := "INSTITUTIONAL"
+else if useIdealConditions and idealAction == "BUY" and strategy.position_size == 0
+    longCondition  := true
+    activeScenario := idealScenario
+    signalSource   := "IDEAL"
+else if useIdealConditions and idealAction == "SELL" and strategy.position_size == 0
+    shortCondition := true
+    activeScenario := idealScenario
+    signalSource   := "IDEAL"
+else if enableReversals and reversalLongCondition and strategy.position_size == 0
+    longCondition  := true
+    activeScenario := "REVERSAL: Long"
+    signalSource   := "REVERSAL"
+else if enableReversals and reversalShortCondition and strategy.position_size == 0
+    shortCondition := true
+    activeScenario := "REVERSAL: Short"
+    signalSource   := "REVERSAL"
+else if useDavinMA and davinLong and strategy.position_size == 0
+    longCondition  := true
+    activeScenario := davinSignal
+    signalSource   := "DAVIN MA"
+else if useDavinMA and davinShort and strategy.position_size > 0
+    shortCondition := true
+    activeScenario := davinSignal
+    signalSource   := "DAVIN MA"
+else
+    if useTrendExhaustion
+        longCondition  := (longAllowed and temaCrossAboveLsma and volumeOK) or (trendExhausted and not currentTrendBullish and temaCrossAboveLsma and volumeOK)
+        shortCondition := (shortAllowed and temaCrossBelowLsma and volumeOK) or (trendExhausted and currentTrendBullish and temaCrossBelowLsma and volumeOK)
+        activeScenario := longCondition ? (trendExhausted ? "ORIGINAL: Exhaustion Long" : "ORIGINAL: Trend Long") : shortCondition ? (trendExhausted ? "ORIGINAL: Exhaustion Short" : "ORIGINAL: Trend Short") : "WAIT"
+    else
+        longCondition  := longAllowed  and temaCrossAboveLsma and volumeOK
+        shortCondition := shortAllowed and temaCrossBelowLsma and volumeOK
+        activeScenario := longCondition ? "ORIGINAL: Long" : shortCondition ? "ORIGINAL: Short" : "WAIT"
+    signalSource := longCondition or shortCondition ? "ORIGINAL" : ""
+
+// === UPDATE DAVIN BUY PRICE ===
+if useDavinMA and davinBuyCondition[1]
+    davinBuyPrice := open
+
+// === RISK MANAGEMENT ===
+float trailOffset = atr * trailATRMult
+float longSL      = na
+float longTP      = na
+float shortSL     = na
+float shortTP     = na
+
+if strategy.position_size > 0
+    if signalSource == "INSTITUTIONAL"
+        longSL := strategy.position_avg_price - (stopLossATRMult * 1.5 * atr)
+        longTP := strategy.position_avg_price + (takeProfitATRMult * 1.2 * atr)
+    else
+        longSL := strategy.position_avg_price - stopLossATRMult * atr
+        longTP := strategy.position_avg_price + takeProfitATRMult * atr
+
+if strategy.position_size < 0
+    if signalSource == "INSTITUTIONAL"
+        shortSL := strategy.position_avg_price + (stopLossATRMult * 1.5 * atr)
+        shortTP := strategy.position_avg_price - (takeProfitATRMult * 1.2 * atr)
+    else
+        shortSL := strategy.position_avg_price + stopLossATRMult * atr
+        shortTP := strategy.position_avg_price - takeProfitATRMult * atr
+
+// === POSITION SIZING ===
+float positionSize = 10.0
+if signalSource == "INSTITUTIONAL"
+    positionSize := institutionalSize
+else if signalSource == "IDEAL"
+    positionSize := 15.0
+else if signalSource == "REVERSAL"
+    positionSize := 12.5
+else if signalSource == "DAVIN MA"
+    positionSize := 10.0
+
+// === STRATEGY EXECUTION ===
+if longCondition and strategy.position_size == 0
+    strategy.entry("Long",  strategy.long,  qty=strategy.equity / close * positionSize / 100)
+
+if shortCondition and strategy.position_size == 0
+    strategy.entry("Short", strategy.short, qty=strategy.equity / close * positionSize / 100)
+
+if strategy.position_size > 0
+    strategy.exit("Long Exit",  "Long",  stop=longSL,  limit=longTP,  trail_points=trailOffset, trail_offset=trailOffset)
+
+if strategy.position_size < 0
+    strategy.exit("Short Exit", "Short", stop=shortSL, limit=shortTP, trail_points=trailOffset, trail_offset=trailOffset)
+
+if strategy.position_size != 0 and bar_index - strategy.opentrades.entry_bar_index(0) >= maxBarsInTrade
+    strategy.close_all()
+
+// === PLOTTING ===
+plot(tema,   "TEMA 9",   color=color.new(#2196F3, 0), linewidth=lineThickness)
+plot(lsma,   "LSMA 25",  color=color.new(#FF9800, 0), linewidth=lineThickness)
+plot(ema100, "EMA 100",  color=color.new(#9C27B0, 0), linewidth=2)
+plot(useDavinMA ? davinMA1 : na, "Davin MA200", color=color.new(#0000FF, 0), linewidth=2)
+plot(useDavinMA ? davinMA2 : na, "Davin MA10", color=color.new(#FFFFFF, 0), linewidth=1)
+plot(enableReversals ? kamaRev : na, "KAMA Rev", color=color.new(#FF00FF, 0), linewidth=1)
+plot(useVWAPMid ? vwapValue : na, "VWAP", color=color.new(#FFFF00, 30), linewidth=1, style=plot.style_stepline)
+plot(enableReversals ? liquidityZoneHigh : na, "Liquidity High", color.red,   1, plot.style_linebr)
+plot(enableReversals ? liquidityZoneLow  : na, "Liquidity Low",  color.green, 1, plot.style_linebr)
+plot(useDavinMA ? davinBuyPrice : na, "Davin Entry", color=color.new(#00FF00, 0), style=plot.style_linebr)
+
+p1 = plot(useInstitutional ? dynBuyZoneLow   : na, "Inst Buy Low",   color=color.new(#00FF00, 70), linewidth=2)
+p2 = plot(useInstitutional ? dynBuyZoneHigh  : na, "Inst Buy High",  color=color.new(#00FF00, 70), linewidth=2)
+fill(p1, p2, color=color.new(#00FF00, 85), title="Accumulation Zone Fill")
+
+p3 = plot(useInstitutional ? dynSellZoneLow  : na, "Inst Sell Low",  color=color.new(#FF0000, 70), linewidth=2)
+p4 = plot(useInstitutional ? dynSellZoneHigh : na, "Inst Sell High", color=color.new(#FF0000, 70), linewidth=2)
+fill(p3, p4, color=color.new(#FF0000, 85), title="Distribution Zone Fill")
+
+p5 = plot(useInstitutional ? dynMidZoneLow   : na, "Mid Zone Low",   color=color.new(#FFFF00, 70), linewidth=1)
+p6 = plot(useInstitutional ? dynMidZoneHigh  : na, "Mid Zone High",  color=color.new(#FFFF00, 70), linewidth=1)
+fill(p5, p6, color=color.new(#FFFF00, 90), title="Liquidity Zone Fill")
+
+plotshape(longCondition  and signalSource == "INSTITUTIONAL", "INST BUY",      shape.triangleup,   location.belowbar, color=color.new(#FFD700, 0), size=size.huge)
+plotshape(longCondition  and signalSource == "IDEAL",         "IDEAL BUY",     shape.triangleup,   location.belowbar, color=color.new(#00FF00, 0), size=size.large)
+plotshape(longCondition  and signalSource == "REVERSAL",      "REV BUY",       shape.triangleup,   location.belowbar, color=color.new(#00FFFF, 0), size=size.normal)
+plotshape(longCondition  and signalSource == "ORIGINAL",      "ORIGINAL BUY",  shape.triangleup,   location.belowbar, color=color.new(#4CAF50, 0), size=size.small)
+plotshape(longCondition  and signalSource == "DAVIN MA",      "DAVIN BUY",     shape.triangleup,   location.belowbar, color=color.new(#FFA500, 0), size=size.normal)
+plotshape(shortCondition and signalSource == "INSTITUTIONAL", "INST SELL",     shape.triangledown, location.abovebar, color=color.new(#FFD700, 0), size=size.huge)
+plotshape(shortCondition and signalSource == "IDEAL",         "IDEAL SELL",    shape.triangledown, location.abovebar, color=color.new(#FF0000, 0), size=size.large)
+plotshape(shortCondition and signalSource == "REVERSAL",      "REV SELL",      shape.triangledown, location.abovebar, color=color.new(#FF00FF, 0), size=size.normal)
+plotshape(shortCondition and signalSource == "ORIGINAL",      "ORIGINAL SELL", shape.triangledown, location.abovebar, color=color.new(#F44336, 0), size=size.small)
+plotshape(shortCondition and signalSource == "DAVIN MA",      "DAVIN SELL",    shape.triangledown, location.abovebar, color=color.new(#FF4500, 0), size=size.normal)
+
+// === INFO PANEL ===
+if showPanel and barstate.islast
+    // Calculate Davin MA values for display
+    string davinStatus = "N/A"
+    if useDavinMA
+        if davinBuyCondition
+            davinStatus := "BUY SETUP"
+        else if close > davinMA1 and close < davinMA2
+            davinStatus := "PULLBACK"
+        else if close > davinMA1
+            davinStatus := "ABOVE 200MA"
+        else
+            davinStatus := "BELOW 200MA"
+    
+    var table infoPanel = table.new(position.top_right, 2, 14, bgcolor=color.new(#1a1a2e, 10), border_color=color.new(#4a4a8a, 50), border_width=1, frame_color=color.new(#4a4a8a, 50), frame_width=1)
+    table.cell(infoPanel, 0, 0, "INSTITUTIONAL ZONES [DYNAMIC]", text_color=color.white,  text_size=size.small, bgcolor=color.new(#2d2d5e, 20))
+    table.cell(infoPanel, 1, 0, instrumentType,                  text_color=color.yellow, text_size=size.small, bgcolor=color.new(#2d2d5e, 20))
+    table.cell(infoPanel, 0, 1, "Swing High",  text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 1, str.tostring(math.round(dynamicSwingHigh, 2)), text_color=color.red,    text_size=size.small)
+    table.cell(infoPanel, 0, 2, "Swing Low",   text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 2, str.tostring(math.round(dynamicSwingLow,  2)), text_color=color.green,  text_size=size.small)
+    table.cell(infoPanel, 0, 3, "Sell Zone",   text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 3, str.tostring(math.round(dynSellZoneLow, 2)) + " - " + str.tostring(math.round(dynSellZoneHigh, 2)), text_color=color.red, text_size=size.small)
+    table.cell(infoPanel, 0, 4, "Buy Zone",    text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 4, str.tostring(math.round(dynBuyZoneLow,  2)) + " - " + str.tostring(math.round(dynBuyZoneHigh,  2)), text_color=color.green, text_size=size.small)
+    table.cell(infoPanel, 0, 5, "VWAP / Mid",  text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 5, str.tostring(math.round(dynMidPrice, 2)), text_color=color.yellow, text_size=size.small)
+    table.cell(infoPanel, 0, 6, "ATR",         text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 6, str.tostring(math.round(atr, 2)),        text_color=color.orange, text_size=size.small)
+    table.cell(infoPanel, 0, 7, "Inst Action", text_color=color.white,  text_size=size.small)
+    instColor = institutionalAction == "ACCUMULATE" ? color.green : institutionalAction == "DISTRIBUTE" ? color.red : color.yellow
+    table.cell(infoPanel, 1, 7, institutionalAction, text_color=instColor, text_size=size.small)
+    table.cell(infoPanel, 0, 8, "Signal Source", text_color=color.white, text_size=size.small)
+    table.cell(infoPanel, 1, 8, signalSource == "" ? "WAIT" : signalSource, text_color=color.white, text_size=size.small)
+    table.cell(infoPanel, 0, 9, "Zone",        text_color=color.white,  text_size=size.small)
+    table.cell(infoPanel, 1, 9, zone,          text_color=color.white,  text_size=size.small)
+    
+    // Davin MA Info - using remaining rows
+    if useDavinMA
+        table.cell(infoPanel, 0, 10, "Davin MA200", text_color=color.gray, text_size=size.small)
+        table.cell(infoPanel, 1, 10, str.tostring(math.round(davinMA1, 2)), text_color=color.blue, text_size=size.small)
+        table.cell(infoPanel, 0, 11, "Davin MA10", text_color=color.gray, text_size=size.small)
+        table.cell(infoPanel, 1, 11, str.tostring(math.round(davinMA2, 2)), text_color=color.white, text_size=size.small)
+        table.cell(infoPanel, 0, 12, "Davin Status", text_color=color.gray, text_size=size.small)
+        statusColor = davinStatus == "BUY SETUP" ? color.green : davinStatus == "PULLBACK" ? color.yellow : color.white
+        table.cell(infoPanel, 1, 12, davinStatus, text_color=statusColor, text_size=size.small)
+        table.cell(infoPanel, 0, 13, "Dip %", text_color=color.gray, text_size=size.small)
+        dipColor = davinOverallChange > davinDipTrigger ? color.green : color.orange
+        table.cell(infoPanel, 1, 13, str.tostring(davinOverallChange, "#.##") + "%", text_color=dipColor, text_size=size.small)

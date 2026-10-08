@@ -1,0 +1,231 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/U0wTnRuE-Apex-Trail-Trend-Agreement-Scalper-with-ATR-Trailing-Stop/
+// id: PUB;19445d4236724deb82a848789b0f8d0e  kind: strategy
+//@version=6
+strategy("RF-HA Trend Scalper", shorttitle = "RHT", overlay = true,
+     initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 10,
+     commission_type = strategy.commission.percent, commission_value = 0.03, slippage = 1,
+     pyramiding = 0, calc_on_every_tick = false, process_orders_on_close = false,
+     max_labels_count = 300, max_bars_back = 500)
+
+// Trend agreement (Range Filter + Smoothed HA + HTF HA) -> ATR trailing stop.
+// SMI is only used to avoid chasing extended moves.
+// Set commission/slippage in the strategy Properties tab to match your broker.
+
+// ---- Palette ----
+color C_BULL = #00FFD1
+color C_BEAR = #FF3B5C
+color C_DIM  = #5B677A
+color C_TXT  = #C9D1D9
+color C_BG   = #0F1115
+color C_BG2  = #171A20
+color C_HEAD = #2B313B
+
+// ---- Inputs ----
+gRF = "Range Filter"
+rfPer  = input.int(50, "Sampling Period", minval = 2, group = gRF)
+rfMult = input.float(2.0, "Range Multiplier", minval = 0.5, step = 0.25, group = gRF)
+
+gHA = "Smoothed Heikin-Ashi"
+preLen  = input.int(6, "Pre-Smooth Length", minval = 1, group = gHA)
+postLen = input.int(8, "Post-Smooth Length", minval = 1, group = gHA)
+
+gHT = "Higher Timeframe"
+useHtf = input.bool(true, "Require HTF HA Agreement", group = gHT)
+htfTf  = input.timeframe("60", "HTF", group = gHT)
+
+gSM = "SMI (anti-chase filter)"
+useSmi = input.bool(true, "Use SMI Filter", group = gSM)
+smiLen = input.int(8, "SMI Length", minval = 2, group = gSM)
+smiS1  = input.int(3, "SMI Smooth 1", minval = 1, group = gSM)
+smiS2  = input.int(3, "SMI Smooth 2", minval = 1, group = gSM)
+smiMax = input.float(60.0, "Skip long if SMI above (short: below minus)", minval = 10.0, maxval = 100.0, group = gSM)
+
+gRK = "Risk and Exit"
+atrLen    = input.int(14, "ATR Length", minval = 1, group = gRK)
+trailMult = input.float(2.5, "Trailing Stop (x ATR)", minval = 0.5, step = 0.1, group = gRK)
+tpR       = input.float(0.0, "Take Profit (R multiple, 0 = off)", minval = 0.0, step = 0.5, group = gRK)
+exitFlip  = input.bool(true, "Exit when Range Filter flips against trade", group = gRK)
+riskPct   = input.float(1.0, "Risk per Trade (% equity)", minval = 0.1, maxval = 10.0, step = 0.1, group = gRK)
+maxLev    = input.float(3.0, "Max Leverage", minval = 1.0, group = gRK)
+dirMode   = input.string("Both", "Direction", options = ["Both", "Long Only", "Short Only"], group = gRK)
+cooldown  = input.int(5, "Cooldown After Exit (bars)", minval = 0, group = gRK)
+
+gVS = "Visuals"
+showBands   = input.bool(true, "Range Bands", group = gVS)
+showSignals = input.bool(true, "Entry Markers", group = gVS)
+colorBars   = input.bool(true, "Color Bars", group = gVS)
+showLabels  = input.bool(true, "Result Labels", group = gVS)
+tintTrade   = input.bool(true, "Tint Background In Trade", group = gVS)
+showDash    = input.bool(true, "Dashboard", group = gVS)
+dashPos     = input.string("Top Right", "Dashboard Position", options = ["Top Right", "Top Left", "Bottom Right", "Bottom Left"], group = gVS)
+
+// ---- Helpers ----
+f_ha(int len1, int len2) =>
+    float o1 = ta.ema(open, len1)
+    float h1 = ta.ema(high, len1)
+    float l1 = ta.ema(low, len1)
+    float c1 = ta.ema(close, len1)
+    float haC = (o1 + h1 + l1 + c1) / 4.0
+    var float haO = na
+    haO := na(haO[1]) ? (o1 + c1) / 2.0 : (haO[1] + haC[1]) / 2.0
+    float haH = math.max(h1, math.max(haO, haC))
+    float haL = math.min(l1, math.min(haO, haC))
+    float o2 = ta.ema(haO, len2)
+    float c2 = ta.ema(haC, len2)
+    float h2 = ta.ema(haH, len2)
+    float l2 = ta.ema(haL, len2)
+    [o2, h2, l2, c2]
+
+f_smi(int len, int s1, int s2) =>
+    float ll = ta.lowest(low, len)
+    float hh = ta.highest(high, len)
+    float diff = hh - ll
+    float rdiff = close - (hh + ll) / 2
+    float avgRel = ta.ema(ta.ema(rdiff, s1), s2)
+    float avgDiff = ta.ema(ta.ema(diff, s1), s2)
+    avgDiff != 0 ? (avgRel / (avgDiff / 2) * 100) : 0.0
+
+// Last closed HTF bar only (no repaint)
+f_htfDir() =>
+    [ho, hh, hl, hc] = f_ha(preLen, postLen)
+    int d = hc >= ho ? 1 : -1
+    d[1]
+
+f_pos(string p) =>
+    p == "Top Left" ? position.top_left : p == "Bottom Right" ? position.bottom_right : p == "Bottom Left" ? position.bottom_left : position.top_right
+
+// ---- State ----
+var float entryP = na
+var float trail = na
+var float tpP = na
+var float netAtEntry = 0.0
+var int lastExitBar = na
+var array<label> lbls = array.new<label>()
+
+// ---- Engines ----
+float atr = ta.atr(atrLen)
+
+// Range Filter
+float rawRange = math.abs(close - close[1])
+float avgRange = ta.ema(rawRange, rfPer)
+float smRng = ta.ema(avgRange, rfPer * 2 - 1) * rfMult
+var float filt = na
+float prevFilt = nz(filt[1], close)
+filt := na(smRng) ? close : close > prevFilt ? math.max(prevFilt, close - smRng) : math.min(prevFilt, close + smRng)
+float hBand = filt + nz(smRng)
+float lBand = filt - nz(smRng)
+
+var int rfDir = 0
+if filt > prevFilt
+    rfDir := 1
+else if filt < prevFilt
+    rfDir := -1
+
+// Smoothed HA
+[o2, h2, l2, c2] = f_ha(preLen, postLen)
+int haDir = c2 >= o2 ? 1 : -1
+
+// HTF HA direction
+int hDir = nz(request.security(syminfo.tickerid, htfTf, f_htfDir(), lookahead = barmerge.lookahead_on))
+
+// SMI
+float smi = f_smi(smiLen, smiS1, smiS2)
+
+// ---- Trend agreement state ----
+int state = rfDir == 1 and haDir == 1 and (not useHtf or hDir == 1) ? 1 : rfDir == -1 and haDir == -1 and (not useHtf or hDir == -1) ? -1 : 0
+
+int sinceExit = na(lastExitBar) ? 9999 : bar_index - lastExitBar
+bool warm = bar_index > rfPer * 4 and not na(smRng) and not na(atr)
+bool flat = strategy.position_size == 0
+bool ready = flat and warm and sinceExit >= cooldown
+
+bool longSig = ready and dirMode != "Short Only" and state == 1 and state[1] != 1 and (not useSmi or smi < smiMax)
+bool shortSig = ready and dirMode != "Long Only" and state == -1 and state[1] != -1 and (not useSmi or smi > -smiMax)
+
+// ---- Sizing (risk % of equity, based on initial stop distance) ----
+float stopDist = trailMult * atr
+float qtyRisk = stopDist > 0 ? (strategy.equity * riskPct / 100.0) / (stopDist * syminfo.pointvalue) : na
+float qtyCap = strategy.equity * maxLev / (close * syminfo.pointvalue)
+float entryQty = math.min(qtyRisk, qtyCap)
+
+if longSig and entryQty > 0
+    strategy.entry("Long", strategy.long, qty = entryQty)
+if shortSig and entryQty > 0
+    strategy.entry("Short", strategy.short, qty = entryQty)
+
+// ---- Position management ----
+bool newPos = strategy.position_size != 0 and strategy.position_size[1] == 0
+bool justClosed = strategy.position_size == 0 and strategy.position_size[1] != 0
+
+if newPos
+    bool isL = strategy.position_size > 0
+    entryP := strategy.position_avg_price
+    trail := isL ? entryP - trailMult * atr : entryP + trailMult * atr
+    tpP := tpR > 0 ? (isL ? entryP + tpR * trailMult * atr : entryP - tpR * trailMult * atr) : na
+    netAtEntry := strategy.netprofit
+
+if strategy.position_size > 0
+    trail := math.max(trail, close - trailMult * atr)
+    strategy.exit("XL", "Long", stop = trail, limit = tpP)
+    if exitFlip and rfDir == -1
+        strategy.close("Long", comment = "RF flip")
+
+if strategy.position_size < 0
+    trail := math.min(trail, close + trailMult * atr)
+    strategy.exit("XS", "Short", stop = trail, limit = tpP)
+    if exitFlip and rfDir == 1
+        strategy.close("Short", comment = "RF flip")
+
+if justClosed
+    float pnl = strategy.netprofit - netAtEntry
+    lastExitBar := bar_index
+    if showLabels and strategy.closedtrades > 0
+        float xp = strategy.closedtrades.exit_price(strategy.closedtrades - 1)
+        bool win = pnl >= 0
+        label lb = label.new(bar_index, xp, (win ? "+" : "") + str.tostring(pnl, "#.##"),
+             style = win ? label.style_label_down : label.style_label_up,
+             color = color.new(win ? C_BULL : C_BEAR, 25), textcolor = color.white, size = size.tiny)
+        array.push(lbls, lb)
+        while array.size(lbls) > 20
+            label.delete(array.shift(lbls))
+
+// ---- Visuals ----
+color rfCol = rfDir == 1 ? C_BULL : rfDir == -1 ? C_BEAR : C_DIM
+pF = plot(filt, "Range Filter", rfCol, 3)
+pU = plot(showBands ? hBand : na, "Upper Band", color.new(rfCol, 70), 1)
+pL = plot(showBands ? lBand : na, "Lower Band", color.new(rfCol, 70), 1)
+fill(pU, pL, color.new(rfCol, 93), title = "Band Fill")
+
+barcolor(colorBars ? (state == 1 ? C_BULL : state == -1 ? C_BEAR : C_DIM) : na, title = "Trend Bars")
+bgcolor(tintTrade ? (strategy.position_size > 0 ? color.new(C_BULL, 94) : strategy.position_size < 0 ? color.new(C_BEAR, 94) : na) : na, title = "In-Trade Tint")
+
+plotshape(showSignals and longSig, "Long Signal", shape.triangleup, location.belowbar, C_BULL, size = size.small)
+plotshape(showSignals and shortSig, "Short Signal", shape.triangledown, location.abovebar, C_BEAR, size = size.small)
+
+plot(strategy.position_size != 0 ? trail : na, "Trailing Stop", color.new(C_BEAR, 10), 2, plot.style_linebr)
+plot(strategy.position_size != 0 ? entryP : na, "Entry", color.new(color.white, 40), 1, plot.style_linebr)
+plot(strategy.position_size != 0 ? tpP : na, "Take Profit", color.new(C_BULL, 10), 1, plot.style_linebr)
+
+// ---- Dashboard ----
+var table dash = table.new(f_pos(dashPos), 2, 8, bgcolor = color.new(C_BG, 4), border_color = color.new(C_DIM, 45), border_width = 1, frame_color = color.new(C_DIM, 35), frame_width = 1)
+
+f_row(int r, string a, string b, color c, color bg) =>
+    table.cell(dash, 0, r, a, text_color = C_TXT, bgcolor = bg, text_size = size.small, text_halign = text.align_left)
+    table.cell(dash, 1, r, b, text_color = c, bgcolor = bg, text_size = size.small, text_halign = text.align_right)
+
+if barstate.islast and showDash
+    int ct = strategy.closedtrades
+    float wr = ct > 0 ? strategy.wintrades / ct * 100.0 : 0.0
+    float pf = strategy.grossloss != 0 ? strategy.grossprofit / math.abs(strategy.grossloss) : na
+    string posTxt = strategy.position_size > 0 ? "LONG" : strategy.position_size < 0 ? "SHORT" : "FLAT"
+    color posCol = strategy.position_size > 0 ? C_BULL : strategy.position_size < 0 ? C_BEAR : C_DIM
+    table.cell(dash, 0, 0, "RF-HA TREND", text_color = C_TXT, bgcolor = C_HEAD, text_size = size.small, text_halign = text.align_center)
+    table.cell(dash, 1, 0, syminfo.ticker + " " + timeframe.period, text_color = C_TXT, bgcolor = C_HEAD, text_size = size.small, text_halign = text.align_center)
+    f_row(1, "RANGE FILTER", rfDir == 1 ? "BULL" : rfDir == -1 ? "BEAR" : "-", rfCol, C_BG2)
+    f_row(2, "SMOOTH HA", haDir == 1 ? "BULL" : "BEAR", haDir == 1 ? C_BULL : C_BEAR, C_BG)
+    f_row(3, "HTF HA", not useHtf ? "off" : hDir == 1 ? "BULL" : hDir == -1 ? "BEAR" : "-", not useHtf ? C_DIM : hDir == 1 ? C_BULL : C_BEAR, C_BG2)
+    f_row(4, "POSITION", posTxt, posCol, C_BG)
+    f_row(5, "TRADES / WIN%", str.tostring(ct) + " / " + str.tostring(wr, "#.#") + "%", wr >= 50 ? C_BULL : C_BEAR, C_BG2)
+    f_row(6, "PROFIT FACTOR", na(pf) ? "-" : str.tostring(pf, "#.##"), na(pf) ? C_DIM : pf >= 1 ? C_BULL : C_BEAR, C_BG)
+    f_row(7, "NET P/L", str.tostring(strategy.netprofit, "#.##"), strategy.netprofit >= 0 ? C_BULL : C_BEAR, C_BG2)

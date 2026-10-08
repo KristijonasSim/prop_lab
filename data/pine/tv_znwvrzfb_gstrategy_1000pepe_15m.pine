@@ -1,0 +1,97 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/ZNWvrzFb-gstrategy-1000pepe-15m/
+// id: PUB;7926006282604bfdb47f82ca5139878e  kind: strategy  likes: 101
+//@version=6
+strategy("GStrategy 1000Pepe 15m", overlay=true, margin_long=100, margin_short=100, pyramiding=0)
+
+// ======= НАСТРОЙКИ =======
+rsiLength = input.int(14, "RSI Length", minval=1)
+emaFastLength = input.int(20, "Быстрая EMA", minval=1)
+emaSlowLength = input.int(50, "Медленная EMA", minval=1)
+stopLossPerc = input.float(5, "Стоп-лосс %", minval=0.1, step=0.1) / 100
+trailOffset = input.float(1, "Трейлинг-стоп %", minval=0.1, step=0.1) / 100
+exitDelayBars = input.int(1, "Задержка выхода (свечи)", minval=1)
+
+// ======= РАСЧЕТ ИНДИКАТОРОВ =======
+rsi = ta.rsi(close, rsiLength)
+emaFast = ta.ema(close, emaFastLength)
+emaSlow = ta.ema(close, emaSlowLength)
+
+// ======= СВЕЧНЫЕ ПАТТЕРНЫ =======
+isHammer = (low - open) >= 2 * (open - close) and (open - close) > 0 and 
+           (close - low) <= 0.2 * (high - low) and (high - close) >= 2 * (open - close)
+
+bullishEngulfing = (close[1] < open[1]) and (close > open) and 
+                   (close >= open[1]) and (open <= close[1]) and 
+                   (close - open) > (open[1] - close[1])
+
+bearishEngulfing = (close[1] > open[1]) and (close < open) and 
+                   (close <= open[1]) and (open >= close[1]) and 
+                   (open - close) > (close[1] - open[1])
+
+// ======= УСЛОВИЯ ТРЕНДА =======
+uptrend = emaFast > emaSlow
+downtrend = emaFast < emaSlow
+
+// ======= УСЛОВИЯ ВХОДА =======
+longCondition = (isHammer or bullishEngulfing) and uptrend and strategy.position_size == 0
+shortCondition = bearishEngulfing and downtrend and strategy.position_size == 0
+
+// ======= УСЛОВИЯ ВЫХОДА =======
+crossUnder = ta.crossunder(emaFast, emaSlow)
+crossOver = ta.crossover(emaFast, emaSlow)
+
+// Счетчики задержки выхода
+var int longExitCounter = 0
+var int shortExitCounter = 0
+
+// Обновление счетчиков при появлении сигнала выхода
+if crossUnder or (open <= emaSlow or close <= emaSlow)
+    longExitCounter := exitDelayBars
+else if longExitCounter > 0
+    longExitCounter := longExitCounter - 1
+
+if crossOver or (open >= emaSlow or close >= emaSlow)
+    shortExitCounter := exitDelayBars
+else if shortExitCounter > 0
+    shortExitCounter := shortExitCounter - 1
+
+// Фактические условия выхода с задержкой
+exitLongAfterCross = longExitCounter == 1  // Выход на последней свече задержки
+exitShortAfterCross = shortExitCounter == 1
+
+// ======= ИСПОЛНЕНИЕ СДЕЛОК =======
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Stop Loss Long", "Long", stop = strategy.position_avg_price * (1 - stopLossPerc), trail_points = close * trailOffset / syminfo.mintick, trail_offset = close * trailOffset / syminfo.mintick)
+
+if (shortCondition)
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Stop Loss Short", "Short",stop = strategy.position_avg_price * (1 + stopLossPerc), trail_points = close * trailOffset / syminfo.mintick, trail_offset = close * trailOffset / syminfo.mintick)
+
+if (exitLongAfterCross)
+    strategy.close("Long")
+    longExitCounter := 0
+    
+if (exitShortAfterCross)
+    strategy.close("Short")
+    shortExitCounter := 0
+
+// ======= ВИЗУАЛИЗАЦИЯ =======
+plot(emaFast, "Быстрая EMA", color=color.blue)
+plot(emaSlow, "Медленная EMA", color=color.red)
+
+// Отображение точек выхода (с учетом задержки)
+plotshape(exitLongAfterCross, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Выход лонг")
+plotshape(exitShortAfterCross, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="Выход шорт")
+
+// Отображение паттернов и сигналов
+plotshape(isHammer, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="Молот")
+plotshape(bullishEngulfing, style=shape.labelup, location=location.belowbar, color=color.green, text="Погл", size=size.small)
+plotshape(bearishEngulfing, style=shape.labeldown, location=location.abovebar, color=color.red, text="Погл", size=size.small)
+plotshape(longCondition, style=shape.triangleup, location=location.belowbar, color=color.lime, size=size.small, title="Лонг")
+plotshape(shortCondition, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Шорт")
+
+// Подсветка фона
+bgcolor(longCondition ? color.new(color.green, 90) : na)
+bgcolor(shortCondition ? color.new(color.red, 90) : na)

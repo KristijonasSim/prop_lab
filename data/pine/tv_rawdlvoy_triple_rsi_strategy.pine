@@ -1,0 +1,28 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/raWdLVOY-Triple-RSI-strategy/
+// id: PUB;09307831c9a746f59931a7bce3226c8e  kind: strategy  likes: 578
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Trade_by_DB
+
+//@version=5
+strategy("3 RSI", overlay=true, margin_long=100, margin_short=100)
+
+
+// 3 rsi strategy , when all of them are overbought we sell, and vice versa
+rsi7 = ta.rsi(close,7)
+rsi14 = ta.rsi(close,14)
+rsi21 = ta.rsi(close,21)
+
+
+// sell condition
+sell = ta.crossunder(rsi7,70) and ta.crossunder(rsi14,70) and ta.crossunder(rsi21,70)
+
+//buy condition
+buy = ta.crossover(rsi7,30) and ta.crossover(rsi14,30) and ta.crossover(rsi21,30)
+
+if (buy)
+    strategy.entry("BUY", strategy.long)
+
+if (sell)
+    strategy.entry("SELL", strategy.short)
+

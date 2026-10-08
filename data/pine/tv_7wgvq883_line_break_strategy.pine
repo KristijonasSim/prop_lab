@@ -1,0 +1,22 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/7wgvQ883-Line-Break-Strategy/
+// id: PUB;XKLYRtMCKFATZiIh52NwMY4aQQxxkThW  kind: strategy  likes: 515
+strategy("Line Break Strategy", overlay=true)
+src = input("close", title="Source")
+nl = input(3, title="Number of Line")
+
+lb_t = linebreak(tickerid, src, nl)
+lb_o = security(lb_t, period, open)
+lb_c = security(lb_t, period, close)
+
+// Overlays line break bars on regular candle bars 
+palette = lb_o < lb_c ? green : red
+po = plot(lb_o, color=palette, title="Open")
+pc = plot(lb_c, color=palette, title="Close")
+fill(po, pc, color=palette)
+
+long_entry = lb_o < lb_c
+short_entry = lb_o > lb_c
+
+strategy.entry("Long", strategy.long, when=long_entry)
+strategy.entry("Short", strategy.short, when=short_entry)

@@ -1,0 +1,57 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/5q4PsY3a-XAUUSD-Scalping-AGRESIV/
+// id: PUB;c7e6c214534e4e8eab5d87bb64011b75  kind: strategy
+//@version=5
+strategy("XAUUSD Scalping V2 AGRESIV", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+// === INPUTURI ===
+emaFastLen = input.int(5, "EMA Rapid")
+emaSlowLen = input.int(13, "EMA Lent")
+rsiLen = input.int(7, "RSI Rapid")
+atrLen = input.int(14, "ATR Length")
+
+tpATR = input.float(1.2, "Take Profit (ATR multiplu)")
+slATR = input.float(0.8, "Stop Loss (ATR multiplu)")
+trailATR = input.float(0.5, "Trailing Stop (ATR multiplu)")
+
+minVolatility = input.float(0.5, "Filtru volatilitate (ATR minim)")
+
+// === CALCULE ===
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+rsi = ta.rsi(close, rsiLen)
+atr = ta.atr(atrLen)
+
+// === FILTRU VOLATILITATE ===
+volatilityOK = atr > minVolatility
+
+// === CONDITII BUY ===
+longCondition = ta.crossover(emaFast, emaSlow) and rsi > 55 and volatilityOK
+
+// === CONDITII SELL ===
+shortCondition = ta.crossunder(emaFast, emaSlow) and rsi < 45 and volatilityOK
+
+// === BUY ===
+if (longCondition)
+    entryPrice = close
+    takeProfit = entryPrice + atr * tpATR
+    stopLoss = entryPrice - atr * slATR
+    
+    strategy.entry("BUY", strategy.long)
+    strategy.exit("TP/SL BUY", from_entry="BUY", limit=takeProfit, stop=stopLoss, trail_points=atr * trailATR / syminfo.mintick)
+
+// === SELL ===
+if (shortCondition)
+    entryPrice = close
+    takeProfit = entryPrice - atr * tpATR
+    stopLoss = entryPrice + atr * slATR
+    
+    strategy.entry("SELL", strategy.short)
+    strategy.exit("TP/SL SELL", from_entry="SELL", limit=takeProfit, stop=stopLoss, trail_points=atr * trailATR / syminfo.mintick)
+
+// === AFISARE ===
+plot(emaFast, color=color.green)
+plot(emaSlow, color=color.red)
+
+plotshape(longCondition, location=location.belowbar, color=color.lime, style=shape.labelup, text="BUY")
+plotshape(shortCondition, location=location.abovebar, color=color.red, style=shape.labeldown, text="SELL")

@@ -1,0 +1,29 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/EXtBltMY-Basic-SMA-200-Strategy/
+// id: PUB;h3tsFsUveBKngOfKEGhA4r4CWKnhmLeO  kind: strategy  likes: 272
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Ichimoku-Trading by TradersEldorado
+
+//@version=4
+strategy("simple MA 200 cross", overlay=true)
+
+//Inputs
+MA_Len = input(title="Moving Average Length", type=input.integer, defval=200)
+
+//Moving Average
+MA = sma(close, MA_Len)
+
+//Entry 
+longCondition = crossover(close, MA)
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+    
+//Exit
+exitCondition = crossunder(close, MA)
+if (exitCondition)
+    strategy.close("Long")
+    
+//Plot
+plot(MA, title="Moving Average")
+plotshape(longCondition, style=shape.arrowup, color=color.green, location=location.belowbar, size=size.normal, title="Entry", text="Entry")
+plotshape(exitCondition, style=shape.arrowdown, color=color.red, location=location.abovebar, size=size.normal, title="Exit", text="Exit")

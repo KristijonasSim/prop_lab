@@ -1,0 +1,23 @@
+// prop_lab: fetched from TradingView 2026-10-08
+// url: https://www.tradingview.com/script/kz5j9elC-Parabolic-SAR-Strategy-with-good-parameters/
+// id: PUB;uKFDzDQuWx3wXwna9euKktz30E7qKVVn  kind: strategy  likes: 354
+//@version=3
+strategy("Parabolic SAR Strategy", overlay=true)
+
+start = input(0.02)
+increment = input(0.02)
+maximum = input(0.2)
+
+psar = sar(start, increment, maximum)
+
+if (psar > high)
+    strategy.entry("ParLE", strategy.long, stop=psar, comment="ParLE")
+else
+    strategy.cancel("ParLE")
+
+if (psar < low)
+    strategy.entry("ParSE", strategy.short, stop=psar, comment="ParSE")
+else
+    strategy.cancel("ParSE")
+
+//plot(strategy.equity, title="equity", color=red, linewidth=2, style=areabr)
