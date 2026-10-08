@@ -258,7 +258,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
 
 </div>
 
-<footer>polls <span class="mono">/api/state</span> every 2s · nothing here starts a run</footer>
+<footer>polls <span class="mono">/api/state</span> every 3s · nothing here starts a run</footer>
 </div>
 
 <script>
@@ -924,14 +924,18 @@ function paint(){
   poolsTable(); ideasTable(); gapsTable(); srcTable();
 }
 
+let pulling = false;
 async function pull(){
+  // One request at a time: overlapping polls are what jammed the server.
+  if (pulling) return;
+  pulling = true;
   try{
     const r = await fetch('/api/state', {cache:'no-store'});
     S = await r.json(); tick = 0; paint();
   }catch(e){
     $('status').textContent = 'server unreachable';
     $('dot').className = 'dot';
-  }
+  }finally{ pulling = false; }
 }
 // The uptime reads as a clock, so it ticks locally between polls instead of
 // jumping in two-second steps.
@@ -941,7 +945,7 @@ setInterval(() => {
   $('uptimeLabel').textContent = S.live
     ? 'running without interruption' : 'nothing on the line right now';
 }, 1000);
-pull(); setInterval(pull, 2000);
+pull(); setInterval(pull, 3000);
 </script>
 </body>
 </html>

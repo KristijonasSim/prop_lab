@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -473,9 +473,30 @@ def state() -> dict:
     }
 
 
+# BUILT IN THE BACKGROUND, SERVED FROM MEMORY. Kris, 2026-10-08: "UI is not
+# working". `state()` had grown to 14.6 MB and ~6 s on a machine busy with
+# 12 testers, the page asks every 2 s, and the server answered one request at
+# a time - so requests queued behind each other until the browser gave up.
+_CACHE: dict = {"gz": b"", "raw": b""}
+
+
+def _refresh_forever(every: float = 3.0) -> None:
+    import gzip
+    import threading
+    while True:
+        try:
+            raw = json.dumps(state(), separators=(",", ":")).encode()
+            _CACHE.update(raw=raw, gz=gzip.compress(raw, 5))
+        except Exception as exc:                        # noqa: BLE001
+            print(f"state() failed: {exc}", flush=True)
+        time.sleep(every)
+
+
 class _Handler(BaseHTTPRequestHandler):
-    def _send(self, body: bytes, ctype: str) -> None:
+    def _send(self, body: bytes, ctype: str, gz: bool = False) -> None:
         self.send_response(200)
+        if gz:
+            self.send_header("Content-Encoding", "gzip")
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
@@ -484,7 +505,12 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):                                    # noqa: N802
         if self.path.startswith("/api/state"):
-            self._send(json.dumps(state()).encode(), "application/json")
+            if not _CACHE["raw"]:
+                _CACHE["raw"] = json.dumps(state()).encode()
+            if "gzip" in (self.headers.get("Accept-Encoding") or "") and _CACHE["gz"]:
+                self._send(_CACHE["gz"], "application/json", gz=True)
+            else:
+                self._send(_CACHE["raw"], "application/json")
         elif self.path in ("/", "/index.html"):
             if not UI.exists():
                 self._send(b"factory/ui/index.html is missing", "text/plain")
@@ -506,8 +532,11 @@ def serve(host: str = HOST, port: int = PORT) -> None:
     server started before `squeeze_end` existed crashed on the first idea
     that used it, and the page just said "server unreachable"."""
     import os
-    srv = HTTPServer((host, port), _Handler)
+    import threading
+    srv = ThreadingHTTPServer((host, port), _Handler)
+    srv.daemon_threads = True
     srv.timeout = 2.0
+    threading.Thread(target=_refresh_forever, daemon=True).start()
     born = _code_mtime()
     print(f"factory floor on http://{host}:{port}   (ctrl-c to stop)")
     try:
