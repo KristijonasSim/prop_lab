@@ -428,12 +428,32 @@ def _flat(s):
     return s if isinstance(s, list) else [s] if s else []
 
 
+def _beat(name: str, done: int, total: int) -> None:
+    try:
+        from factory import live
+        live.beat(2, "translating", detail="AI reads the script", idea=name,
+                  done=done, total=total)
+    except Exception:                           # noqa: BLE001 - never stop a pass
+        pass
+
+
 def _read_all(files, *, ai: bool, model: str | None, workers: int = 1):
     """Order is kept whatever `workers` is: results come back in `files` order."""
     from concurrent.futures import ThreadPoolExecutor
 
+    # THE BOARD MUST SEE TRANSLATION. Kris, 2026-10-08: the page said
+    # "resting" for minutes while the model was reading 20 scripts.
+    done = [0]
+
+    def one(q):
+        if ai:
+            _beat(q.stem, done[0], len(files))
+        r = _read_one(q, ai, model)
+        done[0] += 1
+        return r
+
     with ThreadPoolExecutor(max(1, workers)) as ex:
-        res = list(ex.map(lambda q: _read_one(q, ai, model), files))
+        res = list(ex.map(one, files))
     out = [x for _, s, _ in res for x in _flat(s)]
     skipped = [(n, why) for n, s, why in res if not s]
     return out, skipped
