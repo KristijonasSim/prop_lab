@@ -369,7 +369,7 @@ function stations(){
   const f = r ? r.funnel : {ideas:0, step3_pass:0, step4_repaired:0, step6_pass:0, step7:0};
   const val = n => ({
     1: (r ? r.waiting : 0) + ' queued',
-    2: f.ideas + ' built' + (r && r.archived ? ' · ' + r.archived + ' archived' : ''),
+    2: f.ideas + ' built',
     3: f.step3_pass + ' pass',
     // ONE IDEA SENT TO REPAIR COUNTS ONCE, however many tweaks it got.
     // Kris, 2026-09-24: "0 / 8 fixed" was unreadable - he wants "1k tested,
@@ -391,7 +391,7 @@ function stations(){
     return `<div class="station ${on?'active':done?'done':''}">
       <div class="n mono">STEP ${s.n}</div>
       <div class="nm">${esc(s.name)}</div>
-      <div class="d">${esc(s.detail)}</div>
+      <div class="d">${s.n === 2 && r && r.archived ? esc(r.archived + ' archived (bad)') : esc(s.detail)}</div>
       <div class="v mono ${zero?'zero':(s.n===5 ? ((r && r.step5 && r.step5.real > r.step5.null_max) ? 'good' : 'mid') : (s.n>=3?'good':''))}">${s.n === 4
         ? v.replace(/^(\d+) repaired · (\d+) fixed$/, (_, a, b) =>
             `<span class="${+a ? 'mid' : 'dim'}">${a} repaired</span>`
