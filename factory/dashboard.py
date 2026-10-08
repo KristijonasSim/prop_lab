@@ -385,6 +385,11 @@ def per_source() -> list[dict]:
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested + len(ref),
             "refused": len(ref),
+            # ALL-TIME, NEVER SHRINKS. Kris, 2026-10-08: pruning hid 130
+            # TradingView scripts and "379 built" read as a leak. The
+            # collecting was done even when the strategy was bad.
+            "archived": len(_archived(key) - set(seen)),
+            "collected": _collected(key, tested + len(ref) + len(_archived(key) - set(seen))),
             "gaps": sum(1 for r in ref if r.get("gap")),
             "key": key, "label": src.label, "how": src.how,
             "status": src.status, "note": src.note,
@@ -402,6 +407,26 @@ def per_source() -> list[dict]:
             "stopped": stopped,
         })
     return out
+
+
+def _archived(source: str) -> set[str]:
+    """Scripts `factory/prune.py` moved off the board, by script name."""
+    out = set()
+    for p in (queue.DIR / "archive").glob("*_pruned"):
+        for f in ("tried.jsonl", "survivors.jsonl"):
+            for r in queue.rows(p / f):
+                if r.get("source") == source:
+                    out.add(script_of(r.get("name"), _fingerprint(r)))
+    return out
+
+
+def _collected(source: str, fallback: int) -> int:
+    """Every script ever harvested from a source. For TradingView that is the
+    fetch log itself, which nothing ever prunes."""
+    if source == "tradingview":
+        seen = queue.rows(queue.DIR / "tv_seen.jsonl")
+        return max(fallback, sum(1 for r in seen if r.get("status") == "saved"))
+    return fallback
 
 
 def gaps() -> list[dict]:

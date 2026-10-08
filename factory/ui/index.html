@@ -351,6 +351,7 @@ function sourceBar(){
   $('srcHead').innerHTML =
     `<div class="who"><b>${esc(r.label)}</b><span>${esc(r.how)}</span></div>
      <div class="stats">
+       ${stat(r.collected,'collected, all time','good')}${r.archived ? stat(r.archived,'archived (bad)','') : ''}
        ${stat(r.read,'read')}${stat(r.found,'usable','good')}
        ${r.refused ? stat(r.refused,'refused','warn') : ''}
        ${stat(r.tested,'tested')}${stat(r.passed3,'passed step 3','good')}
@@ -368,7 +369,7 @@ function stations(){
   const f = r ? r.funnel : {ideas:0, step3_pass:0, step4_repaired:0, step6_pass:0, step7:0};
   const val = n => ({
     1: (r ? r.waiting : 0) + ' queued',
-    2: f.ideas + ' built',
+    2: f.ideas + ' built' + (r && r.archived ? ' · ' + r.archived + ' archived' : ''),
     3: f.step3_pass + ' pass',
     // ONE IDEA SENT TO REPAIR COUNTS ONCE, however many tweaks it got.
     // Kris, 2026-09-24: "0 / 8 fixed" was unreadable - he wants "1k tested,
