@@ -5,7 +5,7 @@ every AI agent and every human who opens this repository.**
 
 ---
 
-## NOW — the current truth, one screen. Updated 2026-10-06.
+## NOW — the current truth, one screen. Updated 2026-10-08.
 
 **Rewrite this block whenever a line in it changes. If anything below this
 block or in another file disagrees with it, this block wins until checked.**
@@ -18,7 +18,7 @@ block or in another file disagrees with it, this block wins until checked.**
 | **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
 | **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
 | **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
-| **Factory** | TradingView scripts → grammar → 7 steps. Queue empty: all 278 tested 2026-10-07, total failures archived (`factory/prune.py`), 1-10 score on the board. Desktop loop and VM factory **stopped** by Kris. |
+| **Factory** | TradingView scripts → grammar → 7 steps. **12h TradingView run restarted 2026-10-08** (`./factory/tvloop.sh status`). Tweak of the top 8 (`backtests/factory/TWEAK.md`): 1 kept, supertrend gold 4h with a wide target, 28.4 → 17.8 days, better on 6 of 6 markets. |
 | **Factory verdicts** | Only the last 3 years decide. Nothing has beaten its luck check. **Pools 1-3** (`factory/pools.py`, 2026-10-07): 31-38% pass on unseen data, same as random pools; VWAP is 55%. |
 | **Eval days** | Always at the `riskladder.pick` rung (2% floor), never the fastest rung. Report accounts used (1/pass) beside days. |
 | **Test window** | 3 years, 5 max. Six markets always: BTC, gold, silver, EURUSD, GBPUSD, USDJPY. |
