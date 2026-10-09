@@ -46,7 +46,12 @@ def build(sym: str, years: int = RECHECK_YEARS) -> dict[str, int]:
     end = _end(sym)
     start = end - pd.DateOffset(years=years)
     frames = []
-    t = start.to_pydatetime().replace(tzinfo=timezone.utc)
+    # MIDNIGHT, NOT `start`'s clock time. `_decode` reads each raw day as
+    # minutes after `t`, and `end` is the 3-year cache's LAST BAR (23:00), so
+    # stepping from `start` decoded every day from 23:00 and labelled every bar
+    # 23 HOURS LATE - found 2026-10-09 when Bybit's live bars matched the raw
+    # cache at lag 0 and this one at lag 23. `tests/test_deep_cache.py` pins it.
+    t = start.normalize().to_pydatetime().replace(tzinfo=timezone.utc)
     stop = end.to_pydatetime().replace(tzinfo=timezone.utc)
     missing = 0
     while t <= stop:

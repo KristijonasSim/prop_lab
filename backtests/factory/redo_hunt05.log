@@ -1,0 +1,130 @@
+50-bar breakout in uptrend                   15m->15m 4h candle green        original                 lift +0.005
+NY window drift long (proxy) (rule 1)         4h->4h  London+NY 07-17        stop2 tgt3 hold6         lift +0.019
+TrendSurfers+TrendOsc long (rule 1)          15m->15m EMA50 over EMA200      stop3 tgt6 hold96        lift -0.132
+Underworld Hunter long (rule 1)               1h->1h  RSI14 over 50          stop5 tgt4 hold12        lift -0.126
+LANZ BOS up + uptrend (no clock gate) (rule   1h->1h  EMA50 over EMA200      stop1.5 tgt4 hold10      lift -0.133
+BB breakout long with EMA200 trend and volum  1h->1h  EMA50 over EMA200      stop2 tgt10 hold24       lift +0.169
+EMA100/500 trend-aligned long                15m->4h  EMA50 rising           stop2 tgt10 hold6        lift +0.018
+sustained strength above VWAP                 1h->1h  VWAP24 rising          stop2 tgt10 hold12       lift +0.120
+Triaxial consensus long (trend stack + RSI m  1h->1h  EMA50 over EMA200      stop5 tgt6 hold24        lift -0.040
+ORION box breakout long (rule 1)              1h->1h  above EMA200           stop2 tgt10 hold24       lift +0.158
+Daily low above daily EMA21 for 3 days       15m->4h  none                   stop2 tgt10 hold6        lift +0.030
+CMS bull stack + RSI                          1h->1h  not Asia 07-21         stop5 tgt4 hold24        lift +0.002
+SMMA high-band two-bar breakout               4h->4h  above EMA50            stop2 tgt3 hold6         lift +0.077
+5m EMA8 pullback with 1H trend filter long (  1h->1h  EMA50 over EMA200      stop2 tgt10 hold24       lift +0.290
+Keltner breakout long (approx)                1h->4h  above EMA50            stop1 tgt10 hold6        lift +0.213
+SR pivot breakout (long)                      1h->1h  above VWAP24           stop5 tgt4 hold24        lift +0.009
+Donchian 20 breakout + rising 200 trend       1h->1h  EMA50 rising           stop5 tgt10 hold12       lift +0.005
+Super Scalper long (rule 1)                   1h->1h  not Asia 07-21         stop1.5 tgt6 hold24      lift +0.011
+Narrow-state trend reversal bar (long)        1h->1h  EMA50 over EMA200      stop1 tgt6 hold24        lift -0.028
+Aurum AVE long break (rule 1)                 1h->1h  EMA50 over EMA200      stop1.5 tgt6 hold24      lift +0.244
+Buy-pressure uptrend proxy                    1h->1h  above VWAP24           stop3 tgt10 hold24       lift -0.010
+CEM trend-stack long                          1h->1h  New York 12-17         stop1 tgt6 hold24        lift +0.150
+BB basis EMA cross + AO positive              1h->1h  above EMA200           stop2 tgt4 hold24        lift +0.128
+AutoFib 1.618 breakout above EMA200           1h->1h  EMA50 over EMA200      stop1.5 tgt4 hold24      lift +0.111
+PCT confluence long (trend core) (rule 1)     1h->1h  vol quiet              stop2 tgt10 hold24       lift +0.452
+EMA9 reclaim in uptrend                       1h->1h  not Asia 07-21         stop1 tgt10 hold24       lift +0.062
+Seasonal month-start long (always-in proxy)  15m->4h  New York 12-17         stop2 tgt10 hold4        lift -0.005
+EMA50 MACD RSI long (rule 1)                  4h->4h  not Asia 07-21         stop1.5 tgt1.5 hold6     lift -0.075
+Tomukas trend+VWAP+RSI long                   1h->1h  above EMA50            stop2 tgt10 hold24       lift +0.252
+DEMA ATR line turns up (rule 1)               1h->1h  volume over avg        stop1 tgt10 hold24       lift +0.344
+Grid dip-buy proxy                            4h->4h  New York 12-17         stop1 tgt10 hold6        lift +0.011
+Keltner breakout long                         1h->1h  EMA50 rising           stop5 tgt4 hold24        lift -0.037
+MR Pro long (rule 1)                          1h->1h  not Asia 07-21         stop5 tgt6 hold24        lift -0.019
+Bullish engulfing above EMA200                1h->1h  SMA200 rising          stop1.5 tgt6 hold24      lift +0.006
+Hermes ALMA return trend + breakout + macro   1h->1h  EMA50 over EMA200      stop1.5 tgt10 hold24     lift +0.326
+ATR GOD long ST3 flip (rule 2)               15m->15m above SMA200           stop1.5 tgt10 hold96     lift +0.505
+Concordance long: bias up + stochastic momen  1h->4h  not Asia 07-21         stop1.5 tgt10 hold6      lift +0.187
+Squeeze breakout above 20-bar high, above 20  1h->1h  EMA50 over EMA200      stop1.5 tgt4 hold12      lift +0.007
+IB breakout retrace long                      1h->1h  not Asia 07-21         stop1.5 tgt4 hold24      lift +0.025
+VWAP + BB dip in uptrend                      1h->1h  RSI14 over 50          stop3 tgt10 hold24       lift +0.105
+50-bar breakout in uptrend                   grid +0.005 (p95 +0.131) final +0.005 (p95 +0.131) real=False
+NY window drift long (proxy) (rule 1)        grid +0.019 (p95 +0.102) final +0.019 (p95 +0.102) real=False
+TrendSurfers+TrendOsc long (rule 1)          grid -0.132 (p95 +0.148) final -0.132 (p95 +0.148) real=False
+Underworld Hunter long (rule 1)              grid -0.126 (p95 +0.189) final -0.126 (p95 +0.189) real=False
+LANZ BOS up + uptrend (no clock gate) (rule  grid -0.133 (p95 +0.096) final -0.133 (p95 +0.096) real=False
+BB breakout long with EMA200 trend and volum grid +0.169 (p95 +0.178) final +0.169 (p95 +0.178) real=False
+EMA100/500 trend-aligned long                grid +0.018 (p95 +0.084) final +0.018 (p95 +0.084) real=False
+sustained strength above VWAP                grid +0.120 (p95 +0.114) final +0.120 (p95 +0.114) real=True
+Triaxial consensus long (trend stack + RSI m grid -0.040 (p95 +0.246) final -0.040 (p95 +0.246) real=False
+ORION box breakout long (rule 1)             grid +0.158 (p95 +0.134) final +0.158 (p95 +0.134) real=True
+Daily low above daily EMA21 for 3 days       grid +0.030 (p95 +0.156) final +0.030 (p95 +0.156) real=False
+CMS bull stack + RSI                         grid +0.002 (p95 +0.249) final +0.002 (p95 +0.249) real=False
+SMMA high-band two-bar breakout              grid +0.077 (p95 +0.162) final +0.077 (p95 +0.162) real=False
+5m EMA8 pullback with 1H trend filter long ( grid +0.290 (p95 +0.172) final +0.290 (p95 +0.172) real=True
+Keltner breakout long (approx)               grid +0.213 (p95 +0.136) final +0.213 (p95 +0.136) real=True
+SR pivot breakout (long)                     grid +0.009 (p95 +0.102) final +0.009 (p95 +0.102) real=False
+Donchian 20 breakout + rising 200 trend      grid +0.005 (p95 +0.237) final +0.005 (p95 +0.237) real=False
+Super Scalper long (rule 1)                  grid +0.011 (p95 +0.126) final +0.011 (p95 +0.126) real=False
+Narrow-state trend reversal bar (long)       grid -0.028 (p95 +0.076) final -0.028 (p95 +0.076) real=False
+Aurum AVE long break (rule 1)                grid +0.244 (p95 +0.139) final +0.244 (p95 +0.139) real=True
+Buy-pressure uptrend proxy                   grid -0.010 (p95 +0.153) final -0.010 (p95 +0.153) real=False
+CEM trend-stack long                         grid +0.150 (p95 +0.232) final +0.150 (p95 +0.232) real=False
+BB basis EMA cross + AO positive             grid +0.128 (p95 +0.154) final +0.128 (p95 +0.154) real=False
+AutoFib 1.618 breakout above EMA200          grid +0.111 (p95 +0.277) final +0.111 (p95 +0.277) real=False
+PCT confluence long (trend core) (rule 1)    grid +0.452 (p95 +0.147) final +0.452 (p95 +0.147) real=True
+EMA9 reclaim in uptrend                      grid +0.062 (p95 +0.192) final +0.062 (p95 +0.192) real=False
+Seasonal month-start long (always-in proxy)  grid -0.005 (p95 +0.165) final -0.005 (p95 +0.165) real=False
+EMA50 MACD RSI long (rule 1)                 grid -0.075 (p95 +0.097) final -0.075 (p95 +0.097) real=False
+Tomukas trend+VWAP+RSI long                  grid +0.252 (p95 +0.208) final +0.252 (p95 +0.208) real=True
+DEMA ATR line turns up (rule 1)              grid +0.344 (p95 +0.142) final +0.344 (p95 +0.142) real=True
+Grid dip-buy proxy                           grid +0.011 (p95 +0.186) final +0.011 (p95 +0.186) real=False
+Keltner breakout long                        grid -0.037 (p95 +0.123) final -0.037 (p95 +0.123) real=False
+MR Pro long (rule 1)                         grid -0.019 (p95 +0.196) final -0.019 (p95 +0.196) real=False
+Bullish engulfing above EMA200               grid +0.006 (p95 +0.169) final +0.006 (p95 +0.169) real=False
+Hermes ALMA return trend + breakout + macro  grid +0.326 (p95 +0.166) final +0.326 (p95 +0.166) real=True
+ATR GOD long ST3 flip (rule 2)               grid +0.505 (p95 +0.109) final +0.505 (p95 +0.109) real=True
+Concordance long: bias up + stochastic momen grid +0.187 (p95 +0.127) final +0.187 (p95 +0.127) real=True
+Squeeze breakout above 20-bar high, above 20 grid +0.007 (p95 +0.199) final +0.007 (p95 +0.199) real=False
+IB breakout retrace long                     grid +0.025 (p95 +0.175) final +0.025 (p95 +0.175) real=False
+VWAP + BB dip in uptrend                     grid +0.105 (p95 +0.183) final +0.105 (p95 +0.183) real=False
+| # | strategy | cell | pass | days | accts | PF | tpd || change | pass | days | accts | PF | tpd | luck check |
+|---|---|---|---|---|---|---|---||---|---|---|---|---|---|---|
+| 1 | 50-bar breakout in uptrend | XAUUSD 15m | 46.7% | 32.2 | 2.14 | 1.33 | 0.63 || 4h candle green | 58.5% | 29.1 | 1.71 | 1.44 | 0.56 | luck (p=0.50) |
+| 2 | NY window drift long (proxy) (rule 1) | XAUUSD 4h | 43.5% | 43.6 | 2.3 | 1.31 | 0.72 || London+NY 07-17; stop2 tgt3 hold6 | 56.9% | 54.5 | 1.76 | 1.48 | 0.54 | luck (p=0.38) |
+| 3 | TrendSurfers+TrendOsc long (rule 1) | XAUUSD 15m | 36.9% | 16.3 | 2.71 | 1.34 | 0.61 || EMA50 over EMA200; stop3 tgt6 hold96 | 52.9% | 30.2 | 1.89 | 1.51 | 0.54 | luck (p=0.82) |
+| 4 | Underworld Hunter long (rule 1) | XAUUSD 1h | 50.6% | 45.5 | 1.98 | 1.28 | 0.54 || RSI14 over 50; stop5 tgt4 hold12 | 59.7% | 125.6 | 1.67 | 1.42 | 0.52 | luck (p=1.00) |
+| 5 | LANZ BOS up + uptrend (no clock gate) (r | XAUUSD 1h | 42.5% | 25.9 | 2.35 | 1.33 | 0.76 || EMA50 over EMA200; stop1.5 tgt4 hold10 | 48.2% | 37.3 | 2.07 | 1.37 | 0.54 | luck (p=0.90) |
+| 6 | BB breakout long with EMA200 trend and v | XAUUSD 1h | 32.7% | 30.5 | 3.05 | 1.22 | 0.76 || EMA50 over EMA200; stop2 tgt10 hold24 | 41.9% | 23.8 | 2.38 | 1.46 | 0.53 | luck (p=0.12) |
+| 7 | EMA100/500 trend-aligned long | XAUUSD 15m | 32.5% | 15.4 | 3.08 | 1.27 | 1.16 || tf 4h; EMA50 rising; stop2 tgt10 hold6 | 59.9% | 30.1 | 1.67 | 1.71 | 0.53 | luck (p=0.25) |
+| 8 | sustained strength above VWAP | XAUUSD 1h | 36.1% | 41.5 | 2.77 | 1.24 | 0.57 || VWAP24 rising; stop2 tgt10 hold12 | 45.1% | 37.7 | 2.22 | 1.47 | 0.57 | REAL |
+| 9 | Triaxial consensus long (trend stack + R | XAUUSD 1h | 31.4% | 22.3 | 3.19 | 1.23 | 0.85 || EMA50 over EMA200; stop5 tgt6 hold24 | 62.7% | 60.6 | 1.59 | 1.51 | 0.53 | luck (p=0.93) |
+| 10 | ORION box breakout long (rule 1) | XAUUSD 1h | 42.0% | 35.7 | 2.38 | 1.25 | 0.61 || above EMA200; stop2 tgt10 hold24 | 49.3% | 20.3 | 2.03 | 1.45 | 0.53 | REAL |
+| 11 | Daily low above daily EMA21 for 3 days | XAUUSD 15m | 33.3% | 15.0 | 3.0 | 1.19 | 1.39 || tf 4h; stop2 tgt10 hold6 | 44.3% | 40.7 | 2.26 | 1.41 | 0.55 | luck (p=0.53) |
+| 12 | CMS bull stack + RSI | XAUUSD 1h | 40.0% | 25.0 | 2.5 | 1.25 | 0.85 || not Asia 07-21; stop5 tgt4 hold24 | 69.5% | 67.6 | 1.44 | 1.65 | 0.49 | luck (p=0.95) |
+| 13 | SMMA high-band two-bar breakout | XAUUSD 4h | 44.3% | 42.9 | 2.26 | 1.28 | 0.74 || above EMA50; stop2 tgt3 hold6 | 48.7% | 36.9 | 2.05 | 1.50 | 0.67 | luck (p=0.20) |
+| 14 | 5m EMA8 pullback with 1H trend filter lo | XAUUSD 1h | 44.4% | 24.8 | 2.25 | 1.24 | 0.87 || EMA50 over EMA200; stop2 tgt10 hold24 | 55.0% | 20.9 | 1.82 | 1.72 | 0.53 | REAL |
+| 15 | Keltner breakout long (approx) | XAUUSD 1h | 29.2% | 24.0 | 3.42 | 1.19 | 1.04 || tf 4h; above EMA50; stop1 tgt10 hold6 | 39.3% | 17.8 | 2.54 | 1.57 | 0.61 | REAL |
+| 16 | SR pivot breakout (long) | XAUUSD 1h | 45.2% | 35.4 | 2.21 | 1.30 | 0.56 || above VWAP24; stop5 tgt4 hold24 | 58.6% | 83.6 | 1.71 | 1.44 | 0.51 | luck (p=0.38) |
+| 17 | Donchian 20 breakout + rising 200 trend | XAUUSD 1h | 33.1% | 39.3 | 3.02 | 1.19 | 0.61 || EMA50 rising; stop5 tgt10 hold12 | 60.9% | 75.6 | 1.64 | 1.37 | 0.56 | luck (p=0.57) |
+| 18 | Super Scalper long (rule 1) | XAUUSD 1h | 38.1% | 31.5 | 2.62 | 1.23 | 0.69 || not Asia 07-21; stop1.5 tgt6 hold24 | 42.4% | 33.0 | 2.36 | 1.32 | 0.51 | luck (p=0.28) |
+| 19 | Narrow-state trend reversal bar (long) | XAUUSD 1h | 34.0% | 41.2 | 2.95 | 1.20 | 0.61 || EMA50 over EMA200; stop1 tgt6 hold24 | 33.3% | 15.0 | 3.0 | 1.35 | 0.60 | luck (p=0.62) |
+| 20 | Aurum AVE long break (rule 1) | XAUUSD 1h | 30.6% | 32.6 | 3.26 | 1.14 | 0.74 || EMA50 over EMA200; stop1.5 tgt6 hold24 | 40.3% | 27.3 | 2.48 | 1.44 | 0.52 | REAL |
+| 21 | Buy-pressure uptrend proxy | XAUUSD 1h | 42.8% | 46.7 | 2.34 | 1.17 | 0.63 || above VWAP24; stop3 tgt10 hold24 | 40.2% | 49.8 | 2.49 | 1.31 | 0.51 | luck (p=0.57) |
+| 22 | CEM trend-stack long | XAUUSD 1h | 38.9% | 23.2 | 2.57 | 1.23 | 1.03 || New York 12-17; stop1 tgt6 hold24 | 42.1% | 19.0 | 2.38 | 1.51 | 0.52 | luck (p=0.25) |
+| 23 | BB basis EMA cross + AO positive | XAUUSD 1h | 41.2% | 36.4 | 2.43 | 1.23 | 0.70 || above EMA200; stop2 tgt4 hold24 | 49.5% | 30.3 | 2.02 | 1.52 | 0.54 | luck (p=0.12) |
+| 24 | AutoFib 1.618 breakout above EMA200 | XAUUSD 1h | 43.5% | 18.4 | 2.3 | 1.23 | 0.89 || EMA50 over EMA200; stop1.5 tgt4 hold24 | 41.8% | 23.9 | 2.39 | 1.53 | 0.57 | luck (p=0.53) |
+| 25 | PCT confluence long (trend core) (rule 1 | XAUUSD 1h | 31.4% | 30.2 | 3.18 | 1.19 | 0.91 || vol quiet; stop2 tgt10 hold24 | 41.1% | 20.7 | 2.43 | 1.60 | 0.47 | REAL |
+| 26 | EMA9 reclaim in uptrend | XAUUSD 1h | 39.2% | 30.6 | 2.55 | 1.21 | 0.67 || not Asia 07-21; stop1 tgt10 hold24 | 34.8% | 17.2 | 2.87 | 1.38 | 0.51 | luck (p=0.35) |
+| 27 | Seasonal month-start long (always-in pro | XAUUSD 15m | 29.6% | 20.2 | 3.37 | 1.01 | 1.78 || tf 4h; New York 12-17; stop2 tgt10 hold4 | 57.6% | 57.3 | 1.73 | 1.45 | 0.89 | luck (p=0.65) |
+| 28 | EMA50 MACD RSI long (rule 1) | XAUUSD 4h | 31.5% | 34.9 | 3.17 | 1.21 | 0.60 || not Asia 07-21; stop1.5 tgt1.5 hold6 | 41.2% | 60.7 | 2.43 | 1.26 | 0.56 | luck (p=0.93) |
+| 29 | Tomukas trend+VWAP+RSI long | XAUUSD 1h | 40.7% | 29.5 | 2.46 | 1.27 | 0.90 || above EMA50; stop2 tgt10 hold24 | 47.0% | 21.3 | 2.13 | 1.55 | 0.67 | REAL |
+| 30 | DEMA ATR line turns up (rule 1) | XAUUSD 1h | 36.4% | 32.9 | 2.74 | 1.17 | 0.97 || volume over avg; stop1 tgt10 hold24 | 43.7% | 11.4 | 2.29 | 1.55 | 0.67 | REAL |
+| 31 | Grid dip-buy proxy | XAUUSD 4h | 50.2% | 153.3 | 1.99 | 1.14 | 0.80 || New York 12-17; stop1 tgt10 hold6 | 46.6% | 30.1 | 2.15 | 1.38 | 0.60 | luck (p=0.78) |
+| 32 | Keltner breakout long | XAUUSD 1h | 32.1% | 34.3 | 3.11 | 1.13 | 0.65 || EMA50 rising; stop5 tgt4 hold24 | 51.5% | 79.6 | 1.94 | 1.35 | 0.53 | luck (p=0.75) |
+| 33 | MR Pro long (rule 1) | XAUUSD 1h | 26.6% | 41.3 | 3.76 | 1.08 | 0.94 || not Asia 07-21; stop5 tgt6 hold24 | 76.6% | 60.0 | 1.3 | 1.55 | 0.56 | luck (p=0.93) |
+| 34 | Bullish engulfing above EMA200 | XAUUSD 1h | 34.6% | 46.3 | 2.89 | 1.19 | 0.64 || SMA200 rising; stop1.5 tgt6 hold24 | 38.8% | 25.8 | 2.58 | 1.36 | 0.52 | luck (p=0.57) |
+| 35 | Hermes ALMA return trend + breakout + ma | XAUUSD 1h | 33.4% | 35.9 | 2.99 | 1.16 | 0.77 || EMA50 over EMA200; stop1.5 tgt10 hold24 | 42.1% | 19.0 | 2.38 | 1.56 | 0.52 | REAL |
+| 36 | ATR GOD long ST3 flip (rule 2) | XAUUSD 15m | 42.8% | 46.8 | 2.34 | 1.21 | 0.83 || above SMA200; stop1.5 tgt10 hold96 | 49.2% | 12.2 | 2.03 | 1.67 | 0.48 | REAL |
+| 37 | Concordance long: bias up + stochastic m | XAUUSD 1h | 30.6% | 26.2 | 3.27 | 1.13 | 1.12 || tf 4h; not Asia 07-21; stop1.5 tgt10 hold6 | 50.6% | 29.6 | 1.98 | 1.66 | 0.52 | REAL |
+| 38 | Squeeze breakout above 20-bar high, abov | XAUUSD 1h | 34.5% | 49.3 | 2.9 | 1.09 | 0.64 || EMA50 over EMA200; stop1.5 tgt4 hold12 | 37.5% | 40.0 | 2.67 | 1.19 | 0.55 | luck (p=0.47) |
+| 39 | IB breakout retrace long | XAUUSD 1h | 36.7% | 35.4 | 2.72 | 1.18 | 0.80 || not Asia 07-21; stop1.5 tgt4 hold24 | 39.1% | 28.1 | 2.56 | 1.30 | 0.72 | luck (p=0.35) |
+| 40 | VWAP + BB dip in uptrend | XAUUSD 1h | 26.4% | 34.1 | 3.79 | 1.15 | 0.85 || RSI14 over 50; stop3 tgt10 hold24 | 54.2% | 36.9 | 1.84 | 1.61 | 0.53 | luck (p=0.25) |
+
+FINDS: 6
+5m EMA8 pullback with 1H trend filter long (rule 1) long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1 and ema50 above ema200 stop2 tgt10 hold24 1h 1.7177721548302716 0.53 {'risk_pct': 2.0, 'pass_pct': 55.0, 'days': 20.9, 'accounts': 1.82, 'band': {'days_lo': 17.3, 'days_hi': 25.7, 'days_med': 20.9, 'pass_lo': 45.6, 'pass_hi': 65.5, 'pass_med': 55.1, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}
+Keltner breakout long (approx) long when price above ema20 and price above sma200 and price above ema50 stop1 tgt10 hold6 4h 1.574333504304345 0.615 {'risk_pct': 2.0, 'pass_pct': 39.3, 'days': 17.8, 'accounts': 2.54, 'band': {'days_lo': 15.7, 'days_hi': 25.7, 'days_med': 19.1, 'pass_lo': 35.1, 'pass_hi': 54.8, 'pass_med': 43.6, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}
+Tomukas trend+VWAP+RSI long long when ema50 above ema200 and price above vwap100 and rsi14 above 50 and price above ema50 stop2 tgt10 hold24 1h 1.547662561479157 0.671 {'risk_pct': 2.0, 'pass_pct': 47.0, 'days': 21.3, 'accounts': 2.13, 'band': {'days_lo': 17.8, 'days_hi': 25.9, 'days_med': 21.1, 'pass_lo': 37.1, 'pass_hi': 54.0, 'pass_med': 44.9, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}
+DEMA ATR line turns up (rule 1) long when supertrend20x1.2 cross_above 0 and rvol20 above 1 stop1 tgt10 hold24 1h 1.5522829305079784 0.67 {'risk_pct': 2.0, 'pass_pct': 43.7, 'days': 11.4, 'accounts': 2.29, 'band': {'days_lo': 10.5, 'days_hi': 14.5, 'days_med': 12.2, 'pass_lo': 36.8, 'pass_hi': 48.4, 'pass_med': 42.9, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}
+Hermes ALMA return trend + breakout + macro EMA long when alma30x0.95 above alma250x0.95 and price above highest6[1] and price above ema200 and ema50 above ema200 stop1.5 tgt10 hold24 1h 1.5566710717890624 0.518 {'risk_pct': 2.0, 'pass_pct': 42.1, 'days': 19.0, 'accounts': 2.38, 'band': {'days_lo': 15.2, 'days_hi': 23.0, 'days_med': 18.3, 'pass_lo': 35.9, 'pass_hi': 53.9, 'pass_med': 44.6, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}
+Concordance long: bias up + stochastic momentum long when price above ema55 and wpr20 above -40 and hour above 6.5 and hour below 20.5 stop1.5 tgt10 hold6 4h 1.6580515725357505 0.522 {'risk_pct': 2.0, 'pass_pct': 50.6, 'days': 29.6, 'accounts': 1.98, 'band': {'days_lo': 23.3, 'days_hi': 37.8, 'days_med': 29.8, 'pass_lo': 42.7, 'pass_hi': 61.1, 'pass_med': 53.1, 'never_pct': 0.0, 'resamples': 200, 'mean_block': 10}}

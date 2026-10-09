@@ -376,11 +376,11 @@ def per_source() -> list[dict]:
             # happened to THIS idea", which is what Kris was asking when the
             # board showed "0 fixed" after eight repairs had been tried.
             "ideas": [x for x in nightly.ideas(500)
-                      if x.get("source") == key][-25:][::-1],
+                      if x.get("source") == key and _shown(x)][-25:][::-1],
             # Ranked best to worst and NOT cut: the old `[::-1][:25]` meant
             # newest-first and, on a ranked list, showed only the 25 worst.
             "scripts": scripts_view([x for x in nightly.ideas(500)
-                                     if x.get("source") == key]),
+                                     if x.get("source") == key and _shown(x)]),
             "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested + len(ref),
@@ -407,6 +407,17 @@ def per_source() -> list[dict]:
             "stopped": stopped,
         })
     return out
+
+
+#: Kris, 2026-10-09: the tables show only ideas scored at step 7 with at least
+#: this many trades a day. Everything else is archived by `prune.py --scored-only`.
+MIN_TPD = 0.1
+
+
+def _shown(x: dict) -> bool:
+    sc = x.get("score") if isinstance(x.get("score"), dict) else {}
+    return (str(x.get("outcome", "")).startswith("scored at step 7")
+            and (sc.get("per_day") or 0) >= MIN_TPD)
 
 
 def _archived(source: str) -> set[str]:

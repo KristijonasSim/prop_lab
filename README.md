@@ -5,7 +5,7 @@ every AI agent and every human who opens this repository.**
 
 ---
 
-## NOW — the current truth, one screen. Updated 2026-10-08.
+## NOW — the current truth, one screen. Updated 2026-10-09.
 
 **Rewrite this block whenever a line in it changes. If anything below this
 block or in another file disagrees with it, this block wins until checked.**
@@ -16,10 +16,11 @@ block or in another file disagrees with it, this block wins until checked.**
 | **Shipped rule** | `core/chosen.py`: XAUUSD 1h, floor 30 / top 5, 2% risk. 59.8% pass, 21.7 days (band 16.8–31.4), measured on the old Thunderbolt 6/3/6 card. |
 | **On the HOUSE card** | Settled 2026-10-06 (`research/house_repick.py`): at **2% risk** 54.7% pass, **23.8 days (band 19–33)**, 1.83 accounts per funded one. 4% is 18.3 days (14–24) at 2.29 accounts; the bands overlap, so 4% is not really faster. **2% stays.** |
 | **Tuning H-027** | Closed. Eight axes tested; nothing beats the baseline outside noise. |
-| **Live money** | None. Bybit demo stopped 2026-09-14. No kill switch exists because nothing trades. |
+| **Live money** | None. Gold-pool demo built (`live/pool6_demo.py`, 0.75% real + 2% calculated), not armed: needs the new demo account's key. |
 | **Indicator** | `strategies/vwapbreak/indicator.pine` written, **not published**. |
 | **Factory** | TradingView scripts → grammar → 7 steps. **12h TradingView run restarted 2026-10-08** (`./factory/tvloop.sh status`). Tweak of the top 8 (`backtests/factory/TWEAK.md`): 1 kept, supertrend gold 4h with a wide target, 28.4 → 17.8 days, better on 6 of 6 markets. |
 | **Factory verdicts** | Only the last 3 years decide. Nothing has beaten its luck check. **Pools 1-3** (`factory/pools.py`, 2026-10-07): 31-38% pass on unseen data, same as random pools; VWAP is 55%. |
+| **Step 8 (2026-10-09)** | **Clock bug fixed**: the 5y FX/metals cache was 23h late (`scripts/build_5y.py`); all factory results re-run. Demo pool (gold, 24h cap): B3M + Descending trendline + EMA8 pullback + DEMA ATR — **0.75%: 59.5% pass, 16.8 days, 1.68 accts; 2%: 42.6%, 7.0 days, 2.35**. Older years ~25%. `live/pool6_demo.py`, waiting for Kris's new demo key. |
 | **Eval days** | Always at the `riskladder.pick` rung (2% floor), never the fastest rung. Report accounts used (1/pass) beside days. |
 | **Test window** | 3 years, 5 max. Six markets always: BTC, gold, silver, EURUSD, GBPUSD, USDJPY. |
 | **Data** | Committed to Git on purpose (see `.gitignore`). `data/feeds/` is rewritten every 15 min by cron. |

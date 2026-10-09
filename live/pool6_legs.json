@@ -1,0 +1,34 @@
+[
+ {
+  "name": "B3M trend pullback breakout (reduced)",
+  "tf": "4h",
+  "rule": "long when price above ema20 and price above sma150 and rsi14 above 42 and hour above 16.5",
+  "stop_atr": 1.5,
+  "target_atr": 4.0,
+  "max_hold": 6
+ },
+ {
+  "name": "Descending trendline breakout long (rule 1)",
+  "tf": "4h",
+  "rule": "long when low cross_above pivot_high6 and vwap24 above vwap24[6]",
+  "stop_atr": 1.0,
+  "target_atr": 4.0,
+  "max_hold": 6
+ },
+ {
+  "name": "5m EMA8 pullback with 1H trend filter long (rule 1)",
+  "tf": "1h",
+  "rule": "long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1 and ema50 above ema200",
+  "stop_atr": 2.0,
+  "target_atr": 10.0,
+  "max_hold": 24
+ },
+ {
+  "name": "DEMA ATR line turns up (rule 1)",
+  "tf": "1h",
+  "rule": "long when supertrend20x1.2 cross_above 0 and rvol20 above 1",
+  "stop_atr": 1.0,
+  "target_atr": 10.0,
+  "max_hold": 24
+ }
+]

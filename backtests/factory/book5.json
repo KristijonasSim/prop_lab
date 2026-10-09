@@ -1,0 +1,194 @@
+{
+ "legs": {
+  "Pivot high breakout against Supertrend down (rule 1)": {
+   "n": 110,
+   "risk_pct": 2.0,
+   "pass_pct": 44.5,
+   "days": 35.9,
+   "accounts": 2.25,
+   "pf": 2.16,
+   "tpd": 0.14,
+   "band": [
+    29.3,
+    56.7
+   ]
+  },
+  "Hemant gold liquidity sweep long": {
+   "n": 81,
+   "risk_pct": 2.0,
+   "pass_pct": 60.6,
+   "days": 34.6,
+   "accounts": 1.65,
+   "pf": 2.73,
+   "tpd": 0.12,
+   "band": [
+    26.5,
+    47.4
+   ]
+  },
+  "nonstop DCA long proxy": {
+   "n": 88,
+   "risk_pct": 2.0,
+   "pass_pct": 68.6,
+   "days": 24.8,
+   "accounts": 1.46,
+   "pf": 3.02,
+   "tpd": 0.12,
+   "band": [
+    20.0,
+    33.0
+   ]
+  },
+  "NDX close crosses above SMA10, above EMA200": {
+   "n": 92,
+   "risk_pct": 2.0,
+   "pass_pct": 61.2,
+   "days": 65.4,
+   "accounts": 1.64,
+   "pf": 2.82,
+   "tpd": 0.13,
+   "band": [
+    49.8,
+    84.9
+   ]
+  },
+  "Daily change up long (rule 1)": {
+   "n": 169,
+   "risk_pct": 2.0,
+   "pass_pct": 55.5,
+   "days": 25.2,
+   "accounts": 1.8,
+   "pf": 2.29,
+   "tpd": 0.22,
+   "band": [
+    19.6,
+    30.8
+   ]
+  },
+  "Pivot high breakout against Supertrend down (rule 1) [USDJPY]": {
+   "n": 94,
+   "risk_pct": 2.0,
+   "pass_pct": 44.7,
+   "days": 73.8,
+   "accounts": 2.24,
+   "pf": 1.47,
+   "tpd": 0.12,
+   "band": [
+    53.2,
+    123.8
+   ]
+  },
+  "Pivot high breakout against Supertrend down (rule 1) [GBPUSD]": {
+   "n": 96,
+   "risk_pct": 2.0,
+   "pass_pct": 27.3,
+   "days": 71.4,
+   "accounts": 3.66,
+   "pf": 1.2,
+   "tpd": 0.13,
+   "band": [
+    48.3,
+    117.2
+   ]
+  }
+ },
+ "books": {
+  "A five": {
+   "n": 540,
+   "risk_pct": 2.0,
+   "pass_pct": 51.6,
+   "days": 9.7,
+   "accounts": 1.94,
+   "pf": 2.53,
+   "tpd": 0.69,
+   "band": [
+    8.3,
+    11.7
+   ],
+   "null_days_p10": 10.06,
+   "null_days_med": 11.55,
+   "null_pass_med": 41.900000000000006
+  },
+  "B seven (note)": {
+   "n": 730,
+   "risk_pct": 2.0,
+   "pass_pct": 44.5,
+   "days": 9.0,
+   "accounts": 2.25,
+   "pf": 2.16,
+   "tpd": 0.94,
+   "band": [
+    7.2,
+    9.9
+   ],
+   "null_days_p10": 9.58,
+   "null_days_med": 10.4,
+   "null_pass_med": 38.5
+  },
+  "A without Pivot high breakout against Su": {
+   "n": 430,
+   "risk_pct": 2.0,
+   "pass_pct": 51.0,
+   "days": 11.8,
+   "accounts": 1.96,
+   "pf": 2.63,
+   "tpd": 0.55,
+   "band": [
+    10.0,
+    14.9
+   ]
+  },
+  "A without Hemant gold liquidity sweep lo": {
+   "n": 459,
+   "risk_pct": 2.0,
+   "pass_pct": 50.4,
+   "days": 11.9,
+   "accounts": 1.99,
+   "pf": 2.49,
+   "tpd": 0.59,
+   "band": [
+    9.7,
+    13.6
+   ]
+  },
+  "A without nonstop DCA long proxy": {
+   "n": 452,
+   "risk_pct": 2.0,
+   "pass_pct": 54.6,
+   "days": 11.0,
+   "accounts": 1.83,
+   "pf": 2.42,
+   "tpd": 0.58,
+   "band": [
+    10.0,
+    13.5
+   ]
+  },
+  "A without NDX close crosses above SMA10,": {
+   "n": 448,
+   "risk_pct": 2.0,
+   "pass_pct": 50.5,
+   "days": 9.9,
+   "accounts": 1.98,
+   "pf": 2.49,
+   "tpd": 0.57,
+   "band": [
+    8.8,
+    12.7
+   ]
+  },
+  "A without Daily change up long (rule 1)": {
+   "n": 371,
+   "risk_pct": 2.0,
+   "pass_pct": 52.3,
+   "days": 11.5,
+   "accounts": 1.91,
+   "pf": 2.64,
+   "tpd": 0.48,
+   "band": [
+    10.3,
+    14.6
+   ]
+  }
+ }
+}

@@ -1,0 +1,99 @@
+
+## sustained strength above VWAP  [XAUUSD 1h]  long when rsi14 above 55 for 10 bars and price above vwap100 and vwap24 above vwap24[6]  stop2 tgt10 hold12
+  markets better: 5 /6 {'BTCUSDT': (0.87, 1.07, 444), 'XAUUSD': (1.24, 1.47, 441), 'XAGUSD': (0.86, 1.06, 373), 'EURUSD': (0.9, 0.98, 405), 'GBPUSD': (0.94, 0.92, 360), 'USDJPY': (1.07, 1.15, 459)}
+  older 1.7y: orig pf 0.8595182000828441 n 207 -> new pf 0.8891997020468757 n 215 better=True
+  years: {2023: (1.09, 51), 2024: (1.25, 138), 2025: (1.87, 175), 2026: (1.28, 77)}
+  costs: {'1x': 1.4731364053239113, '2x': 1.1841011079796724, '3x': 1.1246439730976114}
+  entry: {'real_mean': 0.22046637779636083, 'real_n': 441, 'random_median': 0.07019346243131992, 'random_p95': 0.11877483827753485, 'p': 0.0}
+
+## ORION box breakout long (rule 1)  [XAUUSD 1h]  long when price cross_above highest15[1] and price above ema150 and price above ema200  stop2 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (0.83, 0.96, 426), 'XAUUSD': (1.25, 1.45, 408), 'XAGUSD': (1.04, 1.09, 348), 'EURUSD': (0.94, 0.89, 386), 'GBPUSD': (0.94, 1.1, 370), 'USDJPY': (0.93, 1.1, 421)}
+  older 1.7y: orig pf 0.8922122955005305 n 242 -> new pf 0.9613664595654723 n 219 better=True
+  years: {2023: (1.51, 47), 2024: (1.42, 135), 2025: (1.7, 162), 2026: (0.94, 64)}
+  costs: {'1x': 1.4462256822370605, '2x': 1.2351806389419515, '3x': 1.1244992941555194}
+  entry: {'real_mean': 0.2662177091590954, 'real_n': 408, 'random_median': 0.20449984629313722, 'random_p95': 0.32255847274468186, 'p': 0.135}
+
+## 5m EMA8 pullback with 1H trend filter long (rule 1)  [XAUUSD 1h]  long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1 and ema50 above ema200  stop2 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (0.9, 1.02, 473), 'XAUUSD': (1.24, 1.72, 409), 'XAGUSD': (0.83, 1.04, 385), 'EURUSD': (0.9, 0.86, 356), 'GBPUSD': (1.02, 1.1, 344), 'USDJPY': (0.99, 1.16, 455)}
+  older 1.7y: orig pf 0.7846112466905096 n 360 -> new pf 0.934448852407108 n 213 better=True
+  years: {2023: (1.95, 50), 2024: (1.55, 138), 2025: (2.08, 162), 2026: (1.12, 59)}
+  costs: {'1x': 1.7177721548302716, '2x': 1.576338013827838, '3x': 1.445678037797104}
+  entry: {'real_mean': 0.3833542028295737, 'real_n': 409, 'random_median': 0.15123416709349033, 'random_p95': 0.2213902432307946, 'p': 0.0}
+
+## Keltner breakout long (approx)  [XAUUSD 4h]  long when price above ema20 and price above sma200 and price above ema50  stop1 tgt10 hold6
+  markets better: 5 /6 {'BTCUSDT': (1.11, 1.21, 485), 'XAUUSD': (1.49, 1.57, 492), 'XAGUSD': (1.01, 1.05, 431), 'EURUSD': (1.09, 1.18, 353), 'GBPUSD': (1.02, 1.16, 351), 'USDJPY': (0.96, 0.93, 504)}
+  older 1.7y: orig pf 1.2065195736603063 n 196 -> new pf 1.0537632240376935 n 214 better=False
+  years: {2023: (2.72, 50), 2024: (1.3, 157), 2025: (1.66, 222), 2026: (1.27, 63)}
+  costs: {'1x': 1.574333504304345, '2x': 1.4565675449485238, '3x': 1.394570344903098}
+  entry: {'real_mean': 0.32503443399698795, 'real_n': 492, 'random_median': 0.2642084169372316, 'random_p95': 0.3332250285140816, 'p': 0.09}
+
+## Aurum AVE long break (rule 1)  [XAUUSD 1h]  long when price above kc_upper30x1.8 and adx10 above 20 and di_plus10 above di_minus10 and ema50 above ema200  stop1.5 tgt6 hold24
+  markets better: 2 /6 {'BTCUSDT': (0.96, 0.95, 339), 'XAUUSD': (1.14, 1.44, 399), 'XAGUSD': (0.93, 0.88, 339), 'EURUSD': (0.94, 0.9, 312), 'GBPUSD': (0.91, 1.07, 300), 'USDJPY': (0.96, 0.93, 368)}
+  older 1.7y: orig pf 0.8644677140198528 n 300 -> new pf 0.8420265391644494 n 208 better=False
+  years: {2023: (1.07, 47), 2024: (1.4, 132), 2025: (1.66, 166), 2026: (1.22, 54)}
+  costs: {'1x': 1.4396388449918887, '2x': 1.288780664749828, '3x': 1.1653581487731386}
+  entry: {'real_mean': 0.283124129431062, 'real_n': 399, 'random_median': 0.11523173135058967, 'random_p95': 0.17192925983951549, 'p': 0.0}
+
+## PCT confluence long (trend core) (rule 1)  [XAUUSD 1h]  long when price above hma21 and di_plus14 above di_minus14 and price above sma200 and atr14 below atr100  stop2 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (0.95, 1.02, 443), 'XAUUSD': (1.19, 1.6, 367), 'XAGUSD': (0.88, 1.0, 308), 'EURUSD': (0.88, 0.81, 393), 'GBPUSD': (0.93, 0.99, 346), 'USDJPY': (1.03, 1.21, 366)}
+  older 1.7y: orig pf 0.9006954308501013 n 382 -> new pf 0.7319942702566321 n 224 better=False
+  years: {2023: (1.44, 52), 2024: (1.29, 135), 2025: (2.22, 138), 2026: (1.11, 42)}
+  costs: {'1x': 1.6034616205403627, '2x': 1.4174135078006898, '3x': 1.3107968068453861}
+  entry: {'real_mean': 0.39680776756189173, 'real_n': 367, 'random_median': 0.08566444476755353, 'random_p95': 0.1661526939877546, 'p': 0.0}
+
+## Tomukas trend+VWAP+RSI long  [XAUUSD 1h]  long when ema50 above ema200 and price above vwap100 and rsi14 above 50 and price above ema50  stop2 tgt10 hold24
+  markets better: 6 /6 {'BTCUSDT': (0.88, 1.01, 561), 'XAUUSD': (1.27, 1.55, 518), 'XAGUSD': (0.92, 1.06, 472), 'EURUSD': (0.9, 0.93, 488), 'GBPUSD': (0.83, 0.96, 456), 'USDJPY': (0.91, 1.04, 561)}
+  older 1.7y: orig pf 0.8288715057927295 n 358 -> new pf 0.8453842607152232 n 286 better=False
+  years: {2023: (1.49, 62), 2024: (1.33, 174), 2025: (1.99, 207), 2026: (1.01, 75)}
+  costs: {'1x': 1.547662561479157, '2x': 1.3934005061134054, '3x': 1.2837805050840678}
+  entry: {'real_mean': 0.3083713574766126, 'real_n': 518, 'random_median': 0.13762545159575276, 'random_p95': 0.1793184873026953, 'p': 0.0}
+
+## DEMA ATR line turns up (rule 1)  [XAUUSD 1h]  long when supertrend20x1.2 cross_above 0 and rvol20 above 1  stop1 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (0.88, 0.8, 547), 'XAUUSD': (1.17, 1.55, 517), 'XAGUSD': (0.78, 0.94, 473), 'EURUSD': (0.92, 0.98, 644), 'GBPUSD': (0.88, 1.0, 599), 'USDJPY': (0.97, 1.02, 550)}
+  older 1.7y: orig pf 0.9319680562891245 n 448 -> new pf 0.9966909472174932 n 343 better=True
+  years: {2023: (1.72, 62), 2024: (1.31, 179), 2025: (1.78, 173), 2026: (1.51, 103)}
+  costs: {'1x': 1.5522829305079784, '2x': 1.495827236064512, '3x': 1.3594943770994434}
+  entry: {'real_mean': 0.4099405651072457, 'real_n': 517, 'random_median': 0.07360845446346907, 'random_p95': 0.2777582177604779, 'p': 0.005}
+
+## Hermes ALMA return trend + breakout + macro EMA  [XAUUSD 1h]  long when alma30x0.95 above alma250x0.95 and price above highest6[1] and price above ema200 and ema50 above ema200  stop1.5 tgt10 hold24
+  markets better: 3 /6 {'BTCUSDT': (0.92, 1.08, 434), 'XAUUSD': (1.16, 1.56, 400), 'XAGUSD': (0.96, 0.96, 358), 'EURUSD': (0.92, 0.91, 335), 'GBPUSD': (0.94, 0.92, 329), 'USDJPY': (1.01, 1.01, 415)}
+  older 1.7y: orig pf 0.7818422996139801 n 286 -> new pf 1.0208143254520776 n 198 better=True
+  years: {2023: (1.57, 50), 2024: (1.37, 130), 2025: (1.82, 169), 2026: (1.17, 51)}
+  costs: {'1x': 1.5566710717890624, '2x': 1.3403757196910886, '3x': 1.2568498846657903}
+  entry: {'real_mean': 0.36889979129815303, 'real_n': 400, 'random_median': 0.1622357690546522, 'random_p95': 0.25276446388243623, 'p': 0.0}
+
+## ATR GOD long ST3 flip (rule 2)  [XAUUSD 15m]  long when supertrend10x3 cross_above 0 and volume above vol_sma200 and price above sma200  stop1.5 tgt10 hold96
+  markets better: 3 /6 {'BTCUSDT': (0.86, 0.91, 397), 'XAUUSD': (1.21, 1.67, 370), 'XAGUSD': (0.93, 0.93, 306), 'EURUSD': (0.88, 1.24, 352), 'GBPUSD': (0.9, 0.89, 386), 'USDJPY': (1.03, 1.03, 359)}
+  older 1.7y: orig pf 0.9680903263729241 n 397 -> new pf 0.6049774403053674 n 218 better=False
+  years: {2023: (1.64, 48), 2024: (1.43, 146), 2025: (2.14, 114), 2026: (1.48, 62)}
+  costs: {'1x': 1.6716177053551087, '2x': 1.5520834226193851, '3x': 1.4586924547946858}
+  entry: {'real_mean': 0.5245444121729093, 'real_n': 370, 'random_median': 0.11982058838142447, 'random_p95': 0.3416422670363727, 'p': 0.0}
+
+## Concordance long: bias up + stochastic momentum  [XAUUSD 4h]  long when price above ema55 and wpr20 above -40 and hour above 6.5 and hour below 20.5  stop1.5 tgt10 hold6
+  markets better: 4 /6 {'BTCUSDT': (0.95, 1.08, 458), 'XAUUSD': (1.42, 1.66, 418), 'XAGUSD': (1.18, 1.1, 379), 'EURUSD': (0.96, 1.05, 339), 'GBPUSD': (0.97, 0.96, 340), 'USDJPY': (1.06, 1.08, 444)}
+  older 1.7y: orig pf 1.0076599732366638 n 223 -> new pf 0.8131462165710014 n 219 better=False
+  years: {2023: (2.11, 50), 2024: (1.65, 135), 2025: (1.9, 162), 2026: (0.95, 71)}
+  costs: {'1x': 1.6580515725357505, '2x': 1.564121380019918, '3x': 1.4764944724054176}
+  entry: {'real_mean': 0.2766138689610481, 'real_n': 418, 'random_median': 0.1155738392329628, 'random_p95': 0.15499923284820719, 'p': 0.0}
+older pace sustained strength above VWAP            {'n': 215, 'risk_pct': 2.0, 'pass_pct': 27.8, 'days': 71.8, 'accounts': 3.59, 'pf': np.float64(0.89), 'tpd': 0.44, 'band': [51.9, 130.4]}
+now   pace sustained strength above VWAP            {'n': 441, 'risk_pct': 2.0, 'pass_pct': 45.1, 'days': 37.7, 'accounts': 2.22, 'pf': np.float64(1.47), 'tpd': 0.57, 'band': [28.1, 51.0]}
+older pace ORION box breakout long (rule 1)         {'n': 219, 'risk_pct': 2.0, 'pass_pct': 33.3, 'days': 42.0, 'accounts': 3.0, 'pf': np.float64(0.96), 'tpd': 0.46, 'band': [26.9, 64.0]}
+now   pace ORION box breakout long (rule 1)         {'n': 408, 'risk_pct': 2.0, 'pass_pct': 49.3, 'days': 20.3, 'accounts': 2.03, 'pf': np.float64(1.45), 'tpd': 0.53, 'band': [17.3, 26.3]}
+older pace 5m EMA8 pullback with 1H trend filter lo {'n': 213, 'risk_pct': 2.0, 'pass_pct': 32.9, 'days': 63.9, 'accounts': 3.04, 'pf': np.float64(0.93), 'tpd': 0.45, 'band': [37.6, 101.3]}
+now   pace 5m EMA8 pullback with 1H trend filter lo {'n': 409, 'risk_pct': 2.0, 'pass_pct': 55.0, 'days': 20.9, 'accounts': 1.82, 'pf': np.float64(1.72), 'tpd': 0.53, 'band': [17.3, 25.7]}
+older pace Keltner breakout long (approx)           {'n': 214, 'risk_pct': 2.0, 'pass_pct': 28.5, 'days': 52.5, 'accounts': 3.5, 'pf': np.float64(1.05), 'tpd': 0.46, 'band': [36.0, 101.6]}
+now   pace Keltner breakout long (approx)           {'n': 492, 'risk_pct': 2.0, 'pass_pct': 39.3, 'days': 17.8, 'accounts': 2.54, 'pf': np.float64(1.57), 'tpd': 0.65, 'band': [15.7, 25.7]}
+older pace Aurum AVE long break (rule 1)            {'n': 208, 'risk_pct': 2.0, 'pass_pct': 14.8, 'days': 81.1, 'accounts': 6.76, 'pf': np.float64(0.84), 'tpd': 0.44, 'band': [50.1, 135.6]}
+now   pace Aurum AVE long break (rule 1)            {'n': 399, 'risk_pct': 2.0, 'pass_pct': 40.3, 'days': 27.3, 'accounts': 2.48, 'pf': np.float64(1.44), 'tpd': 0.52, 'band': [21.4, 35.0]}
+older pace PCT confluence long (trend core) (rule 1 {'n': 224, 'risk_pct': 2.0, 'pass_pct': 22.5, 'days': 57.9, 'accounts': 4.45, 'pf': np.float64(0.73), 'tpd': 0.47, 'band': [39.3, 98.9]}
+now   pace PCT confluence long (trend core) (rule 1 {'n': 367, 'risk_pct': 2.0, 'pass_pct': 41.1, 'days': 20.7, 'accounts': 2.43, 'pf': np.float64(1.6), 'tpd': 0.48, 'band': [17.0, 26.1]}
+older pace Tomukas trend+VWAP+RSI long              {'n': 286, 'risk_pct': 2.0, 'pass_pct': 19.0, 'days': 73.5, 'accounts': 5.25, 'pf': np.float64(0.85), 'tpd': 0.6, 'band': [44.4, 129.0]}
+now   pace Tomukas trend+VWAP+RSI long              {'n': 518, 'risk_pct': 2.0, 'pass_pct': 47.0, 'days': 21.3, 'accounts': 2.13, 'pf': np.float64(1.55), 'tpd': 0.68, 'band': [17.8, 25.9]}
+older pace DEMA ATR line turns up (rule 1)          {'n': 343, 'risk_pct': 2.0, 'pass_pct': 28.9, 'days': 17.3, 'accounts': 3.47, 'pf': np.float64(1.0), 'tpd': 0.7, 'band': [14.2, 23.8]}
+now   pace DEMA ATR line turns up (rule 1)          {'n': 517, 'risk_pct': 2.0, 'pass_pct': 43.7, 'days': 11.4, 'accounts': 2.29, 'pf': np.float64(1.55), 'tpd': 0.66, 'band': [10.5, 14.5]}
+older pace Hermes ALMA return trend + breakout + ma {'n': 198, 'risk_pct': 2.0, 'pass_pct': 41.4, 'days': 36.2, 'accounts': 2.42, 'pf': np.float64(1.02), 'tpd': 0.42, 'band': [27.4, 54.7]}
+now   pace Hermes ALMA return trend + breakout + ma {'n': 400, 'risk_pct': 2.0, 'pass_pct': 42.1, 'days': 19.0, 'accounts': 2.38, 'pf': np.float64(1.56), 'tpd': 0.52, 'band': [15.2, 23.0]}
+older pace ATR GOD long ST3 flip (rule 2)           {'n': 218, 'risk_pct': 2.0, 'pass_pct': 16.4, 'days': 36.7, 'accounts': 6.12, 'pf': np.float64(0.6), 'tpd': 0.45, 'band': [27.9, 54.5]}
+now   pace ATR GOD long ST3 flip (rule 2)           {'n': 370, 'risk_pct': 2.0, 'pass_pct': 49.2, 'days': 12.2, 'accounts': 2.03, 'pf': np.float64(1.67), 'tpd': 0.47, 'band': [10.8, 14.9]}
+older pace Concordance long: bias up + stochastic m {'n': 219, 'risk_pct': 2.0, 'pass_pct': 15.8, 'days': 101.2, 'accounts': 6.33, 'pf': np.float64(0.81), 'tpd': 0.45, 'band': [64.7, 189.5]}
+now   pace Concordance long: bias up + stochastic m {'n': 418, 'risk_pct': 2.0, 'pass_pct': 50.6, 'days': 29.6, 'accounts': 1.98, 'pf': np.float64(1.66), 'tpd': 0.54, 'band': [23.3, 37.8]}

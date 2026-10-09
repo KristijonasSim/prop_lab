@@ -1,0 +1,48 @@
+{
+ "started": "2026-10-09 09:44:02.338656+00:00",
+ "base_equity": 10000.382251,
+ "legs": {
+  "B3M trend pullback breakout (reduced)": {
+   "open": null,
+   "last_bar": "2026-10-09 04:00:00+00:00"
+  },
+  "Descending trendline breakout long (rule 1)": {
+   "open": null,
+   "last_bar": "2026-10-09 04:00:00+00:00"
+  },
+  "5m EMA8 pullback with 1H trend filter long (rule 1)": {
+   "open": null,
+   "last_bar": "2026-10-09 09:00:00+00:00"
+  },
+  "DEMA ATR line turns up (rule 1)": {
+   "open": null,
+   "last_bar": "2026-10-09 09:00:00+00:00"
+  }
+ },
+ "closed_r": 0.0,
+ "last_exit_check": "2026-10-09 10:16:45.710755+00:00",
+ "virtual": {
+  "0.75%": {
+   "attempt": 1,
+   "start": "2026-10-09 09:44:02.338656+00:00",
+   "r0": 0.0,
+   "peak": 0.0,
+   "day": "2026-10-09",
+   "day_r0": 0.0,
+   "done": false,
+   "equity_pct": 0.0,
+   "today_pct": 0.0
+  },
+  "2%": {
+   "attempt": 1,
+   "start": "2026-10-09 09:44:02.338656+00:00",
+   "r0": 0.0,
+   "peak": 0.0,
+   "day": "2026-10-09",
+   "day_r0": 0.0,
+   "done": false,
+   "equity_pct": 0.0,
+   "today_pct": 0.0
+  }
+ }
+}

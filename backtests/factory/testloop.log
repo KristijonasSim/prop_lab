@@ -65,3 +65,434 @@
 {"worker": 6, "tested": 6, "total": 30, "step3": 1, "step7": 0, "left": 35}
 {"worker": 5, "tested": 6, "total": 30, "step3": 2, "step7": 1, "left": 59}
 {"worker": 3, "tested": 6, "total": 30, "step3": 3, "step7": 1, "left": 65}
+{"worker": 1, "tested": 6, "total": 30, "step3": 3, "step7": 0, "left": 53}
+{"worker": 10, "tested": 6, "total": 42, "step3": 2, "step7": 0, "left": 263}
+{"worker": 11, "tested": 6, "total": 42, "step3": 4, "step7": 2, "left": 162}
+{"worker": 7, "tested": 6, "total": 30, "step3": 2, "step7": 0, "left": 156}
+{"worker": 2, "tested": 6, "total": 30, "step3": 3, "step7": 1, "left": 23}
+{"worker": 8, "tested": 6, "total": 30, "step3": 5, "step7": 2, "left": 150}
+{"worker": 6, "tested": 6, "total": 36, "step3": 1, "step7": 0, "left": 315}
+{"worker": 1, "tested": 6, "total": 36, "step3": 4, "step7": 0, "left": 332}
+{"worker": 4, "tested": 6, "total": 42, "step3": 2, "step7": 0, "left": 257}
+{"worker": 3, "tested": 6, "total": 36, "step3": 3, "step7": 0, "left": 338}
+{"worker": 5, "tested": 6, "total": 36, "step3": 2, "step7": 0, "left": 344}
+{"worker": 0, "tested": 6, "total": 36, "step3": 4, "step7": 2, "left": 239}
+{"worker": 11, "tested": 6, "total": 48, "step3": 1, "step7": 0, "left": 320}
+{"worker": 7, "tested": 6, "total": 36, "step3": 3, "step7": 3, "left": 314}
+{"worker": 9, "tested": 6, "total": 30, "step3": 3, "step7": 0, "left": 71}
+{"worker": 10, "tested": 6, "total": 48, "step3": 2, "step7": 0, "left": 326}
+{"worker": 8, "tested": 6, "total": 36, "step3": 3, "step7": 0, "left": 302}
+{"worker": 5, "tested": 6, "total": 42, "step3": 3, "step7": 2, "left": 272}
+{"worker": 7, "tested": 6, "total": 42, "step3": 3, "step7": 0, "left": 254}
+{"worker": 1, "tested": 6, "total": 42, "step3": 1, "step7": 1, "left": 290}
+{"worker": 0, "tested": 6, "total": 42, "step3": 3, "step7": 0, "left": 266}
+{"worker": 3, "tested": 6, "total": 42, "step3": 2, "step7": 2, "left": 278}
+{"worker": 10, "tested": 6, "total": 54, "step3": 2, "step7": 0, "left": 242}
+{"worker": 2, "tested": 6, "total": 36, "step3": 2, "step7": 1, "left": 308}
+{"worker": 7, "tested": 6, "total": 48, "step3": 1, "step7": 1, "left": 224}
+{"worker": 6, "tested": 6, "total": 42, "step3": 2, "step7": 2, "left": 296}
+{"worker": 3, "tested": 6, "total": 48, "step3": 3, "step7": 2, "left": 206}
+{"worker": 4, "tested": 6, "total": 48, "step3": 3, "step7": 1, "left": 284}
+{"worker": 0, "tested": 6, "total": 48, "step3": 5, "step7": 2, "left": 212}
+{"worker": 9, "tested": 6, "total": 36, "step3": 2, "step7": 1, "left": 248}
+{"worker": 2, "tested": 6, "total": 42, "step3": 2, "step7": 1, "left": 194}
+{"worker": 5, "tested": 6, "total": 48, "step3": 0, "step7": 0, "left": 230}
+{"worker": 8, "tested": 6, "total": 42, "step3": 2, "step7": 2, "left": 236}
+{"worker": 10, "tested": 6, "total": 60, "step3": 1, "step7": 0, "left": 200}
+{"worker": 4, "tested": 6, "total": 54, "step3": 3, "step7": 0, "left": 170}
+{"worker": 11, "tested": 6, "total": 54, "step3": 2, "step7": 1, "left": 260}
+{"worker": 1, "tested": 6, "total": 48, "step3": 4, "step7": 2, "left": 218}
+{"worker": 9, "tested": 6, "total": 42, "step3": 3, "step7": 0, "left": 158}
+{"worker": 0, "tested": 6, "total": 54, "step3": 3, "step7": 1, "left": 164}
+{"worker": 7, "tested": 6, "total": 54, "step3": 2, "step7": 1, "left": 188}
+{"worker": 2, "tested": 6, "total": 48, "step3": 2, "step7": 2, "left": 152}
+{"worker": 5, "tested": 6, "total": 54, "step3": 1, "step7": 2, "left": 146}
+{"worker": 10, "tested": 6, "total": 66, "step3": 3, "step7": 2, "left": 134}
+{"worker": 0, "tested": 6, "total": 60, "step3": 2, "step7": 1, "left": 104}
+{"worker": 7, "tested": 6, "total": 60, "step3": 2, "step7": 1, "left": 98}
+{"worker": 8, "tested": 6, "total": 48, "step3": 1, "step7": 1, "left": 140}
+{"worker": 4, "tested": 6, "total": 60, "step3": 2, "step7": 4, "left": 128}
+{"worker": 5, "tested": 6, "total": 60, "step3": 3, "step7": 0, "left": 86}
+{"worker": 6, "tested": 6, "total": 48, "step3": 2, "step7": 0, "left": 182}
+{"worker": 2, "tested": 6, "total": 54, "step3": 2, "step7": 3, "left": 92}
+{"worker": 1, "tested": 6, "total": 54, "step3": 3, "step7": 0, "left": 116}
+{"worker": 3, "tested": 6, "total": 54, "step3": 3, "step7": 1, "left": 176}
+{"worker": 9, "tested": 6, "total": 48, "step3": 4, "step7": 0, "left": 110}
+{"worker": 11, "tested": 6, "total": 60, "step3": 1, "step7": 0, "left": 122}
+{"worker": 6, "tested": 6, "total": 54, "step3": 3, "step7": 0, "left": 44}
+{"worker": 4, "tested": 6, "total": 66, "step3": 2, "step7": 0, "left": 56}
+{"worker": 1, "tested": 6, "total": 60, "step3": 2, "step7": 0, "left": 32}
+{"worker": 8, "tested": 6, "total": 54, "step3": 2, "step7": 1, "left": 62}
+{"worker": 10, "tested": 6, "total": 72, "step3": 3, "step7": 1, "left": 80}
+{"worker": 9, "tested": 6, "total": 54, "step3": 2, "step7": 1, "left": 20}
+{"worker": 1, "tested": 2, "total": 62, "step3": 2, "step7": 0, "left": 0}
+{"worker": 2, "tested": 6, "total": 60, "step3": 3, "step7": 0, "left": 38}
+{"worker": 5, "tested": 6, "total": 66, "step3": 4, "step7": 1, "left": 50}
+{"worker": 3, "tested": 6, "total": 60, "step3": 2, "step7": 2, "left": 26}
+{"worker": 6, "tested": 6, "total": 60, "step3": 0, "step7": 2, "left": 8}
+{"worker": 4, "tested": 6, "total": 72, "step3": 4, "step7": 1, "left": 2}
+{"worker": 3, "tested": 6, "total": 66, "step3": 3, "step7": 1, "left": 84}
+{"worker": 11, "tested": 6, "total": 66, "step3": 2, "step7": 0, "left": 14}
+{"worker": 7, "tested": 6, "total": 66, "step3": 2, "step7": 0, "left": 68}
+{"worker": 6, "tested": 6, "total": 66, "step3": 1, "step7": 0, "left": 78}
+{"worker": 4, "tested": 6, "total": 78, "step3": 5, "step7": 1, "left": 72}
+{"worker": 3, "tested": 6, "total": 72, "step3": 3, "step7": 1, "left": 66}
+{"worker": 11, "tested": 6, "total": 72, "step3": 4, "step7": 1, "left": 60}
+{"worker": 6, "tested": 6, "total": 72, "step3": 3, "step7": 4, "left": 48}
+{"worker": 0, "tested": 6, "total": 66, "step3": 2, "step7": 1, "left": 74}
+{"worker": 4, "tested": 6, "total": 84, "step3": 4, "step7": 2, "left": 42}
+{"worker": 3, "tested": 6, "total": 78, "step3": 2, "step7": 0, "left": 36}
+{"worker": 6, "tested": 6, "total": 78, "step3": 1, "step7": 0, "left": 24}
+{"worker": 7, "tested": 6, "total": 72, "step3": 4, "step7": 1, "left": 54}
+{"worker": 11, "tested": 6, "total": 78, "step3": 3, "step7": 3, "left": 30}
+{"worker": 4, "tested": 6, "total": 90, "step3": 1, "step7": 2, "left": 12}
+{"worker": 0, "tested": 6, "total": 72, "step3": 5, "step7": 4, "left": 18}
+{"worker": 3, "tested": 6, "total": 84, "step3": 4, "step7": 2, "left": 6}
+{"worker": 6, "tested": 6, "total": 84, "step3": 3, "step7": 3, "left": 0}
+{"drained": 848, "minutes": 1394.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.1}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.1}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"worker": 7, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 40}
+{"worker": 6, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 40}
+{"worker": 2, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 40}
+{"worker": 11, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 40}
+{"worker": 5, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 40}
+{"worker": 9, "tested": 4, "total": 4, "step3": 2, "step7": 1, "left": 36}
+{"worker": 1, "tested": 6, "total": 6, "step3": 3, "step7": 1, "left": 34}
+{"worker": 0, "tested": 6, "total": 6, "step3": 1, "step7": 1, "left": 34}
+{"worker": 10, "tested": 6, "total": 6, "step3": 4, "step7": 0, "left": 34}
+{"worker": 4, "tested": 6, "total": 6, "step3": 3, "step7": 1, "left": 34}
+{"worker": 8, "tested": 6, "total": 6, "step3": 2, "step7": 1, "left": 34}
+{"worker": 3, "tested": 6, "total": 6, "step3": 0, "step7": 2, "left": 34}
+{"drained": 40, "minutes": 24.4}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"worker": 9, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 5, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 10, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 7, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 11, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 0, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 4, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 6, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 19}
+{"worker": 2, "tested": 1, "total": 1, "step3": 1, "step7": 1, "left": 18}
+{"worker": 3, "tested": 6, "total": 6, "step3": 3, "step7": 5, "left": 13}
+{"worker": 8, "tested": 6, "total": 6, "step3": 1, "step7": 3, "left": 13}
+{"worker": 1, "tested": 6, "total": 6, "step3": 4, "step7": 0, "left": 13}
+{"drained": 19, "minutes": 22.8}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"drained": 0, "minutes": 0.0}
+{"worker": 5, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 2, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 8, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 3, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 7, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 9, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
+{"worker": 10, "tested": 1, "total": 1, "step3": 0, "step7": 0, "left": 19}
+{"worker": 4, "tested": 2, "total": 2, "step3": 0, "step7": 0, "left": 18}

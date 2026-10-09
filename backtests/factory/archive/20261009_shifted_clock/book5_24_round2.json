@@ -1,0 +1,137 @@
+{
+ "caps": {
+  "cap none": {
+   "n": 735,
+   "risk_pct": 2.0,
+   "pass_pct": 53.1,
+   "days": 13.2,
+   "accounts": 1.88,
+   "pf": 1.94,
+   "tpd": 0.94,
+   "band": [
+    11.7,
+    16.2
+   ],
+   "null_days_med": 18.700000000000003,
+   "null_accounts_med": 3.125
+  },
+  "cap 1": {
+   "n": 494,
+   "risk_pct": 2.0,
+   "pass_pct": 52.3,
+   "days": 19.1,
+   "accounts": 1.91,
+   "pf": 1.93,
+   "tpd": 0.63,
+   "band": [
+    16.3,
+    24.1
+   ],
+   "null_days_med": 30.55,
+   "null_accounts_med": 3.435
+  },
+  "cap 2": {
+   "n": 685,
+   "risk_pct": 2.0,
+   "pass_pct": 52.2,
+   "days": 13.4,
+   "accounts": 1.92,
+   "pf": 1.92,
+   "tpd": 0.88,
+   "band": [
+    12.0,
+    17.2
+   ],
+   "null_days_med": 20.45,
+   "null_accounts_med": 3.165
+  },
+  "cap 3": {
+   "n": 731,
+   "risk_pct": 2.0,
+   "pass_pct": 53.1,
+   "days": 13.2,
+   "accounts": 1.88,
+   "pf": 1.95,
+   "tpd": 0.94,
+   "band": [
+    11.7,
+    16.2
+   ],
+   "null_days_med": 18.700000000000003,
+   "null_accounts_med": 3.13
+  }
+ },
+ "older": {
+  "cap none": {
+   "n": 382,
+   "risk_pct": 2.0,
+   "pass_pct": 20.4,
+   "days": 29.4,
+   "accounts": 4.91,
+   "pf": 1.13,
+   "tpd": 0.79,
+   "band": [
+    22.8,
+    43.7
+   ]
+  },
+  "cap 2": {
+   "n": 364,
+   "risk_pct": 2.0,
+   "pass_pct": 20.2,
+   "days": 29.7,
+   "accounts": 4.94,
+   "pf": 1.13,
+   "tpd": 0.75,
+   "band": [
+    22.3,
+    43.0
+   ]
+  },
+  "123 reversal long (rule 1)": {
+   "n": 105,
+   "risk_pct": 2.0,
+   "pass_pct": 1.4,
+   "days": 12666.7,
+   "accounts": 74.07,
+   "pf": 0.8,
+   "tpd": 0.22
+  },
+  "MA alignment + new high long": {
+   "n": 67,
+   "risk_pct": 2.0,
+   "pass_pct": 60.0,
+   "days": 136.6,
+   "accounts": 1.67,
+   "pf": 1.63,
+   "tpd": 0.14
+  },
+  "BOS demand-zone retest confirmation (long, approximated)": {
+   "n": 64,
+   "risk_pct": 2.0,
+   "pass_pct": 11.8,
+   "days": 319.1,
+   "accounts": 8.51,
+   "pf": 0.9,
+   "tpd": 0.14
+  },
+  "ORB retest long + VWAP": {
+   "n": 73,
+   "risk_pct": 2.0,
+   "pass_pct": 35.7,
+   "days": 95.3,
+   "accounts": 2.8,
+   "pf": 1.37,
+   "tpd": 0.16
+  },
+  "Pivot high breakout against Supertrend down (rule 1)": {
+   "n": 73,
+   "risk_pct": 2.0,
+   "pass_pct": 35.4,
+   "days": 72.0,
+   "accounts": 2.82,
+   "pf": 1.08,
+   "tpd": 0.15
+  }
+ }
+}

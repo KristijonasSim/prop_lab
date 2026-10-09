@@ -1,4 +1,5 @@
 """Hide total failures from the board: died at step 3 after repair, or under 1 trade/week.
+`--scored-only` archives everything that did not reach a step-7 score.
 Archives rows to backtests/factory/archive/<stamp>_pruned/ and keeps a carried stub
 in tried.jsonl so nothing is re-tested. Kris, 2026-10-07. Dry run unless --apply."""
 import json, ast, sys, collections
@@ -27,8 +28,18 @@ for r in surv + tried:
     e = st.setdefault(fp, {'reached': 0, 'died': 0, 'gate': '', 'name': r.get('name'), 'source': r.get('source')})
     if 'reached' in r: e['reached'] = max(e['reached'], int(r.get('reached') or 3))
     if r.get('died_at'): e['died'] = int(r['died_at']); e['gate'] = r.get('gate') or 'other'
+SCORED = '--scored-only' in sys.argv
+MIN_TPD = 0.1   # Kris, 2026-10-09: below this a scored idea is worthless too
 why = {}
 for fp, e in st.items():
+    # --scored-only: archive everything that did not reach a step-7 score.
+    # Kris, 2026-10-09, before step 8 (improvements) works on the scored ones.
+    if SCORED:
+        if e['died'] or e['reached'] < 7:
+            why[fp] = f"died step{e['died']}:{e['gate']}" if e['died'] else f"reached step{e['reached']}"
+        elif rate.get(script_of(e['name']), 0) < MIN_TPD:
+            why[fp] = f'under {MIN_TPD} trades/day'
+        continue
     if e['died'] == 3: why[fp] = f"step3:{e['gate']}"
     elif e['died'] == 6 or e['reached'] >= 7:
         pd = rate.get(script_of(e['name']))
@@ -48,7 +59,14 @@ def split(f, test):
     return keep, out
 tk, tout = split('tried.jsonl', lambda r: not r.get('carried') and _fingerprint(r) in gone)
 sk, sout = split('survivors.jsonl', lambda r: not r.get('carried') and _fingerprint(r) in gone)
-ik, iout = split('ideas.jsonl', lambda r: script_of(r.get('name')) in gone_names)
+def _tpd(r):
+    try: sc = ast.literal_eval(r['score']) if isinstance(r.get('score'), str) else r.get('score')
+    except Exception: sc = None
+    return (sc or {}).get('per_day') or 0
+if SCORED:   # judge each idea row on its own outcome, not its script's best variant
+    ik, iout = split('ideas.jsonl', lambda r: not str(r.get('outcome', '')).startswith('scored at step 7') or _tpd(r) < MIN_TPD)
+else:
+    ik, iout = split('ideas.jsonl', lambda r: script_of(r.get('name')) in gone_names)
 stubs = {}
 for r in tout + sout:
     stubs.setdefault(_fingerprint(r), {**{k: r[k] for k in _KEEP if k in r}, 'carried': 1})

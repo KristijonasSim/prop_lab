@@ -1,0 +1,110 @@
+{
+ "caps": {
+  "cap none": {
+   "n": 386,
+   "risk_pct": 2.0,
+   "pass_pct": 51.2,
+   "days": 21.5,
+   "accounts": 1.95,
+   "pf": 2.01,
+   "tpd": 0.5,
+   "band": [
+    18.5,
+    26.7
+   ],
+   "null_days_med": 36.05,
+   "null_accounts_med": 2.4400000000000004
+  },
+  "cap 1": {
+   "n": 328,
+   "risk_pct": 2.0,
+   "pass_pct": 53.2,
+   "days": 24.4,
+   "accounts": 1.88,
+   "pf": 1.92,
+   "tpd": 0.43,
+   "band": [
+    21.9,
+    31.7
+   ],
+   "null_days_med": 39.849999999999994,
+   "null_accounts_med": 2.3499999999999996
+  },
+  "cap 2": {
+   "n": 386,
+   "risk_pct": 2.0,
+   "pass_pct": 51.2,
+   "days": 21.5,
+   "accounts": 1.95,
+   "pf": 2.01,
+   "tpd": 0.5,
+   "band": [
+    18.5,
+    26.7
+   ],
+   "null_days_med": 36.05,
+   "null_accounts_med": 2.4400000000000004
+  },
+  "cap 3": {
+   "n": 386,
+   "risk_pct": 2.0,
+   "pass_pct": 51.2,
+   "days": 21.5,
+   "accounts": 1.95,
+   "pf": 2.01,
+   "tpd": 0.5,
+   "band": [
+    18.5,
+    26.7
+   ],
+   "null_days_med": 36.05,
+   "null_accounts_med": 2.4400000000000004
+  }
+ },
+ "older": {
+  "cap none": {
+   "n": 172,
+   "risk_pct": 2.0,
+   "pass_pct": 37.7,
+   "days": 55.7,
+   "accounts": 2.65,
+   "pf": 1.09,
+   "tpd": 0.36,
+   "band": [
+    37.2,
+    95.2
+   ]
+  },
+  "cap 2": {
+   "n": 172,
+   "risk_pct": 2.0,
+   "pass_pct": 37.7,
+   "days": 55.7,
+   "accounts": 2.65,
+   "pf": 1.09,
+   "tpd": 0.36,
+   "band": [
+    37.2,
+    95.2
+   ]
+  },
+  "B3M trend pullback breakout (reduced)": {
+   "n": 115,
+   "risk_pct": 2.0,
+   "pass_pct": 22.2,
+   "days": 85.4,
+   "accounts": 4.5,
+   "pf": 1.29,
+   "tpd": 0.25
+  },
+  "Descending trendline breakout long (rule 1)": {
+   "n": 57,
+   "risk_pct": 2.0,
+   "pass_pct": 18.8,
+   "days": 402.5,
+   "accounts": 5.33,
+   "pf": 0.8,
+   "tpd": 0.12
+  }
+ }
+}

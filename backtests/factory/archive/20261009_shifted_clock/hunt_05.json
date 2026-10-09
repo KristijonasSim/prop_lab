@@ -1,0 +1,6362 @@
+[
+ {
+  "name": "50-bar breakout in uptrend",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above highest50 and price above sma50 and sma50 above sma200",
+   "stop_atr": 4.0,
+   "target_atr": 8.0,
+   "max_hold": 96,
+   "old": {
+    "n": 238,
+    "pf": 1.239368938741301,
+    "mean": 0.12384472484930925,
+    "tpd": 0.6167452996267868
+   },
+   "new": {
+    "n": 249,
+    "pf": 1.4150245195932183,
+    "mean": 0.21338209400000213
+   },
+   "full": {
+    "n": 487,
+    "pf": 1.328905050724338,
+    "mean": 0.16962461174565935
+   },
+   "tpd": 0.631,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.3,
+    "days": 31.1,
+    "accounts": 2.07,
+    "band": {
+     "days_lo": 25.4,
+     "days_hi": 39.8,
+     "days_med": 31.3,
+     "pass_lo": 35.5,
+     "pass_hi": 54.8,
+     "pass_med": 44.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "15m",
+   "filter": "4h candle green",
+   "exits": "original",
+   "rule": "long when price above highest50 and price above sma50 and sma50 above sma200 and htf_closex4 above htf_openx4",
+   "stop_atr": 4.0,
+   "target_atr": 8.0,
+   "max_hold": 96,
+   "old": {
+    "n": 206,
+    "pf": 1.468908500646055,
+    "mean": 0.2167247103545399,
+    "tpd": 0.5338215618618407
+   },
+   "new": {
+    "n": 224,
+    "pf": 1.4247819199234348,
+    "mean": 0.21102236201195895
+   },
+   "full": {
+    "n": 430,
+    "pf": 1.4451284371596307,
+    "mean": 0.21375418470631166
+   },
+   "tpd": 0.557,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 56.0,
+    "days": 28.6,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 26.6,
+     "days_hi": 38.9,
+     "days_med": 31.0,
+     "pass_lo": 43.3,
+     "pass_hi": 60.9,
+     "pass_med": 51.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "15m",
+   "filter": "4h candle green",
+   "exits": "original",
+   "rule": "long when price above highest50 and price above sma50 and sma50 above sma200 and htf_closex4 above htf_openx4",
+   "stop_atr": 4.0,
+   "target_atr": 8.0,
+   "max_hold": 96,
+   "old": {
+    "n": 206,
+    "pf": 1.468908500646055,
+    "mean": 0.2167247103545399,
+    "tpd": 0.5338215618618407
+   },
+   "new": {
+    "n": 224,
+    "pf": 1.4247819199234348,
+    "mean": 0.21102236201195895
+   },
+   "full": {
+    "n": 430,
+    "pf": 1.4451284371596307,
+    "mean": 0.21375418470631166
+   },
+   "tpd": 0.557,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 56.0,
+    "days": 28.6,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 26.6,
+     "days_hi": 38.9,
+     "days_med": 31.0,
+     "pass_lo": 43.3,
+     "pass_hi": 60.9,
+     "pass_med": 51.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.002359731988043179,
+  "lift_final": -0.002359731988043179,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1387724208632251,
+   "median": -0.006329048643181633,
+   "p": 0.475,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.1387724208632251,
+   "median": -0.006329048643181633,
+   "p": 0.475,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "NY window drift long (proxy) (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when roc26 above 0 for 2 bars",
+   "stop_atr": 2.0,
+   "target_atr": 2.0,
+   "max_hold": 6,
+   "old": {
+    "n": 290,
+    "pf": 1.3109212513138442,
+    "mean": 0.10514079174457223,
+    "tpd": 0.7402680280791321
+   },
+   "new": {
+    "n": 275,
+    "pf": 1.2306730766008283,
+    "mean": 0.07831376522936181
+   },
+   "full": {
+    "n": 565,
+    "pf": 1.2717829858530407,
+    "mean": 0.09208338945840788
+   },
+   "tpd": 0.721,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.5,
+    "days": 51.7,
+    "accounts": 2.35,
+    "band": {
+     "days_lo": 43.2,
+     "days_hi": 73.4,
+     "days_med": 54.6,
+     "pass_lo": 29.5,
+     "pass_hi": 50.6,
+     "pass_med": 40.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "London+NY 07-17",
+   "exits": "stop1.5 tgt6 hold6",
+   "rule": "long when roc26 above 0 for 2 bars and hour above 6.5 and hour below 16.5",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 6,
+   "old": {
+    "n": 201,
+    "pf": 1.611681992610886,
+    "mean": 0.2581436088711773,
+    "tpd": 0.5130823229100191
+   },
+   "new": {
+    "n": 204,
+    "pf": 1.2378021363044853,
+    "mean": 0.1117527031740584
+   },
+   "full": {
+    "n": 405,
+    "pf": 1.4133192333584823,
+    "mean": 0.18440596748299892
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 50.1,
+    "days": 35.9,
+    "accounts": 1.99,
+    "band": {
+     "days_lo": 29.1,
+     "days_hi": 49.0,
+     "days_med": 36.2,
+     "pass_lo": 37.7,
+     "pass_hi": 59.8,
+     "pass_med": 48.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "London+NY 07-17",
+   "exits": "stop1.5 tgt6 hold6",
+   "rule": "long when roc26 above 0 for 2 bars and hour above 6.5 and hour below 16.5",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 6,
+   "old": {
+    "n": 201,
+    "pf": 1.611681992610886,
+    "mean": 0.2581436088711773,
+    "tpd": 0.5130823229100191
+   },
+   "new": {
+    "n": 204,
+    "pf": 1.2378021363044853,
+    "mean": 0.1117527031740584
+   },
+   "full": {
+    "n": 405,
+    "pf": 1.4133192333584823,
+    "mean": 0.18440596748299892
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 50.1,
+    "days": 35.9,
+    "accounts": 1.99,
+    "band": {
+     "days_lo": 29.1,
+     "days_hi": 49.0,
+     "days_med": 36.2,
+     "pass_lo": 37.7,
+     "pass_hi": 59.8,
+     "pass_med": 48.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.03343893794469659,
+  "lift_final": 0.03343893794469659,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.22399987097632318,
+   "median": 0.0018894244497955608,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.22399987097632318,
+   "median": 0.0018894244497955608,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "TrendSurfers+TrendOsc long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price cross_above highest168[1] and di_plus14 above di_minus14 and price above prev_close",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 229,
+    "pf": 1.065612971332457,
+    "mean": 0.048280089782058416,
+    "tpd": 0.5934229983803957
+   },
+   "new": {
+    "n": 244,
+    "pf": 1.591415706743477,
+    "mean": 0.4298814729225948
+   },
+   "full": {
+    "n": 473,
+    "pf": 1.3352419273171823,
+    "mean": 0.24513154324144715
+   },
+   "tpd": 0.613,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 37.4,
+    "days": 16.0,
+    "accounts": 2.67,
+    "band": {
+     "days_lo": 12.8,
+     "days_hi": 20.9,
+     "days_med": 15.8,
+     "pass_lo": 31.3,
+     "pass_hi": 46.8,
+     "pass_med": 38.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "15m",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop3 tgt6 hold96",
+   "rule": "long when price cross_above highest168[1] and di_plus14 above di_minus14 and price above prev_close and ema50 above ema200",
+   "stop_atr": 3.0,
+   "target_atr": 6.0,
+   "max_hold": 96,
+   "old": {
+    "n": 201,
+    "pf": 1.4523547830098136,
+    "mean": 0.23202056827099862,
+    "tpd": 0.5208647278360679
+   },
+   "new": {
+    "n": 217,
+    "pf": 1.5719301897597102,
+    "mean": 0.29760367737263316
+   },
+   "full": {
+    "n": 418,
+    "pf": 1.5148603227108746,
+    "mean": 0.26606730194337824
+   },
+   "tpd": 0.542,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 52.1,
+    "days": 28.8,
+    "accounts": 1.92,
+    "band": {
+     "days_lo": 24.0,
+     "days_hi": 36.5,
+     "days_med": 30.0,
+     "pass_lo": 41.4,
+     "pass_hi": 60.4,
+     "pass_med": 50.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "15m",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop3 tgt6 hold96",
+   "rule": "long when price cross_above highest168[1] and di_plus14 above di_minus14 and price above prev_close and ema50 above ema200",
+   "stop_atr": 3.0,
+   "target_atr": 6.0,
+   "max_hold": 96,
+   "old": {
+    "n": 201,
+    "pf": 1.4523547830098136,
+    "mean": 0.23202056827099862,
+    "tpd": 0.5208647278360679
+   },
+   "new": {
+    "n": 217,
+    "pf": 1.5719301897597102,
+    "mean": 0.29760367737263316
+   },
+   "full": {
+    "n": 418,
+    "pf": 1.5148603227108746,
+    "mean": 0.26606730194337824
+   },
+   "tpd": 0.542,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 52.1,
+    "days": 28.8,
+    "accounts": 1.92,
+    "band": {
+     "days_lo": 24.0,
+     "days_hi": 36.5,
+     "days_med": 30.0,
+     "pass_lo": 41.4,
+     "pass_hi": 60.4,
+     "pass_med": 50.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.13227779554996166,
+  "lift_final": -0.13227779554996166,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.09632469628698533,
+   "median": -0.0022033087970332703,
+   "p": 0.925,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.09632469628698533,
+   "median": -0.0022033087970332703,
+   "p": 0.925,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Underworld Hunter long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above bb_upper75x1.9",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 206,
+    "pf": 1.0919007740583548,
+    "mean": 0.045874677457144374,
+    "tpd": 0.5334684456454427
+   },
+   "new": {
+    "n": 209,
+    "pf": 1.4945251478094475,
+    "mean": 0.2223890598009989
+   },
+   "full": {
+    "n": 415,
+    "pf": 1.2841685232175855,
+    "mean": 0.13476987242067595
+   },
+   "tpd": 0.537,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 46.8,
+    "days": 47.0,
+    "accounts": 2.13,
+    "band": {
+     "days_lo": 37.3,
+     "days_hi": 66.6,
+     "days_med": 49.5,
+     "pass_lo": 33.8,
+     "pass_hi": 55.8,
+     "pass_med": 45.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "RSI14 over 50",
+   "exits": "stop5 tgt4 hold12",
+   "rule": "long when price above bb_upper75x1.9 and rsi14 above 50",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 12,
+   "old": {
+    "n": 200,
+    "pf": 1.3363774964172117,
+    "mean": 0.06032609950561708,
+    "tpd": 0.517930529752857
+   },
+   "new": {
+    "n": 203,
+    "pf": 1.500332441016086,
+    "mean": 0.09496181402980418
+   },
+   "full": {
+    "n": 403,
+    "pf": 1.4212868674998629,
+    "mean": 0.07777287381928949
+   },
+   "tpd": 0.522,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 59.7,
+    "days": 126.5,
+    "accounts": 1.68,
+    "band": {
+     "days_lo": 82.7,
+     "days_hi": 180.7,
+     "days_med": 110.4,
+     "pass_lo": 47.6,
+     "pass_hi": 83.8,
+     "pass_med": 66.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "RSI14 over 50",
+   "exits": "stop5 tgt4 hold12",
+   "rule": "long when price above bb_upper75x1.9 and rsi14 above 50",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 12,
+   "old": {
+    "n": 200,
+    "pf": 1.3363774964172117,
+    "mean": 0.06032609950561708,
+    "tpd": 0.517930529752857
+   },
+   "new": {
+    "n": 203,
+    "pf": 1.500332441016086,
+    "mean": 0.09496181402980418
+   },
+   "full": {
+    "n": 403,
+    "pf": 1.4212868674998629,
+    "mean": 0.07777287381928949
+   },
+   "tpd": 0.522,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 59.7,
+    "days": 126.5,
+    "accounts": 1.68,
+    "band": {
+     "days_lo": 82.7,
+     "days_hi": 180.7,
+     "days_med": 110.4,
+     "pass_lo": 47.6,
+     "pass_hi": 83.8,
+     "pass_med": 66.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.12742724577119474,
+  "lift_final": -0.12742724577119474,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.16074976926858037,
+   "median": 0.037318486622478345,
+   "p": 1.0,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.16074976926858037,
+   "median": 0.037318486622478345,
+   "p": 1.0,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "LANZ BOS up + uptrend (no clock gate) (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price cross_above pivot_high3 and ema_slope50 above 0",
+   "stop_atr": 1.8,
+   "target_atr": 9.9,
+   "max_hold": 10,
+   "old": {
+    "n": 290,
+    "pf": 1.2130682977926541,
+    "mean": 0.10492378113795339,
+    "tpd": 0.7509992681416428
+   },
+   "new": {
+    "n": 299,
+    "pf": 1.4581098005345008,
+    "mean": 0.21143670992607924
+   },
+   "full": {
+    "n": 589,
+    "pf": 1.3334915784196086,
+    "mean": 0.15899401154143322
+   },
+   "tpd": 0.763,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.3,
+    "days": 26.0,
+    "accounts": 2.36,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 34.5,
+     "days_med": 26.8,
+     "pass_lo": 34.1,
+     "pass_hi": 50.7,
+     "pass_med": 41.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold10",
+   "rule": "long when price cross_above pivot_high3 and ema_slope50 above 0 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 10,
+   "old": {
+    "n": 211,
+    "pf": 1.6070562419482814,
+    "mean": 0.29382589846360113,
+    "tpd": 0.5464167088892642
+   },
+   "new": {
+    "n": 208,
+    "pf": 1.1472652540648958,
+    "mean": 0.0783936954964364
+   },
+   "full": {
+    "n": 419,
+    "pf": 1.3678754861053988,
+    "mean": 0.18688103398348116
+   },
+   "tpd": 0.543,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.0,
+    "days": 37.5,
+    "accounts": 2.08,
+    "band": {
+     "days_lo": 28.9,
+     "days_hi": 48.4,
+     "days_med": 35.5,
+     "pass_lo": 35.2,
+     "pass_hi": 56.1,
+     "pass_med": 45.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold10",
+   "rule": "long when price cross_above pivot_high3 and ema_slope50 above 0 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 10,
+   "old": {
+    "n": 211,
+    "pf": 1.6070562419482814,
+    "mean": 0.29382589846360113,
+    "tpd": 0.5464167088892642
+   },
+   "new": {
+    "n": 208,
+    "pf": 1.1472652540648958,
+    "mean": 0.0783936954964364
+   },
+   "full": {
+    "n": 419,
+    "pf": 1.3678754861053988,
+    "mean": 0.18688103398348116
+   },
+   "tpd": 0.543,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.0,
+    "days": 37.5,
+    "accounts": 2.08,
+    "band": {
+     "days_lo": 28.9,
+     "days_hi": 48.4,
+     "days_med": 35.5,
+     "pass_lo": 35.2,
+     "pass_hi": 56.1,
+     "pass_med": 45.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.13304301442964284,
+  "lift_final": -0.13304301442964284,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1149950600162926,
+   "median": -0.0217664179227008,
+   "p": 0.9,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.1149950600162926,
+   "median": -0.0217664179227008,
+   "p": 0.9,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "BB breakout long with EMA200 trend and volume (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema200 and price above bb_upper15x1.5 and volume above vol_sma15",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 300,
+    "pf": 1.241311267054867,
+    "mean": 0.13517681660880204,
+    "tpd": 0.7768957946292856
+   },
+   "new": {
+    "n": 287,
+    "pf": 1.2078555703209832,
+    "mean": 0.11408977254359734
+   },
+   "full": {
+    "n": 587,
+    "pf": 1.2251239925222412,
+    "mean": 0.1248667967677224
+   },
+   "tpd": 0.76,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 33.7,
+    "days": 29.7,
+    "accounts": 2.97,
+    "band": {
+     "days_lo": 23.6,
+     "days_hi": 38.6,
+     "days_med": 30.3,
+     "pass_lo": 29.4,
+     "pass_hi": 45.3,
+     "pass_med": 37.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop2 tgt6 hold24",
+   "rule": "long when price above ema200 and price above bb_upper15x1.5 and volume above vol_sma15 and htf_closex4 above htf_openx4",
+   "stop_atr": 2.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 212,
+    "pf": 1.5106416336868038,
+    "mean": 0.27688915746945975,
+    "tpd": 0.5490063615380285
+   },
+   "new": {
+    "n": 187,
+    "pf": 1.6267110046195654,
+    "mean": 0.326007440536262
+   },
+   "full": {
+    "n": 399,
+    "pf": 1.5638418785689907,
+    "mean": 0.29990950567370034
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 46.3,
+    "days": 25.9,
+    "accounts": 2.16,
+    "band": {
+     "days_lo": 21.2,
+     "days_hi": 34.1,
+     "days_med": 26.5,
+     "pass_lo": 41.3,
+     "pass_hi": 61.4,
+     "pass_med": 50.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop2 tgt6 hold24",
+   "rule": "long when price above ema200 and price above bb_upper15x1.5 and volume above vol_sma15 and htf_closex4 above htf_openx4",
+   "stop_atr": 2.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 212,
+    "pf": 1.5106416336868038,
+    "mean": 0.27688915746945975,
+    "tpd": 0.5490063615380285
+   },
+   "new": {
+    "n": 187,
+    "pf": 1.6267110046195654,
+    "mean": 0.326007440536262
+   },
+   "full": {
+    "n": 399,
+    "pf": 1.5638418785689907,
+    "mean": 0.29990950567370034
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 46.3,
+    "days": 25.9,
+    "accounts": 2.16,
+    "band": {
+     "days_lo": 21.2,
+     "days_hi": 34.1,
+     "days_med": 26.5,
+     "pass_lo": 41.3,
+     "pass_hi": 61.4,
+     "pass_med": 50.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.21191766799266468,
+  "lift_final": 0.21191766799266468,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.14483752993608387,
+   "median": 0.035067318285319476,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.14483752993608387,
+   "median": 0.035067318285319476,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "EMA100/500 trend-aligned long",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema100 and price above ema400 and ema100 above ema400",
+   "stop_atr": 2.5,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 427,
+    "pf": 1.1999221900793984,
+    "mean": 0.13568304868640257,
+    "tpd": 1.1065136258009998
+   },
+   "new": {
+    "n": 465,
+    "pf": 1.3340122040811078,
+    "mean": 0.2180809948831239
+   },
+   "full": {
+    "n": 892,
+    "pf": 1.2685273540774717,
+    "mean": 0.17863713498850503
+   },
+   "tpd": 1.156,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 32.8,
+    "days": 15.2,
+    "accounts": 3.05,
+    "band": {
+     "days_lo": 12.3,
+     "days_hi": 18.1,
+     "days_med": 15.0,
+     "pass_lo": 28.6,
+     "pass_hi": 39.6,
+     "pass_med": 33.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "EMA50 rising",
+   "exits": "stop1.5 tgt3 hold6",
+   "rule": "long when price above ema100 and price above ema400 and ema100 above ema400 and ema50 above ema50[10]",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 229,
+    "pf": 1.550174973823358,
+    "mean": 0.236376577445627,
+    "tpd": 0.5845564773452457
+   },
+   "new": {
+    "n": 242,
+    "pf": 1.350592097677132,
+    "mean": 0.15307559213780542
+   },
+   "full": {
+    "n": 471,
+    "pf": 1.446825767258279,
+    "mean": 0.19357649582249997
+   },
+   "tpd": 0.601,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.3,
+    "days": 26.6,
+    "accounts": 2.42,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 33.5,
+     "days_med": 25.9,
+     "pass_lo": 36.0,
+     "pass_hi": 52.2,
+     "pass_med": 44.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "EMA50 rising",
+   "exits": "stop1.5 tgt3 hold6",
+   "rule": "long when price above ema100 and price above ema400 and ema100 above ema400 and ema50 above ema50[10]",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 229,
+    "pf": 1.550174973823358,
+    "mean": 0.236376577445627,
+    "tpd": 0.5845564773452457
+   },
+   "new": {
+    "n": 242,
+    "pf": 1.350592097677132,
+    "mean": 0.15307559213780542
+   },
+   "full": {
+    "n": 471,
+    "pf": 1.446825767258279,
+    "mean": 0.19357649582249997
+   },
+   "tpd": 0.601,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.3,
+    "days": 26.6,
+    "accounts": 2.42,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 33.5,
+     "days_med": 25.9,
+     "pass_lo": 36.0,
+     "pass_hi": 52.2,
+     "pass_med": 44.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.06500540274531849,
+  "lift_final": -0.06500540274531849,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.09394609611141495,
+   "median": -0.020755549694543227,
+   "p": 0.85,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.09394609611141495,
+   "median": -0.020755549694543227,
+   "p": 0.85,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "sustained strength above VWAP",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when rsi14 above 55 for 10 bars and price above vwap100",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 198,
+    "pf": 1.0980027179667482,
+    "mean": 0.052398473273908466,
+    "tpd": 0.5127512244553285
+   },
+   "new": {
+    "n": 239,
+    "pf": 1.3708517105443987,
+    "mean": 0.19477535460641177
+   },
+   "full": {
+    "n": 437,
+    "pf": 1.2460197522968446,
+    "mean": 0.1302659209591906
+   },
+   "tpd": 0.566,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 35.8,
+    "days": 39.1,
+    "accounts": 2.79,
+    "band": {
+     "days_lo": 29.5,
+     "days_hi": 54.0,
+     "days_med": 38.2,
+     "pass_lo": 31.4,
+     "pass_hi": 51.8,
+     "pass_med": 40.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "VWAP24 rising",
+   "exits": "stop2 tgt10 hold12",
+   "rule": "long when rsi14 above 55 for 10 bars and price above vwap100 and vwap24 above vwap24[6]",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 204,
+    "pf": 1.2419114339733466,
+    "mean": 0.11188212051910355,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 237,
+    "pf": 1.674096836378629,
+    "mean": 0.31524125515929374
+   },
+   "full": {
+    "n": 441,
+    "pf": 1.4753653900249533,
+    "mean": 0.22117036294478398
+   },
+   "tpd": 0.571,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.8,
+    "days": 37.4,
+    "accounts": 2.34,
+    "band": {
+     "days_lo": 27.2,
+     "days_hi": 48.9,
+     "days_med": 34.6,
+     "pass_lo": 34.7,
+     "pass_hi": 54.6,
+     "pass_med": 44.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "VWAP24 rising",
+   "exits": "stop2 tgt10 hold12",
+   "rule": "long when rsi14 above 55 for 10 bars and price above vwap100 and vwap24 above vwap24[6]",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 204,
+    "pf": 1.2419114339733466,
+    "mean": 0.11188212051910355,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 237,
+    "pf": 1.674096836378629,
+    "mean": 0.31524125515929374
+   },
+   "full": {
+    "n": 441,
+    "pf": 1.4753653900249533,
+    "mean": 0.22117036294478398
+   },
+   "tpd": 0.571,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.8,
+    "days": 37.4,
+    "accounts": 2.34,
+    "band": {
+     "days_lo": 27.2,
+     "days_hi": 48.9,
+     "days_med": 34.6,
+     "pass_lo": 34.7,
+     "pass_hi": 54.6,
+     "pass_med": 44.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.12046590055288198,
+  "lift_final": 0.12046590055288198,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.13300193243363043,
+   "median": 0.018895225006744006,
+   "p": 0.075,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.13300193243363043,
+   "median": 0.018895225006744006,
+   "p": 0.075,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Triaxial consensus long (trend stack + RSI momentum)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when ema21 above ema100 and ema8 above ema21 and rsi14 above 62",
+   "stop_atr": 1.5,
+   "target_atr": 3.75,
+   "max_hold": 24,
+   "old": {
+    "n": 326,
+    "pf": 1.198481764798647,
+    "mean": 0.12647610895000616,
+    "tpd": 0.844226763497157
+   },
+   "new": {
+    "n": 331,
+    "pf": 1.2642175276668222,
+    "mean": 0.16485552602954423
+   },
+   "full": {
+    "n": 657,
+    "pf": 1.2312536978439854,
+    "mean": 0.14581185788962123
+   },
+   "tpd": 0.851,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 31.3,
+    "days": 22.4,
+    "accounts": 3.2,
+    "band": {
+     "days_lo": 18.4,
+     "days_hi": 29.5,
+     "days_med": 23.3,
+     "pass_lo": 29.4,
+     "pass_hi": 43.0,
+     "pass_med": 36.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop5 tgt6 hold24",
+   "rule": "long when ema21 above ema100 and ema8 above ema21 and rsi14 above 62 and ema50 above ema200",
+   "stop_atr": 5.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 196,
+    "pf": 1.6147833513206298,
+    "mean": 0.16311234629149912,
+    "tpd": 0.5075719191577999
+   },
+   "new": {
+    "n": 212,
+    "pf": 1.4285794491420205,
+    "mean": 0.12652203011091442
+   },
+   "full": {
+    "n": 408,
+    "pf": 1.513082748396446,
+    "mean": 0.1440997310211953
+   },
+   "tpd": 0.528,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 62.7,
+    "days": 60.6,
+    "accounts": 1.59,
+    "band": {
+     "days_lo": 46.6,
+     "days_hi": 85.4,
+     "days_med": 60.9,
+     "pass_lo": 49.1,
+     "pass_hi": 78.3,
+     "pass_med": 63.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop5 tgt6 hold24",
+   "rule": "long when ema21 above ema100 and ema8 above ema21 and rsi14 above 62 and ema50 above ema200",
+   "stop_atr": 5.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 196,
+    "pf": 1.6147833513206298,
+    "mean": 0.16311234629149912,
+    "tpd": 0.5075719191577999
+   },
+   "new": {
+    "n": 212,
+    "pf": 1.4285794491420205,
+    "mean": 0.12652203011091442
+   },
+   "full": {
+    "n": 408,
+    "pf": 1.513082748396446,
+    "mean": 0.1440997310211953
+   },
+   "tpd": 0.528,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 62.7,
+    "days": 60.6,
+    "accounts": 1.59,
+    "band": {
+     "days_lo": 46.6,
+     "days_hi": 85.4,
+     "days_med": 60.9,
+     "pass_lo": 49.1,
+     "pass_hi": 78.3,
+     "pass_med": 63.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.038333495918629806,
+  "lift_final": -0.038333495918629806,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.21428277919304253,
+   "median": 0.048999188883556824,
+   "p": 0.95,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.21428277919304253,
+   "median": 0.048999188883556824,
+   "p": 0.95,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "ORION box breakout long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price cross_above highest15[1] and price above ema150",
+   "stop_atr": 2.0,
+   "target_atr": 3.8,
+   "max_hold": 24,
+   "old": {
+    "n": 231,
+    "pf": 1.3457161688539951,
+    "mean": 0.18405553368909486,
+    "tpd": 0.5982097618645499
+   },
+   "new": {
+    "n": 241,
+    "pf": 1.1682442682285468,
+    "mean": 0.09313547798861603
+   },
+   "full": {
+    "n": 472,
+    "pf": 1.2533707424019156,
+    "mean": 0.13763236965558764
+   },
+   "tpd": 0.611,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.8,
+    "days": 35.9,
+    "accounts": 2.39,
+    "band": {
+     "days_lo": 26.7,
+     "days_hi": 42.9,
+     "days_med": 34.5,
+     "pass_lo": 33.3,
+     "pass_hi": 51.8,
+     "pass_med": 42.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above EMA200",
+   "exits": "stop2 tgt10 hold24",
+   "rule": "long when price cross_above highest15[1] and price above ema150 and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.492941334407114,
+    "mean": 0.28474943907231065,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 213,
+    "pf": 1.4098448339557708,
+    "mean": 0.2509325459008505
+   },
+   "full": {
+    "n": 408,
+    "pf": 1.4483555471022456,
+    "mean": 0.26709503160779835
+   },
+   "tpd": 0.528,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 49.1,
+    "days": 20.4,
+    "accounts": 2.04,
+    "band": {
+     "days_lo": 17.0,
+     "days_hi": 26.3,
+     "days_med": 20.3,
+     "pass_lo": 38.7,
+     "pass_hi": 57.4,
+     "pass_med": 47.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above EMA200",
+   "exits": "stop2 tgt10 hold24",
+   "rule": "long when price cross_above highest15[1] and price above ema150 and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.492941334407114,
+    "mean": 0.28474943907231065,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 213,
+    "pf": 1.4098448339557708,
+    "mean": 0.2509325459008505
+   },
+   "full": {
+    "n": 408,
+    "pf": 1.4483555471022456,
+    "mean": 0.26709503160779835
+   },
+   "tpd": 0.528,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 49.1,
+    "days": 20.4,
+    "accounts": 2.04,
+    "band": {
+     "days_lo": 17.0,
+     "days_hi": 26.3,
+     "days_med": 20.3,
+     "pass_lo": 38.7,
+     "pass_hi": 57.4,
+     "pass_med": 47.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.15779706791223447,
+  "lift_final": 0.15779706791223447,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.13411685257578884,
+   "median": 0.018724701124248355,
+   "p": 0.025,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.13411685257578884,
+   "median": 0.018724701124248355,
+   "p": 0.025,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Daily low above daily EMA21 for 3 days",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when htf_lowx24 above htf_ema21x24 for 3 bars",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 528,
+    "pf": 1.1737107706887404,
+    "mean": 0.10913633117580017,
+    "tpd": 1.3682416731216112
+   },
+   "new": {
+    "n": 546,
+    "pf": 1.2346600376076795,
+    "mean": 0.14281075034932467
+   },
+   "full": {
+    "n": 1074,
+    "pf": 1.2042112929026383,
+    "mean": 0.12625572863273163
+   },
+   "tpd": 1.392,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 35.7,
+    "days": 14.0,
+    "accounts": 2.8,
+    "band": {
+     "days_lo": 11.2,
+     "days_hi": 15.8,
+     "days_med": 13.2,
+     "pass_lo": 29.8,
+     "pass_hi": 41.1,
+     "pass_med": 35.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "stop1.5 tgt3 hold6",
+   "rule": "long when htf_lowx24 above htf_ema21x24 for 3 bars",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 243,
+    "pf": 1.3314668077827432,
+    "mean": 0.15125765664352897,
+    "tpd": 0.620293554562859
+   },
+   "new": {
+    "n": 243,
+    "pf": 1.2580878237563444,
+    "mean": 0.1166774030311634
+   },
+   "full": {
+    "n": 486,
+    "pf": 1.2949487293405852,
+    "mean": 0.13396752983734617
+   },
+   "tpd": 0.62,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 36.4,
+    "days": 33.0,
+    "accounts": 2.75,
+    "band": {
+     "days_lo": 27.5,
+     "days_hi": 47.3,
+     "days_med": 35.4,
+     "pass_lo": 29.5,
+     "pass_hi": 47.2,
+     "pass_med": 38.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "stop1.5 tgt3 hold6",
+   "rule": "long when htf_lowx24 above htf_ema21x24 for 3 bars",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 243,
+    "pf": 1.3314668077827432,
+    "mean": 0.15125765664352897,
+    "tpd": 0.620293554562859
+   },
+   "new": {
+    "n": 243,
+    "pf": 1.2580878237563444,
+    "mean": 0.1166774030311634
+   },
+   "full": {
+    "n": 486,
+    "pf": 1.2949487293405852,
+    "mean": 0.13396752983734617
+   },
+   "tpd": 0.62,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 36.4,
+    "days": 33.0,
+    "accounts": 2.75,
+    "band": {
+     "days_lo": 27.5,
+     "days_hi": 47.3,
+     "days_med": 35.4,
+     "pass_lo": 29.5,
+     "pass_hi": 47.2,
+     "pass_med": 38.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.026133347318161262,
+  "lift_final": -0.026133347318161262,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.09584757636200181,
+   "median": -0.028164824412425453,
+   "p": 0.45,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.09584757636200181,
+   "median": -0.028164824412425453,
+   "p": 0.45,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "CMS bull stack + RSI",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when ema21 above ema55 and ema55 above ema200 and rsi14 above 52",
+   "stop_atr": 1.7,
+   "target_atr": 3.4,
+   "max_hold": 24,
+   "old": {
+    "n": 323,
+    "pf": 1.3125083144353087,
+    "mean": 0.17408046259055196,
+    "tpd": 0.8364578055508641
+   },
+   "new": {
+    "n": 333,
+    "pf": 1.1967687575157036,
+    "mean": 0.11130865150776474
+   },
+   "full": {
+    "n": 656,
+    "pf": 1.2533111959396475,
+    "mean": 0.14221611336712492
+   },
+   "tpd": 0.849,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.1,
+    "days": 26.8,
+    "accounts": 2.43,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 33.9,
+     "days_med": 26.1,
+     "pass_lo": 32.1,
+     "pass_hi": 48.6,
+     "pass_med": 40.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop2 tgt6 hold24",
+   "rule": "long when ema21 above ema55 and ema55 above ema200 and rsi14 above 52 and htf_closex4 above htf_openx4",
+   "stop_atr": 2.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 220,
+    "pf": 1.589563003739855,
+    "mean": 0.29809790609507564,
+    "tpd": 0.5697235827281427
+   },
+   "new": {
+    "n": 219,
+    "pf": 1.5246564432314587,
+    "mean": 0.2705542138723374
+   },
+   "full": {
+    "n": 439,
+    "pf": 1.55686417622821,
+    "mean": 0.2843574309315684
+   },
+   "tpd": 0.568,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 53.4,
+    "days": 26.2,
+    "accounts": 1.87,
+    "band": {
+     "days_lo": 21.6,
+     "days_hi": 33.4,
+     "days_med": 25.8,
+     "pass_lo": 43.6,
+     "pass_hi": 63.7,
+     "pass_med": 54.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop2 tgt6 hold24",
+   "rule": "long when ema21 above ema55 and ema55 above ema200 and rsi14 above 52 and htf_closex4 above htf_openx4",
+   "stop_atr": 2.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 220,
+    "pf": 1.589563003739855,
+    "mean": 0.29809790609507564,
+    "tpd": 0.5697235827281427
+   },
+   "new": {
+    "n": 219,
+    "pf": 1.5246564432314587,
+    "mean": 0.2705542138723374
+   },
+   "full": {
+    "n": 439,
+    "pf": 1.55686417622821,
+    "mean": 0.2843574309315684
+   },
+   "tpd": 0.568,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 53.4,
+    "days": 26.2,
+    "accounts": 1.87,
+    "band": {
+     "days_lo": 21.6,
+     "days_hi": 33.4,
+     "days_med": 25.8,
+     "pass_lo": 43.6,
+     "pass_hi": 63.7,
+     "pass_med": 54.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.15924556236457266,
+  "lift_final": 0.15924556236457266,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.22649324224258705,
+   "median": 0.10433367926847262,
+   "p": 0.25,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.22649324224258705,
+   "median": 0.10433367926847262,
+   "p": 0.25,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "SMMA high-band two-bar breakout",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema39 for 2 bars",
+   "stop_atr": 2.0,
+   "target_atr": 2.0,
+   "max_hold": 6,
+   "old": {
+    "n": 292,
+    "pf": 1.229215282288827,
+    "mean": 0.07967826016678581,
+    "tpd": 0.7453733248245055
+   },
+   "new": {
+    "n": 296,
+    "pf": 1.188887106380108,
+    "mean": 0.06309812452778298
+   },
+   "full": {
+    "n": 588,
+    "pf": 1.2093152071627522,
+    "mean": 0.0713317973281041
+   },
+   "tpd": 0.75,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.6,
+    "days": 45.2,
+    "accounts": 2.06,
+    "band": {
+     "days_lo": 41.6,
+     "days_hi": 69.3,
+     "days_med": 50.0,
+     "pass_lo": 32.9,
+     "pass_hi": 52.7,
+     "pass_med": 42.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "London+NY 07-17",
+   "exits": "stop5 tgt2 hold4",
+   "rule": "long when price above ema39 for 2 bars and hour above 6.5 and hour below 16.5",
+   "stop_atr": 5.0,
+   "target_atr": 2.0,
+   "max_hold": 4,
+   "old": {
+    "n": 268,
+    "pf": 1.5991196293706338,
+    "mean": 0.05502269229655923,
+    "tpd": 0.6841097638800255
+   },
+   "new": {
+    "n": 257,
+    "pf": 1.499021993615683,
+    "mean": 0.04844333695903822
+   },
+   "full": {
+    "n": 525,
+    "pf": 1.5487317523301276,
+    "mean": 0.051801941207525126
+   },
+   "tpd": 0.67,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 73.2,
+    "days": 151.7,
+    "accounts": 1.37,
+    "band": {
+     "days_lo": 114.3,
+     "days_hi": 233.0,
+     "days_med": 152.9,
+     "pass_lo": 65.0,
+     "pass_hi": 91.2,
+     "pass_med": 81.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "London+NY 07-17",
+   "exits": "stop5 tgt2 hold4",
+   "rule": "long when price above ema39 for 2 bars and hour above 6.5 and hour below 16.5",
+   "stop_atr": 5.0,
+   "target_atr": 2.0,
+   "max_hold": 4,
+   "old": {
+    "n": 268,
+    "pf": 1.5991196293706338,
+    "mean": 0.05502269229655923,
+    "tpd": 0.6841097638800255
+   },
+   "new": {
+    "n": 257,
+    "pf": 1.499021993615683,
+    "mean": 0.04844333695903822
+   },
+   "full": {
+    "n": 525,
+    "pf": 1.5487317523301276,
+    "mean": 0.051801941207525126
+   },
+   "tpd": 0.67,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 73.2,
+    "days": 151.7,
+    "accounts": 1.37,
+    "band": {
+     "days_lo": 114.3,
+     "days_hi": 233.0,
+     "days_med": 152.9,
+     "pass_lo": 65.0,
+     "pass_hi": 91.2,
+     "pass_med": 81.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.014654787568744755,
+  "lift_final": -0.014654787568744755,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.16195137314570598,
+   "median": -0.003775684646318181,
+   "p": 0.7,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.16195137314570598,
+   "median": -0.003775684646318181,
+   "p": 0.7,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "5m EMA8 pullback with 1H trend filter long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 339,
+    "pf": 1.297862092964851,
+    "mean": 0.15361379965698743,
+    "tpd": 0.8778922479310927
+   },
+   "new": {
+    "n": 336,
+    "pf": 1.1876294322579792,
+    "mean": 0.09934774448541342
+   },
+   "full": {
+    "n": 675,
+    "pf": 1.24226468224235,
+    "mean": 0.12660136330491503
+   },
+   "tpd": 0.874,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 43.8,
+    "days": 22.8,
+    "accounts": 2.28,
+    "band": {
+     "days_lo": 21.3,
+     "days_hi": 30.7,
+     "days_med": 25.0,
+     "pass_lo": 34.6,
+     "pass_hi": 49.8,
+     "pass_med": 42.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop2 tgt10 hold24",
+   "rule": "long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1 and ema50 above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.697912246640891,
+    "mean": 0.3812801164546864,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 205,
+    "pf": 1.7461958718853177,
+    "mean": 0.3877307001984987
+   },
+   "full": {
+    "n": 409,
+    "pf": 1.7215082086168014,
+    "mean": 0.3845132941257904
+   },
+   "tpd": 0.53,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 55.7,
+    "days": 19.7,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 17.1,
+     "days_hi": 25.3,
+     "days_med": 21.0,
+     "pass_lo": 46.3,
+     "pass_hi": 66.0,
+     "pass_med": 55.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop2 tgt10 hold24",
+   "rule": "long when low below ema8 and price above ema8 and htf_ema8x1 above htf_ema21x1 and ema50 above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.697912246640891,
+    "mean": 0.3812801164546864,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 205,
+    "pf": 1.7461958718853177,
+    "mean": 0.3877307001984987
+   },
+   "full": {
+    "n": 409,
+    "pf": 1.7215082086168014,
+    "mean": 0.3845132941257904
+   },
+   "tpd": 0.53,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 55.7,
+    "days": 19.7,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 17.1,
+     "days_hi": 25.3,
+     "days_med": 21.0,
+     "pass_lo": 46.3,
+     "pass_hi": 66.0,
+     "pass_med": 55.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.28838295571308525,
+  "lift_final": 0.28838295571308525,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1414943123660699,
+   "median": 0.024312461890002784,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.1414943123660699,
+   "median": 0.024312461890002784,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Keltner breakout long (approx)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema20 and price above sma200",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 391,
+    "pf": 1.1723994019083896,
+    "mean": 0.09453273023741797,
+    "tpd": 1.0125541856668354
+   },
+   "new": {
+    "n": 414,
+    "pf": 1.2017516947333124,
+    "mean": 0.106605680421088
+   },
+   "full": {
+    "n": 805,
+    "pf": 1.1872232240182137,
+    "mean": 0.10074167604616256
+   },
+   "tpd": 1.042,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 28.6,
+    "days": 24.4,
+    "accounts": 3.49,
+    "band": {
+     "days_lo": 19.4,
+     "days_hi": 29.9,
+     "days_med": 23.9,
+     "pass_lo": 26.9,
+     "pass_hi": 40.0,
+     "pass_med": 33.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "above VWAP24",
+   "exits": "stop1.5 tgt4 hold6",
+   "rule": "long when price above ema20 and price above sma200 and price above vwap24",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 6,
+   "old": {
+    "n": 206,
+    "pf": 1.4093474399516102,
+    "mean": 0.192030480962554,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 230,
+    "pf": 1.60879840737707,
+    "mean": 0.26209502245082317
+   },
+   "full": {
+    "n": 436,
+    "pf": 1.5102861856720002,
+    "mean": 0.2289911335825125
+   },
+   "tpd": 0.556,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.1,
+    "days": 29.2,
+    "accounts": 2.43,
+    "band": {
+     "days_lo": 24.9,
+     "days_hi": 38.8,
+     "days_med": 29.5,
+     "pass_lo": 37.4,
+     "pass_hi": 59.5,
+     "pass_med": 47.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "above VWAP24",
+   "exits": "stop1.5 tgt4 hold6",
+   "rule": "long when price above ema20 and price above sma200 and price above vwap24",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 6,
+   "old": {
+    "n": 206,
+    "pf": 1.4093474399516102,
+    "mean": 0.192030480962554,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 230,
+    "pf": 1.60879840737707,
+    "mean": 0.26209502245082317
+   },
+   "full": {
+    "n": 436,
+    "pf": 1.5102861856720002,
+    "mean": 0.2289911335825125
+   },
+   "tpd": 0.556,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.1,
+    "days": 29.2,
+    "accounts": 2.43,
+    "band": {
+     "days_lo": 24.9,
+     "days_hi": 38.8,
+     "days_med": 29.5,
+     "pass_lo": 37.4,
+     "pass_hi": 59.5,
+     "pass_med": 47.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.15548934202973516,
+  "lift_final": 0.15548934202973516,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.16259940801969716,
+   "median": 0.011100399734121772,
+   "p": 0.075,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.16259940801969716,
+   "median": 0.011100399734121772,
+   "p": 0.075,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "SR pivot breakout (long)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price cross_above pivot_high5 and price above open",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 219,
+    "pf": 1.5226644645813499,
+    "mean": 0.254675176260698,
+    "tpd": 0.5671339300793784
+   },
+   "new": {
+    "n": 214,
+    "pf": 1.0959127861006568,
+    "mean": 0.05326257123844173
+   },
+   "full": {
+    "n": 433,
+    "pf": 1.2978147889246203,
+    "mean": 0.15513176407879772
+   },
+   "tpd": 0.561,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 45.8,
+    "days": 34.9,
+    "accounts": 2.18,
+    "band": {
+     "days_lo": 28.0,
+     "days_hi": 46.6,
+     "days_med": 35.4,
+     "pass_lo": 32.5,
+     "pass_hi": 52.2,
+     "pass_med": 42.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop5 tgt4 hold24",
+   "rule": "long when price cross_above pivot_high5 and price above open and price above vwap24",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.6055636017800472,
+    "mean": 0.1405047935126733,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 199,
+    "pf": 1.2731102050921541,
+    "mean": 0.062449862544384394
+   },
+   "full": {
+    "n": 394,
+    "pf": 1.4388621697412884,
+    "mean": 0.10108111010483196
+   },
+   "tpd": 0.51,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 58.5,
+    "days": 83.7,
+    "accounts": 1.71,
+    "band": {
+     "days_lo": 66.5,
+     "days_hi": 128.0,
+     "days_med": 85.9,
+     "pass_lo": 38.9,
+     "pass_hi": 73.7,
+     "pass_med": 59.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop5 tgt4 hold24",
+   "rule": "long when price cross_above pivot_high5 and price above open and price above vwap24",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.6055636017800472,
+    "mean": 0.1405047935126733,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 199,
+    "pf": 1.2731102050921541,
+    "mean": 0.062449862544384394
+   },
+   "full": {
+    "n": 394,
+    "pf": 1.4388621697412884,
+    "mean": 0.10108111010483196
+   },
+   "tpd": 0.51,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 58.5,
+    "days": 83.7,
+    "accounts": 1.71,
+    "band": {
+     "days_lo": 66.5,
+     "days_hi": 128.0,
+     "days_med": 85.9,
+     "pass_lo": 38.9,
+     "pass_hi": 73.7,
+     "pass_med": 59.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.00918729130594266,
+  "lift_final": 0.00918729130594266,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.07482891085572055,
+   "median": -0.019213417971041404,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.07482891085572055,
+   "median": -0.019213417971041404,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Donchian 20 breakout + rising 200 trend",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above highest20 and ema_slope200 above 0",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 229,
+    "pf": 1.1441088907693133,
+    "mean": 0.08251114162305781,
+    "tpd": 0.5930304565670214
+   },
+   "new": {
+    "n": 244,
+    "pf": 1.2345100866762184,
+    "mean": 0.13011705575476337
+   },
+   "full": {
+    "n": 473,
+    "pf": 1.1900330424010996,
+    "mean": 0.10706894933581926
+   },
+   "tpd": 0.612,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 34.3,
+    "days": 37.9,
+    "accounts": 2.92,
+    "band": {
+     "days_lo": 30.5,
+     "days_hi": 50.0,
+     "days_med": 37.8,
+     "pass_lo": 28.0,
+     "pass_hi": 46.4,
+     "pass_med": 37.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 rising",
+   "exits": "stop5 tgt10 hold12",
+   "rule": "long when price above highest20 and ema_slope200 above 0 and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 218,
+    "pf": 1.1934063793017617,
+    "mean": 0.05107802037728541,
+    "tpd": 0.5645442774306142
+   },
+   "new": {
+    "n": 216,
+    "pf": 1.5803392960465839,
+    "mean": 0.1347420441372805
+   },
+   "full": {
+    "n": 434,
+    "pf": 1.3735420895199293,
+    "mean": 0.09271725800898803
+   },
+   "tpd": 0.562,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 63.9,
+    "days": 72.0,
+    "accounts": 1.57,
+    "band": {
+     "days_lo": 56.7,
+     "days_hi": 113.6,
+     "days_med": 75.6,
+     "pass_lo": 38.0,
+     "pass_hi": 69.7,
+     "pass_med": 54.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 rising",
+   "exits": "stop5 tgt10 hold12",
+   "rule": "long when price above highest20 and ema_slope200 above 0 and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 218,
+    "pf": 1.1934063793017617,
+    "mean": 0.05107802037728541,
+    "tpd": 0.5645442774306142
+   },
+   "new": {
+    "n": 216,
+    "pf": 1.5803392960465839,
+    "mean": 0.1347420441372805
+   },
+   "full": {
+    "n": 434,
+    "pf": 1.3735420895199293,
+    "mean": 0.09271725800898803
+   },
+   "tpd": 0.562,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 63.9,
+    "days": 72.0,
+    "accounts": 1.57,
+    "band": {
+     "days_lo": 56.7,
+     "days_hi": 113.6,
+     "days_med": 75.6,
+     "pass_lo": 38.0,
+     "pass_hi": 69.7,
+     "pass_med": 54.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.004624988382517126,
+  "lift_final": 0.004624988382517126,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.15628039411042807,
+   "median": 0.013831485940496914,
+   "p": 0.525,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.15628039411042807,
+   "median": 0.013831485940496914,
+   "p": 0.525,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Super Scalper long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when body_pct above 70 and rsi25 above rsi100",
+   "stop_atr": 2.0,
+   "target_atr": 5.0,
+   "max_hold": 24,
+   "old": {
+    "n": 263,
+    "pf": 1.2747278485411442,
+    "mean": 0.14666689729095037,
+    "tpd": 0.6810786466250071
+   },
+   "new": {
+    "n": 267,
+    "pf": 1.1997850012791582,
+    "mean": 0.10487168561919603
+   },
+   "full": {
+    "n": 530,
+    "pf": 1.2372900115137155,
+    "mean": 0.1256115736751798
+   },
+   "tpd": 0.686,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.2,
+    "days": 31.4,
+    "accounts": 2.62,
+    "band": {
+     "days_lo": 25.1,
+     "days_hi": 37.5,
+     "days_med": 30.6,
+     "pass_lo": 30.7,
+     "pass_hi": 46.0,
+     "pass_med": 38.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above VWAP96",
+   "exits": "stop1.5 tgt10 hold24",
+   "rule": "long when body_pct above 70 and rsi25 above rsi100 and price above vwap96",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 198,
+    "pf": 1.4575099427672304,
+    "mean": 0.29641992865308125,
+    "tpd": 0.5127512244553285
+   },
+   "new": {
+    "n": 214,
+    "pf": 1.3413189280229953,
+    "mean": 0.22990223485480274
+   },
+   "full": {
+    "n": 412,
+    "pf": 1.3960322456369305,
+    "mean": 0.26186947604912103
+   },
+   "tpd": 0.533,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 40.9,
+    "days": 17.1,
+    "accounts": 2.45,
+    "band": {
+     "days_lo": 14.1,
+     "days_hi": 21.7,
+     "days_med": 17.1,
+     "pass_lo": 35.6,
+     "pass_hi": 50.1,
+     "pass_med": 42.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above VWAP96",
+   "exits": "stop1.5 tgt10 hold24",
+   "rule": "long when body_pct above 70 and rsi25 above rsi100 and price above vwap96",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 198,
+    "pf": 1.4575099427672304,
+    "mean": 0.29641992865308125,
+    "tpd": 0.5127512244553285
+   },
+   "new": {
+    "n": 214,
+    "pf": 1.3413189280229953,
+    "mean": 0.22990223485480274
+   },
+   "full": {
+    "n": 412,
+    "pf": 1.3960322456369305,
+    "mean": 0.26186947604912103
+   },
+   "tpd": 0.533,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 40.9,
+    "days": 17.1,
+    "accounts": 2.45,
+    "band": {
+     "days_lo": 14.1,
+     "days_hi": 21.7,
+     "days_med": 17.1,
+     "pass_lo": 35.6,
+     "pass_hi": 50.1,
+     "pass_med": 42.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.1250305492356067,
+  "lift_final": 0.1250305492356067,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.12141751266911316,
+   "median": 0.001290134817932883,
+   "p": 0.05,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.12141751266911316,
+   "median": 0.001290134817932883,
+   "p": 0.05,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Narrow-state trend reversal bar (long)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above sma200 and price above prev_high and prev_close below prev_open",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 244,
+    "pf": 1.1192968782067083,
+    "mean": 0.0673215567265957,
+    "tpd": 0.6318752462984856
+   },
+   "new": {
+    "n": 229,
+    "pf": 1.292981793189303,
+    "mean": 0.1448141152938597
+   },
+   "full": {
+    "n": 473,
+    "pf": 1.197657160143533,
+    "mean": 0.10483909565239581
+   },
+   "tpd": 0.612,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 35.0,
+    "days": 42.9,
+    "accounts": 2.86,
+    "band": {
+     "days_lo": 32.4,
+     "days_hi": 57.3,
+     "days_med": 40.6,
+     "pass_lo": 26.5,
+     "pass_hi": 46.4,
+     "pass_med": 35.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop5 tgt2 hold24",
+   "rule": "long when price above sma200 and price above prev_high and prev_close below prev_open and price above vwap24",
+   "stop_atr": 5.0,
+   "target_atr": 2.0,
+   "max_hold": 24,
+   "old": {
+    "n": 205,
+    "pf": 1.4131321153068506,
+    "mean": 0.07367837820259399,
+    "tpd": 0.5308787929966785
+   },
+   "new": {
+    "n": 212,
+    "pf": 1.135554490879704,
+    "mean": 0.02694785504918242
+   },
+   "full": {
+    "n": 417,
+    "pf": 1.26449447473923,
+    "mean": 0.049920894009492664
+   },
+   "tpd": 0.54,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 47.1,
+    "days": 161.5,
+    "accounts": 2.12,
+    "band": {
+     "days_lo": 111.1,
+     "days_hi": 296.2,
+     "days_med": 163.5,
+     "pass_lo": 29.2,
+     "pass_hi": 71.6,
+     "pass_med": 51.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop5 tgt2 hold24",
+   "rule": "long when price above sma200 and price above prev_high and prev_close below prev_open and price above vwap24",
+   "stop_atr": 5.0,
+   "target_atr": 2.0,
+   "max_hold": 24,
+   "old": {
+    "n": 205,
+    "pf": 1.4131321153068506,
+    "mean": 0.07367837820259399,
+    "tpd": 0.5308787929966785
+   },
+   "new": {
+    "n": 212,
+    "pf": 1.135554490879704,
+    "mean": 0.02694785504918242
+   },
+   "full": {
+    "n": 417,
+    "pf": 1.26449447473923,
+    "mean": 0.049920894009492664
+   },
+   "tpd": 0.54,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 47.1,
+    "days": 161.5,
+    "accounts": 2.12,
+    "band": {
+     "days_lo": 111.1,
+     "days_hi": 296.2,
+     "days_med": 163.5,
+     "pass_lo": 29.2,
+     "pass_hi": 71.6,
+     "pass_med": 51.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.11786626024467729,
+  "lift_final": -0.11786626024467729,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.10738595765656574,
+   "median": 0.008162779408469555,
+   "p": 0.95,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.10738595765656574,
+   "median": 0.008162779408469555,
+   "p": 0.95,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Aurum AVE long break (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above kc_upper30x1.8 and adx10 above 20 and di_plus10 above di_minus10",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 280,
+    "pf": 1.0926808858368886,
+    "mean": 0.05146827569688702,
+    "tpd": 0.7251027416539999
+   },
+   "new": {
+    "n": 290,
+    "pf": 1.189396155421996,
+    "mean": 0.10724598260028945
+   },
+   "full": {
+    "n": 570,
+    "pf": 1.142357684092479,
+    "mean": 0.07984640727931984
+   },
+   "tpd": 0.738,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 33.1,
+    "days": 33.2,
+    "accounts": 3.02,
+    "band": {
+     "days_lo": 26.5,
+     "days_hi": 45.6,
+     "days_med": 34.3,
+     "pass_lo": 25.3,
+     "pass_hi": 42.2,
+     "pass_med": 34.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt6 hold24",
+   "rule": "long when price above kc_upper30x1.8 and adx10 above 20 and di_plus10 above di_minus10 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.3324208126552868,
+    "mean": 0.21345598989784415,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 204,
+    "pf": 1.5450511151742692,
+    "mean": 0.3511831735283545
+   },
+   "full": {
+    "n": 399,
+    "pf": 1.4413146532033676,
+    "mean": 0.2838728958141953
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.3,
+    "days": 26.0,
+    "accounts": 2.36,
+    "band": {
+     "days_lo": 20.7,
+     "days_hi": 33.1,
+     "days_med": 26.1,
+     "pass_lo": 35.1,
+     "pass_hi": 54.0,
+     "pass_med": 44.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt6 hold24",
+   "rule": "long when price above kc_upper30x1.8 and adx10 above 20 and di_plus10 above di_minus10 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.3324208126552868,
+    "mean": 0.21345598989784415,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 204,
+    "pf": 1.5450511151742692,
+    "mean": 0.3511831735283545
+   },
+   "full": {
+    "n": 399,
+    "pf": 1.4413146532033676,
+    "mean": 0.2838728958141953
+   },
+   "tpd": 0.517,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.3,
+    "days": 26.0,
+    "accounts": 2.36,
+    "band": {
+     "days_lo": 20.7,
+     "days_hi": 33.1,
+     "days_med": 26.1,
+     "pass_lo": 35.1,
+     "pass_hi": 54.0,
+     "pass_med": 44.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.24393719092806504,
+  "lift_final": 0.24393719092806504,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.12687181937575584,
+   "median": 0.007715171640486476,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.12687181937575584,
+   "median": 0.007715171640486476,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Buy-pressure uptrend proxy",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema20 and body_pct above 20 for 3 bars",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 257,
+    "pf": 1.049859834285245,
+    "mean": 0.025166662786993085,
+    "tpd": 0.6655407307324213
+   },
+   "new": {
+    "n": 226,
+    "pf": 1.319337897181455,
+    "mean": 0.14753574312502374
+   },
+   "full": {
+    "n": 483,
+    "pf": 1.1700351241006548,
+    "mean": 0.08242424489133042
+   },
+   "tpd": 0.625,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.8,
+    "days": 46.7,
+    "accounts": 2.34,
+    "band": {
+     "days_lo": 36.1,
+     "days_hi": 60.9,
+     "days_med": 46.1,
+     "pass_lo": 29.2,
+     "pass_hi": 49.5,
+     "pass_med": 39.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop3 tgt10 hold24",
+   "rule": "long when price above ema20 and body_pct above 20 for 3 bars and price above vwap24",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.291186296985974,
+    "mean": 0.1236796682711911,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 188,
+    "pf": 1.329118462642892,
+    "mean": 0.13726064201883542
+   },
+   "full": {
+    "n": 392,
+    "pf": 1.309205377689565,
+    "mean": 0.1301929924154695
+   },
+   "tpd": 0.508,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 40.1,
+    "days": 49.9,
+    "accounts": 2.49,
+    "band": {
+     "days_lo": 36.1,
+     "days_hi": 63.3,
+     "days_med": 45.2,
+     "pass_lo": 34.8,
+     "pass_hi": 58.2,
+     "pass_med": 44.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above VWAP24",
+   "exits": "stop3 tgt10 hold24",
+   "rule": "long when price above ema20 and body_pct above 20 for 3 bars and price above vwap24",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.291186296985974,
+    "mean": 0.1236796682711911,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 188,
+    "pf": 1.329118462642892,
+    "mean": 0.13726064201883542
+   },
+   "full": {
+    "n": 392,
+    "pf": 1.309205377689565,
+    "mean": 0.1301929924154695
+   },
+   "tpd": 0.508,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 40.1,
+    "days": 49.9,
+    "accounts": 2.49,
+    "band": {
+     "days_lo": 36.1,
+     "days_hi": 63.3,
+     "days_med": 45.2,
+     "pass_lo": 34.8,
+     "pass_hi": 58.2,
+     "pass_med": 44.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.010275101106188317,
+  "lift_final": -0.010275101106188317,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1793390094025424,
+   "median": 0.010401207156881174,
+   "p": 0.65,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.1793390094025424,
+   "median": 0.010401207156881174,
+   "p": 0.65,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "CEM trend-stack long",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema50 and ema50 above ema200 and roc10 above 0",
+   "stop_atr": 1.6,
+   "target_atr": 2.8,
+   "max_hold": 24,
+   "old": {
+    "n": 394,
+    "pf": 1.2424146408956533,
+    "mean": 0.13334544736190768,
+    "tpd": 1.0203231436131284
+   },
+   "new": {
+    "n": 402,
+    "pf": 1.2259342062484433,
+    "mean": 0.12436170774581727
+   },
+   "full": {
+    "n": 796,
+    "pf": 1.2340889005820768,
+    "mean": 0.12880843313368112
+   },
+   "tpd": 1.031,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.7,
+    "days": 23.3,
+    "accounts": 2.59,
+    "band": {
+     "days_lo": 18.9,
+     "days_hi": 28.9,
+     "days_med": 23.0,
+     "pass_lo": 32.7,
+     "pass_hi": 50.3,
+     "pass_med": 41.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "New York 12-17",
+   "exits": "stop1 tgt6 hold24",
+   "rule": "long when price above ema50 and ema50 above ema200 and roc10 above 0 and hour above 11.5 and hour below 16.5",
+   "stop_atr": 1.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 196,
+    "pf": 1.5465957738895304,
+    "mean": 0.36978351943951826,
+    "tpd": 0.5075719191577999
+   },
+   "new": {
+    "n": 197,
+    "pf": 1.2392098387403903,
+    "mean": 0.17105569673253804
+   },
+   "full": {
+    "n": 393,
+    "pf": 1.3882527911290423,
+    "mean": 0.2701667737059938
+   },
+   "tpd": 0.509,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 39.5,
+    "days": 20.3,
+    "accounts": 2.53,
+    "band": {
+     "days_lo": 16.6,
+     "days_hi": 26.6,
+     "days_med": 20.2,
+     "pass_lo": 31.5,
+     "pass_hi": 49.5,
+     "pass_med": 40.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "New York 12-17",
+   "exits": "stop1 tgt6 hold24",
+   "rule": "long when price above ema50 and ema50 above ema200 and roc10 above 0 and hour above 11.5 and hour below 16.5",
+   "stop_atr": 1.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 196,
+    "pf": 1.5465957738895304,
+    "mean": 0.36978351943951826,
+    "tpd": 0.5075719191577999
+   },
+   "new": {
+    "n": 197,
+    "pf": 1.2392098387403903,
+    "mean": 0.17105569673253804
+   },
+   "full": {
+    "n": 393,
+    "pf": 1.3882527911290423,
+    "mean": 0.2701667737059938
+   },
+   "tpd": 0.509,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 39.5,
+    "days": 20.3,
+    "accounts": 2.53,
+    "band": {
+     "days_lo": 16.6,
+     "days_hi": 26.6,
+     "days_med": 20.2,
+     "pass_lo": 31.5,
+     "pass_hi": 49.5,
+     "pass_med": 40.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.046693988986720766,
+  "lift_final": 0.046693988986720766,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.17672999697740213,
+   "median": 0.10185165422563079,
+   "p": 0.725,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.17672999697740213,
+   "median": 0.10185165422563079,
+   "p": 0.725,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "BB basis EMA cross + AO positive",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when ema3 cross_above sma5 and price above sma5 and sma5 above sma34",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 265,
+    "pf": 1.2658727227024507,
+    "mean": 0.12984027190559086,
+    "tpd": 0.6862579519225356
+   },
+   "new": {
+    "n": 279,
+    "pf": 1.2036013133585897,
+    "mean": 0.09944968748150149
+   },
+   "full": {
+    "n": 544,
+    "pf": 1.2339326072819798,
+    "mean": 0.11425392437926561
+   },
+   "tpd": 0.704,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 43.1,
+    "days": 34.8,
+    "accounts": 2.32,
+    "band": {
+     "days_lo": 28.7,
+     "days_hi": 47.1,
+     "days_med": 35.8,
+     "pass_lo": 31.8,
+     "pass_hi": 49.0,
+     "pass_med": 41.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above EMA200",
+   "exits": "stop2 tgt10 hold12",
+   "rule": "long when ema3 cross_above sma5 and price above sma5 and sma5 above sma34 and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 232,
+    "pf": 1.5383931047469994,
+    "mean": 0.2226122865498306,
+    "tpd": 0.6007994145133142
+   },
+   "new": {
+    "n": 252,
+    "pf": 1.6564926405177722,
+    "mean": 0.2975667255664001
+   },
+   "full": {
+    "n": 484,
+    "pf": 1.602584159618288,
+    "mean": 0.261638151492342
+   },
+   "tpd": 0.627,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 45.6,
+    "days": 30.7,
+    "accounts": 2.19,
+    "band": {
+     "days_lo": 22.4,
+     "days_hi": 35.8,
+     "days_med": 28.3,
+     "pass_lo": 37.4,
+     "pass_hi": 60.7,
+     "pass_med": 48.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above EMA200",
+   "exits": "stop2 tgt10 hold12",
+   "rule": "long when ema3 cross_above sma5 and price above sma5 and sma5 above sma34 and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 232,
+    "pf": 1.5383931047469994,
+    "mean": 0.2226122865498306,
+    "tpd": 0.6007994145133142
+   },
+   "new": {
+    "n": 252,
+    "pf": 1.6564926405177722,
+    "mean": 0.2975667255664001
+   },
+   "full": {
+    "n": 484,
+    "pf": 1.602584159618288,
+    "mean": 0.261638151492342
+   },
+   "tpd": 0.627,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 45.6,
+    "days": 30.7,
+    "accounts": 2.19,
+    "band": {
+     "days_lo": 22.4,
+     "days_hi": 35.8,
+     "days_med": 28.3,
+     "pass_lo": 37.4,
+     "pass_hi": 60.7,
+     "pass_med": 48.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.19811703808489864,
+  "lift_final": 0.19811703808489864,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.11900940373465323,
+   "median": 0.0251458724393191,
+   "p": 0.025,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.11900940373465323,
+   "median": 0.0251458724393191,
+   "p": 0.025,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "AutoFib 1.618 breakout above EMA200",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above fib_pivot10x1 and price above ema200",
+   "stop_atr": 1.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 325,
+    "pf": 1.1742290495298742,
+    "mean": 0.1225258713686087,
+    "tpd": 0.8416371108483927
+   },
+   "new": {
+    "n": 360,
+    "pf": 1.2733770501595534,
+    "mean": 0.18889261183746334
+   },
+   "full": {
+    "n": 685,
+    "pf": 1.225900119833308,
+    "mean": 0.15740474227194837
+   },
+   "tpd": 0.887,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.9,
+    "days": 16.3,
+    "accounts": 2.33,
+    "band": {
+     "days_lo": 14.2,
+     "days_hi": 21.4,
+     "days_med": 16.9,
+     "pass_lo": 35.3,
+     "pass_hi": 49.3,
+     "pass_med": 41.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold24",
+   "rule": "long when price above fib_pivot10x1 and price above ema200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.536641894997697,
+    "mean": 0.2985030530287279,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 239,
+    "pf": 1.5251256715865649,
+    "mean": 0.3001969005915987
+   },
+   "full": {
+    "n": 443,
+    "pf": 1.5303506868900019,
+    "mean": 0.29941688952427215
+   },
+   "tpd": 0.574,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.8,
+    "days": 23.9,
+    "accounts": 2.39,
+    "band": {
+     "days_lo": 20.0,
+     "days_hi": 32.7,
+     "days_med": 24.8,
+     "pass_lo": 40.1,
+     "pass_hi": 59.8,
+     "pass_med": 50.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold24",
+   "rule": "long when price above fib_pivot10x1 and price above ema200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.536641894997697,
+    "mean": 0.2985030530287279,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 239,
+    "pf": 1.5251256715865649,
+    "mean": 0.3001969005915987
+   },
+   "full": {
+    "n": 443,
+    "pf": 1.5303506868900019,
+    "mean": 0.29941688952427215
+   },
+   "tpd": 0.574,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 41.8,
+    "days": 23.9,
+    "accounts": 2.39,
+    "band": {
+     "days_lo": 20.0,
+     "days_hi": 32.7,
+     "days_med": 24.8,
+     "pass_lo": 40.1,
+     "pass_hi": 59.8,
+     "pass_med": 50.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.11130428875413537,
+  "lift_final": 0.11130428875413537,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.33216469782872127,
+   "median": 0.10032624168960132,
+   "p": 0.425,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.33216469782872127,
+   "median": 0.10032624168960132,
+   "p": 0.425,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "PCT confluence long (trend core) (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above hma21 and di_plus14 above di_minus14 and price above sma200",
+   "stop_atr": 1.8,
+   "target_atr": 4.5,
+   "max_hold": 24,
+   "old": {
+    "n": 354,
+    "pf": 1.1439289759945246,
+    "mean": 0.08692654796962465,
+    "tpd": 0.916737037662557
+   },
+   "new": {
+    "n": 345,
+    "pf": 1.2383515515512706,
+    "mean": 0.13585958686320776
+   },
+   "full": {
+    "n": 699,
+    "pf": 1.1891674900091582,
+    "mean": 0.11107804785272361
+   },
+   "tpd": 0.905,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 33.3,
+    "days": 30.0,
+    "accounts": 3.0,
+    "band": {
+     "days_lo": 22.0,
+     "days_hi": 35.6,
+     "days_med": 27.6,
+     "pass_lo": 25.7,
+     "pass_hi": 40.7,
+     "pass_med": 33.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop5 tgt10 hold24",
+   "rule": "long when price above hma21 and di_plus14 above di_minus14 and price above sma200 and htf_closex4 above htf_openx4",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 222,
+    "pf": 1.375701960203982,
+    "mean": 0.10749455401026846,
+    "tpd": 0.5749028880256714
+   },
+   "new": {
+    "n": 209,
+    "pf": 1.7636375309878325,
+    "mean": 0.17460956787985088
+   },
+   "full": {
+    "n": 431,
+    "pf": 1.5422597858867724,
+    "mean": 0.14003988556187572
+   },
+   "tpd": 0.558,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 56.0,
+    "days": 59.0,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 43.3,
+     "days_hi": 74.9,
+     "days_med": 55.1,
+     "pass_lo": 49.1,
+     "pass_hi": 76.0,
+     "pass_med": 62.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop5 tgt10 hold24",
+   "rule": "long when price above hma21 and di_plus14 above di_minus14 and price above sma200 and htf_closex4 above htf_openx4",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 222,
+    "pf": 1.375701960203982,
+    "mean": 0.10749455401026846,
+    "tpd": 0.5749028880256714
+   },
+   "new": {
+    "n": 209,
+    "pf": 1.7636375309878325,
+    "mean": 0.17460956787985088
+   },
+   "full": {
+    "n": 431,
+    "pf": 1.5422597858867724,
+    "mean": 0.14003988556187572
+   },
+   "tpd": 0.558,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 56.0,
+    "days": 59.0,
+    "accounts": 1.79,
+    "band": {
+     "days_lo": 43.3,
+     "days_hi": 74.9,
+     "days_med": 55.1,
+     "pass_lo": 49.1,
+     "pass_hi": 76.0,
+     "pass_med": 62.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.03874998101664312,
+  "lift_final": 0.03874998101664312,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.11407014794801859,
+   "median": 0.027218989051953565,
+   "p": 0.45,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.11407014794801859,
+   "median": 0.027218989051953565,
+   "p": 0.45,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "EMA9 reclaim in uptrend",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price cross_above ema9 and ema9 above ema55",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 262,
+    "pf": 1.2972074815219914,
+    "mean": 0.17344362012651157,
+    "tpd": 0.6784889939762427
+   },
+   "new": {
+    "n": 258,
+    "pf": 1.1310261412545057,
+    "mean": 0.07744037007782345
+   },
+   "full": {
+    "n": 520,
+    "pf": 1.2142288032724895,
+    "mean": 0.12581123837158553
+   },
+   "tpd": 0.673,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.6,
+    "days": 31.1,
+    "accounts": 2.59,
+    "band": {
+     "days_lo": 24.1,
+     "days_hi": 38.6,
+     "days_med": 29.5,
+     "pass_lo": 28.3,
+     "pass_hi": 45.6,
+     "pass_med": 36.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "above SMA200",
+   "exits": "stop3 tgt10 hold12",
+   "rule": "long when price cross_above ema9 and ema9 above ema55 and price above sma200",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 223,
+    "pf": 1.5277672191994751,
+    "mean": 0.18750903321441975,
+    "tpd": 0.5774925406744356
+   },
+   "new": {
+    "n": 213,
+    "pf": 1.5069998491430576,
+    "mean": 0.16350470629525696
+   },
+   "full": {
+    "n": 436,
+    "pf": 1.5181232600048304,
+    "mean": 0.17578214873326914
+   },
+   "tpd": 0.565,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 49.4,
+    "days": 46.5,
+    "accounts": 2.02,
+    "band": {
+     "days_lo": 34.0,
+     "days_hi": 61.9,
+     "days_med": 43.9,
+     "pass_lo": 41.7,
+     "pass_hi": 67.9,
+     "pass_med": 54.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "above SMA200",
+   "exits": "stop3 tgt10 hold12",
+   "rule": "long when price cross_above ema9 and ema9 above ema55 and price above sma200",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 12,
+   "old": {
+    "n": 223,
+    "pf": 1.5277672191994751,
+    "mean": 0.18750903321441975,
+    "tpd": 0.5774925406744356
+   },
+   "new": {
+    "n": 213,
+    "pf": 1.5069998491430576,
+    "mean": 0.16350470629525696
+   },
+   "full": {
+    "n": 436,
+    "pf": 1.5181232600048304,
+    "mean": 0.17578214873326914
+   },
+   "tpd": 0.565,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 49.4,
+    "days": 46.5,
+    "accounts": 2.02,
+    "band": {
+     "days_lo": 34.0,
+     "days_hi": 61.9,
+     "days_med": 43.9,
+     "pass_lo": 41.7,
+     "pass_hi": 67.9,
+     "pass_med": 54.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.0860643362174335,
+  "lift_final": 0.0860643362174335,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.09122711306825794,
+   "median": 0.006854839204893368,
+   "p": 0.125,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.09122711306825794,
+   "median": 0.006854839204893368,
+   "p": 0.125,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Seasonal month-start long (always-in proxy)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above prev_low",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 681,
+    "pf": 0.9419254020268262,
+    "mean": -0.027485131969558547,
+    "tpd": 1.7647207943102596
+   },
+   "new": {
+    "n": 689,
+    "pf": 1.093267872247062,
+    "mean": 0.04235537119527993
+   },
+   "full": {
+    "n": 1370,
+    "pf": 1.016476090876379,
+    "mean": 0.007639033490714231
+   },
+   "tpd": 1.775,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 30.0,
+    "days": 20.0,
+    "accounts": 3.33,
+    "band": {
+     "days_lo": 17.1,
+     "days_hi": 25.9,
+     "days_med": 21.0,
+     "pass_lo": 24.0,
+     "pass_hi": 35.3,
+     "pass_med": 30.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "EMA50 rising",
+   "exits": "original",
+   "rule": "long when price above prev_low and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 6,
+   "old": {
+    "n": 206,
+    "pf": 1.6176880274825023,
+    "mean": 0.09805801066758721,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 214,
+    "pf": 1.6468468687349342,
+    "mean": 0.08929429030134416
+   },
+   "full": {
+    "n": 420,
+    "pf": 1.6315271015439121,
+    "mean": 0.09359268648097765
+   },
+   "tpd": 0.536,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 79.4,
+    "days": 91.9,
+    "accounts": 1.26,
+    "band": {
+     "days_lo": 77.6,
+     "days_hi": 137.3,
+     "days_med": 100.8,
+     "pass_lo": 60.6,
+     "pass_hi": 92.2,
+     "pass_med": 78.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "EMA50 rising",
+   "exits": "original",
+   "rule": "long when price above prev_low and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 6,
+   "old": {
+    "n": 206,
+    "pf": 1.6176880274825023,
+    "mean": 0.09805801066758721,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 214,
+    "pf": 1.6468468687349342,
+    "mean": 0.08929429030134416
+   },
+   "full": {
+    "n": 420,
+    "pf": 1.6315271015439121,
+    "mean": 0.09359268648097765
+   },
+   "tpd": 0.536,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 79.4,
+    "days": 91.9,
+    "accounts": 1.26,
+    "band": {
+     "days_lo": 77.6,
+     "days_hi": 137.3,
+     "days_med": 100.8,
+     "pass_lo": 60.6,
+     "pass_hi": 92.2,
+     "pass_med": 78.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.04693891910606423,
+  "lift_final": 0.04693891910606423,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.0722993590874464,
+   "median": 0.04124695240035817,
+   "p": 0.4,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.0722993590874464,
+   "median": 0.04124695240035817,
+   "p": 0.4,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "EMA50 MACD RSI long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema50 and macd_hist above 0 and rsi14 above 50",
+   "stop_atr": 1.0,
+   "target_atr": 2.0,
+   "max_hold": 6,
+   "old": {
+    "n": 234,
+    "pf": 1.1766534963456297,
+    "mean": 0.09930730881428766,
+    "tpd": 0.597319719208679
+   },
+   "new": {
+    "n": 253,
+    "pf": 1.1174416005774381,
+    "mean": 0.06769232135213091
+   },
+   "full": {
+    "n": 487,
+    "pf": 1.1455231415516807,
+    "mean": 0.08288309561526168
+   },
+   "tpd": 0.622,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 33.4,
+    "days": 35.9,
+    "accounts": 2.99,
+    "band": {
+     "days_lo": 29.4,
+     "days_hi": 50.7,
+     "days_med": 36.8,
+     "pass_lo": 23.9,
+     "pass_hi": 41.9,
+     "pass_med": 33.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "VWAP24 rising",
+   "exits": "stop3 tgt1.5 hold4",
+   "rule": "long when price above ema50 and macd_hist above 0 and rsi14 above 50 and vwap24 above vwap24[6]",
+   "stop_atr": 3.0,
+   "target_atr": 1.5,
+   "max_hold": 4,
+   "old": {
+    "n": 206,
+    "pf": 1.1990791530881075,
+    "mean": 0.033946455144883425,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 205,
+    "pf": 1.1896558785843772,
+    "mean": 0.03421238511059339
+   },
+   "full": {
+    "n": 411,
+    "pf": 1.1942463867214916,
+    "mean": 0.034079096611965044
+   },
+   "tpd": 0.525,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.7,
+    "days": 197.1,
+    "accounts": 2.05,
+    "band": {
+     "days_lo": 131.9,
+     "days_hi": 415.0,
+     "days_med": 197.8,
+     "pass_lo": 25.5,
+     "pass_hi": 74.7,
+     "pass_med": 50.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "VWAP24 rising",
+   "exits": "stop3 tgt1.5 hold4",
+   "rule": "long when price above ema50 and macd_hist above 0 and rsi14 above 50 and vwap24 above vwap24[6]",
+   "stop_atr": 3.0,
+   "target_atr": 1.5,
+   "max_hold": 4,
+   "old": {
+    "n": 206,
+    "pf": 1.1990791530881075,
+    "mean": 0.033946455144883425,
+    "tpd": 0.5258455647734525
+   },
+   "new": {
+    "n": 205,
+    "pf": 1.1896558785843772,
+    "mean": 0.03421238511059339
+   },
+   "full": {
+    "n": 411,
+    "pf": 1.1942463867214916,
+    "mean": 0.034079096611965044
+   },
+   "tpd": 0.525,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.7,
+    "days": 197.1,
+    "accounts": 2.05,
+    "band": {
+     "days_lo": 131.9,
+     "days_hi": 415.0,
+     "days_med": 197.8,
+     "pass_lo": 25.5,
+     "pass_hi": 74.7,
+     "pass_med": 50.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.03347993624153752,
+  "lift_final": -0.03347993624153752,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.19312947783545645,
+   "median": -0.0026749783585583945,
+   "p": 0.8,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.19312947783545645,
+   "median": -0.0026749783585583945,
+   "p": 0.8,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Tomukas trend+VWAP+RSI long",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when ema50 above ema200 and price above vwap100 and rsi14 above 50",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 339,
+    "pf": 1.3186252080935408,
+    "mean": 0.15035984810720615,
+    "tpd": 0.8778922479310927
+   },
+   "new": {
+    "n": 356,
+    "pf": 1.2297622198933056,
+    "mean": 0.11310177011142797
+   },
+   "full": {
+    "n": 695,
+    "pf": 1.2721699761908614,
+    "mean": 0.1312751347741169
+   },
+   "tpd": 0.9,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.6,
+    "days": 28.2,
+    "accounts": 2.35,
+    "band": {
+     "days_lo": 23.1,
+     "days_hi": 36.0,
+     "days_med": 27.9,
+     "pass_lo": 32.6,
+     "pass_hi": 51.5,
+     "pass_med": 41.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop5 tgt10 hold24",
+   "rule": "long when ema50 above ema200 and price above vwap100 and rsi14 above 50 and htf_closex4 above htf_openx4",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.628395597994828,
+    "mean": 0.16268829315708622,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 186,
+    "pf": 1.8236396464972742,
+    "mean": 0.18373722142419188
+   },
+   "full": {
+    "n": 381,
+    "pf": 1.716474136547664,
+    "mean": 0.17296414790165748
+   },
+   "tpd": 0.493,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 63.5,
+    "days": 52.0,
+    "accounts": 1.58,
+    "band": {
+     "days_lo": 44.0,
+     "days_hi": 78.9,
+     "days_med": 57.0,
+     "pass_lo": 53.6,
+     "pass_hi": 81.4,
+     "pass_med": 68.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop5 tgt10 hold24",
+   "rule": "long when ema50 above ema200 and price above vwap100 and rsi14 above 50 and htf_closex4 above htf_openx4",
+   "stop_atr": 5.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 195,
+    "pf": 1.628395597994828,
+    "mean": 0.16268829315708622,
+    "tpd": 0.5049822665090357
+   },
+   "new": {
+    "n": 186,
+    "pf": 1.8236396464972742,
+    "mean": 0.18373722142419188
+   },
+   "full": {
+    "n": 381,
+    "pf": 1.716474136547664,
+    "mean": 0.17296414790165748
+   },
+   "tpd": 0.493,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 63.5,
+    "days": 52.0,
+    "accounts": 1.58,
+    "band": {
+     "days_lo": 44.0,
+     "days_hi": 78.9,
+     "days_med": 57.0,
+     "pass_lo": 53.6,
+     "pass_hi": 81.4,
+     "pass_med": 68.1,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.07063545131276391,
+  "lift_final": 0.07063545131276391,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.22860695397337424,
+   "median": 0.0678548832885258,
+   "p": 0.5,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.22860695397337424,
+   "median": 0.0678548832885258,
+   "p": 0.5,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "DEMA ATR line turns up (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when supertrend20x1.2 cross_above 0",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 377,
+    "pf": 1.1276916041856444,
+    "mean": 0.06549867636799744,
+    "tpd": 0.9762990485841355
+   },
+   "new": {
+    "n": 375,
+    "pf": 1.215019541813897,
+    "mean": 0.1003153055179889
+   },
+   "full": {
+    "n": 752,
+    "pf": 1.1691711058486993,
+    "mean": 0.08286069223401711
+   },
+   "tpd": 0.974,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 36.4,
+    "days": 33.0,
+    "accounts": 2.75,
+    "band": {
+     "days_lo": 27.9,
+     "days_hi": 42.1,
+     "days_med": 34.6,
+     "pass_lo": 28.6,
+     "pass_hi": 41.7,
+     "pass_med": 34.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "volume over avg",
+   "exits": "stop1 tgt10 hold24",
+   "rule": "long when supertrend20x1.2 cross_above 0 and rvol20 above 1",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 252,
+    "pf": 1.4883018649499788,
+    "mean": 0.37210553487076176,
+    "tpd": 0.6525924674885999
+   },
+   "new": {
+    "n": 266,
+    "pf": 1.6072466680902944,
+    "mean": 0.4401520649126269
+   },
+   "full": {
+    "n": 518,
+    "pf": 1.5478934695703073,
+    "mean": 0.4070483475949628
+   },
+   "tpd": 0.671,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 43.6,
+    "days": 11.5,
+    "accounts": 2.29,
+    "band": {
+     "days_lo": 10.7,
+     "days_hi": 14.8,
+     "days_med": 12.5,
+     "pass_lo": 35.9,
+     "pass_hi": 48.2,
+     "pass_med": 42.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "volume over avg",
+   "exits": "stop1 tgt10 hold24",
+   "rule": "long when supertrend20x1.2 cross_above 0 and rvol20 above 1",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 252,
+    "pf": 1.4883018649499788,
+    "mean": 0.37210553487076176,
+    "tpd": 0.6525924674885999
+   },
+   "new": {
+    "n": 266,
+    "pf": 1.6072466680902944,
+    "mean": 0.4401520649126269
+   },
+   "full": {
+    "n": 518,
+    "pf": 1.5478934695703073,
+    "mean": 0.4070483475949628
+   },
+   "tpd": 0.671,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 43.6,
+    "days": 11.5,
+    "accounts": 2.29,
+    "band": {
+     "days_lo": 10.7,
+     "days_hi": 14.8,
+     "days_med": 12.5,
+     "pass_lo": 35.9,
+     "pass_hi": 48.2,
+     "pass_med": 42.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.339836759394638,
+  "lift_final": 0.339836759394638,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.14659436976563237,
+   "median": 0.014272219106778866,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.14659436976563237,
+   "median": 0.014272219106778866,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Grid dip-buy proxy",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "4h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price below prev_close",
+   "stop_atr": 5.0,
+   "target_atr": 5.0,
+   "max_hold": 6,
+   "old": {
+    "n": 316,
+    "pf": 1.113555361001595,
+    "mean": 0.01948659555480549,
+    "tpd": 0.8066368857689853
+   },
+   "new": {
+    "n": 309,
+    "pf": 1.1543090825561597,
+    "mean": 0.02427483055211161
+   },
+   "full": {
+    "n": 625,
+    "pf": 1.132819176322002,
+    "mean": 0.02185389893747364
+   },
+   "tpd": 0.798,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 48.8,
+    "days": 147.5,
+    "accounts": 2.05,
+    "band": {
+     "days_lo": 120.3,
+     "days_hi": 298.5,
+     "days_med": 172.0,
+     "pass_lo": 22.7,
+     "pass_hi": 57.7,
+     "pass_med": 38.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "New York 12-17",
+   "exits": "stop1 tgt10 hold6",
+   "rule": "long when price below prev_close and hour above 11.5 and hour below 16.5",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 6,
+   "old": {
+    "n": 224,
+    "pf": 1.9385963890119045,
+    "mean": 0.42458785956324846,
+    "tpd": 0.5717932354818124
+   },
+   "new": {
+    "n": 224,
+    "pf": 1.1277643065132197,
+    "mean": 0.06810006408756365
+   },
+   "full": {
+    "n": 448,
+    "pf": 1.4999989573458377,
+    "mean": 0.24634396182540605
+   },
+   "tpd": 0.572,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 51.4,
+    "days": 23.4,
+    "accounts": 1.95,
+    "band": {
+     "days_lo": 18.9,
+     "days_hi": 29.5,
+     "days_med": 23.0,
+     "pass_lo": 39.6,
+     "pass_hi": 57.3,
+     "pass_med": 48.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "New York 12-17",
+   "exits": "stop1 tgt10 hold6",
+   "rule": "long when price below prev_close and hour above 11.5 and hour below 16.5",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 6,
+   "old": {
+    "n": 224,
+    "pf": 1.9385963890119045,
+    "mean": 0.42458785956324846,
+    "tpd": 0.5717932354818124
+   },
+   "new": {
+    "n": 224,
+    "pf": 1.1277643065132197,
+    "mean": 0.06810006408756365
+   },
+   "full": {
+    "n": 448,
+    "pf": 1.4999989573458377,
+    "mean": 0.24634396182540605
+   },
+   "tpd": 0.572,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 51.4,
+    "days": 23.4,
+    "accounts": 1.95,
+    "band": {
+     "days_lo": 18.9,
+     "days_hi": 29.5,
+     "days_med": 23.0,
+     "pass_lo": 39.6,
+     "pass_hi": 57.3,
+     "pass_med": 48.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.04382523353545204,
+  "lift_final": 0.04382523353545204,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.15930669968833888,
+   "median": 0.030113911397420097,
+   "p": 0.425,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.15930669968833888,
+   "median": 0.030113911397420097,
+   "p": 0.425,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Keltner breakout long",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above kc_upper20x2",
+   "stop_atr": 2.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 248,
+    "pf": 1.0079575172412771,
+    "mean": 0.004594069448276657,
+    "tpd": 0.6422338568935427
+   },
+   "new": {
+    "n": 252,
+    "pf": 1.2577707477017608,
+    "mean": 0.1436689316995192
+   },
+   "full": {
+    "n": 500,
+    "pf": 1.1316645736488824,
+    "mean": 0.07468780002290289
+   },
+   "tpd": 0.647,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 34.1,
+    "days": 35.2,
+    "accounts": 2.93,
+    "band": {
+     "days_lo": 28.2,
+     "days_hi": 46.5,
+     "days_med": 35.5,
+     "pass_lo": 26.3,
+     "pass_hi": 45.0,
+     "pass_med": 35.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 rising",
+   "exits": "stop5 tgt4 hold24",
+   "rule": "long when price above kc_upper20x2 and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 197,
+    "pf": 1.2929653872258013,
+    "mean": 0.07393726742041634,
+    "tpd": 0.5101615718065642
+   },
+   "new": {
+    "n": 215,
+    "pf": 1.4035865190388679,
+    "mean": 0.10519083140288098
+   },
+   "full": {
+    "n": 412,
+    "pf": 1.3515811594699603,
+    "mean": 0.0902467728967025
+   },
+   "tpd": 0.533,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 51.5,
+    "days": 79.6,
+    "accounts": 1.94,
+    "band": {
+     "days_lo": 61.0,
+     "days_hi": 115.0,
+     "days_med": 79.9,
+     "pass_lo": 41.6,
+     "pass_hi": 76.5,
+     "pass_med": 58.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 rising",
+   "exits": "stop5 tgt4 hold24",
+   "rule": "long when price above kc_upper20x2 and ema50 above ema50[10]",
+   "stop_atr": 5.0,
+   "target_atr": 4.0,
+   "max_hold": 24,
+   "old": {
+    "n": 197,
+    "pf": 1.2929653872258013,
+    "mean": 0.07393726742041634,
+    "tpd": 0.5101615718065642
+   },
+   "new": {
+    "n": 215,
+    "pf": 1.4035865190388679,
+    "mean": 0.10519083140288098
+   },
+   "full": {
+    "n": 412,
+    "pf": 1.3515811594699603,
+    "mean": 0.0902467728967025
+   },
+   "tpd": 0.533,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 51.5,
+    "days": 79.6,
+    "accounts": 1.94,
+    "band": {
+     "days_lo": 61.0,
+     "days_hi": 115.0,
+     "days_med": 79.9,
+     "pass_lo": 41.6,
+     "pass_hi": 76.5,
+     "pass_med": 58.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.038478100296638215,
+  "lift_final": -0.038478100296638215,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1672956475842023,
+   "median": 0.044415127007041345,
+   "p": 0.8,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.1672956475842023,
+   "median": 0.044415127007041345,
+   "p": 0.8,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "MR Pro long (rule 1)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price below sma5 and price above sma100",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 369,
+    "pf": 0.9788246408987448,
+    "mean": -0.011189752995826563,
+    "tpd": 0.9555818273940212
+   },
+   "new": {
+    "n": 353,
+    "pf": 1.2039649893525979,
+    "mean": 0.09758700973586405
+   },
+   "full": {
+    "n": 722,
+    "pf": 1.0833209403751587,
+    "mean": 0.04199334568047093
+   },
+   "tpd": 0.935,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 25.7,
+    "days": 38.9,
+    "accounts": 3.89,
+    "band": {
+     "days_lo": 30.4,
+     "days_hi": 49.9,
+     "days_med": 38.4,
+     "pass_lo": 20.7,
+     "pass_hi": 35.0,
+     "pass_med": 28.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "not Asia 07-21",
+   "exits": "stop5 tgt6 hold24",
+   "rule": "long when price below sma5 and price above sma100 and hour above 6.5 and hour below 20.5",
+   "stop_atr": 5.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 213,
+    "pf": 1.8169196759283675,
+    "mean": 0.16348573554488607,
+    "tpd": 0.5515960141867927
+   },
+   "new": {
+    "n": 208,
+    "pf": 1.4852159172861927,
+    "mean": 0.09398982359569864
+   },
+   "full": {
+    "n": 421,
+    "pf": 1.6557391488038582,
+    "mean": 0.129150463132936
+   },
+   "tpd": 0.545,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 82.3,
+    "days": 62.0,
+    "accounts": 1.21,
+    "band": {
+     "days_lo": 51.8,
+     "days_hi": 94.4,
+     "days_med": 66.2,
+     "pass_lo": 57.9,
+     "pass_hi": 87.4,
+     "pass_med": 73.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "not Asia 07-21",
+   "exits": "stop5 tgt6 hold24",
+   "rule": "long when price below sma5 and price above sma100 and hour above 6.5 and hour below 20.5",
+   "stop_atr": 5.0,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 213,
+    "pf": 1.8169196759283675,
+    "mean": 0.16348573554488607,
+    "tpd": 0.5515960141867927
+   },
+   "new": {
+    "n": 208,
+    "pf": 1.4852159172861927,
+    "mean": 0.09398982359569864
+   },
+   "full": {
+    "n": 421,
+    "pf": 1.6557391488038582,
+    "mean": 0.129150463132936
+   },
+   "tpd": 0.545,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 82.3,
+    "days": 62.0,
+    "accounts": 1.21,
+    "band": {
+     "days_lo": 51.8,
+     "days_hi": 94.4,
+     "days_med": 66.2,
+     "pass_lo": 57.9,
+     "pass_hi": 87.4,
+     "pass_med": 73.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.0035971861401654093,
+  "lift_final": -0.0035971861401654093,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.16535338902927535,
+   "median": 0.054797249497201564,
+   "p": 0.85,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.16535338902927535,
+   "median": 0.054797249497201564,
+   "p": 0.85,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Bullish engulfing above EMA200",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when bull_engulf above 0.5 and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 252,
+    "pf": 1.290416465459943,
+    "mean": 0.14363134605089314,
+    "tpd": 0.6525924674885999
+   },
+   "new": {
+    "n": 245,
+    "pf": 1.0967059563525532,
+    "mean": 0.04862576471387816
+   },
+   "full": {
+    "n": 497,
+    "pf": 1.1941242379424242,
+    "mean": 0.09679760877208295
+   },
+   "tpd": 0.644,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 36.2,
+    "days": 44.2,
+    "accounts": 2.77,
+    "band": {
+     "days_lo": 36.6,
+     "days_hi": 58.8,
+     "days_med": 45.3,
+     "pass_lo": 25.6,
+     "pass_hi": 44.8,
+     "pass_med": 35.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "SMA200 rising",
+   "exits": "stop1.5 tgt6 hold24",
+   "rule": "long when bull_engulf above 0.5 and price above ema200 and sma200 above sma200[20]",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 202,
+    "pf": 1.6201280122277466,
+    "mean": 0.36760273568685303,
+    "tpd": 0.5231098350503856
+   },
+   "new": {
+    "n": 200,
+    "pf": 1.1199104416697518,
+    "mean": 0.07609736396674045
+   },
+   "full": {
+    "n": 402,
+    "pf": 1.3627379614838773,
+    "mean": 0.22257518756739406
+   },
+   "tpd": 0.521,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.8,
+    "days": 25.8,
+    "accounts": 2.58,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 34.9,
+     "days_med": 27.0,
+     "pass_lo": 31.9,
+     "pass_hi": 48.6,
+     "pass_med": 39.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "SMA200 rising",
+   "exits": "stop1.5 tgt6 hold24",
+   "rule": "long when bull_engulf above 0.5 and price above ema200 and sma200 above sma200[20]",
+   "stop_atr": 1.5,
+   "target_atr": 6.0,
+   "max_hold": 24,
+   "old": {
+    "n": 202,
+    "pf": 1.6201280122277466,
+    "mean": 0.36760273568685303,
+    "tpd": 0.5231098350503856
+   },
+   "new": {
+    "n": 200,
+    "pf": 1.1199104416697518,
+    "mean": 0.07609736396674045
+   },
+   "full": {
+    "n": 402,
+    "pf": 1.3627379614838773,
+    "mean": 0.22257518756739406
+   },
+   "tpd": 0.521,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.8,
+    "days": 25.8,
+    "accounts": 2.58,
+    "band": {
+     "days_lo": 21.7,
+     "days_hi": 34.9,
+     "days_med": 27.0,
+     "pass_lo": 31.9,
+     "pass_hi": 48.6,
+     "pass_med": 39.4,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.027471599252862293,
+  "lift_final": 0.027471599252862293,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.16452979841025253,
+   "median": 0.02431636471898706,
+   "p": 0.475,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.16452979841025253,
+   "median": 0.02431636471898706,
+   "p": 0.475,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Hermes ALMA return trend + breakout + macro EMA",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when alma30x0.95 above alma250x0.95 and price above highest6[1] and price above ema200",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 297,
+    "pf": 1.1768020647492294,
+    "mean": 0.09111940106257235,
+    "tpd": 0.7691268366829926
+   },
+   "new": {
+    "n": 300,
+    "pf": 1.158963246226949,
+    "mean": 0.08139839200752572
+   },
+   "full": {
+    "n": 597,
+    "pf": 1.1678666321554445,
+    "mean": 0.08623447188918208
+   },
+   "tpd": 0.773,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 33.4,
+    "days": 35.9,
+    "accounts": 2.99,
+    "band": {
+     "days_lo": 28.4,
+     "days_hi": 52.1,
+     "days_med": 37.3,
+     "pass_lo": 28.5,
+     "pass_hi": 47.8,
+     "pass_med": 38.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt10 hold24",
+   "rule": "long when alma30x0.95 above alma250x0.95 and price above highest6[1] and price above ema200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 194,
+    "pf": 1.4908885186302354,
+    "mean": 0.3311676330581159,
+    "tpd": 0.5023926138602713
+   },
+   "new": {
+    "n": 206,
+    "pf": 1.620826412251326,
+    "mean": 0.40443395973779966
+   },
+   "full": {
+    "n": 400,
+    "pf": 1.5566710717890624,
+    "mean": 0.36889979129815303
+   },
+   "tpd": 0.518,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.0,
+    "days": 19.0,
+    "accounts": 2.38,
+    "band": {
+     "days_lo": 15.1,
+     "days_hi": 23.2,
+     "days_med": 18.3,
+     "pass_lo": 35.8,
+     "pass_hi": 54.1,
+     "pass_med": 44.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt10 hold24",
+   "rule": "long when alma30x0.95 above alma250x0.95 and price above highest6[1] and price above ema200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 194,
+    "pf": 1.4908885186302354,
+    "mean": 0.3311676330581159,
+    "tpd": 0.5023926138602713
+   },
+   "new": {
+    "n": 206,
+    "pf": 1.620826412251326,
+    "mean": 0.40443395973779966
+   },
+   "full": {
+    "n": 400,
+    "pf": 1.5566710717890624,
+    "mean": 0.36889979129815303
+   },
+   "tpd": 0.518,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.0,
+    "days": 19.0,
+    "accounts": 2.38,
+    "band": {
+     "days_lo": 15.1,
+     "days_hi": 23.2,
+     "days_med": 18.3,
+     "pass_lo": 35.8,
+     "pass_hi": 54.1,
+     "pass_med": 44.7,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.323035567730274,
+  "lift_final": 0.323035567730274,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.15246107440740875,
+   "median": 0.043744522741721886,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.15246107440740875,
+   "median": 0.043744522741721886,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "ATR GOD long ST3 flip (rule 2)",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "15m",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when supertrend10x3 cross_above 0 and volume above vol_sma200",
+   "stop_atr": 4.5,
+   "target_atr": 6.75,
+   "max_hold": 48,
+   "old": {
+    "n": 331,
+    "pf": 1.139243614751899,
+    "mean": 0.056948820972479705,
+    "tpd": 0.8577424125061615
+   },
+   "new": {
+    "n": 311,
+    "pf": 1.2892571254476242,
+    "mean": 0.09922753435146701
+   },
+   "full": {
+    "n": 642,
+    "pf": 1.2053607714169643,
+    "mean": 0.07742963072460596
+   },
+   "tpd": 0.832,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 42.5,
+    "days": 47.1,
+    "accounts": 2.35,
+    "band": {
+     "days_lo": 37.9,
+     "days_hi": 59.0,
+     "days_med": 47.8,
+     "pass_lo": 29.9,
+     "pass_hi": 48.2,
+     "pass_med": 39.3,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "15m",
+   "filter": "above SMA200",
+   "exits": "stop1.5 tgt10 hold96",
+   "rule": "long when supertrend10x3 cross_above 0 and volume above vol_sma200 and price above sma200",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 203,
+    "pf": 1.5494525692016665,
+    "mean": 0.4411668882509428,
+    "tpd": 0.5260474614463769
+   },
+   "new": {
+    "n": 167,
+    "pf": 1.8296710247017482,
+    "mean": 0.6258955340660781
+   },
+   "full": {
+    "n": 370,
+    "pf": 1.6716177053551087,
+    "mean": 0.5245444121729093
+   },
+   "tpd": 0.479,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 47.7,
+    "days": 12.6,
+    "accounts": 2.1,
+    "band": {
+     "days_lo": 10.4,
+     "days_hi": 15.2,
+     "days_med": 12.4,
+     "pass_lo": 40.0,
+     "pass_hi": 56.4,
+     "pass_med": 48.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "15m",
+   "filter": "above SMA200",
+   "exits": "stop1.5 tgt10 hold96",
+   "rule": "long when supertrend10x3 cross_above 0 and volume above vol_sma200 and price above sma200",
+   "stop_atr": 1.5,
+   "target_atr": 10.0,
+   "max_hold": 96,
+   "old": {
+    "n": 203,
+    "pf": 1.5494525692016665,
+    "mean": 0.4411668882509428,
+    "tpd": 0.5260474614463769
+   },
+   "new": {
+    "n": 167,
+    "pf": 1.8296710247017482,
+    "mean": 0.6258955340660781
+   },
+   "full": {
+    "n": 370,
+    "pf": 1.6716177053551087,
+    "mean": 0.5245444121729093
+   },
+   "tpd": 0.479,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 47.7,
+    "days": 12.6,
+    "accounts": 2.1,
+    "band": {
+     "days_lo": 10.4,
+     "days_hi": 15.2,
+     "days_med": 12.4,
+     "pass_lo": 40.0,
+     "pass_hi": 56.4,
+     "pass_med": 48.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.5266679997146111,
+  "lift_final": 0.5266679997146111,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.11636925359610498,
+   "median": 0.008930887730184712,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  },
+  "null_final": {
+   "p95": 0.11636925359610498,
+   "median": 0.008930887730184712,
+   "p": 0.0,
+   "checks": [
+    true,
+    true,
+    true
+   ],
+   "real": true
+  }
+ },
+ {
+  "name": "Concordance long: bias up + stochastic momentum",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above ema55 and wpr20 above -40",
+   "stop_atr": 2.2,
+   "target_atr": 3.8,
+   "max_hold": 24,
+   "old": {
+    "n": 425,
+    "pf": 1.1039186397058933,
+    "mean": 0.05508816354511444,
+    "tpd": 1.1006023757248211
+   },
+   "new": {
+    "n": 439,
+    "pf": 1.165880883696017,
+    "mean": 0.0828291927799675
+   },
+   "full": {
+    "n": 864,
+    "pf": 1.1344752579456798,
+    "mean": 0.06918343187161966
+   },
+   "tpd": 1.119,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 30.2,
+    "days": 26.5,
+    "accounts": 3.31,
+    "band": {
+     "days_lo": 21.8,
+     "days_hi": 33.0,
+     "days_med": 26.7,
+     "pass_lo": 25.0,
+     "pass_hi": 40.3,
+     "pass_med": 33.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "4h",
+   "filter": "RSI14 over 50",
+   "exits": "stop2 tgt3 hold6",
+   "rule": "long when price above ema55 and wpr20 above -40 and rsi14 above 50",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 217,
+    "pf": 1.5488368834473047,
+    "mean": 0.1825033836657033,
+    "tpd": 0.5539246968730057
+   },
+   "new": {
+    "n": 232,
+    "pf": 1.535241435991349,
+    "mean": 0.1688807783080015
+   },
+   "full": {
+    "n": 449,
+    "pf": 1.541990394803759,
+    "mean": 0.17546453189958564
+   },
+   "tpd": 0.573,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 53.6,
+    "days": 42.9,
+    "accounts": 1.87,
+    "band": {
+     "days_lo": 34.7,
+     "days_hi": 53.7,
+     "days_med": 42.2,
+     "pass_lo": 51.8,
+     "pass_hi": 76.2,
+     "pass_med": 62.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "4h",
+   "filter": "RSI14 over 50",
+   "exits": "stop2 tgt3 hold6",
+   "rule": "long when price above ema55 and wpr20 above -40 and rsi14 above 50",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 6,
+   "old": {
+    "n": 217,
+    "pf": 1.5488368834473047,
+    "mean": 0.1825033836657033,
+    "tpd": 0.5539246968730057
+   },
+   "new": {
+    "n": 232,
+    "pf": 1.535241435991349,
+    "mean": 0.1688807783080015
+   },
+   "full": {
+    "n": 449,
+    "pf": 1.541990394803759,
+    "mean": 0.17546453189958564
+   },
+   "tpd": 0.573,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 53.6,
+    "days": 42.9,
+    "accounts": 1.87,
+    "band": {
+     "days_lo": 34.7,
+     "days_hi": 53.7,
+     "days_med": 42.2,
+     "pass_lo": 51.8,
+     "pass_hi": 76.2,
+     "pass_med": 62.8,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.08605158552803399,
+  "lift_final": 0.08605158552803399,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.14789009641177803,
+   "median": 0.038630564131298784,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.14789009641177803,
+   "median": 0.038630564131298784,
+   "p": 0.275,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "Squeeze breakout above 20-bar high, above 200 SMA",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when price above highest20 and price above sma200",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 240,
+    "pf": 1.0397678326905946,
+    "mean": 0.021523440926770613,
+    "tpd": 0.6215166357034284
+   },
+   "new": {
+    "n": 254,
+    "pf": 1.134021220323443,
+    "mean": 0.07090025399117322
+   },
+   "full": {
+    "n": 494,
+    "pf": 1.0876929402128193,
+    "mean": 0.04691151889915576
+   },
+   "tpd": 0.64,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 34.6,
+    "days": 49.2,
+    "accounts": 2.89,
+    "band": {
+     "days_lo": 37.7,
+     "days_hi": 65.7,
+     "days_med": 48.4,
+     "pass_lo": 26.6,
+     "pass_hi": 48.4,
+     "pass_med": 37.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold12",
+   "rule": "long when price above highest20 and price above sma200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 12,
+   "old": {
+    "n": 203,
+    "pf": 1.270974876593433,
+    "mean": 0.15169608981031782,
+    "tpd": 0.5256994876991499
+   },
+   "new": {
+    "n": 221,
+    "pf": 1.1289236022706468,
+    "mean": 0.0775123416974859
+   },
+   "full": {
+    "n": 424,
+    "pf": 1.1944091208695833,
+    "mean": 0.11302956072320497
+   },
+   "tpd": 0.549,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 37.2,
+    "days": 43.0,
+    "accounts": 2.69,
+    "band": {
+     "days_lo": 29.4,
+     "days_hi": 54.2,
+     "days_med": 39.0,
+     "pass_lo": 29.3,
+     "pass_hi": 48.6,
+     "pass_med": 38.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "EMA50 over EMA200",
+   "exits": "stop1.5 tgt4 hold12",
+   "rule": "long when price above highest20 and price above sma200 and ema50 above ema200",
+   "stop_atr": 1.5,
+   "target_atr": 4.0,
+   "max_hold": 12,
+   "old": {
+    "n": 203,
+    "pf": 1.270974876593433,
+    "mean": 0.15169608981031782,
+    "tpd": 0.5256994876991499
+   },
+   "new": {
+    "n": 221,
+    "pf": 1.1289236022706468,
+    "mean": 0.0775123416974859
+   },
+   "full": {
+    "n": 424,
+    "pf": 1.1944091208695833,
+    "mean": 0.11302956072320497
+   },
+   "tpd": 0.549,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 37.2,
+    "days": 43.0,
+    "accounts": 2.69,
+    "band": {
+     "days_lo": 29.4,
+     "days_hi": 54.2,
+     "days_med": 39.0,
+     "pass_lo": 29.3,
+     "pass_hi": 48.6,
+     "pass_med": 38.9,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.006612087706312678,
+  "lift_final": 0.006612087706312678,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.2228395591813453,
+   "median": 0.07342297797279246,
+   "p": 0.7,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.2228395591813453,
+   "median": 0.07342297797279246,
+   "p": 0.7,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "IB breakout retrace long",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when highest12 above range_high13x2 and price below range_high13x2",
+   "stop_atr": 1.5,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 326,
+    "pf": 1.3139438401119992,
+    "mean": 0.1592409084574762,
+    "tpd": 0.844226763497157
+   },
+   "new": {
+    "n": 347,
+    "pf": 1.0560076377724192,
+    "mean": 0.03148811139912542
+   },
+   "full": {
+    "n": 673,
+    "pf": 1.174337829048607,
+    "mean": 0.09337133850317053
+   },
+   "tpd": 0.871,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 38.9,
+    "days": 28.2,
+    "accounts": 2.57,
+    "band": {
+     "days_lo": 24.4,
+     "days_hi": 37.3,
+     "days_med": 29.0,
+     "pass_lo": 30.8,
+     "pass_hi": 45.1,
+     "pass_med": 37.2,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop1 tgt10 hold24",
+   "rule": "long when highest12 above range_high13x2 and price below range_high13x2 and htf_closex4 above htf_openx4",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 200,
+    "pf": 1.6442183628118947,
+    "mean": 0.40191242870533345,
+    "tpd": 0.517930529752857
+   },
+   "new": {
+    "n": 225,
+    "pf": 1.0288942045151512,
+    "mean": 0.02018683854540795
+   },
+   "full": {
+    "n": 425,
+    "pf": 1.3011820804805263,
+    "mean": 0.1998224103853729
+   },
+   "tpd": 0.55,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 35.2,
+    "days": 17.0,
+    "accounts": 2.84,
+    "band": {
+     "days_lo": 15.3,
+     "days_hi": 23.0,
+     "days_med": 18.7,
+     "pass_lo": 30.2,
+     "pass_hi": 45.8,
+     "pass_med": 38.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "4h candle green",
+   "exits": "stop1 tgt10 hold24",
+   "rule": "long when highest12 above range_high13x2 and price below range_high13x2 and htf_closex4 above htf_openx4",
+   "stop_atr": 1.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 200,
+    "pf": 1.6442183628118947,
+    "mean": 0.40191242870533345,
+    "tpd": 0.517930529752857
+   },
+   "new": {
+    "n": 225,
+    "pf": 1.0288942045151512,
+    "mean": 0.02018683854540795
+   },
+   "full": {
+    "n": 425,
+    "pf": 1.3011820804805263,
+    "mean": 0.1998224103853729
+   },
+   "tpd": 0.55,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 35.2,
+    "days": 17.0,
+    "accounts": 2.84,
+    "band": {
+     "days_lo": 15.3,
+     "days_hi": 23.0,
+     "days_med": 18.7,
+     "pass_lo": 30.2,
+     "pass_hi": 45.8,
+     "pass_med": 38.0,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": -0.01130127285371747,
+  "lift_final": -0.01130127285371747,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.15124027280217095,
+   "median": 0.018275356803137313,
+   "p": 0.675,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.15124027280217095,
+   "median": 0.018275356803137313,
+   "p": 0.675,
+   "checks": [
+    false,
+    false,
+    true
+   ],
+   "real": false
+  }
+ },
+ {
+  "name": "VWAP + BB dip in uptrend",
+  "by": "hunt",
+  "market": "XAUUSD",
+  "base": {
+   "tf": "1h",
+   "filter": "none",
+   "exits": "original",
+   "rule": "long when ema50 above ema200 and price above vwap100 and lowest10[1] below bb_lower7x2",
+   "stop_atr": 2.0,
+   "target_atr": 3.0,
+   "max_hold": 24,
+   "old": {
+    "n": 331,
+    "pf": 1.094526251703991,
+    "mean": 0.04817180292657878,
+    "tpd": 0.8571750267409783
+   },
+   "new": {
+    "n": 323,
+    "pf": 1.2144392597979454,
+    "mean": 0.10103284470254564
+   },
+   "full": {
+    "n": 654,
+    "pf": 1.151399421686741,
+    "mean": 0.07427901469055019
+   },
+   "tpd": 0.847,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 26.3,
+    "days": 34.2,
+    "accounts": 3.81,
+    "band": {
+     "days_lo": 29.1,
+     "days_hi": 48.6,
+     "days_med": 36.5,
+     "pass_lo": 24.4,
+     "pass_hi": 40.7,
+     "pass_med": 32.6,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "grid": {
+   "tf": "1h",
+   "filter": "RSI14 over 50",
+   "exits": "stop3 tgt10 hold24",
+   "rule": "long when ema50 above ema200 and price above vwap100 and lowest10[1] below bb_lower7x2 and rsi14 above 50",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.7235703397298743,
+    "mean": 0.2719330920865093,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 202,
+    "pf": 1.5144889245632376,
+    "mean": 0.20793505760974906
+   },
+   "full": {
+    "n": 406,
+    "pf": 1.6157459811903878,
+    "mean": 0.24009170547491923
+   },
+   "tpd": 0.526,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 54.2,
+    "days": 35.0,
+    "accounts": 1.84,
+    "band": {
+     "days_lo": 27.8,
+     "days_hi": 43.9,
+     "days_med": 34.6,
+     "pass_lo": 46.0,
+     "pass_hi": 69.1,
+     "pass_med": 57.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "final": {
+   "tf": "1h",
+   "filter": "RSI14 over 50",
+   "exits": "stop3 tgt10 hold24",
+   "rule": "long when ema50 above ema200 and price above vwap100 and lowest10[1] below bb_lower7x2 and rsi14 above 50",
+   "stop_atr": 3.0,
+   "target_atr": 10.0,
+   "max_hold": 24,
+   "old": {
+    "n": 204,
+    "pf": 1.7235703397298743,
+    "mean": 0.2719330920865093,
+    "tpd": 0.5282891403479142
+   },
+   "new": {
+    "n": 202,
+    "pf": 1.5144889245632376,
+    "mean": 0.20793505760974906
+   },
+   "full": {
+    "n": 406,
+    "pf": 1.6157459811903878,
+    "mean": 0.24009170547491923
+   },
+   "tpd": 0.526,
+   "pace": {
+    "risk_pct": 2.0,
+    "pass_pct": 54.2,
+    "days": 35.0,
+    "accounts": 1.84,
+    "band": {
+     "days_lo": 27.8,
+     "days_hi": 43.9,
+     "days_med": 34.6,
+     "pass_lo": 46.0,
+     "pass_hi": 69.1,
+     "pass_med": 57.5,
+     "never_pct": 0.0,
+     "resamples": 200,
+     "mean_block": 10
+    }
+   }
+  },
+  "lift_grid": 0.10690221290720342,
+  "lift_final": 0.10690221290720342,
+  "top_old": [],
+  "null_grid": {
+   "p95": 0.1261510930395978,
+   "median": 0.032088530864907594,
+   "p": 0.125,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  },
+  "null_final": {
+   "p95": 0.1261510930395978,
+   "median": 0.032088530864907594,
+   "p": 0.125,
+   "checks": [
+    true,
+    false,
+    true
+   ],
+   "real": false
+  }
+ }
+]

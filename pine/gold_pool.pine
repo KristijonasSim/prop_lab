@@ -1,0 +1,101 @@
+//@version=5
+// GOLD POOL - the four rules running on the Bybit demo (live/pool6_demo.py), Kris 2026-10-09.
+// Long only. Run it on a 1H chart of gold - BYBIT:XAUUSDT.P is what the demo trades.
+// The two 4h rules are read from the 4h chart and enter when a 4h bar closes.
+//
+//   B3M   (4h)  close > EMA20, close > SMA150, RSI14 > 42, the 20:00 UTC 4h bar      stop 1.5 ATR  target 4 ATR
+//   DESC  (4h)  low crosses above the last confirmed 6/6 pivot high, VWAP24 rising   stop 1.0 ATR  target 4 ATR
+//   EMA8  (1h)  low < EMA8 < close, previous bar EMA8 > EMA21, EMA50 > EMA200         stop 2.0 ATR  target 10 ATR
+//   DEMA  (1h)  Supertrend(20, 1.2) flips up, volume above its 20-bar average        stop 1.0 ATR  target 10 ATR
+//   Every trade closes after 24 hours at the latest. One trade per rule at a time.
+//
+// Matches the Python backtest's own formulas: RSI and ATR are SIMPLE averages
+// (not Wilder's), VWAP is a ROLLING 24/6-bar VWAP of typical price, not a session VWAP.
+// Measured on 3 years of Dukascopy gold: PF 1.70, ~1.7 trades/day; at 0.75% risk
+// 59.5% of 8%/3%/6% evaluations passed, ~17 expected days. Older years were much
+// weaker (~25% pass) - this is a bet on gold's trend, not a guarantee.
+strategy("Gold Pool (B3M + DESC + EMA8 + DEMA)", overlay=true, pyramiding=4,
+         initial_capital=10000, default_qty_type=strategy.fixed, commission_type=strategy.commission.percent,
+         commission_value=0.0275, calc_on_every_tick=false, process_orders_on_close=false, max_labels_count=500)
+
+riskPct = input.float(0.75, "Risk per trade (% of starting capital)", step=0.25)
+useB3M  = input.bool(true, "B3M trend pullback (4h)")
+useDESC = input.bool(true, "Descending trendline breakout (4h)")
+useEMA8 = input.bool(true, "EMA8 pullback (1h)")
+useDEMA = input.bool(true, "DEMA ATR turn-up (1h)")
+maxHours = input.int(24, "Max hold (hours)")
+
+// ---------- the backtest's own formulas ----------
+simpleRsi(src, n) =>
+    ch = ta.change(src)
+    up = ta.sma(math.max(ch, 0), n)
+    dn = ta.sma(math.max(-ch, 0), n)
+    dn == 0 ? 100.0 : 100 - 100 / (1 + up / dn)
+simpleAtr(n) => ta.sma(ta.tr(true), n)
+rollVwap(n) =>
+    tp = (high + low + close) / 3
+    v  = math.sum(volume, n)
+    v > 0 ? math.sum(tp * volume, n) / v : ta.sma(tp, n)
+
+// ---------- 4h rules, evaluated on the 4h chart ----------
+b3mCond() =>
+    close > ta.ema(close, 20) and close > ta.sma(close, 150) and simpleRsi(close, 14) > 42 and hour(time, "UTC") > 16.5
+descCond() =>
+    ph = ta.pivothigh(high, 6, 6)
+    lastPh = ta.valuewhen(not na(ph), ph, 0)
+    vw = rollVwap(24)
+    ta.crossover(low, lastPh) and vw > vw[6]
+[b3m4, desc4, atr4] = request.security(syminfo.tickerid, "240", [b3mCond(), descCond(), simpleAtr(14)], lookahead=barmerge.lookahead_off)
+closes4h = hour(time_close, "UTC") % 4 == 0      // this 1h bar closes a 4h bar
+
+// ---------- 1h rules ----------
+e8 = ta.ema(close, 8)
+e21 = ta.ema(close, 21)
+ema8Cond = low < e8 and close > e8 and e8[1] > e21[1] and ta.ema(close, 50) > ta.ema(close, 200)
+[stLine, stDir] = ta.supertrend(1.2, 20)
+stUp = stDir < 0
+volBase = ta.sma(volume, 20)[1]
+demaCond = stUp and not stUp[1] and volBase > 0 and volume / volBase > 1
+atr1 = simpleAtr(14)
+
+// ---------- one trade per rule ----------
+isOpen(id) =>
+    found = false
+    if strategy.opentrades > 0
+        for i = 0 to strategy.opentrades - 1
+            if strategy.opentrades.entry_id(i) == id
+                found := true
+    found
+
+riskCash = strategy.initial_capital * riskPct / 100
+enter(id, cond, atrv, stopMult, tgtMult) =>
+    fired = false
+    if cond and not isOpen(id) and atrv > 0
+        stopDist = stopMult * atrv
+        qty = riskCash / stopDist
+        strategy.entry(id, strategy.long, qty=qty)
+        strategy.exit(id + " exit", id, stop=close - stopDist, limit=close + tgtMult * atrv)
+        fired := true
+    fired
+
+sigB3M  = useB3M  and closes4h and b3m4
+sigDESC = useDESC and closes4h and desc4
+sigEMA8 = useEMA8 and ema8Cond
+sigDEMA = useDEMA and demaCond
+fB3M  = enter("B3M",  sigB3M,  atr4, 1.5, 4.0)
+fDESC = enter("DESC", sigDESC, atr4, 1.0, 4.0)
+fEMA8 = enter("EMA8", sigEMA8, atr1, 2.0, 10.0)
+fDEMA = enter("DEMA", sigDEMA, atr1, 1.0, 10.0)
+
+// ---------- 24h time exit ----------
+if strategy.opentrades > 0
+    for i = 0 to strategy.opentrades - 1
+        if time_close - strategy.opentrades.entry_time(i) >= (maxHours - 1) * 3600000
+            strategy.close(strategy.opentrades.entry_id(i), comment="24h")
+
+// ---------- BUY labels (exits are drawn by the Strategy Tester) ----------
+anyBuy = fB3M or fDESC or fEMA8 or fDEMA
+buyText = (fB3M ? "B3M " : "") + (fDESC ? "DESC " : "") + (fEMA8 ? "EMA8 " : "") + (fDEMA ? "DEMA" : "")
+if anyBuy
+    label.new(bar_index, low, "BUY\n" + buyText, style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white, size=size.small)
+alertcondition(anyBuy, "Gold Pool BUY", "Gold Pool: BUY signal on {{ticker}}")

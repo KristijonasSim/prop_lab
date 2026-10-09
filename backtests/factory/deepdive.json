@@ -1,0 +1,892 @@
+[
+ {
+  "name": "Pivot high breakout against Supertrend down (rule 1)",
+  "home": "EURUSD 1h",
+  "rule": "long when high cross_above pivot_high5 and supertrend5x2.618 below 0 and rvol20 above 1",
+  "exits": "stop1 tgt10 hold24",
+  "markets": [
+   {
+    "market": "BTCUSDT",
+    "orig": {
+     "n": 217,
+     "pf": 0.854216975269929,
+     "mean": -0.07322842623878599
+    },
+    "new": {
+     "n": 146,
+     "pf": 1.0567503561573728,
+     "mean": 0.05281024155648495
+    },
+    "better": true
+   },
+   {
+    "market": "XAUUSD",
+    "orig": {
+     "n": 130,
+     "pf": 0.829827182630256,
+     "mean": -0.08599695497677501
+    },
+    "new": {
+     "n": 87,
+     "pf": 0.8456269487936309,
+     "mean": -0.12974935775600233
+    },
+    "better": false
+   },
+   {
+    "market": "XAGUSD",
+    "orig": {
+     "n": 108,
+     "pf": 0.7311455905753118,
+     "mean": -0.14193975737708853
+    },
+    "new": {
+     "n": 77,
+     "pf": 0.9515488842590103,
+     "mean": -0.045617090757259525
+    },
+    "better": true
+   },
+   {
+    "market": "EURUSD",
+    "orig": {
+     "n": 131,
+     "pf": 1.018736128768758,
+     "mean": 0.0086711113366338
+    },
+    "new": {
+     "n": 110,
+     "pf": 2.1645092684543217,
+     "mean": 0.7718196535102159
+    },
+    "better": true
+   },
+   {
+    "market": "GBPUSD",
+    "orig": {
+     "n": 121,
+     "pf": 1.110630367297479,
+     "mean": 0.05199276043168564
+    },
+    "new": {
+     "n": 96,
+     "pf": 1.1968904067658714,
+     "mean": 0.1615303701754139
+    },
+    "better": true
+   },
+   {
+    "market": "USDJPY",
+    "orig": {
+     "n": 130,
+     "pf": 1.095972917343933,
+     "mean": 0.036541846247476056
+    },
+    "new": {
+     "n": 94,
+     "pf": 1.46716211013027,
+     "mean": 0.33481336773722337
+    },
+    "better": true
+   }
+  ],
+  "markets_better": 5,
+  "pass_markets": true,
+  "older": {
+   "orig": {
+    "n": 83,
+    "pf": 0.7074648006636117,
+    "mean": -0.15871787863788736
+   },
+   "new": {
+    "n": 73,
+    "pf": 1.0790252182457938,
+    "mean": 0.0594194071128943
+   },
+   "years": 1.8,
+   "better": true
+  },
+  "years": {
+   "2023": {
+    "n": 14,
+    "pf": 3.397865652798201,
+    "mean": 1.5965203954294567
+   },
+   "2024": {
+    "n": 40,
+    "pf": 2.2617799487681625,
+    "mean": 0.8465495836269781
+   },
+   "2025": {
+    "n": 38,
+    "pf": 1.9902526863859844,
+    "mean": 0.6273921300930686
+   },
+   "2026": {
+    "n": 18,
+    "pf": 1.3823929057118698,
+    "mean": 0.26922178119420237
+   }
+  },
+  "costs": {
+   "1x": 2.1645092684543217,
+   "2x": 2.080455909705151,
+   "3x": 2.001613876502573
+  },
+  "pass_costs": true,
+  "entry": {
+   "real_mean": 0.7718196535102159,
+   "real_n": 110,
+   "random_median": -0.10409750827383435,
+   "random_p95": 0.4342675660512126,
+   "p": 0.015
+  },
+  "pass_entry": true,
+  "pace": {
+   "risk_pct": 2.0,
+   "pass_pct": 44.5,
+   "days": 35.9,
+   "accounts": 2.25,
+   "band": {
+    "days_lo": 29.3,
+    "days_hi": 56.7,
+    "days_med": 39.6,
+    "pass_lo": 37.8,
+    "pass_hi": 66.9,
+    "pass_med": 52.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  "pace_before": {
+   "risk_pct": 2.0,
+   "pass_pct": 34.8,
+   "days": 40.2,
+   "accounts": 2.87,
+   "band": {
+    "days_lo": 32.7,
+    "days_hi": 53.7,
+    "days_med": 41.3,
+    "pass_lo": 26.9,
+    "pass_hi": 45.6,
+    "pass_med": 36.2,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ },
+ {
+  "name": "Hemant gold liquidity sweep long",
+  "home": "XAUUSD 4h",
+  "rule": "long when low below lowest10 and price above lowest10 and price above ema200 and vwap24 above vwap24[6]",
+  "exits": "stop1 tgt10 hold24",
+  "markets": [
+   {
+    "market": "BTCUSDT",
+    "orig": {
+     "n": 128,
+     "pf": 0.9872677235646765,
+     "mean": -0.007156723847237999
+    },
+    "new": {
+     "n": 81,
+     "pf": 0.8672939609036786,
+     "mean": -0.11659148462160686
+    },
+    "better": false
+   },
+   {
+    "market": "XAUUSD",
+    "orig": {
+     "n": 127,
+     "pf": 1.3529375937772632,
+     "mean": 0.19139032452922705
+    },
+    "new": {
+     "n": 81,
+     "pf": 2.731531098702162,
+     "mean": 1.1982688445604608
+    },
+    "better": true
+   },
+   {
+    "market": "XAGUSD",
+    "orig": {
+     "n": 118,
+     "pf": 0.8016409799198129,
+     "mean": -0.1255997067223762
+    },
+    "new": {
+     "n": 74,
+     "pf": 0.9402127129038986,
+     "mean": -0.052998925796215415
+    },
+    "better": true
+   },
+   {
+    "market": "EURUSD",
+    "orig": {
+     "n": 112,
+     "pf": 0.988774862525988,
+     "mean": -0.006812562923624215
+    },
+    "new": {
+     "n": 49,
+     "pf": 0.8651797789829218,
+     "mean": -0.11035553244796316
+    },
+    "better": false
+   },
+   {
+    "market": "GBPUSD",
+    "orig": {
+     "n": 114,
+     "pf": 1.0736439195540055,
+     "mean": 0.04143011212800879
+    },
+    "new": {
+     "n": 61,
+     "pf": 1.103536042904575,
+     "mean": 0.08706683020820505
+    },
+    "better": true
+   },
+   {
+    "market": "USDJPY",
+    "orig": {
+     "n": 148,
+     "pf": 1.1094467256385316,
+     "mean": 0.06472654673703639
+    },
+    "new": {
+     "n": 99,
+     "pf": 1.1851202690229172,
+     "mean": 0.14846253660019065
+    },
+    "better": true
+   }
+  ],
+  "markets_better": 4,
+  "pass_markets": true,
+  "older": {
+   "orig": {
+    "n": 66,
+    "pf": 1.4702788770458803,
+    "mean": 0.24558067473218026
+   },
+   "new": {
+    "n": 46,
+    "pf": 1.804793127358887,
+    "mean": 0.6562733056289666
+   },
+   "years": 1.7,
+   "better": true
+  },
+  "years": {
+   "2023": {
+    "n": 8,
+    "pf": 4.033402202043097,
+    "mean": 2.0194429490016366
+   },
+   "2024": {
+    "n": 30,
+    "pf": 3.0496496420578554,
+    "mean": 1.3886939911785798
+   },
+   "2025": {
+    "n": 33,
+    "pf": 2.108312361224235,
+    "mean": 0.8159163072537334
+   },
+   "2026": {
+    "n": 10,
+    "pf": 3.016499477750037,
+    "mean": 1.231817494265366
+   }
+  },
+  "costs": {
+   "1x": 2.731531098702162,
+   "2x": 2.5915038522375973,
+   "3x": 2.4631255866676907
+  },
+  "pass_costs": true,
+  "entry": {
+   "real_mean": 1.1982688445604608,
+   "real_n": 81,
+   "random_median": 0.5547041570643656,
+   "random_p95": 1.1493631310085255,
+   "p": 0.04
+  },
+  "pass_entry": true,
+  "pace": {
+   "risk_pct": 2.0,
+   "pass_pct": 60.6,
+   "days": 34.6,
+   "accounts": 1.65,
+   "band": {
+    "days_lo": 26.5,
+    "days_hi": 47.4,
+    "days_med": 34.2,
+    "pass_lo": 46.7,
+    "pass_hi": 73.1,
+    "pass_med": 59.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  "pace_before": {
+   "risk_pct": 2.0,
+   "pass_pct": 38.6,
+   "days": 28.5,
+   "accounts": 2.59,
+   "band": {
+    "days_lo": 24.6,
+    "days_hi": 40.2,
+    "days_med": 29.7,
+    "pass_lo": 31.4,
+    "pass_hi": 47.6,
+    "pass_med": 39.9,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ },
+ {
+  "name": "nonstop DCA long proxy",
+  "home": "XAUUSD 4h",
+  "rule": "long when price above sma3 and atr14 above atr100",
+  "exits": "stop1.5 tgt10 hold240",
+  "markets": [
+   {
+    "market": "BTCUSDT",
+    "orig": {
+     "n": 291,
+     "pf": 1.0126177762716901,
+     "mean": 0.0027272244920078037
+    },
+    "new": {
+     "n": 106,
+     "pf": 1.439994919345955,
+     "mean": 0.3550528884830965
+    },
+    "better": true
+   },
+   {
+    "market": "XAUUSD",
+    "orig": {
+     "n": 345,
+     "pf": 1.3538861272995077,
+     "mean": 0.06245702662553254
+    },
+    "new": {
+     "n": 88,
+     "pf": 3.0186455645335166,
+     "mean": 1.3577720839410987
+    },
+    "better": true
+   },
+   {
+    "market": "XAGUSD",
+    "orig": {
+     "n": 289,
+     "pf": 1.22434832535442,
+     "mean": 0.04155950091193893
+    },
+    "new": {
+     "n": 104,
+     "pf": 1.6121562332594732,
+     "mean": 0.5344535965649311
+    },
+    "better": true
+   },
+   {
+    "market": "EURUSD",
+    "orig": {
+     "n": 281,
+     "pf": 0.9399227119157594,
+     "mean": -0.014321833200200383
+    },
+    "new": {
+     "n": 118,
+     "pf": 1.098461461621409,
+     "mean": 0.08438099214375515
+    },
+    "better": true
+   },
+   {
+    "market": "GBPUSD",
+    "orig": {
+     "n": 295,
+     "pf": 0.9939651502249158,
+     "mean": -0.001366653172225707
+    },
+    "new": {
+     "n": 112,
+     "pf": 1.144896767703928,
+     "mean": 0.12499145910943572
+    },
+    "better": true
+   },
+   {
+    "market": "USDJPY",
+    "orig": {
+     "n": 302,
+     "pf": 1.2129230563312385,
+     "mean": 0.04084489115604779
+    },
+    "new": {
+     "n": 104,
+     "pf": 0.9859295529818941,
+     "mean": -0.012000527455634121
+    },
+    "better": false
+   }
+  ],
+  "markets_better": 5,
+  "pass_markets": true,
+  "older": {
+   "orig": {
+    "n": 175,
+    "pf": 0.977120090021555,
+    "mean": -0.005200978685102233
+   },
+   "new": {
+    "n": 65,
+    "pf": 1.1628174469923533,
+    "mean": 0.1433688706960965
+   },
+   "years": 1.7,
+   "better": true
+  },
+  "years": {
+   "2023": {
+    "n": 16,
+    "pf": 2.1501639481435983,
+    "mean": 0.8870894350460996
+   },
+   "2024": {
+    "n": 30,
+    "pf": 3.0178450786619817,
+    "mean": 1.377190007718977
+   },
+   "2025": {
+    "n": 25,
+    "pf": 5.587294134478534,
+    "mean": 2.4279418914006383
+   },
+   "2026": {
+    "n": 17,
+    "pf": 1.2492829492333655,
+    "mean": 0.19272146526434314
+   }
+  },
+  "costs": {
+   "1x": 3.0186455645335166,
+   "2x": 2.9474282534723275,
+   "3x": 2.8789641983202214
+  },
+  "pass_costs": true,
+  "entry": {
+   "real_mean": 1.3577720839410987,
+   "real_n": 88,
+   "random_median": 0.9693047499873312,
+   "random_p95": 1.1774730561325462,
+   "p": 0.005
+  },
+  "pass_entry": true,
+  "pace": {
+   "risk_pct": 2.0,
+   "pass_pct": 68.6,
+   "days": 24.8,
+   "accounts": 1.46,
+   "band": {
+    "days_lo": 20.0,
+    "days_hi": 33.0,
+    "days_med": 26.0,
+    "pass_lo": 57.7,
+    "pass_hi": 81.8,
+    "pass_med": 72.3,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  "pace_before": {
+   "risk_pct": 2.0,
+   "pass_pct": 38.2,
+   "days": 88.9,
+   "accounts": 2.62,
+   "band": {
+    "days_lo": 67.0,
+    "days_hi": 146.1,
+    "days_med": 91.7,
+    "pass_lo": 24.3,
+    "pass_hi": 47.8,
+    "pass_med": 35.5,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ },
+ {
+  "name": "NDX close crosses above SMA10, above EMA200",
+  "home": "XAUUSD 4h",
+  "rule": "long when price cross_above sma10 and price above ema200 and vwap24 above vwap24[1] and rvol20 above 1",
+  "exits": "stop1.5 tgt3 hold36",
+  "markets": [
+   {
+    "market": "BTCUSDT",
+    "orig": {
+     "n": 192,
+     "pf": 0.9385780186573567,
+     "mean": -0.027692571846610847
+    },
+    "new": {
+     "n": 66,
+     "pf": 1.0639217614714307,
+     "mean": 0.040538209428383196
+    },
+    "better": true
+   },
+   {
+    "market": "XAUUSD",
+    "orig": {
+     "n": 201,
+     "pf": 1.352739734893988,
+     "mean": 0.14625343997375045
+    },
+    "new": {
+     "n": 92,
+     "pf": 2.8204945604804257,
+     "mean": 0.7324725703694542
+    },
+    "better": true
+   },
+   {
+    "market": "XAGUSD",
+    "orig": {
+     "n": 181,
+     "pf": 0.9801377850585845,
+     "mean": -0.009864033078244775
+    },
+    "new": {
+     "n": 87,
+     "pf": 0.8419059609904634,
+     "mean": -0.11569628920481323
+    },
+    "better": false
+   },
+   {
+    "market": "EURUSD",
+    "orig": {
+     "n": 157,
+     "pf": 1.0099167516522636,
+     "mean": 0.004651351628572558
+    },
+    "new": {
+     "n": 57,
+     "pf": 1.0152223346074736,
+     "mean": 0.010021946870679052
+    },
+    "better": true
+   },
+   {
+    "market": "GBPUSD",
+    "orig": {
+     "n": 182,
+     "pf": 0.7880464683678218,
+     "mean": -0.11574896190650787
+    },
+    "new": {
+     "n": 80,
+     "pf": 1.0212017326212455,
+     "mean": 0.014089456657572164
+    },
+    "better": true
+   },
+   {
+    "market": "USDJPY",
+    "orig": {
+     "n": 187,
+     "pf": 1.0407126978597196,
+     "mean": 0.01832973716733989
+    },
+    "new": {
+     "n": 80,
+     "pf": 1.3949841098043165,
+     "mean": 0.2302935787434663
+    },
+    "better": true
+   }
+  ],
+  "markets_better": 5,
+  "pass_markets": true,
+  "older": {
+   "orig": {
+    "n": 93,
+    "pf": 1.0665386367587615,
+    "mean": 0.03370380531351185
+   },
+   "new": {
+    "n": 43,
+    "pf": 1.4159473074317512,
+    "mean": 0.2554877550965197
+   },
+   "years": 1.7,
+   "better": true
+  },
+  "years": {
+   "2023": {
+    "n": 7,
+    "pf": 4.1294714046256376,
+    "mean": 0.9223299555519656
+   },
+   "2024": {
+    "n": 38,
+    "pf": 2.6066330199279464,
+    "mean": 0.6986125811523378
+   },
+   "2025": {
+    "n": 37,
+    "pf": 2.848090972316482,
+    "mean": 0.7178293698930566
+   },
+   "2026": {
+    "n": 10,
+    "pf": 2.928095679902641,
+    "mean": 0.7824202015294109
+   }
+  },
+  "costs": {
+   "1x": 2.8204945604804257,
+   "2x": 2.6919097222458577,
+   "3x": 2.5700164144380593
+  },
+  "pass_costs": true,
+  "entry": {
+   "real_mean": 0.7324725703694542,
+   "real_n": 92,
+   "random_median": 0.23030792558912283,
+   "random_p95": 0.4802769126972352,
+   "p": 0.0
+  },
+  "pass_entry": true,
+  "pace": {
+   "risk_pct": 2.0,
+   "pass_pct": 61.2,
+   "days": 65.4,
+   "accounts": 1.64,
+   "band": {
+    "days_lo": 49.8,
+    "days_hi": 84.9,
+    "days_med": 63.6,
+    "pass_lo": 57.7,
+    "pass_hi": 87.2,
+    "pass_med": 73.6,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  "pace_before": {
+   "risk_pct": 2.0,
+   "pass_pct": 35.8,
+   "days": 39.1,
+   "accounts": 2.79,
+   "band": {
+    "days_lo": 30.2,
+    "days_hi": 51.1,
+    "days_med": 38.0,
+    "pass_lo": 27.5,
+    "pass_hi": 46.8,
+    "pass_med": 38.1,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ },
+ {
+  "name": "Daily change up long (rule 1)",
+  "home": "XAUUSD 4h",
+  "rule": "long when price above htf_closex24 and hour above 11.5 and hour below 16.5",
+  "exits": "stop1.5 tgt10 hold48",
+  "markets": [
+   {
+    "market": "BTCUSDT",
+    "orig": {
+     "n": 424,
+     "pf": 1.0063006575344842,
+     "mean": 0.003265701693621604
+    },
+    "new": {
+     "n": 205,
+     "pf": 1.213415907638294,
+     "mean": 0.15601825570420483
+    },
+    "better": true
+   },
+   {
+    "market": "XAUUSD",
+    "orig": {
+     "n": 408,
+     "pf": 1.34848685226119,
+     "mean": 0.16406847730364132
+    },
+    "new": {
+     "n": 169,
+     "pf": 2.292886803901003,
+     "mean": 0.7980401277806859
+    },
+    "better": true
+   },
+   {
+    "market": "XAGUSD",
+    "orig": {
+     "n": 378,
+     "pf": 0.9579094435502556,
+     "mean": -0.024003803353923537
+    },
+    "new": {
+     "n": 179,
+     "pf": 1.1442781265131654,
+     "mean": 0.11187387603396684
+    },
+    "better": true
+   },
+   {
+    "market": "EURUSD",
+    "orig": {
+     "n": 424,
+     "pf": 0.8920340847220116,
+     "mean": -0.06123613763139956
+    },
+    "new": {
+     "n": 175,
+     "pf": 1.0560561044384829,
+     "mean": 0.04121331335493269
+    },
+    "better": true
+   },
+   {
+    "market": "GBPUSD",
+    "orig": {
+     "n": 414,
+     "pf": 0.8780712951190207,
+     "mean": -0.06900709204063572
+    },
+    "new": {
+     "n": 172,
+     "pf": 0.962436930294604,
+     "mean": -0.028982319383700196
+    },
+    "better": true
+   },
+   {
+    "market": "USDJPY",
+    "orig": {
+     "n": 380,
+     "pf": 1.1900703104509582,
+     "mean": 0.09307907785690228
+    },
+    "new": {
+     "n": 190,
+     "pf": 1.3467295056860968,
+     "mean": 0.2508367620005434
+    },
+    "better": true
+   }
+  ],
+  "markets_better": 6,
+  "pass_markets": true,
+  "older": {
+   "orig": {
+    "n": 242,
+    "pf": 0.9614773869528453,
+    "mean": -0.021937533680311296
+   },
+   "new": {
+    "n": 107,
+    "pf": 1.056783612438053,
+    "mean": 0.04394870449624436
+   },
+   "years": 1.7,
+   "better": true
+  },
+  "years": {
+   "2023": {
+    "n": 23,
+    "pf": 2.424198698223168,
+    "mean": 0.9628729553612385
+   },
+   "2024": {
+    "n": 54,
+    "pf": 2.1774980636307517,
+    "mean": 0.7308489791281748
+   },
+   "2025": {
+    "n": 60,
+    "pf": 2.7051027658399818,
+    "mean": 0.9928973696904736
+   },
+   "2026": {
+    "n": 32,
+    "pf": 1.6736788336322972,
+    "mean": 0.42759426772742326
+   }
+  },
+  "costs": {
+   "1x": 2.292886803901003,
+   "2x": 2.2163404942179437,
+   "3x": 2.143764682198615
+  },
+  "pass_costs": true,
+  "entry": {
+   "real_mean": 0.7980401277806859,
+   "real_n": 169,
+   "random_median": 0.571701961716718,
+   "random_p95": 0.6993030583213895,
+   "p": 0.0
+  },
+  "pass_entry": true,
+  "pace": {
+   "risk_pct": 2.0,
+   "pass_pct": 55.5,
+   "days": 25.2,
+   "accounts": 1.8,
+   "band": {
+    "days_lo": 19.6,
+    "days_hi": 30.8,
+    "days_med": 24.6,
+    "pass_lo": 50.9,
+    "pass_hi": 70.8,
+    "pass_med": 61.8,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  },
+  "pace_before": {
+   "risk_pct": 2.0,
+   "pass_pct": 39.3,
+   "days": 20.4,
+   "accounts": 2.55,
+   "band": {
+    "days_lo": 16.8,
+    "days_hi": 24.0,
+    "days_med": 20.3,
+    "pass_lo": 32.4,
+    "pass_hi": 46.0,
+    "pass_med": 39.2,
+    "never_pct": 0.0,
+    "resamples": 200,
+    "mean_block": 10
+   }
+  }
+ }
+]

@@ -1,0 +1,6 @@
+2026-10-09 10:23 UTC  {'added': 20, 'duplicates': 0, 'queued': 40, 'rejected': 0}
+[agent] kept 19, rejected 1:
+  - short when stoch_k14 cross_below 80 and adx14 below 25: already tested
+2026-10-09 11:24 UTC  {'added': 19, 'duplicates': 0, 'queued': 19, 'rejected': 1}
+2026-10-09 12:05 UTC  {'added': 20, 'duplicates': 0, 'queued': 20, 'rejected': 0}
+2026-10-09 12:12 UTC  {'added': 20, 'duplicates': 0, 'queued': 20, 'rejected': 0}

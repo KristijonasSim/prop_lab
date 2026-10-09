@@ -1,0 +1,137 @@
+{
+ "caps": {
+  "cap none": {
+   "n": 540,
+   "risk_pct": 2.0,
+   "pass_pct": 51.6,
+   "days": 9.7,
+   "accounts": 1.94,
+   "pf": 2.53,
+   "tpd": 0.69,
+   "band": [
+    8.3,
+    11.7
+   ],
+   "null_days_med": 11.55,
+   "null_accounts_med": 2.385
+  },
+  "cap 1": {
+   "n": 151,
+   "risk_pct": 2.0,
+   "pass_pct": 74.0,
+   "days": 24.3,
+   "accounts": 1.35,
+   "pf": 2.68,
+   "tpd": 0.19,
+   "band": [
+    18.8,
+    28.7
+   ],
+   "null_days_med": 23.25,
+   "null_accounts_med": 1.685
+  },
+  "cap 2": {
+   "n": 349,
+   "risk_pct": 2.0,
+   "pass_pct": 52.3,
+   "days": 13.4,
+   "accounts": 1.91,
+   "pf": 2.55,
+   "tpd": 0.45,
+   "band": [
+    10.8,
+    15.6
+   ],
+   "null_days_med": 14.350000000000001,
+   "null_accounts_med": 2.115
+  },
+  "cap 3": {
+   "n": 497,
+   "risk_pct": 2.0,
+   "pass_pct": 52.9,
+   "days": 9.4,
+   "accounts": 1.89,
+   "pf": 2.51,
+   "tpd": 0.64,
+   "band": [
+    8.7,
+    12.3
+   ],
+   "null_days_med": 11.9,
+   "null_accounts_med": 2.31
+  }
+ },
+ "older": {
+  "cap none": {
+   "n": 334,
+   "risk_pct": 2.0,
+   "pass_pct": 27.6,
+   "days": 14.5,
+   "accounts": 3.62,
+   "pf": 1.23,
+   "tpd": 0.68,
+   "band": [
+    12.9,
+    21.8
+   ]
+  },
+  "cap 2": {
+   "n": 245,
+   "risk_pct": 2.0,
+   "pass_pct": 25.4,
+   "days": 19.7,
+   "accounts": 3.93,
+   "pf": 1.09,
+   "tpd": 0.5,
+   "band": [
+    16.6,
+    31.0
+   ]
+  },
+  "Pivot high breakout against Supertrend down (rule 1)": {
+   "n": 73,
+   "risk_pct": 2.0,
+   "pass_pct": 35.4,
+   "days": 72.0,
+   "accounts": 2.82,
+   "pf": 1.08,
+   "tpd": 0.15
+  },
+  "Hemant gold liquidity sweep long": {
+   "n": 46,
+   "risk_pct": 2.0,
+   "pass_pct": 52.9,
+   "days": 79.4,
+   "accounts": 1.89,
+   "pf": 1.8,
+   "tpd": 0.1
+  },
+  "nonstop DCA long proxy": {
+   "n": 65,
+   "risk_pct": 2.0,
+   "pass_pct": 36.1,
+   "days": 44.3,
+   "accounts": 2.77,
+   "pf": 1.16,
+   "tpd": 0.15
+  },
+  "NDX close crosses above SMA10, above EMA200": {
+   "n": 43,
+   "risk_pct": 2.0,
+   "pass_pct": 29.2,
+   "days": 224.5,
+   "accounts": 3.43,
+   "pf": 1.42,
+   "tpd": 0.1
+  },
+  "Daily change up long (rule 1)": {
+   "n": 107,
+   "risk_pct": 2.0,
+   "pass_pct": 30.9,
+   "days": 51.7,
+   "accounts": 3.23,
+   "pf": 1.06,
+   "tpd": 0.22
+  }
+ }
+}

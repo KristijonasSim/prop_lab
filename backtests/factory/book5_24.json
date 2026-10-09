@@ -1,0 +1,74 @@
+{
+ "legs": {
+  "B3M trend pullback breakout (reduced)": {
+   "n": 273,
+   "risk_pct": 2.0,
+   "pass_pct": 45.7,
+   "days": 37.2,
+   "accounts": 2.19,
+   "pf": 1.7,
+   "tpd": 0.36,
+   "band": [
+    32.2,
+    51.7
+   ]
+  },
+  "Descending trendline breakout long (rule 1)": {
+   "n": 113,
+   "risk_pct": 2.0,
+   "pass_pct": 79.2,
+   "days": 44.2,
+   "accounts": 1.26,
+   "pf": 2.85,
+   "tpd": 0.15,
+   "band": [
+    39.6,
+    67.8
+   ]
+  }
+ },
+ "books": {
+  "A five": {
+   "n": 386,
+   "risk_pct": 2.0,
+   "pass_pct": 51.2,
+   "days": 21.5,
+   "accounts": 1.95,
+   "pf": 2.01,
+   "tpd": 0.5,
+   "band": [
+    18.5,
+    26.7
+   ],
+   "null_days_p10": 28.97,
+   "null_days_med": 36.05,
+   "null_pass_med": 41.0
+  },
+  "A without B3M trend pullback breakout (r": {
+   "n": 113,
+   "risk_pct": 2.0,
+   "pass_pct": 79.2,
+   "days": 44.2,
+   "accounts": 1.26,
+   "pf": 2.85,
+   "tpd": 0.15,
+   "band": [
+    39.6,
+    67.8
+   ]
+  },
+  "A without Descending trendline breakout ": {
+   "n": 273,
+   "risk_pct": 2.0,
+   "pass_pct": 45.7,
+   "days": 37.2,
+   "accounts": 2.19,
+   "pf": 1.7,
+   "tpd": 0.36,
+   "band": [
+    32.2,
+    51.7
+   ]
+  }
+ }
+}

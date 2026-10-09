@@ -1,0 +1,108 @@
+//@version=5
+// GOLD POOL - the four rules running on the Bybit demo (live/pool6_demo.py), Kris 2026-10-09.
+// INDICATOR version - BUY/SELL labels only, no orders (the backtest version is gold_pool.pine).
+// SELL = a BUY from that rule closing: stop, target or the 24h limit.
+// Long only. Run it on a 1H chart of gold - BYBIT:XAUUSDT.P is what the demo trades.
+// The two 4h rules are read from the 4h chart and enter when a 4h bar closes.
+//
+//   B3M   (4h)  close > EMA20, close > SMA150, RSI14 > 42, the 20:00 UTC 4h bar      stop 1.5 ATR  target 4 ATR
+//   DESC  (4h)  low crosses above the last confirmed 6/6 pivot high, VWAP24 rising   stop 1.0 ATR  target 4 ATR
+//   EMA8  (1h)  low < EMA8 < close, previous bar EMA8 > EMA21, EMA50 > EMA200         stop 2.0 ATR  target 10 ATR
+//   DEMA  (1h)  Supertrend(20, 1.2) flips up, volume above its 20-bar average        stop 1.0 ATR  target 10 ATR
+//   Every trade closes after 24 hours at the latest. One trade per rule at a time.
+//
+// Matches the Python backtest's own formulas: RSI and ATR are SIMPLE averages
+// (not Wilder's), VWAP is a ROLLING 24/6-bar VWAP of typical price, not a session VWAP.
+// Measured on 3 years of Dukascopy gold: PF 1.70, ~1.7 trades/day; at 0.75% risk
+// 59.5% of 8%/3%/6% evaluations passed, ~17 expected days. Older years were much
+// weaker (~25% pass) - this is a bet on gold's trend, not a guarantee.
+indicator("Gold Pool signals (B3M + DESC + EMA8 + DEMA)", overlay=true, max_labels_count=500)
+
+useB3M  = input.bool(true, "B3M trend pullback (4h)")
+useDESC = input.bool(true, "Descending trendline breakout (4h)")
+useEMA8 = input.bool(true, "EMA8 pullback (1h)")
+useDEMA = input.bool(true, "DEMA ATR turn-up (1h)")
+maxHours = input.int(24, "Max hold (hours)")
+
+// ---------- the backtest's own formulas ----------
+simpleRsi(src, n) =>
+    ch = ta.change(src)
+    up = ta.sma(math.max(ch, 0), n)
+    dn = ta.sma(math.max(-ch, 0), n)
+    dn == 0 ? 100.0 : 100 - 100 / (1 + up / dn)
+simpleAtr(n) => ta.sma(ta.tr(true), n)
+rollVwap(n) =>
+    tp = (high + low + close) / 3
+    v  = math.sum(volume, n)
+    v > 0 ? math.sum(tp * volume, n) / v : ta.sma(tp, n)
+
+// ---------- 4h rules, evaluated on the 4h chart ----------
+b3mCond() =>
+    close > ta.ema(close, 20) and close > ta.sma(close, 150) and simpleRsi(close, 14) > 42 and hour(time, "UTC") > 16.5
+descCond() =>
+    ph = ta.pivothigh(high, 6, 6)
+    lastPh = ta.valuewhen(not na(ph), ph, 0)
+    vw = rollVwap(24)
+    ta.crossover(low, lastPh) and vw > vw[6]
+[b3m4, desc4, atr4] = request.security(syminfo.tickerid, "240", [b3mCond(), descCond(), simpleAtr(14)], lookahead=barmerge.lookahead_off)
+closes4h = hour(time_close, "UTC") % 4 == 0      // this 1h bar closes a 4h bar
+
+// ---------- 1h rules ----------
+e8 = ta.ema(close, 8)
+e21 = ta.ema(close, 21)
+ema8Cond = low < e8 and close > e8 and e8[1] > e21[1] and ta.ema(close, 50) > ta.ema(close, 200)
+[stLine, stDir] = ta.supertrend(1.2, 20)
+stUp = stDir < 0
+volBase = ta.sma(volume, 20)[1]
+demaCond = stUp and not stUp[1] and volBase > 0 and volume / volBase > 1
+atr1 = simpleAtr(14)
+
+// ---------- each rule tracked on its own: one trade at a time ----------
+var float[] ep = array.new_float(4, na)     // entry price
+var float[] sl = array.new_float(4, na)
+var float[] tp = array.new_float(4, na)
+var int[]   et = array.new_int(4, 0)        // entry time
+
+// returns: 1 = BUY, -1 = SELL stop, -2 = SELL target, -3 = SELL 24h, 0 = nothing
+step(i, cond, atrv, stopMult, tgtMult) =>
+    res = 0
+    if not na(array.get(ep, i))
+        if low <= array.get(sl, i)
+            res := -1
+        else if high >= array.get(tp, i)
+            res := -2
+        else if time_close - array.get(et, i) >= maxHours * 3600000
+            res := -3
+        if res != 0
+            array.set(ep, i, na)
+    else if cond and atrv > 0
+        array.set(ep, i, close)
+        array.set(sl, i, close - stopMult * atrv)
+        array.set(tp, i, close + tgtMult * atrv)
+        array.set(et, i, time_close)
+        res := 1
+    res
+
+names = array.from("B3M", "DESC", "EMA8", "DEMA")
+r0 = step(0, useB3M  and closes4h and b3m4,  atr4, 1.5, 4.0)
+r1 = step(1, useDESC and closes4h and desc4, atr4, 1.0, 4.0)
+r2 = step(2, useEMA8 and ema8Cond,           atr1, 2.0, 10.0)
+r3 = step(3, useDEMA and demaCond,           atr1, 1.0, 10.0)
+
+buyTxt = ""
+sellTxt = ""
+why(r) => r == -1 ? "stop" : r == -2 ? "target" : "24h"
+rs = array.from(r0, r1, r2, r3)
+for i = 0 to 3
+    r = array.get(rs, i)
+    if r == 1
+        buyTxt += array.get(names, i) + " "
+    else if r < 0
+        sellTxt += array.get(names, i) + " " + why(r) + " "
+
+if buyTxt != ""
+    label.new(bar_index, low, "BUY\n" + buyTxt, style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white, size=size.small)
+if sellTxt != ""
+    label.new(bar_index, high, "SELL\n" + sellTxt, style=label.style_label_down, color=color.new(color.red, 0), textcolor=color.white, size=size.small)
+alertcondition(buyTxt != "", "Gold Pool BUY", "Gold Pool BUY on {{ticker}}")
+alertcondition(sellTxt != "", "Gold Pool SELL", "Gold Pool SELL (close the buy) on {{ticker}}")

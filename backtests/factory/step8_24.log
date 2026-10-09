@@ -1,0 +1,61 @@
+
+## 123 reversal long (rule 1)  [XAUUSD 4h]  long when prev_close[1] below prev_close and price above prev_close and stoch_k14 above 50 and rvol20 above 1.5  stop2 tgt3 hold6
+  markets better: 5 /6 {'BTCUSDT': (1.06, 0.98, 190), 'XAUUSD': (1.44, 1.9, 200), 'XAGUSD': (0.92, 1.22, 180), 'EURUSD': (0.92, 1.4, 161), 'GBPUSD': (0.9, 0.99, 165), 'USDJPY': (1.22, 1.21, 200)}
+  older 1.7y: orig pf 0.9894954916977924 n 171 -> new pf 0.8041027920264273 n 105 better=False
+  years: {2023: (1.73, 23), 2024: (2.16, 70), 2025: (1.77, 79), 2026: (1.87, 28)}
+  costs: {'1x': 1.8962882772490015, '2x': 1.7817334692174986, '3x': 1.6228588559598456}
+  entry: {'real_mean': 0.25966673820068786, 'real_n': 200, 'random_median': 0.08063884743562194, 'random_p95': 0.15765062615535616, 'p': 0.0}
+
+## MA alignment + new high long  [XAUUSD 1h]  long when highest10 above highest10[10] and sma50 above sma200 and price above sma20 and adx14 below 20  stop3 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (1.01, 0.92, 190), 'XAUUSD': (1.41, 1.97, 143), 'XAGUSD': (0.96, 1.28, 147), 'EURUSD': (1.08, 1.08, 148), 'GBPUSD': (0.89, 1.01, 139), 'USDJPY': (1.08, 1.1, 197)}
+  older 1.7y: orig pf 0.9633043661897298 n 210 -> new pf 1.6344587141007987 n 67 better=True
+  years: {2023: (3.34, 18), 2024: (2.01, 46), 2025: (2.04, 57), 2026: (1.03, 22)}
+  costs: {'1x': 1.9658837130518418, '2x': 1.7515889735659, '3x': 1.6262309026504418}
+  entry: {'real_mean': 0.37397181386200107, 'real_n': 143, 'random_median': 0.10740730144382252, 'random_p95': 0.17861069103500415, 'p': 0.0}
+
+## BOS demand-zone retest confirmation (long, approximated)  [XAUUSD 4h]  long when price above ema200 and price above open and price above prev_high and hour above 6.5 and hour below 11.5  stop1.5 tgt4 hold6
+  markets better: 5 /6 {'BTCUSDT': (0.96, 1.02, 148), 'XAUUSD': (1.34, 2.18, 125), 'XAGUSD': (0.94, 0.86, 101), 'EURUSD': (0.98, 1.22, 94), 'GBPUSD': (0.93, 1.03, 103), 'USDJPY': (1.16, 1.52, 138)}
+  older 1.7y: orig pf 1.0563849785145667 n 178 -> new pf 0.8962229274525528 n 64 better=False
+  years: {2023: (1.98, 10), 2024: (3.1, 45), 2025: (2.08, 61), 2026: (0.19, 9)}
+  costs: {'1x': 2.1803266266872474, '2x': 2.050670210432403, '3x': 1.929232111434166}
+  entry: {'real_mean': 0.3886583543441037, 'real_n': 125, 'random_median': 0.047681950757234, 'random_p95': 0.19424527641104006, 'p': 0.0}
+
+## ORB retest long + VWAP  [XAUUSD 1h]  long when price above range_high13x0.25 and low below range_high13x0.25 and price above vwap100 and rvol20 above 1.5  stop1 tgt6 hold12
+  markets better: 4 /6 {'BTCUSDT': (0.68, 0.8, 323), 'XAUUSD': (1.12, 1.63, 157), 'XAGUSD': (0.74, 0.9, 138), 'EURUSD': (0.81, 0.71, 150), 'GBPUSD': (0.85, 0.9, 141), 'USDJPY': (0.57, 0.49, 175)}
+  older 1.7y: orig pf 1.2540289545631742 n 153 -> new pf 1.3737362885805664 n 73 better=True
+  years: {2023: (4.56, 16), 2024: (1.48, 52), 2025: (1.41, 50), 2026: (1.47, 39)}
+  costs: {'1x': 1.6328967936983363, '2x': 1.553754972850207, '3x': 1.4367811063125382}
+  entry: {'real_mean': 0.33949878967561753, 'real_n': 157, 'random_median': -0.02208975700819277, 'random_p95': 0.24377049990964966, 'p': 0.005}
+
+## Pivot high breakout against Supertrend down (rule 1)  [EURUSD 1h]  long when high cross_above pivot_high5 and supertrend5x2.618 below 0 and rvol20 above 1  stop1 tgt10 hold24
+  markets better: 5 /6 {'BTCUSDT': (0.85, 1.06, 146), 'XAUUSD': (0.83, 0.85, 87), 'XAGUSD': (0.73, 0.95, 77), 'EURUSD': (1.02, 2.16, 110), 'GBPUSD': (1.11, 1.2, 96), 'USDJPY': (1.1, 1.47, 94)}
+  older 1.8y: orig pf 0.7074648006636117 n 83 -> new pf 1.0790252182457938 n 73 better=True
+  years: {2023: (3.4, 14), 2024: (2.26, 40), 2025: (1.99, 38), 2026: (1.38, 18)}
+  costs: {'1x': 2.1645092684543217, '2x': 2.080455909705151, '3x': 2.001613876502573}
+  entry: {'real_mean': 0.7718196535102159, 'real_n': 110, 'random_median': -0.10409750827383435, 'random_p95': 0.4342675660512126, 'p': 0.015}
+
+=== BOOK ===
+123 reversal long (rule 1)                           {'n': 200, 'risk_pct': 2.0, 'pass_pct': 77.7, 'days': 74.0, 'accounts': 1.29, 'pf': np.float64(1.9), 'tpd': 0.26, 'band': [56.5, 97.6]}
+MA alignment + new high long                         {'n': 143, 'risk_pct': 2.0, 'pass_pct': 72.9, 'days': 61.8, 'accounts': 1.37, 'pf': np.float64(1.97), 'tpd': 0.19, 'band': [55.0, 95.6]}
+BOS demand-zone retest confirmation (long, approxima {'n': 125, 'risk_pct': 2.0, 'pass_pct': 71.2, 'days': 60.4, 'accounts': 1.4, 'pf': np.float64(2.18), 'tpd': 0.18, 'band': [53.7, 101.8]}
+ORB retest long + VWAP                               {'n': 157, 'risk_pct': 2.0, 'pass_pct': 45.9, 'days': 67.5, 'accounts': 2.18, 'pf': np.float64(1.63), 'tpd': 0.21, 'band': [44.5, 92.0]}
+Pivot high breakout against Supertrend down (rule 1) {'n': 110, 'risk_pct': 2.0, 'pass_pct': 44.5, 'days': 35.9, 'accounts': 2.25, 'pf': np.float64(2.16), 'tpd': 0.14, 'band': [29.3, 56.7]}
+A five                                               {'n': 735, 'risk_pct': 2.0, 'pass_pct': 53.1, 'days': 13.2, 'accounts': 1.88, 'pf': np.float64(1.94), 'tpd': 0.94, 'band': [11.7, 16.2], 'null_days_p10': 16.7, 'null_days_med': 18.700000000000003, 'null_pass_med': 32.0}
+A without 123 reversal long (rule 1)                 {'n': 535, 'risk_pct': 2.0, 'pass_pct': 47.6, 'days': 16.8, 'accounts': 2.1, 'pf': np.float64(1.95), 'tpd': 0.69, 'band': [14.0, 20.5]}
+A without MA alignment + new high long               {'n': 592, 'risk_pct': 2.0, 'pass_pct': 52.1, 'days': 15.4, 'accounts': 1.92, 'pf': np.float64(1.93), 'tpd': 0.76, 'band': [14.4, 20.1]}
+A without BOS demand-zone retest confirm             {'n': 610, 'risk_pct': 2.0, 'pass_pct': 51.6, 'days': 15.5, 'accounts': 1.94, 'pf': np.float64(1.9), 'tpd': 0.78, 'band': [13.7, 19.2]}
+A without ORB retest long + VWAP                     {'n': 578, 'risk_pct': 2.0, 'pass_pct': 58.7, 'days': 17.0, 'accounts': 1.7, 'pf': np.float64(2.05), 'tpd': 0.74, 'band': [14.8, 20.7]}
+A without Pivot high breakout against Su             {'n': 625, 'risk_pct': 2.0, 'pass_pct': 59.6, 'days': 18.5, 'accounts': 1.68, 'pf': np.float64(1.87), 'tpd': 0.82, 'band': [15.0, 22.0]}
+
+=== BOOK ROUND 2 (caps, older years) ===
+cap none {'n': 735, 'risk_pct': 2.0, 'pass_pct': 53.1, 'days': 13.2, 'accounts': 1.88, 'pf': np.float64(1.94), 'tpd': 0.94, 'band': [11.7, 16.2], 'null_days_med': 18.700000000000003, 'null_accounts_med': 3.125}
+cap    1 {'n': 494, 'risk_pct': 2.0, 'pass_pct': 52.3, 'days': 19.1, 'accounts': 1.91, 'pf': np.float64(1.93), 'tpd': 0.63, 'band': [16.3, 24.1], 'null_days_med': 30.55, 'null_accounts_med': 3.435}
+cap    2 {'n': 685, 'risk_pct': 2.0, 'pass_pct': 52.2, 'days': 13.4, 'accounts': 1.92, 'pf': np.float64(1.92), 'tpd': 0.88, 'band': [12.0, 17.2], 'null_days_med': 20.45, 'null_accounts_med': 3.165}
+cap    3 {'n': 731, 'risk_pct': 2.0, 'pass_pct': 53.1, 'days': 13.2, 'accounts': 1.88, 'pf': np.float64(1.95), 'tpd': 0.94, 'band': [11.7, 16.2], 'null_days_med': 18.700000000000003, 'null_accounts_med': 3.13}
+older years, cap none: {'n': 382, 'risk_pct': 2.0, 'pass_pct': 20.4, 'days': 29.4, 'accounts': 4.91, 'pf': np.float64(1.13), 'tpd': 0.79, 'band': [22.8, 43.7]}
+older years, cap 2: {'n': 364, 'risk_pct': 2.0, 'pass_pct': 20.2, 'days': 29.7, 'accounts': 4.94, 'pf': np.float64(1.13), 'tpd': 0.75, 'band': [22.3, 43.0]}
+  older 123 reversal long (rule 1)               {'n': 105, 'risk_pct': 2.0, 'pass_pct': 1.4, 'days': 12666.7, 'accounts': 74.07, 'pf': np.float64(0.8), 'tpd': 0.22}
+  older MA alignment + new high long             {'n': 67, 'risk_pct': 2.0, 'pass_pct': 60.0, 'days': 136.6, 'accounts': 1.67, 'pf': np.float64(1.63), 'tpd': 0.14}
+  older BOS demand-zone retest confirmation (lon {'n': 64, 'risk_pct': 2.0, 'pass_pct': 11.8, 'days': 319.1, 'accounts': 8.51, 'pf': np.float64(0.9), 'tpd': 0.14}
+  older ORB retest long + VWAP                   {'n': 73, 'risk_pct': 2.0, 'pass_pct': 35.7, 'days': 95.3, 'accounts': 2.8, 'pf': np.float64(1.37), 'tpd': 0.16}
+  older Pivot high breakout against Supertrend d {'n': 73, 'risk_pct': 2.0, 'pass_pct': 35.4, 'days': 72.0, 'accounts': 2.82, 'pf': np.float64(1.08), 'tpd': 0.15}

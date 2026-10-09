@@ -94,6 +94,11 @@ MAX_HOLD = 20
 TRADE_FLOOR = "0.4 trades/day AND 100 trades minimum"
 
 
+#: A steer appended to the prompt by a loop that wants a particular kind of
+#: idea (`factory/ailoop.py`). Empty = the original, unsteered prompt.
+FOCUS = ""
+
+
 class ProposalError(ValueError):
     """Raised with a message meant for the MODEL, not for a human."""
 
@@ -146,6 +151,7 @@ ALL entry conditions must hold on the SAME bar. 1-3 conditions.
 stop_atr {STOP_RANGE[0]}-{STOP_RANGE[1]}, target_atr {TARGET_RANGE[0]}-{TARGET_RANGE[1]},
 max_hold {HOLD_RANGE[0]}-{HOLD_RANGE[1]} bars.
 
+
 WHAT IS TESTED: gold, silver, BTC, EURUSD, GBPUSD, USDJPY on 15m/1h/4h/1d,
 three years, costs charged, and every rule is compared against the SAME rule
 entered at random bars. A rule that only works because the market rose is
@@ -160,7 +166,7 @@ lookbacks. A rule firing under ~0.4 times a day cannot be tested here at all.
 "note" is REQUIRED and must name the mechanism. "momentum works" is not a
 mechanism. Who is forced to trade against this, and why can they not stop?
 
-ALREADY TESTED - do not repeat these or trivial reparameterisations:
+{FOCUS}ALREADY TESTED - do not repeat these or trivial reparameterisations:
 {seen}
 
 Return the JSON array only."""

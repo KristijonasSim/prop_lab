@@ -88,3 +88,22 @@ or the bot is started again.
 
 `live/paper` is excluded on purpose: the VM's leg book is the live one and must
 never be overwritten by this machine's copy.
+
+## THE GOLD POOL BOT (2026-10-09) - its own folder, its own account
+
+    folder  ~/pool6                 core/ factory/ strategies/ live/ copied in; .venv -> ~/prop_lab/.venv
+    key     ~/.config/prop_lab/bybit_pool_demo.env   (Kris's NEW demo account, chmod 600)
+    cron    */5 * * * *  /home/ubuntu/pool6/live/pool6_cron.sh
+    state   ~/pool6/live/paper/pool6_state.json  (+ pool6_trades.jsonl, pool6_attempts.jsonl)
+
+Kept apart from ~/prop_lab so the research loop and the old H-027 bot on this box
+are never touched by a deploy. The desk's cron line was REMOVED before the VM's
+was installed - only one machine may run it, and the state file went across first.
+
+    ssh -i $KEY ubuntu@89.168.78.138 'tail -30 ~/pool6/live/paper/pool6_cron.log'
+    ssh -i $KEY ubuntu@89.168.78.138 'cd ~/pool6 && .venv/bin/python -W ignore live/pool6_demo.py --status'
+    stop:  ssh -i $KEY ubuntu@89.168.78.138 'crontab -l | grep -v pool6_cron | crontab -'
+
+NOTE: the old H-027 cron (`2 * * * * ~/prop_lab/live/bybit_cron.sh`) was found
+STILL RUNNING on 2026-10-09, trading the old demo account, although README said
+it stopped 2026-09-14. Left as is pending Kris.

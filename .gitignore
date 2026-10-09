@@ -61,3 +61,7 @@ backtests/factory/*.tmp
 backtests/factory/inflight.jsonl
 backtests/factory/tvloop_state.json
 backtests/factory/tvloop.log
+
+# regenerable caches (2026-10-09)
+backtests/factory/improve_cache/
+data/archive_shifted_5y/

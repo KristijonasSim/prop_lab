@@ -1,0 +1,8 @@
+19 legs, 1140 pools, split 2025-01-30
+PICK ['123 reversal long (rule 1)', 'MA alignment + new high long', 'ORION box breakout long (rule 1)'] 
+  older half {'n': 364, 'risk_pct': 2.0, 'pass_pct': 65.3, 'days': 12.3, 'accounts': 1.53, 'pf': np.float64(1.74), 'tpd': 0.97} 
+  newer half {'n': 387, 'risk_pct': 2.0, 'pass_pct': 34.7, 'days': 14.4, 'accounts': 2.88, 'pf': np.float64(1.48), 'tpd': 0.99}
+refs newer half {'pool of 5': {'n': 369, 'risk_pct': 2.0, 'pass_pct': 43.8, 'days': 13.7, 'accounts': 2.28, 'pf': np.float64(1.63), 'tpd': 0.94}, 'EMA8 + DEMA': {'n': 469, 'risk_pct': 2.0, 'pass_pct': 43.5, 'days': 9.2, 'accounts': 2.3, 'pf': np.float64(1.67), 'tpd': 1.2}}
+null accounts p10 2.585 median 3.04 REAL False
+full window {'n': 751, 'risk_pct': 2.0, 'pass_pct': 50.5, 'days': 11.9, 'accounts': 1.98, 'pf': np.float64(1.6), 'tpd': 0.98, 'band': [11.1, 15.7]}
+older years {'n': 390, 'risk_pct': 2.0, 'pass_pct': 27.6, 'days': 25.4, 'accounts': 3.63, 'pf': np.float64(1.02), 'tpd': 0.81, 'band': [18.3, 36.2]}

@@ -1,0 +1,74 @@
+{
+ "cap none": {
+  "n": 927,
+  "risk_pct": 2.0,
+  "pass_pct": 42.5,
+  "days": 9.4,
+  "accounts": 2.35,
+  "pf": 1.61,
+  "tpd": 1.19,
+  "band": [
+   7.5,
+   10.4
+  ],
+  "null_days_med": 13.05,
+  "null_accounts_med": 3.29
+ },
+ "cap 1": {
+  "n": 742,
+  "risk_pct": 2.0,
+  "pass_pct": 44.3,
+  "days": 11.3,
+  "accounts": 2.26,
+  "pf": 1.55,
+  "tpd": 0.95,
+  "band": [
+   8.8,
+   12.2
+  ],
+  "null_days_med": 15.55,
+  "null_accounts_med": 3.12
+ },
+ "cap 2": {
+  "n": 927,
+  "risk_pct": 2.0,
+  "pass_pct": 42.5,
+  "days": 9.4,
+  "accounts": 2.35,
+  "pf": 1.61,
+  "tpd": 1.19,
+  "band": [
+   7.5,
+   10.4
+  ],
+  "null_days_med": 13.05,
+  "null_accounts_med": 3.29
+ },
+ "overlap": 0.43765281173594134,
+ "older cap none": {
+  "n": 555,
+  "risk_pct": 2.0,
+  "pass_pct": 22.1,
+  "days": 13.6,
+  "accounts": 4.52,
+  "pf": 0.97,
+  "tpd": 1.14,
+  "band": [
+   10.7,
+   17.6
+  ]
+ },
+ "older cap 1": {
+  "n": 458,
+  "risk_pct": 2.0,
+  "pass_pct": 25.5,
+  "days": 15.7,
+  "accounts": 3.92,
+  "pf": 0.92,
+  "tpd": 0.94,
+  "band": [
+   12.1,
+   19.9
+  ]
+ }
+}

@@ -1,0 +1,18 @@
+/home/kris/prop_lab/live/pool6_demo.py:146: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  h = h[h.index <= pd.Timestamp(now()) - pd.Timedelta(hours=1)]
+/home/kris/prop_lab/live/pool6_demo.py:149: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+  f4 = f4[f4.index <= h.index[-1] - pd.Timedelta(hours=3)]
+2026-10-09 09:45 UTC  ARMED  equity $10,000.52  XAUUSDT 4190.20  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 09:50 UTC  ARMED  equity $10,000.52  XAUUSDT 4191.20  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 09:55 UTC  ARMED  equity $10,000.52  XAUUSDT 4192.17  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 10:00 UTC  ARMED  equity $10,000.52  XAUUSDT 4191.72  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 10:05 UTC  ARMED  equity $10,000.52  XAUUSDT 4191.57  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 10:10 UTC  ARMED  equity $10,000.52  XAUUSDT 4190.02  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)
+2026-10-09 10:15 UTC  ARMED  equity $10,000.52  XAUUSDT 4190.84  risk/trade $75.00
+  book: 0 open, 0.000 XAU, closed +0.00R, open +0.00R | 0.75% #1 +0.00% (today +0.00%) | 2% #1 +0.00% (today +0.00%)

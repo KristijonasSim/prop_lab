@@ -1,0 +1,45 @@
+
+## CRTS long score approx (rule 1)  [XAUUSD 15m]  long when price above ema233 and ema55 above ema233 and rsi14 above 65 and sma200 above sma200[20]  stop1.5 tgt10 hold96
+  markets better: 1 /6 {'BTCUSDT': (0.82, 0.8, 1023), 'XAUUSD': (1.19, 1.41, 842), 'XAGUSD': (0.85, 0.88, 756), 'EURUSD': (0.87, 0.81, 815), 'GBPUSD': (0.84, 0.82, 814), 'USDJPY': (0.88, 0.87, 897)}
+  older 1.7y: orig pf 0.7878862550450494 n 554 -> new pf 0.7043082692570176 n 463 better=False
+  years: {2023: (1.83, 97), 2024: (1.17, 285), 2025: (1.56, 328), 2026: (1.25, 132)}
+  costs: {'1x': 1.4068455971687936, '2x': 1.27503206494046, '3x': 1.219761958035924}
+  entry: {'real_mean': 0.3339260264809953, 'real_n': 842, 'random_median': 0.09741523722980651, 'random_p95': 0.13674187933938145, 'p': 0.0}
+
+## Z-Score oversold long (rule 1)  [EURUSD 15m]  long when price below bb_lower80x2.8  stop1.5 tgt10 hold96
+  markets better: 3 /6 {'BTCUSDT': (0.68, 0.71, 768), 'XAUUSD': (0.85, 0.87, 743), 'XAGUSD': (0.7, 0.82, 633), 'EURUSD': (1.18, 1.29, 787), 'GBPUSD': (1.05, 1.29, 733), 'USDJPY': (0.89, 0.9, 730)}
+  older 1.8y: orig pf 0.8756329744888393 n 578 -> new pf 0.9188549922006493 n 612 better=True
+  years: {2023: (0.99, 112), 2024: (1.26, 290), 2025: (1.3, 232), 2026: (1.6, 153)}
+  costs: {'1x': 1.2942157791596554, '2x': 1.2967321318076963, '3x': 1.2233320252999895}
+  entry: {'real_mean': 0.22739810279417666, 'real_n': 787, 'random_median': -0.048824298595598344, 'random_p95': 0.011670163303281569, 'p': 0.0}
+
+## Daily change up long (rule 1)  [XAUUSD 1h]  long when price above htf_closex24 and sma200 above sma200[20]  stop1 tgt6 hold24
+  markets better: 1 /6 {'BTCUSDT': (0.88, 0.86, 903), 'XAUUSD': (1.05, 1.24, 817), 'XAGUSD': (0.87, 0.87, 702), 'EURUSD': (0.89, 0.81, 753), 'GBPUSD': (0.91, 0.84, 644), 'USDJPY': (1.03, 0.99, 782)}
+  older 1.7y: orig pf 0.7871208261836039 n 688 -> new pf 1.0001887605266664 n 403 better=True
+  years: {2023: (1.15, 98), 2024: (1.23, 268), 2025: (1.38, 332), 2026: (0.97, 119)}
+  costs: {'1x': 1.2410826995933089, '2x': 1.1740940803462072, '3x': 1.105546651688675}
+  entry: {'real_mean': 0.1895484260620126, 'real_n': 817, 'random_median': 0.04162377871382218, 'random_p95': 0.08427054173160646, 'p': 0.0}
+
+## Inertia RVI proxy long (RSI20 > 50) (rule 1)  [XAUUSD 1h]  long when rsi20 above 50 for 3 bars and hour above 6.5 and hour below 20.5  stop1 tgt10 hold24
+  markets better: 4 /6 {'BTCUSDT': (0.89, 0.84, 1049), 'XAUUSD': (1.12, 1.3, 820), 'XAGUSD': (0.88, 0.77, 775), 'EURUSD': (0.9, 0.93, 793), 'GBPUSD': (0.86, 0.98, 740), 'USDJPY': (1.07, 1.18, 774)}
+  older 1.7y: orig pf 0.6952020138974498 n 554 -> new pf 0.8110417415104528 n 508 better=True
+  years: {2023: (1.21, 107), 2024: (1.35, 293), 2025: (1.5, 276), 2026: (0.9, 144)}
+  costs: {'1x': 1.2985892627423914, '2x': 1.1780127315258424, '3x': 1.1031146173390358}
+  entry: {'real_mean': 0.22060453389770418, 'real_n': 820, 'random_median': 0.07095958708370755, 'random_p95': 0.10847675122805345, 'p': 0.0}
+
+## SMA20/120 trend + ADX long (rule 1)  [XAUUSD 1h]  long when sma20 above sma120 and adx14 above 20 and price above sma200  stop2 tgt10 hold12
+  markets better: 6 /6 {'BTCUSDT': (1.0, 1.01, 897), 'XAUUSD': (1.06, 1.28, 887), 'XAGUSD': (0.87, 0.91, 767), 'EURUSD': (0.92, 1.06, 755), 'GBPUSD': (0.93, 1.06, 714), 'USDJPY': (0.83, 0.93, 824)}
+  older 1.7y: orig pf 0.8523491638754338 n 498 -> new pf 0.8928226287507687 n 455 better=True
+  years: {2023: (1.56, 116), 2024: (1.21, 285), 2025: (1.35, 350), 2026: (1.02, 136)}
+  costs: {'1x': 1.2751491723534047, '2x': 1.1203682925240175, '3x': 1.0404293203511945}
+  entry: {'real_mean': 0.13658380445455653, 'real_n': 887, 'random_median': 0.09059284292921876, 'random_p95': 0.12441383008347853, 'p': 0.02}
+older pace CRTS long score approx (rule 1)          {'n': 463, 'risk_pct': 2.0, 'pass_pct': 18.0, 'days': 16.7, 'accounts': 5.57, 'pf': np.float64(0.7), 'tpd': 0.95, 'band': [15.0, 27.7]}
+now   pace CRTS long score approx (rule 1)          {'n': 842, 'risk_pct': 2.0, 'pass_pct': 38.8, 'days': 7.7, 'accounts': 2.58, 'pf': np.float64(1.41), 'tpd': 1.08, 'band': [7.1, 10.3]}
+older pace Z-Score oversold long (rule 1)           {'n': 612, 'risk_pct': 2.0, 'pass_pct': 35.2, 'days': 8.5, 'accounts': 2.84, 'pf': np.float64(0.92), 'tpd': 1.24, 'band': [7.6, 11.4]}
+now   pace Z-Score oversold long (rule 1)           {'n': 787, 'risk_pct': 2.0, 'pass_pct': 39.7, 'days': 7.6, 'accounts': 2.52, 'pf': np.float64(1.29), 'tpd': 1.01, 'band': [7.1, 10.3]}
+older pace Daily change up long (rule 1)            {'n': 403, 'risk_pct': 2.0, 'pass_pct': 33.0, 'days': 21.2, 'accounts': 3.03, 'pf': np.float64(1.0), 'tpd': 0.85, 'band': [13.6, 25.4]}
+now   pace Daily change up long (rule 1)            {'n': 817, 'risk_pct': 2.0, 'pass_pct': 37.4, 'days': 13.4, 'accounts': 2.68, 'pf': np.float64(1.24), 'tpd': 1.07, 'band': [10.6, 15.1]}
+older pace Inertia RVI proxy long (RSI20 > 50) (rul {'n': 508, 'risk_pct': 2.0, 'pass_pct': 17.8, 'days': 16.9, 'accounts': 5.62, 'pf': np.float64(0.81), 'tpd': 1.04, 'band': [12.3, 22.9]}
+now   pace Inertia RVI proxy long (RSI20 > 50) (rul {'n': 820, 'risk_pct': 2.0, 'pass_pct': 34.1, 'days': 11.7, 'accounts': 2.93, 'pf': np.float64(1.3), 'tpd': 1.05, 'band': [10.3, 14.5]}
+older pace SMA20/120 trend + ADX long (rule 1)      {'n': 455, 'risk_pct': 2.0, 'pass_pct': 23.0, 'days': 47.8, 'accounts': 4.35, 'pf': np.float64(0.89), 'tpd': 0.94, 'band': [30.2, 69.8]}
+now   pace SMA20/120 trend + ADX long (rule 1)      {'n': 887, 'risk_pct': 2.0, 'pass_pct': 34.3, 'days': 17.5, 'accounts': 2.91, 'pf': np.float64(1.28), 'tpd': 1.16, 'band': [15.4, 24.8]}
