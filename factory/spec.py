@@ -381,7 +381,7 @@ def _register_ports():
     def _cols(w):
         k = len(w)
         return {c: np.asarray(getattr(w, c)[-k:], dtype=float) for c in
-                ("open", "high", "low", "close", "volume", "hour")}
+                Window.COLUMNS}
 
     for kind, (fn, side) in _sc.PORTS.items():
         def series(cols, n, fn=fn, side=side):
@@ -406,10 +406,12 @@ from factory.terms import MULT, TERMS, ZERO_LENGTH_OK  # noqa: E402,F401
 
 
 def _register_terms():
+    from factory.guard import Window
+
     def _cols(w):
         k = len(w)
         return {c: np.asarray(getattr(w, c)[-k:], dtype=float) for c in
-                ("open", "high", "low", "close", "volume", "hour")}
+                Window.COLUMNS}
 
     for kind, (fn, needs_n, _help) in TERMS.items():
         def series(cols, n=0, m=0.0, fn=fn):

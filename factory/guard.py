@@ -98,7 +98,12 @@ class Window:
     #: leak: knowing that the current bar is 14:00 says nothing about the next
     #: one's price. It is carried as a column by `factory/cells.py` because
     #: `build.run` drops the DatetimeIndex before the strategy ever runs.
-    COLUMNS = ("open", "high", "low", "close", "volume", "hour")
+    COLUMNS = ("open", "high", "low", "close", "volume", "hour",
+               # ORDER FLOW, gold only (core/ticks.py, 2026-10-09). Sums over
+               # the bar of tick-rule up/down size, quoted ask/bid size, tick
+               # count, and the mean spread. Zeros where a market has none, so
+               # every flow term reads nan there and never fires.
+               "ask_vol", "bid_vol", "up_vol", "dn_vol", "ticks", "spread")
 
     __slots__ = COLUMNS + ("t", "_n")
 

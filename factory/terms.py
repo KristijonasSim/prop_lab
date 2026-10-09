@@ -28,7 +28,7 @@ from __future__ import annotations
 import numpy as np
 
 from factory.scripts import (_nan, atr, pivot_high, pivot_low, rma,
-                             rolling_max, rolling_min, sma)
+                             rolling_max, rolling_min, rsum, sma)
 
 
 def _ema(x, n):
@@ -680,6 +680,51 @@ def t_rsi_lowest(cols, n, m=0.0):
     return _shift(rolling_min(_rsi_series(_hlc(cols)[3], 14), n))
 
 #: name -> (function, needs a length?, help line for the translator)
+
+# ----------------------------------------------------------- order flow (gold)
+# core/ticks.py, 2026-10-09. Each reads only bars at or before t. A market with
+# no tick data has zero columns, so every term is nan there and never fires.
+def _col(cols, k):
+    return np.asarray(cols.get(k, np.zeros(len(cols["close"]))), float)
+
+
+def _ratio(num, den):
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(den > 0, num / den, np.nan)
+
+
+def t_of_delta(cols, n, m=0.0):
+    """Tick-rule delta over the last n bars: (up size - down size) / total, -1..1."""
+    up, dn = rsum(_col(cols, "up_vol"), n), rsum(_col(cols, "dn_vol"), n)
+    return _ratio(up - dn, up + dn)
+
+
+def t_of_book(cols, n, m=0.0):
+    """Quoted size imbalance over n bars: (ask size - bid size) / total, -1..1."""
+    a, b = rsum(_col(cols, "ask_vol"), n), rsum(_col(cols, "bid_vol"), n)
+    return _ratio(a - b, a + b)
+
+
+def t_of_dz(cols, n, m=0.0):
+    """This bar's delta (up - down size) as a z-score against the n bars before."""
+    d = _col(cols, "up_vol") - _col(cols, "dn_vol")
+    tot = _col(cols, "up_vol") + _col(cols, "dn_vol")
+    d = np.where(tot > 0, d, np.nan)
+    mu, sd = _shift(sma(d, n)), _shift(np.sqrt(np.maximum(sma(d * d, n) - sma(d, n) ** 2, 0)))
+    return _ratio(d - mu, sd)
+
+
+def t_of_ticks(cols, n, m=0.0):
+    """Tick count / mean tick count of the n bars before: activity, 2 = double."""
+    t = _col(cols, "ticks")
+    return np.where(t > 0, _ratio(t, _shift(sma(t, n))), np.nan)
+
+
+def t_of_spread(cols, n, m=0.0):
+    """Mean spread / mean spread of the n bars before: 2 = twice as wide as usual."""
+    sp = _col(cols, "spread")
+    return np.where(sp > 0, _ratio(sp, _shift(sma(sp, n))), np.nan)
+
 TERMS = {
     "open":       (t_open, False, "this bar's open"),
     "high":       (t_high, False, "this bar's high"),
@@ -719,6 +764,16 @@ TERMS = {
     "stochrsi_k": (t_stochrsi_k, True, "Stoch RSI %K: rsi(n) through stoch(n), smoothed 3, 0-100"),
     "cci":        (t_cci, True, "CCI(n)"),
     "rvol":       (t_rvol, True, "volume / mean volume of the n bars before; 2 = double"),
+    "of_delta":   (t_of_delta, True, "ORDER FLOW (gold only): tick-rule buy minus sell "
+                                     "size over n bars / total, -1..1; >0 = buyers pushed"),
+    "of_book":    (t_of_book, True, "ORDER FLOW (gold only): quoted ask size minus bid "
+                                    "size over n bars / total, -1..1"),
+    "of_dz":      (t_of_dz, True, "ORDER FLOW (gold only): this bar's buy-minus-sell size "
+                                  "as a z-score vs the n bars before; 2 = unusual buying"),
+    "of_ticks":   (t_of_ticks, True, "ORDER FLOW (gold only): tick count / mean of the n "
+                                     "bars before; 2 = twice the usual activity"),
+    "of_spread":  (t_of_spread, True, "ORDER FLOW (gold only): spread / mean spread of the "
+                                      "n bars before; >1 = liquidity thinning"),
     "supertrend": (t_supertrend, True, "Supertrend direction, ATR length n, factor=value "
                                        "(default 3): +1 up, -1 down. A flip to up is "
                                        "'supertrend cross_above 0'. Also use for any "
