@@ -496,3 +496,5 @@
 {"worker": 9, "tested": 0, "total": 0, "step3": 0, "step7": 0, "left": 20}
 {"worker": 10, "tested": 1, "total": 1, "step3": 0, "step7": 0, "left": 19}
 {"worker": 4, "tested": 2, "total": 2, "step3": 0, "step7": 0, "left": 18}
+{"worker": 11, "tested": 2, "total": 2, "step3": 0, "step7": 0, "left": 18}
+{"worker": 1, "tested": 3, "total": 3, "step3": 2, "step7": 0, "left": 17}

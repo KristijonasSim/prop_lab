@@ -53,6 +53,12 @@ CATALOGUE: tuple[Source, ...] = (
            "because its ideas are good.", 3),
     Source("kris", "Kris", "injected by hand, any time", "ready",
            "Nothing to set up - add a Strategy and queue it.", 4),
+    Source("orderflow", "Order flow data",
+           "gold buy/sell tick volume from Dukascopy (core/fx_spread.py)",
+           "blocked",
+           "Not downloaded yet - Kris, 2026-10-09: tab first, then explore "
+           "with the AI. ~19k free hourly tick files for 3 years.",
+           5),
 )
 
 BY_KEY = {s.key: s for s in CATALOGUE}
