@@ -546,17 +546,31 @@ def once(a) -> None:
     # armed exit was traded twice - once reduce-only here, once again in the
     # net order - and the last leg's exit would have opened an unprotected
     # position in the opposite direction with nothing in the book to close it.
+    #
+    # A MINORITY LEG CANNOT BE CLOSED REDUCE-ONLY. With five short legs and one
+    # long leg the net position is short, and closing the long leg means
+    # SELLING - which grows the net short. Bybit rejects that as "reduce-only
+    # order has same side with current position", the leg stays in the book,
+    # and the next pass tries again. From 2026-10-06 03:02 vwap4 (0.133 long)
+    # was rejected every hour for five days; it happened twice before that.
+    # Such an exit is sent as a plain order. Reduce-only is kept wherever it
+    # applies, and ALWAYS on a desynced book, where growing a position the bot
+    # does not understand is the thing to avoid.
     closed = 0.0
     delta = 0.0                       # net XAU to OPEN this pass, + = buy
+    net_now = net_live
     for tag, leg, why in due_exits(df, st["open"]):
         print(f"  EXIT {tag:6} {leg['side']} {leg['qty']:.3f} XAU - {why}")
-        closed += -leg["qty"] if leg["side"] == "Buy" else leg["qty"]
+        move = -leg["qty"] if leg["side"] == "Buy" else leg["qty"]
+        closed += move
         if a.arm:
+            reduces = net_now * move < 0 and abs(move) <= abs(net_now) + 1e-9
             r = market(host, "Sell" if leg["side"] == "Buy" else "Buy",
-                       leg["qty"], f"x-{tag}", reduce_only=True)
+                       leg["qty"], f"x-{tag}", reduce_only=reduces or desync)
             print(f"      {'CLOSED' if r.get('retCode') == 0 else 'REJECTED ' + str(r.get('retMsg'))}")
             if r.get("retCode") != 0:
                 continue
+            net_now += move
         st["open"].pop(tag, None)
 
     # ---- 2. open what fired ------------------------------------------- #
@@ -593,7 +607,7 @@ def once(a) -> None:
     # ---- 3. one netted order, and a backstop on what is left ---------- #
     total_risk = sum(l["qty"] * abs(l["entry_ref"] - l["stop"]) for l in st["open"].values())
     if closed:
-        print(f"  closed this pass: {closed:+.3f} XAU (reduce-only, above)")
+        print(f"  closed this pass: {closed:+.3f} XAU (exits, above)")
     print(f"  net this pass: {delta:+.3f} XAU   book: {len(st['open'])} legs, "
           f"risk at stops ${total_risk:,.0f} ({total_risk / eq * 100:.2f}% of equity)")
     if a.arm and abs(delta) >= MIN_QTY:

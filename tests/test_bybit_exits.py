@@ -333,3 +333,52 @@ def test_a_stale_level_is_its_own_alarm(bot, monkeypatch, capsys):
                  held=95.0, capsys=capsys)
     assert "BACKSTOP NOT MOVED to 101.00" in out and "holds 95.00" in out
     assert "holds no stop" not in out
+
+
+# --------------------------------------------------------------------------- #
+# The minority leg - found 2026-10-11 in the VM's log. vwap4 (0.133 long) sat
+# inside a net-short book; closing it means selling, which grows the short, so
+# the reduce-only exit was rejected every hour from 2026-10-06 03:02.
+# --------------------------------------------------------------------------- #
+def _mixed_book(bot, at: str) -> None:
+    bot.save_state({"open": {
+        "vwap1": {"at": at, "side": "Sell", "qty": 0.5, "stop": 105.0,
+                  "hold_h": 384, "entry_ref": 100.0},
+        "vwap4": {"at": at, "side": "Buy", "qty": 0.2, "stop": 99.0,
+                  "hold_h": 384, "entry_ref": 100.0}},
+        "peak": 10_000.0, "started": at})
+    bot._live = [{"size": "0.3", "side": "Sell", "avgPrice": "100.0",
+                  "stopLoss": "105.0", "unrealisedPnl": "0"}]
+
+
+def _low_bars(last: str) -> pd.DataFrame:
+    df = _bars(last, high=100.5)
+    df.iloc[-1, df.columns.get_loc("low")] = 98.5          # touches vwap4's stop
+    return df
+
+
+def test_a_minority_leg_exits_with_a_plain_order(bot, monkeypatch):
+    last = "2026-10-06 03:00"
+    monkeypatch.setattr(bot, "bars", lambda: _low_bars(last))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    _mixed_book(bot, at=str(pd.Timestamp(last, tz="UTC") - pd.Timedelta(hours=4)))
+
+    bot.once(Namespace(arm=True, weekends=False))
+
+    assert bot.orders == [{"side": "Sell", "qty": 0.2, "tag": bot.orders[0]["tag"],
+                           "reduce_only": False}]
+    assert set(bot.load_state()["open"]) == {"vwap1"}
+
+
+def test_a_minority_leg_stays_reduce_only_on_a_desynced_book(bot, monkeypatch):
+    last = "2026-10-06 03:00"
+    monkeypatch.setattr(bot, "bars", lambda: _low_bars(last))
+    monkeypatch.setattr(bot, "vwap_signals", lambda df, cold=False: [])
+    monkeypatch.setattr(bot, "asia_signal", lambda df, cold=False: [])
+    _mixed_book(bot, at=str(pd.Timestamp(last, tz="UTC") - pd.Timedelta(hours=4)))
+    bot._live[0]["size"] = "2.0"                            # book says 0.3
+
+    bot.once(Namespace(arm=True, weekends=False))
+
+    assert bot.orders[0]["reduce_only"] is True
