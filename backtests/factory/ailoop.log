@@ -4,3 +4,417 @@
 2026-10-09 11:24 UTC  {'added': 19, 'duplicates': 0, 'queued': 19, 'rejected': 1}
 2026-10-09 12:05 UTC  {'added': 20, 'duplicates': 0, 'queued': 20, 'rejected': 0}
 2026-10-09 12:12 UTC  {'added': 20, 'duplicates': 0, 'queued': 20, 'rejected': 0}
+2026-10-11 09:27 UTC  {'added': 20, 'duplicates': 0, 'queued': 20, 'rejected': 0}
+[agent] kept 19, rejected 1:
+  - long when bull_engulf above 0.5 and rsi14 below 35: already tested
+2026-10-11 09:38 UTC  {'added': 19, 'duplicates': 0, 'queued': 19, 'rejected': 1}
+[agent] kept 19, rejected 1:
+  - short when price cross_below bb_upper20x2 and adx14 below 25: already tested
+2026-10-11 09:49 UTC  {'added': 19, 'duplicates': 0, 'queued': 19, 'rejected': 1}
+2026-10-11 09:59 UTC  {'added': 20, 'duplicates': 0, 'queued': 21, 'rejected': 0}
+2026-10-11 10:10 UTC  {'added': 20, 'duplicates': 0, 'queued': 23, 'rejected': 0}
+[agent] kept 17, rejected 3:
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_b: already tested
+2026-10-11 10:21 UTC  {'added': 17, 'duplicates': 0, 'queued': 40, 'rejected': 3}
+[agent] kept 14, rejected 5:
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5: already tested
+  - short when price cross_below range_low3x4 and adx14 below 30: already tested
+  - long when price cross_above range_high3x4 and rvol20 above 1.3: already tested
+  - short when rsi_bear_div5 above 0.5 and price below open: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30: already tested
+2026-10-11 10:31 UTC  {'added': 14, 'duplicates': 0, 'queued': 48, 'rejected': 5}
+[agent] kept 19, rejected 1:
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_b: already tested
+2026-10-11 10:42 UTC  {'added': 19, 'duplicates': 0, 'queued': 61, 'rejected': 1}
+2026-10-11 10:53 UTC  {'added': 20, 'duplicates': 0, 'queued': 75, 'rejected': 0}
+[agent] kept 16, rejected 3:
+  - short when bear_engulf above 0.5 and since_sweep_high20 below 4: already tested
+  - short when price below prev_day_low and rvol20 above 1.5 and adx14 above 20: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+2026-10-11 11:03 UTC  {'added': 16, 'duplicates': 0, 'queued': 79, 'rejected': 3}
+[agent] kept 15, rejected 5:
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when supertrend10x3 cross_below 0 and price below htf_ema50x4: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - long when low below fvg_bull_top30 and price above fvg_bull_bot30 and rsi14 below 50: already tested
+2026-10-11 11:14 UTC  {'added': 15, 'duplicates': 0, 'queued': 88, 'rejected': 5}
+[agent] kept 15, rejected 5:
+  - short when since_sweep_high20 below 4 and price below open and rsi14 above 55: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20: already tested
+  - long when squeeze_end20 above 0.5 and price above ema20: already tested
+2026-10-11 11:25 UTC  {'added': 15, 'duplicates': 0, 'queued': 91, 'rejected': 5}
+[agent] kept 19, rejected 1:
+  - long when wt110 cross_above wt210 and wt110 below -40: already tested
+2026-10-11 11:35 UTC  {'added': 19, 'duplicates': 0, 'queued': 98, 'rejected': 1}
+[agent] kept 13, rejected 7:
+  - short when adx14 below 25 and price cross_below bb_upper20x2: already tested
+  - short when adx14 below 30 and bear_engulf above 0.5 and since_sweep_high20 below 4: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - long when wt110 cross_above wt210 and wt110 below -50: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30: already tested
+  - long when low below fvg_bull_top30 and price above fvg_bull_top30: already tested
+2026-10-11 11:46 UTC  {'added': 13, 'duplicates': 0, 'queued': 111, 'rejected': 7}
+[agent] kept 14, rejected 5:
+  - short when price cross_below bb_upper20x2 and adx14 below 30: already tested
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+  - short when cci20 cross_below 100 and adx14 below 30: already tested
+2026-10-11 11:57 UTC  {'added': 14, 'duplicates': 0, 'queued': 119, 'rejected': 5}
+[agent] kept 16, rejected 4:
+  - short when bear_engulf above 0.5 and since_sweep_high20 below 5: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_b: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+2026-10-11 12:08 UTC  {'added': 16, 'duplicates': 0, 'queued': 129, 'rejected': 4}
+[agent] kept 17, rejected 3:
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20 and price below vwap48: already tested
+2026-10-11 12:18 UTC  {'added': 17, 'duplicates': 0, 'queued': 146, 'rejected': 3}
+[agent] kept 15, rejected 5:
+  - short when bear_engulf above 0.5 and since_sweep_high20 below 4: already tested
+  - short when htf_rsi14x4 above 65 and stoch_k14 cross_below 80: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+  - long when htf_rsi14x4 below 35 and stoch_k14 cross_above 20: already tested
+2026-10-11 12:29 UTC  {'added': 15, 'duplicates': 0, 'queued': 155, 'rejected': 5}
+[agent] kept 13, rejected 7:
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when stoch_k14 cross_below 80 and adx14 below 25: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+  - short when price below kc_lower20x1.5 and adx14 above 25 and di_minus14 above di_plus14: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.5 and adx14 below 30: already tested
+2026-10-11 12:40 UTC  {'added': 13, 'duplicates': 0, 'queued': 156, 'rejected': 7}
+[agent] kept 10, rejected 9:
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when price above bb_upper20x2.5 and rsi14 above 72 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 28: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+2026-10-11 12:51 UTC  {'added': 10, 'duplicates': 0, 'queued': 160, 'rejected': 9}
+[agent] kept 17, rejected 4:
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.2: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+2026-10-11 13:01 UTC  {'added': 17, 'duplicates': 0, 'queued': 147, 'rejected': 4}
+[agent] kept 12, rejected 8:
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when price above bb_upper20x2.5 and rsi14 above 72 and adx14 below 25: already tested
+  - short when price cross_below range_low0x6 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and htf_rsi14x4 below 50: already tested
+  - short when rsi_bear_div5 above 0.5 and price below ema20: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_b: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+2026-10-11 13:12 UTC  {'added': 12, 'duplicates': 0, 'queued': 159, 'rejected': 8}
+[agent] kept 18, rejected 2:
+  - {'side': 'long', 'entry': [{'left': {'ki: entry must be a list of 1-3 conditions
+  - short when price below ichi_span_b and price cross_below ichi_kijun26 and adx14 above 18: already tested
+2026-10-11 13:23 UTC  {'added': 18, 'duplicates': 0, 'queued': 177, 'rejected': 2}
+[agent] kept 14, rejected 6:
+  - short when bear_engulf above 0.5 and since_sweep_high20 below 4 and adx14 below 30: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when price cross_below range_low0x4 and adx14 below 25: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 28: already tested
+2026-10-11 13:34 UTC  {'added': 14, 'duplicates': 0, 'queued': 185, 'rejected': 6}
+[agent] kept 18, rejected 2:
+  - short when price above bb_upper20x2.5 and rsi14 above 72 and adx14 below 25: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+2026-10-11 13:44 UTC  {'added': 18, 'duplicates': 0, 'queued': 203, 'rejected': 2}
+[agent] kept 14, rejected 6:
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5 and adx14 below 30: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 below 25: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+  - short when cci20 cross_below 100 and adx14 below 30: already tested
+2026-10-11 13:55 UTC  {'added': 14, 'duplicates': 0, 'queued': 211, 'rejected': 6}
+[agent] kept 16, rejected 4:
+  - short when price above bb_upper20x2.2 and rsi14 above 70 and adx14 below 25: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when ha_bull_run above 4 and rsi14 above 68: already tested
+  - short when price cross_below htf_lowx4 and rvol20 above 1.2: already tested
+2026-10-11 14:06 UTC  {'added': 16, 'duplicates': 0, 'queued': 221, 'rejected': 4}
+[agent] kept 13, rejected 7:
+  - short when price cross_below prev_day_low and rvol20 above 1.5: already tested
+  - short when since_sweep_high20 below 4 and bear_engulf above 0.5: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 22: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+2026-10-11 14:17 UTC  {'added': 13, 'duplicates': 0, 'queued': 228, 'rejected': 7}
+[agent] kept 10, rejected 10:
+  - short when rsi_bear_div5 above 0.5 and price above vwap48: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when price above bb_upper20x2.5 and rsi14 above 75 and adx14 below 25: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and ema_slope20 below 0: already tested
+  - short when macd_hist cross_below 0 and price below vwap48 and adx14 above 20: already tested
+  - {'side': 'short', 'entry': [{'left': {'k: condition 2: both sides are the same term
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+2026-10-11 14:28 UTC  {'added': 10, 'duplicates': 0, 'queued': 220, 'rejected': 10}
+[agent] kept 16, rejected 4:
+  - short when bear_engulf above 0.5 and rsi14 above 65: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20 and price below htf_ema50x4: already tested
+  - long when squeeze_end20 above 0.5 and price above ema20 and body_pct above 30: already tested
+  - short when macd_hist cross_below 0 and price below vwap48 and adx14 above 20: already tested
+2026-10-11 14:39 UTC  {'added': 16, 'duplicates': 0, 'queued': 230, 'rejected': 4}
+[agent] kept 17, rejected 3:
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 below 25: already tested
+  - short when inside_bar above 0.5 and price cross_below prev_low and adx14 below 20: already tested
+2026-10-11 14:49 UTC  {'added': 17, 'duplicates': 0, 'queued': 241, 'rejected': 3}
+[agent] kept 11, rejected 9:
+  - short when price cross_below bb_upper20x2 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when rsi_bear_div5 above 0.5 and price above vwap48: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when stoch_k14 cross_below 80 and adx14 below 25: already tested
+  - long when since_sweep_low20 below 3 and bull_engulf above 0.5: already tested
+  - short when macd_hist cross_below 0 and price below vwap48 and adx14 above 20: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_b: already tested
+2026-10-11 15:00 UTC  {'added': 11, 'duplicates': 0, 'queued': 246, 'rejected': 9}
+[agent] kept 11, rejected 9:
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when stochrsi_k14 cross_below 80 and adx14 below 25 and price above vwap48: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 below 25: already tested
+  - long when since_sweep_low20 below 3 and bull_engulf above 0.5: already tested
+  - long when squeeze_end20 above 0.5 and price above ema20: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20: already tested
+  - short when spike_up above 0.5 and rsi14 above 65: already tested
+2026-10-11 15:11 UTC  {'added': 11, 'duplicates': 0, 'queued': 257, 'rejected': 9}
+[agent] kept 13, rejected 7:
+  - short when price below prev_day_low and adx14 above 20 and rvol20 above 1.5: already tested
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and price below htf_ema50x4: already tested
+  - short when htf_rsi14x4 below 45 and rsi14 cross_below 50: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+  - long when low below prev_day_low and price above prev_day_low and price above open: already tested
+2026-10-11 15:22 UTC  {'added': 13, 'duplicates': 0, 'queued': 264, 'rejected': 7}
+[agent] kept 9, rejected 11:
+  - short when price above bb_upper20x2.2 and rsi14 above 72 and adx14 below 25: already tested
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when bear_engulf above 0.5 and rsi14 above 60 and price above vwap48: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 above 15: already tested
+  - short when stochrsi_k14 cross_below 80 and adx14 below 25: already tested
+  - short when cci20 cross_below 100 and price above vwap48: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when ha_bull_run above 4 and rsi14 above 68: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_a: already tested
+2026-10-11 15:33 UTC  {'added': 9, 'duplicates': 0, 'queued': 273, 'rejected': 11}
+[agent] kept 15, rejected 5:
+  - short when rsi14 above 65 and bear_engulf above 0.5: already tested
+  - short when price cross_below bb_upper20x2 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - long when price cross_above prev_day_low and rsi14 below 50: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and price below ema50: already tested
+2026-10-11 15:44 UTC  {'added': 15, 'duplicates': 0, 'queued': 270, 'rejected': 5}
+[agent] kept 17, rejected 3:
+  - short when htf_rsi14x4 above 65 and rsi14 cross_below 60: already tested
+  - long when wt110 cross_above wt210 and wt110 below -40: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_b: already tested
+2026-10-11 15:54 UTC  {'added': 17, 'duplicates': 0, 'queued': 287, 'rejected': 3}
+[agent] kept 12, rejected 8:
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - long when since_sweep_low20 below 3 and bull_engulf above 0.5: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when spike_up above 0.5 and rsi14 above 65: already tested
+2026-10-11 16:05 UTC  {'added': 12, 'duplicates': 0, 'queued': 293, 'rejected': 8}
+[agent] kept 13, rejected 7:
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and price below htf_ema50x4: already tested
+  - {'side': 'short', 'entry': [{'left': {'k: entry must be a list of 1-3 conditions
+  - short when price cross_below prev_day_low and rvol20 above 1.3 and adx14 above 15: already tested
+  - short when price below range_low7x3 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when ha_bull_run above 4 and rsi14 above 70: already tested
+  - short when spike_up above 0.5 and price below open: already tested
+2026-10-11 16:16 UTC  {'added': 13, 'duplicates': 0, 'queued': 306, 'rejected': 7}
+[agent] kept 11, rejected 9:
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - long when since_sweep_low30 below 3 and bull_engulf above 0.5: already tested
+  - short when price below range_low7x3 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3 and adx14 above 15: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_a: already tested
+  - short when stochrsi_k14 cross_below 80 and price above vwap48 and adx14 below 25: already tested
+2026-10-11 16:27 UTC  {'added': 11, 'duplicates': 0, 'queued': 293, 'rejected': 9}
+[agent] kept 19, rejected 1:
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+2026-10-11 16:37 UTC  {'added': 19, 'duplicates': 0, 'queued': 306, 'rejected': 1}
+[agent] kept 12, rejected 8:
+  - short when price above bb_upper20x2.2 and rsi14 above 70 and adx14 below 25: already tested
+  - short when price below htf_lowx4 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when macd_hist cross_below 0 and price below ema200 and adx14 above 20: already tested
+  - short when stoch_k14 cross_below 80 and price above vwap48 and adx14 below 25: already tested
+  - long when since_sweep_low20 below 3 and bull_engulf above 0.5: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_a: already tested
+  - short when price cross_below range_low0x4 and price below ema50: already tested
+2026-10-11 16:48 UTC  {'added': 12, 'duplicates': 0, 'queued': 318, 'rejected': 8}
+[agent] kept 17, rejected 3:
+  - short when since_sweep_high20 below 5 and price below ema20 and adx14 below 25: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_a: already tested
+2026-10-11 16:59 UTC  {'added': 17, 'duplicates': 0, 'queued': 323, 'rejected': 3}
+[agent] kept 14, rejected 6:
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 25: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when price below range_low7x3 and rvol20 above 1.5 and adx14 below 22: already tested
+2026-10-11 17:10 UTC  {'added': 14, 'duplicates': 0, 'queued': 337, 'rejected': 6}
+[agent] kept 10, rejected 10:
+  - short when rsi_bear_div5 above 0.5 and adx14 above 15: already tested
+  - short when price below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when price below htf_lowx4 and rvol20 above 1.3: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - long when since_sweep_low20 below 3 and bull_engulf above 0.5: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30: already tested
+  - short when ha_bull_run above 5 and rsi14 above 70: already tested
+2026-10-11 17:21 UTC  {'added': 10, 'duplicates': 0, 'queued': 341, 'rejected': 10}
+[agent] kept 11, rejected 9:
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when price below range_low7x3 and rvol20 above 1.5 and adx14 below 22: already tested
+  - short when htf_rsi14x4 above 65 and price cross_below ema20: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+  - long when htf_rsi14x4 below 35 and rsi14 cross_above 40: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when inside_bar above 0.5 and price below prev_low and adx14 below 20: already tested
+2026-10-11 17:31 UTC  {'added': 11, 'duplicates': 0, 'queued': 352, 'rejected': 9}
+[agent] kept 11, rejected 9:
+  - short when high above bb_upper20x2.5 and price below bb_upper20x2.5 and adx14 below 25: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30: already tested
+  - long when wt110 cross_above wt210 and wt110 below -50: already tested
+  - short when htf_rsi14x4 above 65 and rsi14 cross_below 60: already tested
+  - long when htf_rsi14x4 below 35 and rsi14 cross_above 40: already tested
+  - short when inside_bar above 0.5 and price cross_below prev_low and adx14 below 20: already tested
+2026-10-11 17:42 UTC  {'added': 11, 'duplicates': 0, 'queued': 363, 'rejected': 9}
+[agent] kept 12, rejected 8:
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when price cross_below range_low0x6 and rvol20 above 1.3 and adx14 below 25: already tested
+  - short when rsi_bear_div5 above 0.5 and price below ema20: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+  - long when wt110 cross_above wt210 and wt110 below -50 and adx14 below 25: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50 and adx14 below 25: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_a: already tested
+2026-10-11 17:53 UTC  {'added': 12, 'duplicates': 0, 'queued': 369, 'rejected': 8}
+[agent] kept 13, rejected 8:
+  - short when since_sweep_high20 below 4 and price below ema20 and adx14 below 25: already tested
+  - short when high above bb_upper20x2.5 and price below bb_upper20x2.5 and adx14 below 25: already tested
+  - short when bear_engulf above 0.5 and high above prev_day_high: already tested
+  - short when wt110 cross_below wt210 and wt110 above 50: already tested
+  - short when ichi_tenkan9 cross_below ichi_kijun26 and price below ichi_span_a and price below ichi_span_b: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30 and adx14 above 15: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+2026-10-11 18:04 UTC  {'added': 13, 'duplicates': 0, 'queued': 376, 'rejected': 8}
+[agent] kept 11, rejected 9:
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+  - short when high above bb_upper20x2.5 and price below bb_upper20x2.5 and adx14 below 25: already tested
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 22: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when cci20 cross_below 100 and price above vwap96: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_a: already tested
+  - short when spike_up above 0.5 and rsi14 above 65: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and di_minus14 above di_plus14: already tested
+  - long when htf_rsi14x4 below 35 and rsi14 cross_above 30: already tested
+2026-10-11 18:15 UTC  {'added': 11, 'duplicates': 0, 'queued': 381, 'rejected': 9}
+[agent] kept 10, rejected 10:
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and price below htf_ema50x4: already tested
+  - short when price cross_below kc_upper20x2 and adx14 below 25: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when stoch_k14 cross_below 80 and price above vwap48 and adx14 below 25: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when cci20 cross_below 100 and price above vwap48: already tested
+  - short when spike_up above 0.5 and rvol20 above 2: already tested
+2026-10-11 18:26 UTC  {'added': 10, 'duplicates': 0, 'queued': 367, 'rejected': 10}
+[agent] kept 15, rejected 5:
+  - short when price cross_below prev_day_low and rvol20 above 1.3: already tested
+  - short when bear_engulf above 0.5 and price above vwap48 and rsi14 above 60: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when spike_up above 0.5 and rvol20 above 2: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+2026-10-11 18:36 UTC  {'added': 15, 'duplicates': 0, 'queued': 376, 'rejected': 5}
+[agent] kept 15, rejected 5:
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - {'side': 'short', 'entry': [{'left': {'k: condition 1 left: 'hour' is step 4's, not an entry term
+  - short when squeeze_end20 above 0.5 and price below ema20: already tested
+  - short when price above bb_upper20x2.5 and rsi14 above 75 and adx14 below 25: already tested
+  - short when price cross_below prev_day_low and rvol20 above 1.3 and adx14 above 18: already tested
+2026-10-11 18:47 UTC  {'added': 15, 'duplicates': 0, 'queued': 391, 'rejected': 5}
+[agent] kept 12, rejected 8:
+  - short when price below prev_day_low and rvol20 above 1.5 and adx14 above 15: already tested
+  - short when bear_engulf above 0.5 and since_sweep_high20 below 4 and adx14 below 25: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+  - long when htf_rsi14x4 below 35 and rsi14 cross_above 30: already tested
+  - short when htf_rsi14x4 above 65 and rsi14 cross_below 70: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_top30 and adx14 above 15: already tested
+2026-10-11 18:58 UTC  {'added': 12, 'duplicates': 0, 'queued': 397, 'rejected': 8}
+[agent] kept 10, rejected 10:
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+  - short when since_sweep_high20 below 3 and bear_engulf above 0.5: already tested
+  - short when price cross_below vwap48 and htf_rsi14x4 below 50: already tested
+  - short when supertrend10x3 cross_below 0 and adx14 above 20: already tested
+  - short when rsi_bear_div5 above 0.5 and adx14 below 30: already tested
+  - short when wt110 cross_below wt210 and wt110 above 40: already tested
+  - short when stoch_k14 cross_below 80 and adx14 below 25 and price above vwap48: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when price cross_below ichi_kijun26 and price below ichi_span_a and adx14 above 18: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30 and adx14 above 15: already tested
+2026-10-11 19:09 UTC  {'added': 10, 'duplicates': 0, 'queued': 407, 'rejected': 10}
+[agent] kept 12, rejected 8:
+  - short when high above prev_day_high and price below prev_day_high and adx14 below 25: already tested
+  - short when since_sweep_high20 below 3 and bear_engulf above 0.5: already tested
+  - short when price below prev_day_low and rvol20 above 1.5 and adx14 above 20: already tested
+  - short when bear_engulf above 0.5 and price above bb_upper20x1.5: already tested
+  - long when since_sweep_low30 below 3 and body_pct above 40 and rsi14 below 40: already tested
+  - short when squeeze_end20 above 0.5 and price below ema20 and adx14 below 20: already tested
+  - short when price below range_low0x6 and rvol20 above 1.5 and adx14 below 20: already tested
+  - short when high above fvg_bear_bot30 and price below fvg_bear_bot30 and adx14 above 15: already tested
+2026-10-11 19:21 UTC  {'added': 12, 'duplicates': 0, 'queued': 419, 'rejected': 8}
