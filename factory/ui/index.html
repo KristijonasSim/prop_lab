@@ -99,6 +99,11 @@ td.good{color:var(--live)} td.bad{color:var(--dead)} td.warn{color:var(--warn)}
 
 /* ---------- the idea drill-down ---------- */
 tr.idea{cursor:pointer}
+/* Kris, 2026-10-12: rows that passed the luck check glow green */
+tr.idea.luck td{background:rgba(46,204,113,.10)}
+tr.idea.luck td:first-child{box-shadow:inset 3px 0 0 #2ecc71}
+tr.idea.luck{animation:luckglow 2.4s ease-in-out infinite}
+@keyframes luckglow{0%,100%{box-shadow:0 0 0 rgba(46,204,113,0)}50%{box-shadow:0 0 14px rgba(46,204,113,.45)}}
 tr.idea:hover td{background:#1b1e23}
 tr.idea td:first-child::before{content:'▸';color:var(--ink-3);margin-right:8px;
   display:inline-block;transition:transform .15s}
@@ -238,8 +243,14 @@ footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);text-align:center}
     <div class="scroll"><table id="poolsTable"></table></div>
   </div>
 
+  <div class="card c12" id="krisCard" style="display:none">
+    <h2>Kris studies · one strategy at a time, built by hand</h2>
+    <p class="lede">Reason first, rules locked before the run, one honest test. Failures stay here.</p>
+    <div class="scroll"><table id="krisTable"></table></div>
+  </div>
+
   <div class="card c12" id="ideasCard">
-    <h2>Strategies tested · 2023–2026</h2>
+    <h2>Strategies tested · 2023–2026 · best 15 <span class="dim" style="font-size:12px;font-weight:400">— green = passed the luck check</span></h2>
     <p class="lede">Best market and timeframe. Click a row for detail.</p>
     <div class="scroll"><table id="ideas"></table></div>
   </div>
@@ -375,9 +386,7 @@ function stations(){
     // Kris, 2026-09-24: "0 / 8 fixed" was unreadable - he wants "1k tested,
     // 450 sent to repair, N of those worked". Attempts are not the unit.
     4: (() => {
-      const sc = r ? (r.scripts || []) : [];
-      const sent = sc.filter(x => x.sent_to_repair).length;
-      return `${sent} repaired · ${sc.filter(x => x.fixed).length} fixed`;
+      return `${r ? r.repaired_n || 0 : 0} repaired · ${r ? r.fixed_n || 0 : 0} fixed`;
     })(),
     5: (r && r.step5) ? `${r.step5.real} vs ${r.step5.null_mean}` : '—',
     6: f.step6_pass + ' held',
@@ -799,8 +808,11 @@ function ideasTable(){
   $('ideasCard').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   const rank = bestRank(list);
+  // LUCK-CHECK PASSERS STAY ON TOP under any sort - their own group.
   const order = list.map((x, i) => i).sort((a, b) => {
-    if (SORT.key === 'best') return rank[a] - rank[b];
+    const g = (list[b].luck ? 1 : 0) - (list[a].luck ? 1 : 0);
+    if (g) return g;
+    if (SORT.key === 'best') return list[b].score10 - list[a].score10 || rank[a] - rank[b];
     const [get, hi] = COLS[SORT.key];
     const va = get(list[a]), vb = get(list[b]);
     if (va == null) return vb == null ? rank[a] - rank[b] : 1;   // blanks last
@@ -813,13 +825,15 @@ function ideasTable(){
     `<tr>${th('best','#')}${th('score','score')}<th>strategy</th><th>market</th><th>tf</th>${th('per_day','trades/day')}
        ${th('pf','PF')}${th('win','win %')}${th('r','R/trade')}${th('dd','max DD')}
        ${th('pass','pass %')}${th('days','days')}${th('acc','accounts')}<th>result</th><th>repairs</th></tr>` +
-    order.map(i => { const x = list[i];
+    order.map((i, j) => { const x = list[i];
+      const split = j > 0 && list[order[j-1]].luck && !x.luck
+        ? `<tr class="split"><td colspan="15" class="dim" style="padding:10px 8px 4px;font-size:11.5px;border-top:2px solid #2ecc71">best of the rest — did not pass the luck check</td></tr>` : '';
       const good = /^(passed|fixed)/.test(plainOutcome(x.outcome, x));
       const open = OPEN.has(i);
       const k = x.score || {};
       const pf = k.pf;
-      return `<tr class="idea ${open?'open':''}" data-i="${i}">
-          <td class="mono dim">${rank[i] + 1}</td>
+      return split + `<tr class="idea ${open?'open':''} ${x.luck?'luck':''}" data-i="${i}"${x.luck?' title="passed the luck check"':''}>
+          <td class="mono dim">${j + 1}</td>
           <td class="mono ${x.score10 >= 7 ? 'good' : x.score10 >= 5 ? 'warn' : 'bad'}" title="1-10: speed 30%, accounts 25%, profit factor 25%, checks passed 20%"><b>${x.score10 ?? '—'}</b></td>
           <td class="wide">${esc(x.script || shortName(x))}${approx(x)}${x.variants > 1
             ? `<span class="dim" style="display:block;font-size:11.5px">best of ${x.variants}: ${esc((x.name || '').split(' - ')[1] || '')}</span>` : ''}</td>
@@ -916,12 +930,32 @@ function sourceTable(){
 
 
 
+function krisTable(){
+  const on = SRC === 'kris';
+  const L = S.kris_studies || [];
+  $('krisCard').style.display = on ? '' : 'none';
+  if (!on) return;
+  $('krisTable').innerHTML = !L.length ? '<tr><td class="dim">No studies yet.</td></tr>' :
+    `<tr><th>#</th><th>date</th><th>study</th><th>why it should work</th><th>data</th><th>tf</th>
+      <th>trades</th><th>trades/day</th><th>PF at 2x fees</th><th>days to pass</th><th>luck check</th><th>verdict</th></tr>` +
+    L.map(x => `<tr title="${esc(x.note || '')}">
+      <td class="mono dim">${x.n}</td><td class="mono">${esc(x.date)}</td>
+      <td><b>${esc(x.name)}</b><span class="dim" style="display:block;font-size:11.5px">${esc(x.markets)} · ${esc(x.period)}</span></td>
+      <td style="max-width:320px;font-size:12.5px">${esc(x.why)}</td>
+      <td style="font-size:12.5px">${esc(x.data)}</td><td class="mono">${esc(x.tf)}</td>
+      <td class="mono">${esc(x.trades)}</td><td class="mono">${esc(x.tpd)}</td>
+      <td class="mono">${esc(x.pf2x)}</td><td class="mono">${esc(x.days)}</td>
+      <td style="font-size:12.5px">${esc(x.luck)}</td>
+      <td class="${/DEAD|FAIL/.test(x.verdict) ? 'bad' : /PASS|KEEP/.test(x.verdict) ? 'good' : 'warn'}"><b>${esc(x.verdict)}</b>
+        <span class="dim" style="display:block;font-size:11.5px;max-width:300px">${esc(x.note || '')}</span></td></tr>`).join('');
+}
+
 function paint(){
   $('dot').className = 'dot' + (S.live ? ' on' : '');
   $('status').textContent = S.live ? 'running' : 'idle';
   $('passes').textContent = S.passes + (S.passes === 1 ? ' pass' : ' passes');
   sourceBar(); stations(); now(); funnel(); gates(); nullPanel();
-  poolsTable(); ideasTable(); gapsTable(); srcTable();
+  poolsTable(); krisTable(); ideasTable(); gapsTable(); srcTable();
 }
 
 let pulling = false;

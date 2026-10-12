@@ -1,0 +1,4398 @@
+{
+ "cells": [
+  {
+   "cell": "XAUUSD 4h X1 fixed 2R",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 246,
+    "pf": 1.255,
+    "mean_r": 0.157,
+    "win": 38.6,
+    "dd_r": -16.45,
+    "tpd": 0.191,
+    "hold_d": 4.5
+   },
+   "x1": {
+    "n": 246,
+    "pf": 1.222,
+    "mean_r": 0.139,
+    "win": 38.6,
+    "dd_r": -18.17,
+    "tpd": 0.191,
+    "hold_d": 4.5
+   },
+   "x2": {
+    "n": 246,
+    "pf": 1.191,
+    "mean_r": 0.122,
+    "win": 38.6,
+    "dd_r": -19.89,
+    "tpd": 0.191,
+    "hold_d": 4.5
+   },
+   "x3": {
+    "n": 246,
+    "pf": 1.161,
+    "mean_r": 0.104,
+    "win": 38.6,
+    "dd_r": -21.61,
+    "tpd": 0.191,
+    "hold_d": 4.5
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.11,
+    0.349
+   ],
+   "random_mean_r2x": -0.019,
+   "p": 0.065,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 4h X2 turtle 10-bar",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 222,
+    "pf": 1.18,
+    "mean_r": 0.096,
+    "win": 32.9,
+    "dd_r": -13.73,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x1": {
+    "n": 222,
+    "pf": 1.143,
+    "mean_r": 0.078,
+    "win": 32.9,
+    "dd_r": -15.5,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x2": {
+    "n": 222,
+    "pf": 1.107,
+    "mean_r": 0.06,
+    "win": 32.9,
+    "dd_r": -17.27,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x3": {
+    "n": 222,
+    "pf": 1.073,
+    "mean_r": 0.042,
+    "win": 32.9,
+    "dd_r": -19.03,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.006,
+    0.128
+   ],
+   "random_mean_r2x": 0.001,
+   "p": 0.235,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 4h X3 ATR trail 3",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 214,
+    "pf": 1.457,
+    "mean_r": 0.15,
+    "win": 40.7,
+    "dd_r": -7.46,
+    "tpd": 0.166,
+    "hold_d": 5.3
+   },
+   "x1": {
+    "n": 214,
+    "pf": 1.412,
+    "mean_r": 0.138,
+    "win": 40.7,
+    "dd_r": -7.9,
+    "tpd": 0.166,
+    "hold_d": 5.3
+   },
+   "x2": {
+    "n": 214,
+    "pf": 1.369,
+    "mean_r": 0.127,
+    "win": 40.7,
+    "dd_r": -8.34,
+    "tpd": 0.166,
+    "hold_d": 5.3
+   },
+   "x3": {
+    "n": 214,
+    "pf": 1.327,
+    "mean_r": 0.115,
+    "win": 40.7,
+    "dd_r": -8.77,
+    "tpd": 0.166,
+    "hold_d": 5.3
+   },
+   "fee_r": 0.012,
+   "halves": [
+    0.049,
+    0.204
+   ],
+   "random_mean_r2x": 0.042,
+   "p": 0.095,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 4h X4 time 20 bars",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 292,
+    "pf": 1.275,
+    "mean_r": 0.134,
+    "win": 43.5,
+    "dd_r": -19.22,
+    "tpd": 0.227,
+    "hold_d": 3.3
+   },
+   "x1": {
+    "n": 292,
+    "pf": 1.233,
+    "mean_r": 0.116,
+    "win": 43.5,
+    "dd_r": -21.4,
+    "tpd": 0.227,
+    "hold_d": 3.3
+   },
+   "x2": {
+    "n": 292,
+    "pf": 1.192,
+    "mean_r": 0.097,
+    "win": 42.8,
+    "dd_r": -23.58,
+    "tpd": 0.227,
+    "hold_d": 3.3
+   },
+   "x3": {
+    "n": 292,
+    "pf": 1.153,
+    "mean_r": 0.079,
+    "win": 42.5,
+    "dd_r": -25.76,
+    "tpd": 0.227,
+    "hold_d": 3.3
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.064,
+    0.259
+   ],
+   "random_mean_r2x": -0.027,
+   "p": 0.045,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 4h X5 EMA20 close",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 254,
+    "pf": 1.282,
+    "mean_r": 0.124,
+    "win": 36.2,
+    "dd_r": -18.49,
+    "tpd": 0.197,
+    "hold_d": 3.6
+   },
+   "x1": {
+    "n": 254,
+    "pf": 1.234,
+    "mean_r": 0.105,
+    "win": 36.2,
+    "dd_r": -20.41,
+    "tpd": 0.197,
+    "hold_d": 3.6
+   },
+   "x2": {
+    "n": 254,
+    "pf": 1.189,
+    "mean_r": 0.087,
+    "win": 36.2,
+    "dd_r": -22.32,
+    "tpd": 0.197,
+    "hold_d": 3.6
+   },
+   "x3": {
+    "n": 254,
+    "pf": 1.146,
+    "mean_r": 0.069,
+    "win": 35.8,
+    "dd_r": -24.24,
+    "tpd": 0.197,
+    "hold_d": 3.6
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.027,
+    0.207
+   ],
+   "random_mean_r2x": -0.009,
+   "p": 0.04,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 4h X6 breakeven + trail",
+   "sym": "XAUUSD",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 212,
+    "pf": 1.354,
+    "mean_r": 0.178,
+    "win": 39.2,
+    "dd_r": -12.39,
+    "tpd": 0.165,
+    "hold_d": 5.3
+   },
+   "x1": {
+    "n": 212,
+    "pf": 1.313,
+    "mean_r": 0.161,
+    "win": 39.2,
+    "dd_r": -13.65,
+    "tpd": 0.165,
+    "hold_d": 5.3
+   },
+   "x2": {
+    "n": 212,
+    "pf": 1.272,
+    "mean_r": 0.143,
+    "win": 39.2,
+    "dd_r": -15.13,
+    "tpd": 0.165,
+    "hold_d": 5.3
+   },
+   "x3": {
+    "n": 212,
+    "pf": 1.234,
+    "mean_r": 0.125,
+    "win": 39.2,
+    "dd_r": -16.61,
+    "tpd": 0.165,
+    "hold_d": 5.3
+   },
+   "fee_r": 0.018,
+   "halves": [
+    0.067,
+    0.218
+   ],
+   "random_mean_r2x": 0.06,
+   "p": 0.175,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X1 fixed 2R",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 244,
+    "pf": 1.278,
+    "mean_r": 0.169,
+    "win": 38.9,
+    "dd_r": -11.0,
+    "tpd": 0.189,
+    "hold_d": 4.2
+   },
+   "x1": {
+    "n": 244,
+    "pf": 1.201,
+    "mean_r": 0.128,
+    "win": 38.9,
+    "dd_r": -11.58,
+    "tpd": 0.189,
+    "hold_d": 4.2
+   },
+   "x2": {
+    "n": 244,
+    "pf": 1.13,
+    "mean_r": 0.086,
+    "win": 38.9,
+    "dd_r": -14.34,
+    "tpd": 0.189,
+    "hold_d": 4.2
+   },
+   "x3": {
+    "n": 244,
+    "pf": 1.065,
+    "mean_r": 0.045,
+    "win": 38.9,
+    "dd_r": -19.51,
+    "tpd": 0.189,
+    "hold_d": 4.2
+   },
+   "fee_r": 0.042,
+   "halves": [
+    -0.0,
+    0.167
+   ],
+   "random_mean_r2x": -0.069,
+   "p": 0.03,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X2 turtle 10-bar",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 214,
+    "pf": 1.324,
+    "mean_r": 0.171,
+    "win": 35.0,
+    "dd_r": -12.63,
+    "tpd": 0.166,
+    "hold_d": 5.5
+   },
+   "x1": {
+    "n": 214,
+    "pf": 1.23,
+    "mean_r": 0.128,
+    "win": 33.6,
+    "dd_r": -14.99,
+    "tpd": 0.166,
+    "hold_d": 5.5
+   },
+   "x2": {
+    "n": 214,
+    "pf": 1.144,
+    "mean_r": 0.085,
+    "win": 31.8,
+    "dd_r": -19.29,
+    "tpd": 0.166,
+    "hold_d": 5.5
+   },
+   "x3": {
+    "n": 214,
+    "pf": 1.067,
+    "mean_r": 0.041,
+    "win": 31.8,
+    "dd_r": -26.82,
+    "tpd": 0.166,
+    "hold_d": 5.5
+   },
+   "fee_r": 0.043,
+   "halves": [
+    -0.078,
+    0.27
+   ],
+   "random_mean_r2x": -0.018,
+   "p": 0.175,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X3 ATR trail 3",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 205,
+    "pf": 1.338,
+    "mean_r": 0.126,
+    "win": 38.5,
+    "dd_r": -7.13,
+    "tpd": 0.159,
+    "hold_d": 5.6
+   },
+   "x1": {
+    "n": 205,
+    "pf": 1.25,
+    "mean_r": 0.098,
+    "win": 38.5,
+    "dd_r": -7.55,
+    "tpd": 0.159,
+    "hold_d": 5.6
+   },
+   "x2": {
+    "n": 205,
+    "pf": 1.17,
+    "mean_r": 0.069,
+    "win": 38.0,
+    "dd_r": -7.99,
+    "tpd": 0.159,
+    "hold_d": 5.6
+   },
+   "x3": {
+    "n": 205,
+    "pf": 1.096,
+    "mean_r": 0.041,
+    "win": 38.0,
+    "dd_r": -9.77,
+    "tpd": 0.159,
+    "hold_d": 5.6
+   },
+   "fee_r": 0.028,
+   "halves": [
+    -0.008,
+    0.151
+   ],
+   "random_mean_r2x": -0.014,
+   "p": 0.125,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X4 time 20 bars",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 280,
+    "pf": 1.29,
+    "mean_r": 0.145,
+    "win": 42.5,
+    "dd_r": -13.53,
+    "tpd": 0.217,
+    "hold_d": 3.4
+   },
+   "x1": {
+    "n": 280,
+    "pf": 1.194,
+    "mean_r": 0.102,
+    "win": 42.1,
+    "dd_r": -15.66,
+    "tpd": 0.217,
+    "hold_d": 3.4
+   },
+   "x2": {
+    "n": 280,
+    "pf": 1.107,
+    "mean_r": 0.059,
+    "win": 41.1,
+    "dd_r": -20.78,
+    "tpd": 0.217,
+    "hold_d": 3.4
+   },
+   "x3": {
+    "n": 280,
+    "pf": 1.028,
+    "mean_r": 0.016,
+    "win": 40.7,
+    "dd_r": -26.47,
+    "tpd": 0.217,
+    "hold_d": 3.4
+   },
+   "fee_r": 0.043,
+   "halves": [
+    -0.09,
+    0.21
+   ],
+   "random_mean_r2x": -0.082,
+   "p": 0.04,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X5 EMA20 close",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 252,
+    "pf": 1.287,
+    "mean_r": 0.126,
+    "win": 35.7,
+    "dd_r": -10.69,
+    "tpd": 0.195,
+    "hold_d": 3.9
+   },
+   "x1": {
+    "n": 252,
+    "pf": 1.177,
+    "mean_r": 0.083,
+    "win": 33.7,
+    "dd_r": -12.18,
+    "tpd": 0.195,
+    "hold_d": 3.9
+   },
+   "x2": {
+    "n": 252,
+    "pf": 1.079,
+    "mean_r": 0.039,
+    "win": 32.1,
+    "dd_r": -16.46,
+    "tpd": 0.195,
+    "hold_d": 3.9
+   },
+   "x3": {
+    "n": 252,
+    "pf": 0.993,
+    "mean_r": -0.004,
+    "win": 32.1,
+    "dd_r": -24.19,
+    "tpd": 0.195,
+    "hold_d": 3.9
+   },
+   "fee_r": 0.043,
+   "halves": [
+    -0.091,
+    0.178
+   ],
+   "random_mean_r2x": -0.046,
+   "p": 0.035,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 4h X6 breakeven + trail",
+   "sym": "XAGUSD",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 214,
+    "pf": 1.215,
+    "mean_r": 0.118,
+    "win": 35.5,
+    "dd_r": -12.4,
+    "tpd": 0.166,
+    "hold_d": 5.2
+   },
+   "x1": {
+    "n": 214,
+    "pf": 1.131,
+    "mean_r": 0.076,
+    "win": 35.5,
+    "dd_r": -15.07,
+    "tpd": 0.166,
+    "hold_d": 5.2
+   },
+   "x2": {
+    "n": 214,
+    "pf": 1.055,
+    "mean_r": 0.033,
+    "win": 35.0,
+    "dd_r": -21.94,
+    "tpd": 0.166,
+    "hold_d": 5.2
+   },
+   "x3": {
+    "n": 214,
+    "pf": 0.985,
+    "mean_r": -0.009,
+    "win": 35.0,
+    "dd_r": -29.73,
+    "tpd": 0.166,
+    "hold_d": 5.2
+   },
+   "fee_r": 0.043,
+   "halves": [
+    -0.06,
+    0.129
+   ],
+   "random_mean_r2x": -0.001,
+   "p": 0.34,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X1 fixed 2R",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 243,
+    "pf": 1.03,
+    "mean_r": 0.02,
+    "win": 34.2,
+    "dd_r": -16.34,
+    "tpd": 0.188,
+    "hold_d": 4.2
+   },
+   "x1": {
+    "n": 243,
+    "pf": 1.021,
+    "mean_r": 0.014,
+    "win": 34.2,
+    "dd_r": -17.03,
+    "tpd": 0.188,
+    "hold_d": 4.2
+   },
+   "x2": {
+    "n": 243,
+    "pf": 1.013,
+    "mean_r": 0.008,
+    "win": 34.2,
+    "dd_r": -17.72,
+    "tpd": 0.188,
+    "hold_d": 4.2
+   },
+   "x3": {
+    "n": 243,
+    "pf": 1.004,
+    "mean_r": 0.003,
+    "win": 34.2,
+    "dd_r": -18.41,
+    "tpd": 0.188,
+    "hold_d": 4.2
+   },
+   "fee_r": 0.006,
+   "halves": [
+    0.011,
+    0.005
+   ],
+   "random_mean_r2x": -0.019,
+   "p": 0.385,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X2 turtle 10-bar",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 245,
+    "pf": 0.771,
+    "mean_r": -0.137,
+    "win": 30.2,
+    "dd_r": -40.33,
+    "tpd": 0.19,
+    "hold_d": 4.3
+   },
+   "x1": {
+    "n": 245,
+    "pf": 0.763,
+    "mean_r": -0.142,
+    "win": 30.2,
+    "dd_r": -41.72,
+    "tpd": 0.19,
+    "hold_d": 4.3
+   },
+   "x2": {
+    "n": 245,
+    "pf": 0.755,
+    "mean_r": -0.148,
+    "win": 30.2,
+    "dd_r": -43.1,
+    "tpd": 0.19,
+    "hold_d": 4.3
+   },
+   "x3": {
+    "n": 245,
+    "pf": 0.747,
+    "mean_r": -0.154,
+    "win": 30.2,
+    "dd_r": -44.48,
+    "tpd": 0.19,
+    "hold_d": 4.3
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.191,
+    -0.104
+   ],
+   "random_mean_r2x": -0.094,
+   "p": 0.8,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X3 ATR trail 3",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 227,
+    "pf": 0.831,
+    "mean_r": -0.066,
+    "win": 37.9,
+    "dd_r": -22.16,
+    "tpd": 0.175,
+    "hold_d": 4.9
+   },
+   "x1": {
+    "n": 227,
+    "pf": 0.823,
+    "mean_r": -0.07,
+    "win": 37.4,
+    "dd_r": -22.67,
+    "tpd": 0.175,
+    "hold_d": 4.9
+   },
+   "x2": {
+    "n": 227,
+    "pf": 0.814,
+    "mean_r": -0.074,
+    "win": 37.4,
+    "dd_r": -23.21,
+    "tpd": 0.175,
+    "hold_d": 4.9
+   },
+   "x3": {
+    "n": 227,
+    "pf": 0.806,
+    "mean_r": -0.078,
+    "win": 37.4,
+    "dd_r": -23.74,
+    "tpd": 0.175,
+    "hold_d": 4.9
+   },
+   "fee_r": 0.004,
+   "halves": [
+    -0.12,
+    -0.027
+   ],
+   "random_mean_r2x": -0.023,
+   "p": 0.815,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X4 time 20 bars",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 300,
+    "pf": 0.794,
+    "mean_r": -0.117,
+    "win": 36.7,
+    "dd_r": -41.3,
+    "tpd": 0.232,
+    "hold_d": 3.0
+   },
+   "x1": {
+    "n": 300,
+    "pf": 0.785,
+    "mean_r": -0.123,
+    "win": 36.7,
+    "dd_r": -42.59,
+    "tpd": 0.232,
+    "hold_d": 3.0
+   },
+   "x2": {
+    "n": 300,
+    "pf": 0.776,
+    "mean_r": -0.129,
+    "win": 36.7,
+    "dd_r": -43.93,
+    "tpd": 0.232,
+    "hold_d": 3.0
+   },
+   "x3": {
+    "n": 300,
+    "pf": 0.767,
+    "mean_r": -0.135,
+    "win": 36.7,
+    "dd_r": -45.6,
+    "tpd": 0.232,
+    "hold_d": 3.0
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.199,
+    -0.06
+   ],
+   "random_mean_r2x": -0.024,
+   "p": 0.93,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X5 EMA20 close",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 281,
+    "pf": 0.779,
+    "mean_r": -0.11,
+    "win": 33.5,
+    "dd_r": -38.13,
+    "tpd": 0.217,
+    "hold_d": 3.1
+   },
+   "x1": {
+    "n": 281,
+    "pf": 0.768,
+    "mean_r": -0.115,
+    "win": 33.1,
+    "dd_r": -39.15,
+    "tpd": 0.217,
+    "hold_d": 3.1
+   },
+   "x2": {
+    "n": 281,
+    "pf": 0.759,
+    "mean_r": -0.121,
+    "win": 33.1,
+    "dd_r": -40.48,
+    "tpd": 0.217,
+    "hold_d": 3.1
+   },
+   "x3": {
+    "n": 281,
+    "pf": 0.749,
+    "mean_r": -0.127,
+    "win": 33.1,
+    "dd_r": -41.82,
+    "tpd": 0.217,
+    "hold_d": 3.1
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.16,
+    -0.083
+   ],
+   "random_mean_r2x": -0.015,
+   "p": 1.0,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 4h X6 breakeven + trail",
+   "sym": "EURUSD",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 221,
+    "pf": 0.87,
+    "mean_r": -0.072,
+    "win": 38.0,
+    "dd_r": -23.72,
+    "tpd": 0.171,
+    "hold_d": 5.1
+   },
+   "x1": {
+    "n": 221,
+    "pf": 0.861,
+    "mean_r": -0.078,
+    "win": 38.0,
+    "dd_r": -24.69,
+    "tpd": 0.171,
+    "hold_d": 5.1
+   },
+   "x2": {
+    "n": 221,
+    "pf": 0.852,
+    "mean_r": -0.084,
+    "win": 38.0,
+    "dd_r": -25.65,
+    "tpd": 0.171,
+    "hold_d": 5.1
+   },
+   "x3": {
+    "n": 221,
+    "pf": 0.843,
+    "mean_r": -0.089,
+    "win": 38.0,
+    "dd_r": -26.62,
+    "tpd": 0.171,
+    "hold_d": 5.1
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.158,
+    -0.002
+   ],
+   "random_mean_r2x": -0.041,
+   "p": 0.71,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X1 fixed 2R",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 252,
+    "pf": 0.927,
+    "mean_r": -0.05,
+    "win": 31.7,
+    "dd_r": -31.0,
+    "tpd": 0.195,
+    "hold_d": 4.6
+   },
+   "x1": {
+    "n": 252,
+    "pf": 0.909,
+    "mean_r": -0.063,
+    "win": 31.7,
+    "dd_r": -33.52,
+    "tpd": 0.195,
+    "hold_d": 4.6
+   },
+   "x2": {
+    "n": 252,
+    "pf": 0.892,
+    "mean_r": -0.076,
+    "win": 31.7,
+    "dd_r": -36.05,
+    "tpd": 0.195,
+    "hold_d": 4.6
+   },
+   "x3": {
+    "n": 252,
+    "pf": 0.874,
+    "mean_r": -0.089,
+    "win": 31.7,
+    "dd_r": -38.57,
+    "tpd": 0.195,
+    "hold_d": 4.6
+   },
+   "fee_r": 0.013,
+   "halves": [
+    -0.14,
+    -0.014
+   ],
+   "random_mean_r2x": -0.029,
+   "p": 0.675,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X2 turtle 10-bar",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 237,
+    "pf": 0.918,
+    "mean_r": -0.046,
+    "win": 32.5,
+    "dd_r": -29.42,
+    "tpd": 0.183,
+    "hold_d": 4.8
+   },
+   "x1": {
+    "n": 237,
+    "pf": 0.896,
+    "mean_r": -0.059,
+    "win": 32.1,
+    "dd_r": -31.98,
+    "tpd": 0.183,
+    "hold_d": 4.8
+   },
+   "x2": {
+    "n": 237,
+    "pf": 0.874,
+    "mean_r": -0.072,
+    "win": 31.6,
+    "dd_r": -34.55,
+    "tpd": 0.183,
+    "hold_d": 4.8
+   },
+   "x3": {
+    "n": 237,
+    "pf": 0.853,
+    "mean_r": -0.086,
+    "win": 31.2,
+    "dd_r": -37.11,
+    "tpd": 0.183,
+    "hold_d": 4.8
+   },
+   "fee_r": 0.013,
+   "halves": [
+    -0.122,
+    -0.021
+   ],
+   "random_mean_r2x": -0.052,
+   "p": 0.61,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X3 ATR trail 3",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 235,
+    "pf": 0.833,
+    "mean_r": -0.066,
+    "win": 34.9,
+    "dd_r": -22.61,
+    "tpd": 0.182,
+    "hold_d": 5.0
+   },
+   "x1": {
+    "n": 235,
+    "pf": 0.813,
+    "mean_r": -0.075,
+    "win": 34.9,
+    "dd_r": -23.32,
+    "tpd": 0.182,
+    "hold_d": 5.0
+   },
+   "x2": {
+    "n": 235,
+    "pf": 0.794,
+    "mean_r": -0.084,
+    "win": 34.9,
+    "dd_r": -24.19,
+    "tpd": 0.182,
+    "hold_d": 5.0
+   },
+   "x3": {
+    "n": 235,
+    "pf": 0.776,
+    "mean_r": -0.093,
+    "win": 34.9,
+    "dd_r": -25.22,
+    "tpd": 0.182,
+    "hold_d": 5.0
+   },
+   "fee_r": 0.009,
+   "halves": [
+    -0.18,
+    0.024
+   ],
+   "random_mean_r2x": -0.046,
+   "p": 0.755,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X4 time 20 bars",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 301,
+    "pf": 0.918,
+    "mean_r": -0.044,
+    "win": 39.2,
+    "dd_r": -28.14,
+    "tpd": 0.233,
+    "hold_d": 3.1
+   },
+   "x1": {
+    "n": 301,
+    "pf": 0.895,
+    "mean_r": -0.057,
+    "win": 38.9,
+    "dd_r": -30.4,
+    "tpd": 0.233,
+    "hold_d": 3.1
+   },
+   "x2": {
+    "n": 301,
+    "pf": 0.872,
+    "mean_r": -0.071,
+    "win": 38.9,
+    "dd_r": -33.55,
+    "tpd": 0.233,
+    "hold_d": 3.1
+   },
+   "x3": {
+    "n": 301,
+    "pf": 0.849,
+    "mean_r": -0.085,
+    "win": 37.9,
+    "dd_r": -36.7,
+    "tpd": 0.233,
+    "hold_d": 3.1
+   },
+   "fee_r": 0.014,
+   "halves": [
+    -0.114,
+    -0.026
+   ],
+   "random_mean_r2x": -0.032,
+   "p": 0.715,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X5 EMA20 close",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 291,
+    "pf": 0.788,
+    "mean_r": -0.103,
+    "win": 30.9,
+    "dd_r": -40.11,
+    "tpd": 0.225,
+    "hold_d": 3.1
+   },
+   "x1": {
+    "n": 291,
+    "pf": 0.765,
+    "mean_r": -0.117,
+    "win": 30.6,
+    "dd_r": -41.68,
+    "tpd": 0.225,
+    "hold_d": 3.1
+   },
+   "x2": {
+    "n": 291,
+    "pf": 0.743,
+    "mean_r": -0.13,
+    "win": 29.2,
+    "dd_r": -43.25,
+    "tpd": 0.225,
+    "hold_d": 3.1
+   },
+   "x3": {
+    "n": 291,
+    "pf": 0.722,
+    "mean_r": -0.143,
+    "win": 28.5,
+    "dd_r": -44.82,
+    "tpd": 0.225,
+    "hold_d": 3.1
+   },
+   "fee_r": 0.013,
+   "halves": [
+    -0.255,
+    0.01
+   ],
+   "random_mean_r2x": -0.064,
+   "p": 0.96,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 4h X6 breakeven + trail",
+   "sym": "GBPUSD",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 230,
+    "pf": 0.897,
+    "mean_r": -0.061,
+    "win": 32.6,
+    "dd_r": -29.81,
+    "tpd": 0.178,
+    "hold_d": 5.0
+   },
+   "x1": {
+    "n": 230,
+    "pf": 0.877,
+    "mean_r": -0.075,
+    "win": 32.6,
+    "dd_r": -30.95,
+    "tpd": 0.178,
+    "hold_d": 5.0
+   },
+   "x2": {
+    "n": 230,
+    "pf": 0.857,
+    "mean_r": -0.088,
+    "win": 32.6,
+    "dd_r": -32.17,
+    "tpd": 0.178,
+    "hold_d": 5.0
+   },
+   "x3": {
+    "n": 230,
+    "pf": 0.838,
+    "mean_r": -0.101,
+    "win": 32.6,
+    "dd_r": -33.38,
+    "tpd": 0.178,
+    "hold_d": 5.0
+   },
+   "fee_r": 0.013,
+   "halves": [
+    -0.207,
+    0.04
+   ],
+   "random_mean_r2x": -0.059,
+   "p": 0.605,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X1 fixed 2R",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 264,
+    "pf": 1.271,
+    "mean_r": 0.165,
+    "win": 39.0,
+    "dd_r": -13.0,
+    "tpd": 0.204,
+    "hold_d": 3.9
+   },
+   "x1": {
+    "n": 264,
+    "pf": 1.237,
+    "mean_r": 0.147,
+    "win": 39.0,
+    "dd_r": -13.47,
+    "tpd": 0.204,
+    "hold_d": 3.9
+   },
+   "x2": {
+    "n": 264,
+    "pf": 1.204,
+    "mean_r": 0.129,
+    "win": 39.0,
+    "dd_r": -14.27,
+    "tpd": 0.204,
+    "hold_d": 3.9
+   },
+   "x3": {
+    "n": 264,
+    "pf": 1.173,
+    "mean_r": 0.111,
+    "win": 39.0,
+    "dd_r": -15.4,
+    "tpd": 0.204,
+    "hold_d": 3.9
+   },
+   "fee_r": 0.018,
+   "halves": [
+    0.138,
+    0.119
+   ],
+   "random_mean_r2x": 0.003,
+   "p": 0.085,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X2 turtle 10-bar",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 222,
+    "pf": 1.239,
+    "mean_r": 0.131,
+    "win": 34.7,
+    "dd_r": -24.62,
+    "tpd": 0.172,
+    "hold_d": 5.0
+   },
+   "x1": {
+    "n": 222,
+    "pf": 1.202,
+    "mean_r": 0.114,
+    "win": 34.7,
+    "dd_r": -25.88,
+    "tpd": 0.172,
+    "hold_d": 5.0
+   },
+   "x2": {
+    "n": 222,
+    "pf": 1.167,
+    "mean_r": 0.096,
+    "win": 34.7,
+    "dd_r": -27.15,
+    "tpd": 0.172,
+    "hold_d": 5.0
+   },
+   "x3": {
+    "n": 222,
+    "pf": 1.133,
+    "mean_r": 0.078,
+    "win": 34.2,
+    "dd_r": -28.41,
+    "tpd": 0.172,
+    "hold_d": 5.0
+   },
+   "fee_r": 0.018,
+   "halves": [
+    0.147,
+    0.042
+   ],
+   "random_mean_r2x": 0.062,
+   "p": 0.365,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X3 ATR trail 3",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 235,
+    "pf": 1.153,
+    "mean_r": 0.058,
+    "win": 37.9,
+    "dd_r": -18.06,
+    "tpd": 0.182,
+    "hold_d": 4.7
+   },
+   "x1": {
+    "n": 235,
+    "pf": 1.119,
+    "mean_r": 0.046,
+    "win": 37.4,
+    "dd_r": -18.89,
+    "tpd": 0.182,
+    "hold_d": 4.7
+   },
+   "x2": {
+    "n": 235,
+    "pf": 1.087,
+    "mean_r": 0.034,
+    "win": 36.6,
+    "dd_r": -20.31,
+    "tpd": 0.182,
+    "hold_d": 4.7
+   },
+   "x3": {
+    "n": 235,
+    "pf": 1.055,
+    "mean_r": 0.022,
+    "win": 36.2,
+    "dd_r": -22.29,
+    "tpd": 0.182,
+    "hold_d": 4.7
+   },
+   "fee_r": 0.012,
+   "halves": [
+    0.06,
+    0.009
+   ],
+   "random_mean_r2x": 0.004,
+   "p": 0.345,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X4 time 20 bars",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 304,
+    "pf": 1.19,
+    "mean_r": 0.102,
+    "win": 40.1,
+    "dd_r": -18.82,
+    "tpd": 0.235,
+    "hold_d": 3.0
+   },
+   "x1": {
+    "n": 304,
+    "pf": 1.152,
+    "mean_r": 0.083,
+    "win": 40.1,
+    "dd_r": -20.38,
+    "tpd": 0.235,
+    "hold_d": 3.0
+   },
+   "x2": {
+    "n": 304,
+    "pf": 1.115,
+    "mean_r": 0.065,
+    "win": 39.5,
+    "dd_r": -21.94,
+    "tpd": 0.235,
+    "hold_d": 3.0
+   },
+   "x3": {
+    "n": 304,
+    "pf": 1.08,
+    "mean_r": 0.046,
+    "win": 39.5,
+    "dd_r": -23.5,
+    "tpd": 0.235,
+    "hold_d": 3.0
+   },
+   "fee_r": 0.019,
+   "halves": [
+    0.099,
+    0.031
+   ],
+   "random_mean_r2x": -0.006,
+   "p": 0.2,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X5 EMA20 close",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 267,
+    "pf": 1.27,
+    "mean_r": 0.126,
+    "win": 34.1,
+    "dd_r": -17.38,
+    "tpd": 0.207,
+    "hold_d": 3.6
+   },
+   "x1": {
+    "n": 267,
+    "pf": 1.225,
+    "mean_r": 0.107,
+    "win": 34.1,
+    "dd_r": -18.72,
+    "tpd": 0.207,
+    "hold_d": 3.6
+   },
+   "x2": {
+    "n": 267,
+    "pf": 1.181,
+    "mean_r": 0.089,
+    "win": 33.3,
+    "dd_r": -20.06,
+    "tpd": 0.207,
+    "hold_d": 3.6
+   },
+   "x3": {
+    "n": 267,
+    "pf": 1.14,
+    "mean_r": 0.07,
+    "win": 33.3,
+    "dd_r": -21.68,
+    "tpd": 0.207,
+    "hold_d": 3.6
+   },
+   "fee_r": 0.018,
+   "halves": [
+    0.098,
+    0.08
+   ],
+   "random_mean_r2x": 0.061,
+   "p": 0.255,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 4h X6 breakeven + trail",
+   "sym": "USDJPY",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 222,
+    "pf": 1.405,
+    "mean_r": 0.204,
+    "win": 38.3,
+    "dd_r": -14.93,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x1": {
+    "n": 222,
+    "pf": 1.361,
+    "mean_r": 0.186,
+    "win": 38.3,
+    "dd_r": -16.03,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x2": {
+    "n": 222,
+    "pf": 1.32,
+    "mean_r": 0.169,
+    "win": 37.8,
+    "dd_r": -17.12,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "x3": {
+    "n": 222,
+    "pf": 1.28,
+    "mean_r": 0.151,
+    "win": 37.8,
+    "dd_r": -18.21,
+    "tpd": 0.172,
+    "hold_d": 4.9
+   },
+   "fee_r": 0.018,
+   "halves": [
+    0.194,
+    0.142
+   ],
+   "random_mean_r2x": 0.025,
+   "p": 0.075,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X1 fixed 2R",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 299,
+    "pf": 1.291,
+    "mean_r": 0.177,
+    "win": 39.1,
+    "dd_r": -16.0,
+    "tpd": 0.231,
+    "hold_d": 3.4
+   },
+   "x1": {
+    "n": 299,
+    "pf": 1.222,
+    "mean_r": 0.14,
+    "win": 39.1,
+    "dd_r": -17.99,
+    "tpd": 0.231,
+    "hold_d": 3.4
+   },
+   "x2": {
+    "n": 299,
+    "pf": 1.158,
+    "mean_r": 0.103,
+    "win": 39.1,
+    "dd_r": -19.99,
+    "tpd": 0.231,
+    "hold_d": 3.4
+   },
+   "x3": {
+    "n": 299,
+    "pf": 1.098,
+    "mean_r": 0.066,
+    "win": 39.1,
+    "dd_r": -21.98,
+    "tpd": 0.231,
+    "hold_d": 3.4
+   },
+   "fee_r": 0.037,
+   "halves": [
+    0.15,
+    0.057
+   ],
+   "random_mean_r2x": -0.044,
+   "p": 0.045,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X2 turtle 10-bar",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 296,
+    "pf": 1.65,
+    "mean_r": 0.351,
+    "win": 32.8,
+    "dd_r": -17.36,
+    "tpd": 0.229,
+    "hold_d": 3.5
+   },
+   "x1": {
+    "n": 296,
+    "pf": 1.543,
+    "mean_r": 0.309,
+    "win": 32.4,
+    "dd_r": -19.9,
+    "tpd": 0.229,
+    "hold_d": 3.5
+   },
+   "x2": {
+    "n": 296,
+    "pf": 1.446,
+    "mean_r": 0.267,
+    "win": 31.4,
+    "dd_r": -24.26,
+    "tpd": 0.229,
+    "hold_d": 3.5
+   },
+   "x3": {
+    "n": 296,
+    "pf": 1.358,
+    "mean_r": 0.224,
+    "win": 31.4,
+    "dd_r": -29.09,
+    "tpd": 0.229,
+    "hold_d": 3.5
+   },
+   "fee_r": 0.042,
+   "halves": [
+    0.579,
+    0.015
+   ],
+   "random_mean_r2x": 0.025,
+   "p": 0.0,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X3 ATR trail 3",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 293,
+    "pf": 1.724,
+    "mean_r": 0.271,
+    "win": 37.9,
+    "dd_r": -10.38,
+    "tpd": 0.226,
+    "hold_d": 3.7
+   },
+   "x1": {
+    "n": 293,
+    "pf": 1.62,
+    "mean_r": 0.243,
+    "win": 37.2,
+    "dd_r": -11.3,
+    "tpd": 0.226,
+    "hold_d": 3.7
+   },
+   "x2": {
+    "n": 293,
+    "pf": 1.524,
+    "mean_r": 0.215,
+    "win": 35.8,
+    "dd_r": -12.71,
+    "tpd": 0.226,
+    "hold_d": 3.7
+   },
+   "x3": {
+    "n": 293,
+    "pf": 1.435,
+    "mean_r": 0.187,
+    "win": 33.8,
+    "dd_r": -16.05,
+    "tpd": 0.226,
+    "hold_d": 3.7
+   },
+   "fee_r": 0.028,
+   "halves": [
+    0.359,
+    0.092
+   ],
+   "random_mean_r2x": 0.076,
+   "p": 0.025,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X4 time 20 bars",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 386,
+    "pf": 1.265,
+    "mean_r": 0.142,
+    "win": 39.1,
+    "dd_r": -14.01,
+    "tpd": 0.298,
+    "hold_d": 2.1
+   },
+   "x1": {
+    "n": 386,
+    "pf": 1.179,
+    "mean_r": 0.101,
+    "win": 38.3,
+    "dd_r": -17.32,
+    "tpd": 0.298,
+    "hold_d": 2.1
+   },
+   "x2": {
+    "n": 386,
+    "pf": 1.101,
+    "mean_r": 0.059,
+    "win": 37.8,
+    "dd_r": -24.0,
+    "tpd": 0.298,
+    "hold_d": 2.1
+   },
+   "x3": {
+    "n": 386,
+    "pf": 1.029,
+    "mean_r": 0.018,
+    "win": 37.6,
+    "dd_r": -30.69,
+    "tpd": 0.298,
+    "hold_d": 2.1
+   },
+   "fee_r": 0.041,
+   "halves": [
+    0.143,
+    -0.012
+   ],
+   "random_mean_r2x": -0.019,
+   "p": 0.145,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X5 EMA20 close",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 352,
+    "pf": 1.647,
+    "mean_r": 0.291,
+    "win": 34.1,
+    "dd_r": -15.06,
+    "tpd": 0.272,
+    "hold_d": 2.5
+   },
+   "x1": {
+    "n": 352,
+    "pf": 1.522,
+    "mean_r": 0.249,
+    "win": 32.7,
+    "dd_r": -16.14,
+    "tpd": 0.272,
+    "hold_d": 2.5
+   },
+   "x2": {
+    "n": 352,
+    "pf": 1.41,
+    "mean_r": 0.207,
+    "win": 31.0,
+    "dd_r": -18.48,
+    "tpd": 0.272,
+    "hold_d": 2.5
+   },
+   "x3": {
+    "n": 352,
+    "pf": 1.309,
+    "mean_r": 0.165,
+    "win": 29.0,
+    "dd_r": -23.78,
+    "tpd": 0.272,
+    "hold_d": 2.5
+   },
+   "fee_r": 0.042,
+   "halves": [
+    0.378,
+    0.064
+   ],
+   "random_mean_r2x": 0.003,
+   "p": 0.0,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 4h X6 breakeven + trail",
+   "sym": "BTCUSDT",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 273,
+    "pf": 1.617,
+    "mean_r": 0.317,
+    "win": 38.1,
+    "dd_r": -9.69,
+    "tpd": 0.211,
+    "hold_d": 4.0
+   },
+   "x1": {
+    "n": 273,
+    "pf": 1.511,
+    "mean_r": 0.276,
+    "win": 37.4,
+    "dd_r": -10.47,
+    "tpd": 0.211,
+    "hold_d": 4.0
+   },
+   "x2": {
+    "n": 273,
+    "pf": 1.415,
+    "mean_r": 0.235,
+    "win": 37.0,
+    "dd_r": -11.25,
+    "tpd": 0.211,
+    "hold_d": 4.0
+   },
+   "x3": {
+    "n": 273,
+    "pf": 1.327,
+    "mean_r": 0.194,
+    "win": 35.2,
+    "dd_r": -12.26,
+    "tpd": 0.211,
+    "hold_d": 4.0
+   },
+   "fee_r": 0.041,
+   "halves": [
+    0.42,
+    0.071
+   ],
+   "random_mean_r2x": 0.116,
+   "p": 0.175,
+   "short_years": false
+  },
+  {
+   "cell": "NAS100 4h X1 fixed 2R",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 158,
+    "pf": 1.27,
+    "mean_r": 0.164,
+    "win": 38.6,
+    "dd_r": -14.0,
+    "tpd": 0.204,
+    "hold_d": 4.0
+   },
+   "x1": {
+    "n": 158,
+    "pf": 1.215,
+    "mean_r": 0.135,
+    "win": 38.6,
+    "dd_r": -14.87,
+    "tpd": 0.204,
+    "hold_d": 4.0
+   },
+   "x2": {
+    "n": 158,
+    "pf": 1.163,
+    "mean_r": 0.105,
+    "win": 38.6,
+    "dd_r": -16.06,
+    "tpd": 0.204,
+    "hold_d": 4.0
+   },
+   "x3": {
+    "n": 158,
+    "pf": 1.113,
+    "mean_r": 0.075,
+    "win": 38.6,
+    "dd_r": -18.04,
+    "tpd": 0.204,
+    "hold_d": 4.0
+   },
+   "fee_r": 0.03,
+   "halves": [
+    0.254,
+    0.077
+   ],
+   "random_mean_r2x": -0.063,
+   "p": 0.065,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 4h X2 turtle 10-bar",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 142,
+    "pf": 1.166,
+    "mean_r": 0.087,
+    "win": 38.0,
+    "dd_r": -20.81,
+    "tpd": 0.184,
+    "hold_d": 4.9
+   },
+   "x1": {
+    "n": 142,
+    "pf": 1.108,
+    "mean_r": 0.059,
+    "win": 37.3,
+    "dd_r": -22.56,
+    "tpd": 0.184,
+    "hold_d": 4.9
+   },
+   "x2": {
+    "n": 142,
+    "pf": 1.054,
+    "mean_r": 0.03,
+    "win": 37.3,
+    "dd_r": -24.48,
+    "tpd": 0.184,
+    "hold_d": 4.9
+   },
+   "x3": {
+    "n": 142,
+    "pf": 1.003,
+    "mean_r": 0.002,
+    "win": 37.3,
+    "dd_r": -26.4,
+    "tpd": 0.184,
+    "hold_d": 4.9
+   },
+   "fee_r": 0.028,
+   "halves": [
+    0.545,
+    -0.054
+   ],
+   "random_mean_r2x": -0.065,
+   "p": 0.16,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 4h X3 ATR trail 3",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 152,
+    "pf": 1.192,
+    "mean_r": 0.066,
+    "win": 43.4,
+    "dd_r": -13.73,
+    "tpd": 0.196,
+    "hold_d": 4.4
+   },
+   "x1": {
+    "n": 152,
+    "pf": 1.131,
+    "mean_r": 0.046,
+    "win": 42.1,
+    "dd_r": -14.76,
+    "tpd": 0.196,
+    "hold_d": 4.4
+   },
+   "x2": {
+    "n": 152,
+    "pf": 1.073,
+    "mean_r": 0.027,
+    "win": 40.1,
+    "dd_r": -15.79,
+    "tpd": 0.196,
+    "hold_d": 4.4
+   },
+   "x3": {
+    "n": 152,
+    "pf": 1.019,
+    "mean_r": 0.007,
+    "win": 38.8,
+    "dd_r": -16.83,
+    "tpd": 0.196,
+    "hold_d": 4.4
+   },
+   "fee_r": 0.02,
+   "halves": [
+    0.268,
+    -0.014
+   ],
+   "random_mean_r2x": -0.032,
+   "p": 0.235,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 4h X4 time 20 bars",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 195,
+    "pf": 1.059,
+    "mean_r": 0.032,
+    "win": 40.5,
+    "dd_r": -15.85,
+    "tpd": 0.252,
+    "hold_d": 3.0
+   },
+   "x1": {
+    "n": 195,
+    "pf": 1.002,
+    "mean_r": 0.001,
+    "win": 40.5,
+    "dd_r": -17.76,
+    "tpd": 0.252,
+    "hold_d": 3.0
+   },
+   "x2": {
+    "n": 195,
+    "pf": 0.949,
+    "mean_r": -0.029,
+    "win": 40.0,
+    "dd_r": -19.68,
+    "tpd": 0.252,
+    "hold_d": 3.0
+   },
+   "x3": {
+    "n": 195,
+    "pf": 0.899,
+    "mean_r": -0.06,
+    "win": 40.0,
+    "dd_r": -21.96,
+    "tpd": 0.252,
+    "hold_d": 3.0
+   },
+   "fee_r": 0.031,
+   "halves": [
+    0.054,
+    -0.046
+   ],
+   "random_mean_r2x": -0.057,
+   "p": 0.375,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 4h X5 EMA20 close",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 164,
+    "pf": 1.189,
+    "mean_r": 0.086,
+    "win": 37.2,
+    "dd_r": -22.19,
+    "tpd": 0.212,
+    "hold_d": 3.8
+   },
+   "x1": {
+    "n": 164,
+    "pf": 1.121,
+    "mean_r": 0.057,
+    "win": 36.6,
+    "dd_r": -23.96,
+    "tpd": 0.212,
+    "hold_d": 3.8
+   },
+   "x2": {
+    "n": 164,
+    "pf": 1.058,
+    "mean_r": 0.028,
+    "win": 36.6,
+    "dd_r": -25.73,
+    "tpd": 0.212,
+    "hold_d": 3.8
+   },
+   "x3": {
+    "n": 164,
+    "pf": 1.0,
+    "mean_r": -0.0,
+    "win": 36.0,
+    "dd_r": -27.5,
+    "tpd": 0.212,
+    "hold_d": 3.8
+   },
+   "fee_r": 0.029,
+   "halves": [
+    0.472,
+    -0.047
+   ],
+   "random_mean_r2x": 0.002,
+   "p": 0.38,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 4h X6 breakeven + trail",
+   "sym": "NAS100",
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 150,
+    "pf": 1.222,
+    "mean_r": 0.107,
+    "win": 37.3,
+    "dd_r": -16.62,
+    "tpd": 0.194,
+    "hold_d": 4.4
+   },
+   "x1": {
+    "n": 150,
+    "pf": 1.157,
+    "mean_r": 0.078,
+    "win": 37.3,
+    "dd_r": -18.04,
+    "tpd": 0.194,
+    "hold_d": 4.4
+   },
+   "x2": {
+    "n": 150,
+    "pf": 1.096,
+    "mean_r": 0.05,
+    "win": 36.7,
+    "dd_r": -19.46,
+    "tpd": 0.194,
+    "hold_d": 4.4
+   },
+   "x3": {
+    "n": 150,
+    "pf": 1.039,
+    "mean_r": 0.021,
+    "win": 35.3,
+    "dd_r": -20.89,
+    "tpd": 0.194,
+    "hold_d": 4.4
+   },
+   "fee_r": 0.029,
+   "halves": [
+    0.433,
+    -0.02
+   ],
+   "random_mean_r2x": -0.057,
+   "p": 0.19,
+   "short_years": true
+  },
+  {
+   "cell": "XAUUSD 1d X1 fixed 2R",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 58,
+    "pf": 1.995,
+    "mean_r": 0.499,
+    "win": 50.0,
+    "dd_r": -4.0,
+    "tpd": 0.046,
+    "hold_d": 15.5
+   },
+   "x1": {
+    "n": 58,
+    "pf": 1.973,
+    "mean_r": 0.491,
+    "win": 50.0,
+    "dd_r": -4.03,
+    "tpd": 0.046,
+    "hold_d": 15.5
+   },
+   "x2": {
+    "n": 58,
+    "pf": 1.952,
+    "mean_r": 0.484,
+    "win": 50.0,
+    "dd_r": -4.06,
+    "tpd": 0.046,
+    "hold_d": 15.5
+   },
+   "x3": {
+    "n": 58,
+    "pf": 1.931,
+    "mean_r": 0.477,
+    "win": 50.0,
+    "dd_r": -4.09,
+    "tpd": 0.046,
+    "hold_d": 15.5
+   },
+   "fee_r": 0.007,
+   "halves": [
+    0.285,
+    0.615
+   ],
+   "random_mean_r2x": 0.125,
+   "p": 0.065,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 1d X2 turtle 10-bar",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 41,
+    "pf": 2.185,
+    "mean_r": 0.543,
+    "win": 41.5,
+    "dd_r": -4.89,
+    "tpd": 0.032,
+    "hold_d": 27.9
+   },
+   "x1": {
+    "n": 41,
+    "pf": 2.156,
+    "mean_r": 0.535,
+    "win": 41.5,
+    "dd_r": -4.95,
+    "tpd": 0.032,
+    "hold_d": 27.9
+   },
+   "x2": {
+    "n": 41,
+    "pf": 2.128,
+    "mean_r": 0.528,
+    "win": 39.0,
+    "dd_r": -5.03,
+    "tpd": 0.032,
+    "hold_d": 27.9
+   },
+   "x3": {
+    "n": 41,
+    "pf": 2.1,
+    "mean_r": 0.52,
+    "win": 39.0,
+    "dd_r": -5.1,
+    "tpd": 0.032,
+    "hold_d": 27.9
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.049,
+    0.984
+   ],
+   "random_mean_r2x": -0.033,
+   "p": 0.025,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 1d X3 ATR trail 3",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 42,
+    "pf": 2.375,
+    "mean_r": 0.413,
+    "win": 45.2,
+    "dd_r": -3.08,
+    "tpd": 0.033,
+    "hold_d": 26.8
+   },
+   "x1": {
+    "n": 42,
+    "pf": 2.347,
+    "mean_r": 0.408,
+    "win": 45.2,
+    "dd_r": -3.1,
+    "tpd": 0.033,
+    "hold_d": 26.8
+   },
+   "x2": {
+    "n": 42,
+    "pf": 2.318,
+    "mean_r": 0.403,
+    "win": 45.2,
+    "dd_r": -3.12,
+    "tpd": 0.033,
+    "hold_d": 26.8
+   },
+   "x3": {
+    "n": 42,
+    "pf": 2.29,
+    "mean_r": 0.398,
+    "win": 45.2,
+    "dd_r": -3.13,
+    "tpd": 0.033,
+    "hold_d": 26.8
+   },
+   "fee_r": 0.005,
+   "halves": [
+    0.186,
+    0.582
+   ],
+   "random_mean_r2x": 0.17,
+   "p": 0.095,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 1d X4 time 20 bars",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 56,
+    "pf": 1.49,
+    "mean_r": 0.244,
+    "win": 37.5,
+    "dd_r": -9.31,
+    "tpd": 0.044,
+    "hold_d": 17.0
+   },
+   "x1": {
+    "n": 56,
+    "pf": 1.47,
+    "mean_r": 0.236,
+    "win": 37.5,
+    "dd_r": -9.41,
+    "tpd": 0.044,
+    "hold_d": 17.0
+   },
+   "x2": {
+    "n": 56,
+    "pf": 1.451,
+    "mean_r": 0.229,
+    "win": 37.5,
+    "dd_r": -9.51,
+    "tpd": 0.044,
+    "hold_d": 17.0
+   },
+   "x3": {
+    "n": 56,
+    "pf": 1.432,
+    "mean_r": 0.221,
+    "win": 37.5,
+    "dd_r": -9.61,
+    "tpd": 0.044,
+    "hold_d": 17.0
+   },
+   "fee_r": 0.008,
+   "halves": [
+    -0.096,
+    0.532
+   ],
+   "random_mean_r2x": 0.061,
+   "p": 0.215,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 1d X5 EMA20 close",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 48,
+    "pf": 2.363,
+    "mean_r": 0.471,
+    "win": 39.6,
+    "dd_r": -3.79,
+    "tpd": 0.038,
+    "hold_d": 18.4
+   },
+   "x1": {
+    "n": 48,
+    "pf": 2.322,
+    "mean_r": 0.464,
+    "win": 37.5,
+    "dd_r": -3.82,
+    "tpd": 0.038,
+    "hold_d": 18.4
+   },
+   "x2": {
+    "n": 48,
+    "pf": 2.283,
+    "mean_r": 0.456,
+    "win": 37.5,
+    "dd_r": -3.85,
+    "tpd": 0.038,
+    "hold_d": 18.4
+   },
+   "x3": {
+    "n": 48,
+    "pf": 2.245,
+    "mean_r": 0.448,
+    "win": 37.5,
+    "dd_r": -3.88,
+    "tpd": 0.038,
+    "hold_d": 18.4
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.078,
+    0.834
+   ],
+   "random_mean_r2x": 0.034,
+   "p": 0.0,
+   "short_years": false
+  },
+  {
+   "cell": "XAUUSD 1d X6 breakeven + trail",
+   "sym": "XAUUSD",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 39,
+    "pf": 2.41,
+    "mean_r": 0.651,
+    "win": 46.2,
+    "dd_r": -3.0,
+    "tpd": 0.031,
+    "hold_d": 28.0
+   },
+   "x1": {
+    "n": 39,
+    "pf": 2.382,
+    "mean_r": 0.643,
+    "win": 46.2,
+    "dd_r": -3.03,
+    "tpd": 0.031,
+    "hold_d": 28.0
+   },
+   "x2": {
+    "n": 39,
+    "pf": 2.355,
+    "mean_r": 0.636,
+    "win": 46.2,
+    "dd_r": -3.06,
+    "tpd": 0.031,
+    "hold_d": 28.0
+   },
+   "x3": {
+    "n": 39,
+    "pf": 2.328,
+    "mean_r": 0.628,
+    "win": 46.2,
+    "dd_r": -3.08,
+    "tpd": 0.031,
+    "hold_d": 28.0
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.111,
+    1.085
+   ],
+   "random_mean_r2x": 0.196,
+   "p": 0.05,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X1 fixed 2R",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 53,
+    "pf": 1.068,
+    "mean_r": 0.044,
+    "win": 35.8,
+    "dd_r": -7.0,
+    "tpd": 0.041,
+    "hold_d": 20.5
+   },
+   "x1": {
+    "n": 53,
+    "pf": 1.04,
+    "mean_r": 0.027,
+    "win": 35.8,
+    "dd_r": -7.17,
+    "tpd": 0.041,
+    "hold_d": 20.5
+   },
+   "x2": {
+    "n": 53,
+    "pf": 1.014,
+    "mean_r": 0.009,
+    "win": 35.8,
+    "dd_r": -7.34,
+    "tpd": 0.041,
+    "hold_d": 20.5
+   },
+   "x3": {
+    "n": 53,
+    "pf": 0.988,
+    "mean_r": -0.008,
+    "win": 35.8,
+    "dd_r": -7.51,
+    "tpd": 0.041,
+    "hold_d": 20.5
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.126,
+    0.113
+   ],
+   "random_mean_r2x": 0.029,
+   "p": 0.55,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X2 turtle 10-bar",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 51,
+    "pf": 1.027,
+    "mean_r": 0.016,
+    "win": 23.5,
+    "dd_r": -13.49,
+    "tpd": 0.04,
+    "hold_d": 22.0
+   },
+   "x1": {
+    "n": 51,
+    "pf": 0.996,
+    "mean_r": -0.002,
+    "win": 23.5,
+    "dd_r": -14.01,
+    "tpd": 0.04,
+    "hold_d": 22.0
+   },
+   "x2": {
+    "n": 51,
+    "pf": 0.967,
+    "mean_r": -0.02,
+    "win": 23.5,
+    "dd_r": -14.54,
+    "tpd": 0.04,
+    "hold_d": 22.0
+   },
+   "x3": {
+    "n": 51,
+    "pf": 0.938,
+    "mean_r": -0.038,
+    "win": 23.5,
+    "dd_r": -15.07,
+    "tpd": 0.04,
+    "hold_d": 22.0
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.313,
+    0.262
+   ],
+   "random_mean_r2x": 0.003,
+   "p": 0.55,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X3 ATR trail 3",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 47,
+    "pf": 1.012,
+    "mean_r": 0.005,
+    "win": 36.2,
+    "dd_r": -8.98,
+    "tpd": 0.037,
+    "hold_d": 24.6
+   },
+   "x1": {
+    "n": 47,
+    "pf": 0.983,
+    "mean_r": -0.007,
+    "win": 36.2,
+    "dd_r": -9.27,
+    "tpd": 0.037,
+    "hold_d": 24.6
+   },
+   "x2": {
+    "n": 47,
+    "pf": 0.955,
+    "mean_r": -0.019,
+    "win": 36.2,
+    "dd_r": -9.56,
+    "tpd": 0.037,
+    "hold_d": 24.6
+   },
+   "x3": {
+    "n": 47,
+    "pf": 0.928,
+    "mean_r": -0.031,
+    "win": 36.2,
+    "dd_r": -9.85,
+    "tpd": 0.037,
+    "hold_d": 24.6
+   },
+   "fee_r": 0.012,
+   "halves": [
+    -0.153,
+    0.147
+   ],
+   "random_mean_r2x": 0.009,
+   "p": 0.585,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X4 time 20 bars",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 62,
+    "pf": 0.842,
+    "mean_r": -0.101,
+    "win": 32.3,
+    "dd_r": -20.08,
+    "tpd": 0.048,
+    "hold_d": 16.1
+   },
+   "x1": {
+    "n": 62,
+    "pf": 0.817,
+    "mean_r": -0.119,
+    "win": 32.3,
+    "dd_r": -20.81,
+    "tpd": 0.048,
+    "hold_d": 16.1
+   },
+   "x2": {
+    "n": 62,
+    "pf": 0.793,
+    "mean_r": -0.137,
+    "win": 32.3,
+    "dd_r": -21.55,
+    "tpd": 0.048,
+    "hold_d": 16.1
+   },
+   "x3": {
+    "n": 62,
+    "pf": 0.77,
+    "mean_r": -0.155,
+    "win": 32.3,
+    "dd_r": -22.28,
+    "tpd": 0.048,
+    "hold_d": 16.1
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.364,
+    0.09
+   ],
+   "random_mean_r2x": 0.006,
+   "p": 0.8,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X5 EMA20 close",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 59,
+    "pf": 0.951,
+    "mean_r": -0.023,
+    "win": 33.9,
+    "dd_r": -14.58,
+    "tpd": 0.046,
+    "hold_d": 16.3
+   },
+   "x1": {
+    "n": 59,
+    "pf": 0.914,
+    "mean_r": -0.041,
+    "win": 32.2,
+    "dd_r": -15.22,
+    "tpd": 0.046,
+    "hold_d": 16.3
+   },
+   "x2": {
+    "n": 59,
+    "pf": 0.878,
+    "mean_r": -0.06,
+    "win": 32.2,
+    "dd_r": -15.87,
+    "tpd": 0.046,
+    "hold_d": 16.3
+   },
+   "x3": {
+    "n": 59,
+    "pf": 0.844,
+    "mean_r": -0.078,
+    "win": 32.2,
+    "dd_r": -16.52,
+    "tpd": 0.046,
+    "hold_d": 16.3
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.235,
+    0.11
+   ],
+   "random_mean_r2x": -0.112,
+   "p": 0.27,
+   "short_years": false
+  },
+  {
+   "cell": "XAGUSD 1d X6 breakeven + trail",
+   "sym": "XAGUSD",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 44,
+    "pf": 1.173,
+    "mean_r": 0.097,
+    "win": 36.4,
+    "dd_r": -9.06,
+    "tpd": 0.034,
+    "hold_d": 26.5
+   },
+   "x1": {
+    "n": 44,
+    "pf": 1.138,
+    "mean_r": 0.079,
+    "win": 36.4,
+    "dd_r": -9.45,
+    "tpd": 0.034,
+    "hold_d": 26.5
+   },
+   "x2": {
+    "n": 44,
+    "pf": 1.105,
+    "mean_r": 0.061,
+    "win": 36.4,
+    "dd_r": -9.83,
+    "tpd": 0.034,
+    "hold_d": 26.5
+   },
+   "x3": {
+    "n": 44,
+    "pf": 1.073,
+    "mean_r": 0.044,
+    "win": 36.4,
+    "dd_r": -10.22,
+    "tpd": 0.034,
+    "hold_d": 26.5
+   },
+   "fee_r": 0.018,
+   "halves": [
+    -0.271,
+    0.46
+   ],
+   "random_mean_r2x": 0.022,
+   "p": 0.45,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X1 fixed 2R",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 54,
+    "pf": 0.786,
+    "mean_r": -0.151,
+    "win": 27.8,
+    "dd_r": -12.0,
+    "tpd": 0.042,
+    "hold_d": 20.1
+   },
+   "x1": {
+    "n": 54,
+    "pf": 0.783,
+    "mean_r": -0.154,
+    "win": 27.8,
+    "dd_r": -12.07,
+    "tpd": 0.042,
+    "hold_d": 20.1
+   },
+   "x2": {
+    "n": 54,
+    "pf": 0.78,
+    "mean_r": -0.156,
+    "win": 27.8,
+    "dd_r": -12.15,
+    "tpd": 0.042,
+    "hold_d": 20.1
+   },
+   "x3": {
+    "n": 54,
+    "pf": 0.778,
+    "mean_r": -0.158,
+    "win": 27.8,
+    "dd_r": -12.22,
+    "tpd": 0.042,
+    "hold_d": 20.1
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.129,
+    -0.178
+   ],
+   "random_mean_r2x": -0.005,
+   "p": 0.79,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X2 turtle 10-bar",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 53,
+    "pf": 0.84,
+    "mean_r": -0.072,
+    "win": 37.7,
+    "dd_r": -8.01,
+    "tpd": 0.041,
+    "hold_d": 22.5
+   },
+   "x1": {
+    "n": 53,
+    "pf": 0.835,
+    "mean_r": -0.075,
+    "win": 37.7,
+    "dd_r": -8.05,
+    "tpd": 0.041,
+    "hold_d": 22.5
+   },
+   "x2": {
+    "n": 53,
+    "pf": 0.83,
+    "mean_r": -0.077,
+    "win": 37.7,
+    "dd_r": -8.11,
+    "tpd": 0.041,
+    "hold_d": 22.5
+   },
+   "x3": {
+    "n": 53,
+    "pf": 0.825,
+    "mean_r": -0.08,
+    "win": 37.7,
+    "dd_r": -8.19,
+    "tpd": 0.041,
+    "hold_d": 22.5
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.021,
+    -0.124
+   ],
+   "random_mean_r2x": -0.098,
+   "p": 0.405,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X3 ATR trail 3",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 50,
+    "pf": 0.79,
+    "mean_r": -0.071,
+    "win": 40.0,
+    "dd_r": -5.75,
+    "tpd": 0.039,
+    "hold_d": 24.3
+   },
+   "x1": {
+    "n": 50,
+    "pf": 0.786,
+    "mean_r": -0.072,
+    "win": 40.0,
+    "dd_r": -5.77,
+    "tpd": 0.039,
+    "hold_d": 24.3
+   },
+   "x2": {
+    "n": 50,
+    "pf": 0.781,
+    "mean_r": -0.074,
+    "win": 40.0,
+    "dd_r": -5.8,
+    "tpd": 0.039,
+    "hold_d": 24.3
+   },
+   "x3": {
+    "n": 50,
+    "pf": 0.777,
+    "mean_r": -0.076,
+    "win": 40.0,
+    "dd_r": -5.82,
+    "tpd": 0.039,
+    "hold_d": 24.3
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.006,
+    -0.132
+   ],
+   "random_mean_r2x": -0.001,
+   "p": 0.715,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X4 time 20 bars",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 62,
+    "pf": 1.077,
+    "mean_r": 0.037,
+    "win": 46.8,
+    "dd_r": -6.8,
+    "tpd": 0.049,
+    "hold_d": 17.0
+   },
+   "x1": {
+    "n": 62,
+    "pf": 1.072,
+    "mean_r": 0.035,
+    "win": 46.8,
+    "dd_r": -6.88,
+    "tpd": 0.049,
+    "hold_d": 17.0
+   },
+   "x2": {
+    "n": 62,
+    "pf": 1.067,
+    "mean_r": 0.032,
+    "win": 46.8,
+    "dd_r": -6.95,
+    "tpd": 0.049,
+    "hold_d": 17.0
+   },
+   "x3": {
+    "n": 62,
+    "pf": 1.062,
+    "mean_r": 0.03,
+    "win": 46.8,
+    "dd_r": -7.03,
+    "tpd": 0.049,
+    "hold_d": 17.0
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.096,
+    0.169
+   ],
+   "random_mean_r2x": -0.043,
+   "p": 0.305,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X5 EMA20 close",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 62,
+    "pf": 0.828,
+    "mean_r": -0.067,
+    "win": 38.7,
+    "dd_r": -7.24,
+    "tpd": 0.048,
+    "hold_d": 15.8
+   },
+   "x1": {
+    "n": 62,
+    "pf": 0.822,
+    "mean_r": -0.069,
+    "win": 38.7,
+    "dd_r": -7.36,
+    "tpd": 0.048,
+    "hold_d": 15.8
+   },
+   "x2": {
+    "n": 62,
+    "pf": 0.817,
+    "mean_r": -0.072,
+    "win": 38.7,
+    "dd_r": -7.47,
+    "tpd": 0.048,
+    "hold_d": 15.8
+   },
+   "x3": {
+    "n": 62,
+    "pf": 0.811,
+    "mean_r": -0.074,
+    "win": 38.7,
+    "dd_r": -7.59,
+    "tpd": 0.048,
+    "hold_d": 15.8
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.037,
+    -0.104
+   ],
+   "random_mean_r2x": -0.026,
+   "p": 0.745,
+   "short_years": false
+  },
+  {
+   "cell": "EURUSD 1d X6 breakeven + trail",
+   "sym": "EURUSD",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 51,
+    "pf": 0.772,
+    "mean_r": -0.117,
+    "win": 35.3,
+    "dd_r": -9.61,
+    "tpd": 0.04,
+    "hold_d": 23.4
+   },
+   "x1": {
+    "n": 51,
+    "pf": 0.768,
+    "mean_r": -0.12,
+    "win": 35.3,
+    "dd_r": -9.73,
+    "tpd": 0.04,
+    "hold_d": 23.4
+   },
+   "x2": {
+    "n": 51,
+    "pf": 0.764,
+    "mean_r": -0.122,
+    "win": 35.3,
+    "dd_r": -9.84,
+    "tpd": 0.04,
+    "hold_d": 23.4
+   },
+   "x3": {
+    "n": 51,
+    "pf": 0.76,
+    "mean_r": -0.124,
+    "win": 35.3,
+    "dd_r": -9.95,
+    "tpd": 0.04,
+    "hold_d": 23.4
+   },
+   "fee_r": 0.002,
+   "halves": [
+    -0.008,
+    -0.216
+   ],
+   "random_mean_r2x": -0.095,
+   "p": 0.545,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X1 fixed 2R",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 49,
+    "pf": 1.107,
+    "mean_r": 0.068,
+    "win": 36.7,
+    "dd_r": -8.0,
+    "tpd": 0.038,
+    "hold_d": 23.9
+   },
+   "x1": {
+    "n": 49,
+    "pf": 1.097,
+    "mean_r": 0.062,
+    "win": 36.7,
+    "dd_r": -8.16,
+    "tpd": 0.038,
+    "hold_d": 23.9
+   },
+   "x2": {
+    "n": 49,
+    "pf": 1.088,
+    "mean_r": 0.056,
+    "win": 36.7,
+    "dd_r": -8.32,
+    "tpd": 0.038,
+    "hold_d": 23.9
+   },
+   "x3": {
+    "n": 49,
+    "pf": 1.079,
+    "mean_r": 0.051,
+    "win": 36.7,
+    "dd_r": -8.48,
+    "tpd": 0.038,
+    "hold_d": 23.9
+   },
+   "fee_r": 0.006,
+   "halves": [
+    0.425,
+    -0.27
+   ],
+   "random_mean_r2x": 0.034,
+   "p": 0.43,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X2 turtle 10-bar",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 53,
+    "pf": 0.709,
+    "mean_r": -0.153,
+    "win": 39.6,
+    "dd_r": -13.32,
+    "tpd": 0.041,
+    "hold_d": 22.0
+   },
+   "x1": {
+    "n": 53,
+    "pf": 0.7,
+    "mean_r": -0.158,
+    "win": 39.6,
+    "dd_r": -13.52,
+    "tpd": 0.041,
+    "hold_d": 22.0
+   },
+   "x2": {
+    "n": 53,
+    "pf": 0.691,
+    "mean_r": -0.164,
+    "win": 39.6,
+    "dd_r": -13.72,
+    "tpd": 0.041,
+    "hold_d": 22.0
+   },
+   "x3": {
+    "n": 53,
+    "pf": 0.683,
+    "mean_r": -0.17,
+    "win": 39.6,
+    "dd_r": -13.95,
+    "tpd": 0.041,
+    "hold_d": 22.0
+   },
+   "fee_r": 0.006,
+   "halves": [
+    0.157,
+    -0.375
+   ],
+   "random_mean_r2x": 0.005,
+   "p": 0.88,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X3 ATR trail 3",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 50,
+    "pf": 0.682,
+    "mean_r": -0.129,
+    "win": 34.0,
+    "dd_r": -9.79,
+    "tpd": 0.039,
+    "hold_d": 25.3
+   },
+   "x1": {
+    "n": 50,
+    "pf": 0.675,
+    "mean_r": -0.133,
+    "win": 34.0,
+    "dd_r": -9.91,
+    "tpd": 0.039,
+    "hold_d": 25.3
+   },
+   "x2": {
+    "n": 50,
+    "pf": 0.667,
+    "mean_r": -0.136,
+    "win": 34.0,
+    "dd_r": -10.03,
+    "tpd": 0.039,
+    "hold_d": 25.3
+   },
+   "x3": {
+    "n": 50,
+    "pf": 0.66,
+    "mean_r": -0.14,
+    "win": 34.0,
+    "dd_r": -10.15,
+    "tpd": 0.039,
+    "hold_d": 25.3
+   },
+   "fee_r": 0.004,
+   "halves": [
+    0.063,
+    -0.281
+   ],
+   "random_mean_r2x": 0.019,
+   "p": 0.88,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X4 time 20 bars",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 64,
+    "pf": 0.683,
+    "mean_r": -0.181,
+    "win": 39.1,
+    "dd_r": -17.75,
+    "tpd": 0.05,
+    "hold_d": 15.9
+   },
+   "x1": {
+    "n": 64,
+    "pf": 0.675,
+    "mean_r": -0.186,
+    "win": 39.1,
+    "dd_r": -18.04,
+    "tpd": 0.05,
+    "hold_d": 15.9
+   },
+   "x2": {
+    "n": 64,
+    "pf": 0.668,
+    "mean_r": -0.192,
+    "win": 39.1,
+    "dd_r": -18.34,
+    "tpd": 0.05,
+    "hold_d": 15.9
+   },
+   "x3": {
+    "n": 64,
+    "pf": 0.66,
+    "mean_r": -0.197,
+    "win": 39.1,
+    "dd_r": -18.63,
+    "tpd": 0.05,
+    "hold_d": 15.9
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.032,
+    -0.324
+   ],
+   "random_mean_r2x": -0.056,
+   "p": 0.81,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X5 EMA20 close",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 63,
+    "pf": 0.703,
+    "mean_r": -0.127,
+    "win": 39.7,
+    "dd_r": -12.7,
+    "tpd": 0.049,
+    "hold_d": 15.8
+   },
+   "x1": {
+    "n": 63,
+    "pf": 0.693,
+    "mean_r": -0.133,
+    "win": 39.7,
+    "dd_r": -12.99,
+    "tpd": 0.049,
+    "hold_d": 15.8
+   },
+   "x2": {
+    "n": 63,
+    "pf": 0.682,
+    "mean_r": -0.138,
+    "win": 39.7,
+    "dd_r": -13.27,
+    "tpd": 0.049,
+    "hold_d": 15.8
+   },
+   "x3": {
+    "n": 63,
+    "pf": 0.672,
+    "mean_r": -0.144,
+    "win": 39.7,
+    "dd_r": -13.56,
+    "tpd": 0.049,
+    "hold_d": 15.8
+   },
+   "fee_r": 0.006,
+   "halves": [
+    -0.001,
+    -0.248
+   ],
+   "random_mean_r2x": -0.014,
+   "p": 0.935,
+   "short_years": false
+  },
+  {
+   "cell": "GBPUSD 1d X6 breakeven + trail",
+   "sym": "GBPUSD",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 51,
+    "pf": 0.794,
+    "mean_r": -0.106,
+    "win": 35.3,
+    "dd_r": -9.47,
+    "tpd": 0.04,
+    "hold_d": 21.9
+   },
+   "x1": {
+    "n": 51,
+    "pf": 0.784,
+    "mean_r": -0.112,
+    "win": 35.3,
+    "dd_r": -9.57,
+    "tpd": 0.04,
+    "hold_d": 21.9
+   },
+   "x2": {
+    "n": 51,
+    "pf": 0.775,
+    "mean_r": -0.117,
+    "win": 35.3,
+    "dd_r": -9.67,
+    "tpd": 0.04,
+    "hold_d": 21.9
+   },
+   "x3": {
+    "n": 51,
+    "pf": 0.766,
+    "mean_r": -0.123,
+    "win": 35.3,
+    "dd_r": -9.77,
+    "tpd": 0.04,
+    "hold_d": 21.9
+   },
+   "fee_r": 0.006,
+   "halves": [
+    0.022,
+    -0.232
+   ],
+   "random_mean_r2x": -0.029,
+   "p": 0.72,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X1 fixed 2R",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 49,
+    "pf": 1.5,
+    "mean_r": 0.286,
+    "win": 42.9,
+    "dd_r": -4.0,
+    "tpd": 0.038,
+    "hold_d": 22.1
+   },
+   "x1": {
+    "n": 49,
+    "pf": 1.484,
+    "mean_r": 0.278,
+    "win": 42.9,
+    "dd_r": -4.04,
+    "tpd": 0.038,
+    "hold_d": 22.1
+   },
+   "x2": {
+    "n": 49,
+    "pf": 1.467,
+    "mean_r": 0.271,
+    "win": 42.9,
+    "dd_r": -4.09,
+    "tpd": 0.038,
+    "hold_d": 22.1
+   },
+   "x3": {
+    "n": 49,
+    "pf": 1.451,
+    "mean_r": 0.264,
+    "win": 42.9,
+    "dd_r": -4.13,
+    "tpd": 0.038,
+    "hold_d": 22.1
+   },
+   "fee_r": 0.007,
+   "halves": [
+    0.486,
+    0.028
+   ],
+   "random_mean_r2x": 0.09,
+   "p": 0.195,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X2 turtle 10-bar",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 40,
+    "pf": 1.984,
+    "mean_r": 0.473,
+    "win": 42.5,
+    "dd_r": -5.07,
+    "tpd": 0.031,
+    "hold_d": 32.1
+   },
+   "x1": {
+    "n": 40,
+    "pf": 1.96,
+    "mean_r": 0.466,
+    "win": 42.5,
+    "dd_r": -5.14,
+    "tpd": 0.031,
+    "hold_d": 32.1
+   },
+   "x2": {
+    "n": 40,
+    "pf": 1.937,
+    "mean_r": 0.459,
+    "win": 42.5,
+    "dd_r": -5.21,
+    "tpd": 0.031,
+    "hold_d": 32.1
+   },
+   "x3": {
+    "n": 40,
+    "pf": 1.914,
+    "mean_r": 0.451,
+    "win": 42.5,
+    "dd_r": -5.28,
+    "tpd": 0.031,
+    "hold_d": 32.1
+   },
+   "fee_r": 0.007,
+   "halves": [
+    0.91,
+    0.007
+   ],
+   "random_mean_r2x": 0.206,
+   "p": 0.18,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X3 ATR trail 3",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 43,
+    "pf": 1.872,
+    "mean_r": 0.255,
+    "win": 46.5,
+    "dd_r": -3.93,
+    "tpd": 0.034,
+    "hold_d": 27.3
+   },
+   "x1": {
+    "n": 43,
+    "pf": 1.846,
+    "mean_r": 0.25,
+    "win": 46.5,
+    "dd_r": -4.02,
+    "tpd": 0.034,
+    "hold_d": 27.3
+   },
+   "x2": {
+    "n": 43,
+    "pf": 1.822,
+    "mean_r": 0.245,
+    "win": 46.5,
+    "dd_r": -4.1,
+    "tpd": 0.034,
+    "hold_d": 27.3
+   },
+   "x3": {
+    "n": 43,
+    "pf": 1.797,
+    "mean_r": 0.24,
+    "win": 46.5,
+    "dd_r": -4.18,
+    "tpd": 0.034,
+    "hold_d": 27.3
+   },
+   "fee_r": 0.005,
+   "halves": [
+    0.51,
+    -0.008
+   ],
+   "random_mean_r2x": 0.177,
+   "p": 0.39,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X4 time 20 bars",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 60,
+    "pf": 1.25,
+    "mean_r": 0.128,
+    "win": 43.3,
+    "dd_r": -7.01,
+    "tpd": 0.047,
+    "hold_d": 15.6
+   },
+   "x1": {
+    "n": 60,
+    "pf": 1.232,
+    "mean_r": 0.121,
+    "win": 43.3,
+    "dd_r": -7.15,
+    "tpd": 0.047,
+    "hold_d": 15.6
+   },
+   "x2": {
+    "n": 60,
+    "pf": 1.215,
+    "mean_r": 0.113,
+    "win": 43.3,
+    "dd_r": -7.3,
+    "tpd": 0.047,
+    "hold_d": 15.6
+   },
+   "x3": {
+    "n": 60,
+    "pf": 1.198,
+    "mean_r": 0.105,
+    "win": 43.3,
+    "dd_r": -7.44,
+    "tpd": 0.047,
+    "hold_d": 15.6
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.344,
+    -0.119
+   ],
+   "random_mean_r2x": 0.06,
+   "p": 0.33,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X5 EMA20 close",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 51,
+    "pf": 1.714,
+    "mean_r": 0.308,
+    "win": 39.2,
+    "dd_r": -7.1,
+    "tpd": 0.04,
+    "hold_d": 20.7
+   },
+   "x1": {
+    "n": 51,
+    "pf": 1.689,
+    "mean_r": 0.3,
+    "win": 39.2,
+    "dd_r": -7.26,
+    "tpd": 0.04,
+    "hold_d": 20.7
+   },
+   "x2": {
+    "n": 51,
+    "pf": 1.664,
+    "mean_r": 0.293,
+    "win": 39.2,
+    "dd_r": -7.42,
+    "tpd": 0.04,
+    "hold_d": 20.7
+   },
+   "x3": {
+    "n": 51,
+    "pf": 1.639,
+    "mean_r": 0.285,
+    "win": 39.2,
+    "dd_r": -7.58,
+    "tpd": 0.04,
+    "hold_d": 20.7
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.76,
+    -0.123
+   ],
+   "random_mean_r2x": 0.225,
+   "p": 0.315,
+   "short_years": false
+  },
+  {
+   "cell": "USDJPY 1d X6 breakeven + trail",
+   "sym": "USDJPY",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 48,
+    "pf": 1.52,
+    "mean_r": 0.238,
+    "win": 41.7,
+    "dd_r": -6.61,
+    "tpd": 0.038,
+    "hold_d": 22.4
+   },
+   "x1": {
+    "n": 48,
+    "pf": 1.498,
+    "mean_r": 0.231,
+    "win": 41.7,
+    "dd_r": -6.75,
+    "tpd": 0.038,
+    "hold_d": 22.4
+   },
+   "x2": {
+    "n": 48,
+    "pf": 1.477,
+    "mean_r": 0.223,
+    "win": 41.7,
+    "dd_r": -6.9,
+    "tpd": 0.038,
+    "hold_d": 22.4
+   },
+   "x3": {
+    "n": 48,
+    "pf": 1.456,
+    "mean_r": 0.215,
+    "win": 41.7,
+    "dd_r": -7.04,
+    "tpd": 0.038,
+    "hold_d": 22.4
+   },
+   "fee_r": 0.008,
+   "halves": [
+    0.478,
+    -0.032
+   ],
+   "random_mean_r2x": 0.237,
+   "p": 0.505,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X1 fixed 2R",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 63,
+    "pf": 1.073,
+    "mean_r": 0.048,
+    "win": 34.9,
+    "dd_r": -9.0,
+    "tpd": 0.049,
+    "hold_d": 14.6
+   },
+   "x1": {
+    "n": 63,
+    "pf": 1.05,
+    "mean_r": 0.033,
+    "win": 34.9,
+    "dd_r": -9.68,
+    "tpd": 0.049,
+    "hold_d": 14.6
+   },
+   "x2": {
+    "n": 63,
+    "pf": 1.027,
+    "mean_r": 0.018,
+    "win": 34.9,
+    "dd_r": -10.36,
+    "tpd": 0.049,
+    "hold_d": 14.6
+   },
+   "x3": {
+    "n": 63,
+    "pf": 1.005,
+    "mean_r": 0.004,
+    "win": 34.9,
+    "dd_r": -11.04,
+    "tpd": 0.049,
+    "hold_d": 14.6
+   },
+   "fee_r": 0.015,
+   "halves": [
+    0.317,
+    -0.236
+   ],
+   "random_mean_r2x": 0.008,
+   "p": 0.465,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X2 turtle 10-bar",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 52,
+    "pf": 1.716,
+    "mean_r": 0.391,
+    "win": 34.6,
+    "dd_r": -5.31,
+    "tpd": 0.04,
+    "hold_d": 19.8
+   },
+   "x1": {
+    "n": 52,
+    "pf": 1.676,
+    "mean_r": 0.376,
+    "win": 34.6,
+    "dd_r": -5.43,
+    "tpd": 0.04,
+    "hold_d": 19.8
+   },
+   "x2": {
+    "n": 52,
+    "pf": 1.638,
+    "mean_r": 0.361,
+    "win": 34.6,
+    "dd_r": -5.56,
+    "tpd": 0.04,
+    "hold_d": 19.8
+   },
+   "x3": {
+    "n": 52,
+    "pf": 1.601,
+    "mean_r": 0.346,
+    "win": 34.6,
+    "dd_r": -5.68,
+    "tpd": 0.04,
+    "hold_d": 19.8
+   },
+   "fee_r": 0.015,
+   "halves": [
+    0.42,
+    0.297
+   ],
+   "random_mean_r2x": 0.081,
+   "p": 0.085,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X3 ATR trail 3",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 50,
+    "pf": 1.675,
+    "mean_r": 0.283,
+    "win": 32.0,
+    "dd_r": -4.42,
+    "tpd": 0.039,
+    "hold_d": 23.3
+   },
+   "x1": {
+    "n": 50,
+    "pf": 1.641,
+    "mean_r": 0.273,
+    "win": 32.0,
+    "dd_r": -4.61,
+    "tpd": 0.039,
+    "hold_d": 23.3
+   },
+   "x2": {
+    "n": 50,
+    "pf": 1.608,
+    "mean_r": 0.263,
+    "win": 30.0,
+    "dd_r": -4.79,
+    "tpd": 0.039,
+    "hold_d": 23.3
+   },
+   "x3": {
+    "n": 50,
+    "pf": 1.575,
+    "mean_r": 0.253,
+    "win": 30.0,
+    "dd_r": -4.97,
+    "tpd": 0.039,
+    "hold_d": 23.3
+   },
+   "fee_r": 0.01,
+   "halves": [
+    0.492,
+    0.051
+   ],
+   "random_mean_r2x": 0.125,
+   "p": 0.235,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X4 time 20 bars",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 65,
+    "pf": 1.48,
+    "mean_r": 0.275,
+    "win": 38.5,
+    "dd_r": -5.45,
+    "tpd": 0.051,
+    "hold_d": 12.2
+   },
+   "x1": {
+    "n": 65,
+    "pf": 1.446,
+    "mean_r": 0.26,
+    "win": 38.5,
+    "dd_r": -5.61,
+    "tpd": 0.051,
+    "hold_d": 12.2
+   },
+   "x2": {
+    "n": 65,
+    "pf": 1.414,
+    "mean_r": 0.245,
+    "win": 38.5,
+    "dd_r": -5.77,
+    "tpd": 0.051,
+    "hold_d": 12.2
+   },
+   "x3": {
+    "n": 65,
+    "pf": 1.382,
+    "mean_r": 0.23,
+    "win": 38.5,
+    "dd_r": -5.93,
+    "tpd": 0.051,
+    "hold_d": 12.2
+   },
+   "fee_r": 0.015,
+   "halves": [
+    0.395,
+    0.091
+   ],
+   "random_mean_r2x": 0.069,
+   "p": 0.17,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X5 EMA20 close",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 63,
+    "pf": 1.644,
+    "mean_r": 0.309,
+    "win": 34.9,
+    "dd_r": -5.09,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x1": {
+    "n": 63,
+    "pf": 1.6,
+    "mean_r": 0.294,
+    "win": 34.9,
+    "dd_r": -5.17,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x2": {
+    "n": 63,
+    "pf": 1.559,
+    "mean_r": 0.279,
+    "win": 34.9,
+    "dd_r": -5.25,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x3": {
+    "n": 63,
+    "pf": 1.518,
+    "mean_r": 0.264,
+    "win": 34.9,
+    "dd_r": -5.33,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "fee_r": 0.015,
+   "halves": [
+    0.332,
+    0.22
+   ],
+   "random_mean_r2x": 0.043,
+   "p": 0.025,
+   "short_years": false
+  },
+  {
+   "cell": "BTCUSDT 1d X6 breakeven + trail",
+   "sym": "BTCUSDT",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 49,
+    "pf": 1.811,
+    "mean_r": 0.43,
+    "win": 36.7,
+    "dd_r": -5.98,
+    "tpd": 0.038,
+    "hold_d": 22.2
+   },
+   "x1": {
+    "n": 49,
+    "pf": 1.77,
+    "mean_r": 0.416,
+    "win": 36.7,
+    "dd_r": -6.07,
+    "tpd": 0.038,
+    "hold_d": 22.2
+   },
+   "x2": {
+    "n": 49,
+    "pf": 1.73,
+    "mean_r": 0.401,
+    "win": 34.7,
+    "dd_r": -6.17,
+    "tpd": 0.038,
+    "hold_d": 22.2
+   },
+   "x3": {
+    "n": 49,
+    "pf": 1.691,
+    "mean_r": 0.386,
+    "win": 34.7,
+    "dd_r": -6.26,
+    "tpd": 0.038,
+    "hold_d": 22.2
+   },
+   "fee_r": 0.015,
+   "halves": [
+    0.548,
+    0.26
+   ],
+   "random_mean_r2x": 0.198,
+   "p": 0.21,
+   "short_years": false
+  },
+  {
+   "cell": "NAS100 1d X1 fixed 2R",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "x0": {
+    "n": 41,
+    "pf": 0.929,
+    "mean_r": -0.049,
+    "win": 31.7,
+    "dd_r": -8.0,
+    "tpd": 0.054,
+    "hold_d": 13.6
+   },
+   "x1": {
+    "n": 41,
+    "pf": 0.913,
+    "mean_r": -0.06,
+    "win": 31.7,
+    "dd_r": -8.13,
+    "tpd": 0.054,
+    "hold_d": 13.6
+   },
+   "x2": {
+    "n": 41,
+    "pf": 0.898,
+    "mean_r": -0.071,
+    "win": 31.7,
+    "dd_r": -8.27,
+    "tpd": 0.054,
+    "hold_d": 13.6
+   },
+   "x3": {
+    "n": 41,
+    "pf": 0.883,
+    "mean_r": -0.083,
+    "win": 31.7,
+    "dd_r": -8.4,
+    "tpd": 0.054,
+    "hold_d": 13.6
+   },
+   "fee_r": 0.011,
+   "halves": [
+    -0.023,
+    -0.08
+   ],
+   "random_mean_r2x": 0.013,
+   "p": 0.625,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 1d X2 turtle 10-bar",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "x0": {
+    "n": 31,
+    "pf": 0.867,
+    "mean_r": -0.08,
+    "win": 35.5,
+    "dd_r": -7.82,
+    "tpd": 0.041,
+    "hold_d": 21.2
+   },
+   "x1": {
+    "n": 31,
+    "pf": 0.852,
+    "mean_r": -0.091,
+    "win": 32.3,
+    "dd_r": -7.97,
+    "tpd": 0.041,
+    "hold_d": 21.2
+   },
+   "x2": {
+    "n": 31,
+    "pf": 0.836,
+    "mean_r": -0.101,
+    "win": 32.3,
+    "dd_r": -8.12,
+    "tpd": 0.041,
+    "hold_d": 21.2
+   },
+   "x3": {
+    "n": 31,
+    "pf": 0.821,
+    "mean_r": -0.112,
+    "win": 32.3,
+    "dd_r": -8.27,
+    "tpd": 0.041,
+    "hold_d": 21.2
+   },
+   "fee_r": 0.01,
+   "halves": [
+    0.174,
+    -0.167
+   ],
+   "random_mean_r2x": -0.082,
+   "p": 0.475,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 1d X3 ATR trail 3",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "x0": {
+    "n": 30,
+    "pf": 1.021,
+    "mean_r": 0.009,
+    "win": 36.7,
+    "dd_r": -4.63,
+    "tpd": 0.04,
+    "hold_d": 22.5
+   },
+   "x1": {
+    "n": 30,
+    "pf": 1.003,
+    "mean_r": 0.001,
+    "win": 36.7,
+    "dd_r": -4.7,
+    "tpd": 0.04,
+    "hold_d": 22.5
+   },
+   "x2": {
+    "n": 30,
+    "pf": 0.986,
+    "mean_r": -0.006,
+    "win": 36.7,
+    "dd_r": -4.77,
+    "tpd": 0.04,
+    "hold_d": 22.5
+   },
+   "x3": {
+    "n": 30,
+    "pf": 0.968,
+    "mean_r": -0.014,
+    "win": 36.7,
+    "dd_r": -4.84,
+    "tpd": 0.04,
+    "hold_d": 22.5
+   },
+   "fee_r": 0.007,
+   "halves": [
+    -0.096,
+    0.012
+   ],
+   "random_mean_r2x": -0.002,
+   "p": 0.48,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 1d X4 time 20 bars",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "x0": {
+    "n": 43,
+    "pf": 0.751,
+    "mean_r": -0.164,
+    "win": 32.6,
+    "dd_r": -13.2,
+    "tpd": 0.057,
+    "hold_d": 13.1
+   },
+   "x1": {
+    "n": 43,
+    "pf": 0.737,
+    "mean_r": -0.175,
+    "win": 32.6,
+    "dd_r": -13.49,
+    "tpd": 0.057,
+    "hold_d": 13.1
+   },
+   "x2": {
+    "n": 43,
+    "pf": 0.723,
+    "mean_r": -0.186,
+    "win": 32.6,
+    "dd_r": -13.78,
+    "tpd": 0.057,
+    "hold_d": 13.1
+   },
+   "x3": {
+    "n": 43,
+    "pf": 0.709,
+    "mean_r": -0.198,
+    "win": 32.6,
+    "dd_r": -14.07,
+    "tpd": 0.057,
+    "hold_d": 13.1
+   },
+   "fee_r": 0.011,
+   "halves": [
+    0.119,
+    -0.236
+   ],
+   "random_mean_r2x": -0.076,
+   "p": 0.725,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 1d X5 EMA20 close",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "x0": {
+    "n": 37,
+    "pf": 0.791,
+    "mean_r": -0.096,
+    "win": 32.4,
+    "dd_r": -8.29,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x1": {
+    "n": 37,
+    "pf": 0.771,
+    "mean_r": -0.107,
+    "win": 32.4,
+    "dd_r": -8.54,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x2": {
+    "n": 37,
+    "pf": 0.752,
+    "mean_r": -0.118,
+    "win": 32.4,
+    "dd_r": -8.79,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "x3": {
+    "n": 37,
+    "pf": 0.733,
+    "mean_r": -0.129,
+    "win": 29.7,
+    "dd_r": -9.04,
+    "tpd": 0.049,
+    "hold_d": 14.0
+   },
+   "fee_r": 0.011,
+   "halves": [
+    0.088,
+    -0.158
+   ],
+   "random_mean_r2x": -0.034,
+   "p": 0.73,
+   "short_years": true
+  },
+  {
+   "cell": "NAS100 1d X6 breakeven + trail",
+   "sym": "NAS100",
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "x0": {
+    "n": 32,
+    "pf": 1.031,
+    "mean_r": 0.017,
+    "win": 31.2,
+    "dd_r": -7.8,
+    "tpd": 0.042,
+    "hold_d": 18.2
+   },
+   "x1": {
+    "n": 32,
+    "pf": 1.012,
+    "mean_r": 0.007,
+    "win": 31.2,
+    "dd_r": -7.91,
+    "tpd": 0.042,
+    "hold_d": 18.2
+   },
+   "x2": {
+    "n": 32,
+    "pf": 0.993,
+    "mean_r": -0.004,
+    "win": 31.2,
+    "dd_r": -8.03,
+    "tpd": 0.042,
+    "hold_d": 18.2
+   },
+   "x3": {
+    "n": 32,
+    "pf": 0.974,
+    "mean_r": -0.015,
+    "win": 31.2,
+    "dd_r": -8.14,
+    "tpd": 0.042,
+    "hold_d": 18.2
+   },
+   "fee_r": 0.011,
+   "halves": [
+    0.09,
+    -0.022
+   ],
+   "random_mean_r2x": -0.022,
+   "p": 0.48,
+   "short_years": true
+  }
+ ],
+ "books": [
+  {
+   "tf": "4h",
+   "exit": "X1 fixed 2R",
+   "n": 1706,
+   "pf2x": 1.103,
+   "mean_r2x": 0.068,
+   "pace": {
+    "n": 1706,
+    "risk_pct": 2.0,
+    "pass_pct": 32.0,
+    "days": 18.8,
+    "accounts": 3.13,
+    "pf": 1.1,
+    "tpd": 1.32
+   }
+  },
+  {
+   "tf": "4h",
+   "exit": "X2 turtle 10-bar",
+   "n": 1578,
+   "pf2x": 1.09,
+   "mean_r2x": 0.052,
+   "pace": {
+    "n": 1578,
+    "risk_pct": 2.0,
+    "pass_pct": 32.8,
+    "days": 18.3,
+    "accounts": 3.05,
+    "pf": 1.09,
+    "tpd": 1.22
+   }
+  },
+  {
+   "tf": "4h",
+   "exit": "X3 ATR trail 3",
+   "n": 1561,
+   "pf2x": 1.13,
+   "mean_r2x": 0.051,
+   "pace": {
+    "n": 1561,
+    "risk_pct": 2.0,
+    "pass_pct": 35.6,
+    "days": 25.3,
+    "accounts": 2.81,
+    "pf": 1.13,
+    "tpd": 1.21
+   }
+  },
+  {
+   "tf": "4h",
+   "exit": "X4 time 20 bars",
+   "n": 2058,
+   "pf2x": 1.019,
+   "mean_r2x": 0.011,
+   "pace": {
+    "n": 2058,
+    "risk_pct": 2.0,
+    "pass_pct": 34.0,
+    "days": 14.7,
+    "accounts": 2.94,
+    "pf": 1.02,
+    "tpd": 1.59
+   }
+  },
+  {
+   "tf": "4h",
+   "exit": "X5 EMA20 close",
+   "n": 1861,
+   "pf2x": 1.067,
+   "mean_r2x": 0.033,
+   "pace": {
+    "n": 1861,
+    "risk_pct": 2.0,
+    "pass_pct": 31.6,
+    "days": 19.0,
+    "accounts": 3.17,
+    "pf": 1.07,
+    "tpd": 1.44
+   }
+  },
+  {
+   "tf": "4h",
+   "exit": "X6 breakeven + trail",
+   "n": 1522,
+   "pf2x": 1.126,
+   "mean_r2x": 0.071,
+   "pace": {
+    "n": 1522,
+    "risk_pct": 2.0,
+    "pass_pct": 36.2,
+    "days": 16.6,
+    "accounts": 2.77,
+    "pf": 1.13,
+    "tpd": 1.18
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X1 fixed 2R",
+   "n": 367,
+   "pf2x": 1.147,
+   "mean_r2x": 0.094,
+   "pace": {
+    "n": 367,
+    "risk_pct": 2.0,
+    "pass_pct": 32.2,
+    "days": 71.5,
+    "accounts": 3.11,
+    "pf": 1.15,
+    "tpd": 0.29
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X2 turtle 10-bar",
+   "n": 321,
+   "pf2x": 1.245,
+   "mean_r2x": 0.13,
+   "pace": {
+    "n": 321,
+    "risk_pct": 2.0,
+    "pass_pct": 41.5,
+    "days": 67.5,
+    "accounts": 2.41,
+    "pf": 1.25,
+    "tpd": 0.25
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X3 ATR trail 3",
+   "n": 312,
+   "pf2x": 1.248,
+   "mean_r2x": 0.093,
+   "pace": {
+    "n": 312,
+    "risk_pct": 2.0,
+    "pass_pct": 34.9,
+    "days": 117.4,
+    "accounts": 2.86,
+    "pf": 1.25,
+    "tpd": 0.24
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X4 time 20 bars",
+   "n": 412,
+   "pf2x": 1.037,
+   "mean_r2x": 0.021,
+   "pace": {
+    "n": 412,
+    "risk_pct": 2.0,
+    "pass_pct": 31.0,
+    "days": 64.5,
+    "accounts": 3.22,
+    "pf": 1.04,
+    "tpd": 0.32
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X5 EMA20 close",
+   "n": 383,
+   "pf2x": 1.197,
+   "mean_r2x": 0.087,
+   "pace": {
+    "n": 383,
+    "risk_pct": 2.0,
+    "pass_pct": 28.8,
+    "days": 111.0,
+    "accounts": 3.47,
+    "pf": 1.2,
+    "tpd": 0.3
+   }
+  },
+  {
+   "tf": "1d",
+   "exit": "X6 breakeven + trail",
+   "n": 314,
+   "pf2x": 1.276,
+   "mean_r2x": 0.145,
+   "pace": {
+    "n": 314,
+    "risk_pct": 2.0,
+    "pass_pct": 41.7,
+    "days": 67.1,
+    "accounts": 2.4,
+    "pf": 1.28,
+    "tpd": 0.25
+   }
+  }
+ ]
+}

@@ -252,6 +252,49 @@ def scripts_view(ideas: list[dict]) -> list[dict]:
     return sorted(out, key=rank_key)
 
 
+#: Kris, 2026-10-12: *"leave only 10-15 best strategies in a table and those
+#: that pass luck check mark them glowing green"*.
+TABLE_ROWS = 15
+
+#: Step 8's per-rule luck checks. REAL = the newer-half gain beats 95% of the
+#: same search run on random entries (`factory/improve.py`).
+LUCK_FILES = ("improve.json", "improve24.json", "hunt.json", "hunt_05.json", "improve2.json")
+
+
+def luck_passed() -> set[str]:
+    out = set()
+    for f in LUCK_FILES:
+        p = queue.DIR / f
+        try:
+            rows = json.loads(p.read_text()) if p.exists() else []
+        except ValueError:
+            continue
+        for r in rows:
+            n = r.get("null_final") or r.get("null") or {}
+            if n.get("real"):
+                out.add(script_of(r.get("name")))
+    return out
+
+
+def best_table(scripts: list[dict], luck: set[str]) -> list[dict]:
+    """PF 1.2 or better only. Luck-check passers first, then the best by
+    score, TABLE_ROWS in all."""
+    for x in scripts:
+        x["luck"] = x["script"] in luck
+    by_score, seen = [], set()
+    for x in sorted(scripts, key=lambda x: (-x["score10"], rank_key(x))):
+        k = x["script"].lower()           # "Bearish divergence short" twice
+        # Kris, 2026-10-12: nothing under PF 1.2 on the table, green or not.
+        if round((x.get("score") or {}).get("pf") or 0, 2) < 1.2:
+            continue
+        if k not in seen:
+            seen.add(k)
+            by_score.append(x)
+    real = [x for x in by_score if x["luck"]]
+    rest = [x for x in by_score if not x["luck"]]
+    return real + rest[:max(0, TABLE_ROWS - len(real))]
+
+
 def per_source() -> list[dict]:
     """One row per source: found, tested, where they died, what survived.
 
@@ -282,6 +325,8 @@ def per_source() -> list[dict]:
     keys |= {r.get("source", "?") for r in tried + kept + waiting}
     keys |= {r.get("source", "?") for r in refused}
 
+    all_ideas = nightly.ideas(10**9)
+    luck = luck_passed()
     out = []
     for key in sorted(keys, key=lambda k: catalogue.get(k).order):
         src = catalogue.get(key)
@@ -367,6 +412,8 @@ def per_source() -> list[dict]:
             last_null = {**last_null, "batch": batch,
                          "only_source": set(batch) == {key}}
 
+        full = scripts_view([x for x in all_ideas
+                             if x.get("source") == key and _shown(x)])
         out.append({
             "funnel": funnel,
             "runs": runs[-20:],
@@ -379,8 +426,12 @@ def per_source() -> list[dict]:
                       if x.get("source") == key and _shown(x)][-25:][::-1],
             # Ranked best to worst and NOT cut: the old `[::-1][:25]` meant
             # newest-first and, on a ranked list, showed only the 25 worst.
-            "scripts": scripts_view([x for x in nightly.ideas(500)
-                                     if x.get("source") == key and _shown(x)]),
+            # EVERY RECORD, not the newest 500: the cap hid 195 of 219
+            # TradingView scripts once the AI loop's ideas piled on top.
+            "scripts": best_table(full, luck),
+            "repaired_n": sum(1 for x in full if x.get("sent_to_repair")),
+            "fixed_n": sum(1 for x in full if x.get("fixed")),
+            "scripts_total": len(full),
             "survivors": [x for x in _survivors(200) if x.get("source") == key][:12],
             "candidates": [x for x in _candidates(200) if x.get("source") == key][:8],
             "read": len({script_of(r.get("name"), str(i)) for i, r in enumerate(w)}) + tested + len(ref),
@@ -452,6 +503,23 @@ def gaps() -> list[dict]:
     return gapsort.tag(queue.rows(queue.DIR / "skipped.jsonl"))
 
 
+#: Kris tab: one hand-built study per row, pass or fail. Kris, 2026-10-12:
+#: *"this one that failed please log in Kris tab in UI"*.
+KRIS_STUDIES = ROOT / "backtests" / "kris" / "studies.jsonl"
+
+
+def kris_studies() -> list[dict]:
+    if not KRIS_STUDIES.exists():
+        return []
+    out = []
+    for line in KRIS_STUDIES.read_text().splitlines():
+        try:
+            out.append(json.loads(line))
+        except ValueError:
+            continue
+    return out[::-1]
+
+
 def state() -> dict:
     """Everything the page draws, in one object."""
     b = live.read()
@@ -481,6 +549,7 @@ def state() -> dict:
                   "p_value": (r.get("step5") or {}).get("p_value")}
                  for r in reversed(runs)],
         "passes": len(nightly.history(10_000)),
+        "kris_studies": kris_studies(),
     }
 
 

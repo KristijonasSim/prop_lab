@@ -343,7 +343,12 @@ def log_equity(row: dict) -> None:
 
 
 def size_multiplier(eq: float, peak: float) -> float:
-    """The adopted budget-linear rule, `core/chosen.py["sizing"]`."""
+    """The adopted budget-linear rule, `core/chosen.py["sizing"]` - SWITCHED OFF.
+
+    Kris, 2026-10-12: shrinking size near the max-loss cap leaves an account
+    floating at a quarter size instead of passing or failing. Full risk always.
+    """
+    return 1.0
     if not peak or peak <= 0:
         return 1.0
     dd = min((eq - peak) / peak, 0.0)

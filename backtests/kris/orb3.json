@@ -1,0 +1,3129 @@
+{
+ "cells": [
+  {
+   "cell": "XAUUSD London 5m stop-side tgt-1R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "1R",
+   "setups": 700,
+   "x0": {
+    "n": 696,
+    "pf": 0.994,
+    "mean_r": -0.003,
+    "win": 49.9,
+    "dd_r": -30.0,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -0.04
+   },
+   "x1": {
+    "n": 696,
+    "pf": 0.627,
+    "mean_r": -0.228,
+    "win": 49.9,
+    "dd_r": -160.08,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -2.86
+   },
+   "x2": {
+    "n": 696,
+    "pf": 0.374,
+    "mean_r": -0.454,
+    "win": 48.4,
+    "dd_r": -316.16,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -5.46
+   },
+   "x3": {
+    "n": 696,
+    "pf": 0.211,
+    "mean_r": -0.68,
+    "win": 41.7,
+    "dd_r": -472.52,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -7.67
+   },
+   "gross_r": -0.003,
+   "fee_r": 0.226,
+   "halves": [
+    -0.517,
+    -0.393
+   ],
+   "p": 0.066,
+   "pace": {
+    "n": 696,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 1212.1,
+    "accounts": 60.61,
+    "pf": 0.37,
+    "tpd": 0.89
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m stop-side tgt-2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "2R",
+   "setups": 700,
+   "x0": {
+    "n": 696,
+    "pf": 1.111,
+    "mean_r": 0.071,
+    "win": 35.8,
+    "dd_r": -32.0,
+    "tpd": 0.89,
+    "hold_h": 0.73,
+    "sharpe": 0.63
+   },
+   "x1": {
+    "n": 696,
+    "pf": 0.803,
+    "mean_r": -0.155,
+    "win": 35.8,
+    "dd_r": -114.71,
+    "tpd": 0.89,
+    "hold_h": 0.73,
+    "sharpe": -1.36
+   },
+   "x2": {
+    "n": 696,
+    "pf": 0.59,
+    "mean_r": -0.38,
+    "win": 35.8,
+    "dd_r": -266.72,
+    "tpd": 0.89,
+    "hold_h": 0.73,
+    "sharpe": -3.29
+   },
+   "x3": {
+    "n": 696,
+    "pf": 0.434,
+    "mean_r": -0.606,
+    "win": 35.8,
+    "dd_r": -422.8,
+    "tpd": 0.89,
+    "hold_h": 0.73,
+    "sharpe": -5.09
+   },
+   "gross_r": 0.071,
+   "fee_r": 0.226,
+   "halves": [
+    -0.433,
+    -0.329
+   ],
+   "p": 0.017,
+   "pace": {
+    "n": 696,
+    "risk_pct": 2.0,
+    "pass_pct": 9.8,
+    "days": 71.5,
+    "accounts": 10.21,
+    "pf": 0.59,
+    "tpd": 0.89
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m stop-side tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 700,
+   "x0": {
+    "n": 696,
+    "pf": 0.994,
+    "mean_r": -0.003,
+    "win": 49.9,
+    "dd_r": -30.0,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -0.04
+   },
+   "x1": {
+    "n": 696,
+    "pf": 0.627,
+    "mean_r": -0.228,
+    "win": 49.9,
+    "dd_r": -160.08,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -2.86
+   },
+   "x2": {
+    "n": 696,
+    "pf": 0.374,
+    "mean_r": -0.454,
+    "win": 48.4,
+    "dd_r": -316.16,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -5.46
+   },
+   "x3": {
+    "n": 696,
+    "pf": 0.211,
+    "mean_r": -0.68,
+    "win": 41.7,
+    "dd_r": -472.52,
+    "tpd": 0.89,
+    "hold_h": 0.37,
+    "sharpe": -7.67
+   },
+   "gross_r": -0.003,
+   "fee_r": 0.226,
+   "halves": [
+    -0.517,
+    -0.393
+   ],
+   "p": 0.078,
+   "pace": {
+    "n": 696,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 1212.1,
+    "accounts": 60.61,
+    "pf": 0.37,
+    "tpd": 0.89
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m stop-mid tgt-1R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 700,
+   "x0": {
+    "n": 549,
+    "pf": 0.76,
+    "mean_r": -0.137,
+    "win": 43.2,
+    "dd_r": -77.0,
+    "tpd": 0.71,
+    "hold_h": 0.11,
+    "sharpe": -1.55
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.36,
+    "mean_r": -0.494,
+    "win": 43.2,
+    "dd_r": -272.46,
+    "tpd": 0.71,
+    "hold_h": 0.11,
+    "sharpe": -5.28
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.134,
+    "mean_r": -0.852,
+    "win": 36.1,
+    "dd_r": -467.93,
+    "tpd": 0.71,
+    "hold_h": 0.11,
+    "sharpe": -8.12
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.045,
+    "mean_r": -1.21,
+    "win": 20.6,
+    "dd_r": -663.8,
+    "tpd": 0.71,
+    "hold_h": 0.11,
+    "sharpe": -10.05
+   },
+   "gross_r": -0.137,
+   "fee_r": 0.358,
+   "halves": [
+    -0.885,
+    -0.829
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 549,
+    "risk_pct": 3.0,
+    "pass_pct": 0.1,
+    "days": 6666.7,
+    "accounts": 1111.11,
+    "pf": 0.13,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m stop-mid tgt-2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 700,
+   "x0": {
+    "n": 549,
+    "pf": 0.984,
+    "mean_r": -0.011,
+    "win": 33.0,
+    "dd_r": -40.0,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -0.09
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.595,
+    "mean_r": -0.369,
+    "win": 33.0,
+    "dd_r": -202.46,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -2.9
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.368,
+    "mean_r": -0.726,
+    "win": 33.0,
+    "dd_r": -397.93,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -5.41
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.219,
+    "mean_r": -1.084,
+    "win": 33.0,
+    "dd_r": -593.39,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -7.47
+   },
+   "gross_r": -0.011,
+   "fee_r": 0.358,
+   "halves": [
+    -0.836,
+    -0.651
+   ],
+   "p": 0.001,
+   "pace": {
+    "n": 549,
+    "risk_pct": 2.0,
+    "pass_pct": 1.6,
+    "days": 632.9,
+    "accounts": 63.29,
+    "pf": 0.37,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m stop-mid tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 700,
+   "x0": {
+    "n": 549,
+    "pf": 0.984,
+    "mean_r": -0.011,
+    "win": 33.0,
+    "dd_r": -40.0,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -0.09
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.595,
+    "mean_r": -0.369,
+    "win": 33.0,
+    "dd_r": -202.46,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -2.9
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.368,
+    "mean_r": -0.726,
+    "win": 33.0,
+    "dd_r": -397.93,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -5.41
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.219,
+    "mean_r": -1.084,
+    "win": 33.0,
+    "dd_r": -593.39,
+    "tpd": 0.71,
+    "hold_h": 0.2,
+    "sharpe": -7.47
+   },
+   "gross_r": -0.011,
+   "fee_r": 0.358,
+   "halves": [
+    -0.836,
+    -0.651
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 549,
+    "risk_pct": 2.0,
+    "pass_pct": 1.6,
+    "days": 632.9,
+    "accounts": 63.29,
+    "pf": 0.37,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-side tgt-1R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "1R",
+   "setups": 589,
+   "x0": {
+    "n": 589,
+    "pf": 1.01,
+    "mean_r": 0.005,
+    "win": 50.3,
+    "dd_r": -31.0,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": 0.06
+   },
+   "x1": {
+    "n": 589,
+    "pf": 0.761,
+    "mean_r": -0.136,
+    "win": 50.3,
+    "dd_r": -88.59,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -1.57
+   },
+   "x2": {
+    "n": 589,
+    "pf": 0.566,
+    "mean_r": -0.276,
+    "win": 50.3,
+    "dd_r": -165.37,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -3.15
+   },
+   "x3": {
+    "n": 589,
+    "pf": 0.41,
+    "mean_r": -0.417,
+    "win": 49.4,
+    "dd_r": -247.05,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -4.61
+   },
+   "gross_r": 0.005,
+   "fee_r": 0.141,
+   "halves": [
+    -0.26,
+    -0.293
+   ],
+   "p": 0.33,
+   "pace": {
+    "n": 589,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 747.1,
+    "accounts": 57.47,
+    "pf": 0.57,
+    "tpd": 0.76
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-side tgt-2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "2R",
+   "setups": 589,
+   "x0": {
+    "n": 589,
+    "pf": 1.089,
+    "mean_r": 0.058,
+    "win": 35.3,
+    "dd_r": -34.0,
+    "tpd": 0.76,
+    "hold_h": 1.76,
+    "sharpe": 0.47
+   },
+   "x1": {
+    "n": 589,
+    "pf": 0.887,
+    "mean_r": -0.083,
+    "win": 35.3,
+    "dd_r": -63.32,
+    "tpd": 0.76,
+    "hold_h": 1.76,
+    "sharpe": -0.67
+   },
+   "x2": {
+    "n": 589,
+    "pf": 0.731,
+    "mean_r": -0.224,
+    "win": 35.3,
+    "dd_r": -137.04,
+    "tpd": 0.76,
+    "hold_h": 1.76,
+    "sharpe": -1.8
+   },
+   "x3": {
+    "n": 589,
+    "pf": 0.605,
+    "mean_r": -0.365,
+    "win": 35.3,
+    "dd_r": -219.05,
+    "tpd": 0.76,
+    "hold_h": 1.76,
+    "sharpe": -2.89
+   },
+   "gross_r": 0.058,
+   "fee_r": 0.141,
+   "halves": [
+    -0.235,
+    -0.213
+   ],
+   "p": 0.195,
+   "pace": {
+    "n": 589,
+    "risk_pct": 2.0,
+    "pass_pct": 17.7,
+    "days": 45.1,
+    "accounts": 5.64,
+    "pf": 0.73,
+    "tpd": 0.76
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-side tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 589,
+   "x0": {
+    "n": 589,
+    "pf": 1.01,
+    "mean_r": 0.005,
+    "win": 50.3,
+    "dd_r": -31.0,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": 0.06
+   },
+   "x1": {
+    "n": 589,
+    "pf": 0.761,
+    "mean_r": -0.136,
+    "win": 50.3,
+    "dd_r": -88.59,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -1.57
+   },
+   "x2": {
+    "n": 589,
+    "pf": 0.566,
+    "mean_r": -0.276,
+    "win": 50.3,
+    "dd_r": -165.37,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -3.15
+   },
+   "x3": {
+    "n": 589,
+    "pf": 0.41,
+    "mean_r": -0.417,
+    "win": 49.4,
+    "dd_r": -247.05,
+    "tpd": 0.76,
+    "hold_h": 1.01,
+    "sharpe": -4.61
+   },
+   "gross_r": 0.005,
+   "fee_r": 0.141,
+   "halves": [
+    -0.26,
+    -0.293
+   ],
+   "p": 0.3,
+   "pace": {
+    "n": 589,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 747.1,
+    "accounts": 57.47,
+    "pf": 0.57,
+    "tpd": 0.76
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-mid tgt-1R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 589,
+   "x0": {
+    "n": 574,
+    "pf": 0.926,
+    "mean_r": -0.038,
+    "win": 48.1,
+    "dd_r": -42.0,
+    "tpd": 0.74,
+    "hold_h": 0.25,
+    "sharpe": -0.44
+   },
+   "x1": {
+    "n": 574,
+    "pf": 0.532,
+    "mean_r": -0.308,
+    "win": 48.1,
+    "dd_r": -180.57,
+    "tpd": 0.74,
+    "hold_h": 0.25,
+    "sharpe": -3.46
+   },
+   "x2": {
+    "n": 574,
+    "pf": 0.277,
+    "mean_r": -0.578,
+    "win": 45.6,
+    "dd_r": -332.14,
+    "tpd": 0.74,
+    "hold_h": 0.25,
+    "sharpe": -6.08
+   },
+   "x3": {
+    "n": 574,
+    "pf": 0.129,
+    "mean_r": -0.847,
+    "win": 34.0,
+    "dd_r": -485.79,
+    "tpd": 0.74,
+    "hold_h": 0.25,
+    "sharpe": -8.13
+   },
+   "gross_r": -0.038,
+   "fee_r": 0.27,
+   "halves": [
+    -0.639,
+    -0.522
+   ],
+   "p": 0.021,
+   "pace": {
+    "n": 574,
+    "risk_pct": 2.0,
+    "pass_pct": 0.2,
+    "days": 5277.8,
+    "accounts": 555.56,
+    "pf": 0.28,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-mid tgt-2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 589,
+   "x0": {
+    "n": 574,
+    "pf": 1.005,
+    "mean_r": 0.003,
+    "win": 33.4,
+    "dd_r": -44.0,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": 0.03
+   },
+   "x1": {
+    "n": 574,
+    "pf": 0.683,
+    "mean_r": -0.266,
+    "win": 33.4,
+    "dd_r": -166.22,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -2.15
+   },
+   "x2": {
+    "n": 574,
+    "pf": 0.472,
+    "mean_r": -0.536,
+    "win": 33.4,
+    "dd_r": -313.98,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -4.22
+   },
+   "x3": {
+    "n": 574,
+    "pf": 0.324,
+    "mean_r": -0.805,
+    "win": 33.4,
+    "dd_r": -465.49,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -6.05
+   },
+   "gross_r": 0.003,
+   "fee_r": 0.27,
+   "halves": [
+    -0.522,
+    -0.548
+   ],
+   "p": 0.027,
+   "pace": {
+    "n": 574,
+    "risk_pct": 2.0,
+    "pass_pct": 4.0,
+    "days": 177.2,
+    "accounts": 25.32,
+    "pf": 0.47,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m stop-mid tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 589,
+   "x0": {
+    "n": 574,
+    "pf": 1.005,
+    "mean_r": 0.003,
+    "win": 33.4,
+    "dd_r": -44.0,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": 0.03
+   },
+   "x1": {
+    "n": 574,
+    "pf": 0.683,
+    "mean_r": -0.266,
+    "win": 33.4,
+    "dd_r": -166.22,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -2.15
+   },
+   "x2": {
+    "n": 574,
+    "pf": 0.472,
+    "mean_r": -0.536,
+    "win": 33.4,
+    "dd_r": -313.98,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -4.22
+   },
+   "x3": {
+    "n": 574,
+    "pf": 0.324,
+    "mean_r": -0.805,
+    "win": 33.4,
+    "dd_r": -465.49,
+    "tpd": 0.74,
+    "hold_h": 0.49,
+    "sharpe": -6.05
+   },
+   "gross_r": 0.003,
+   "fee_r": 0.27,
+   "halves": [
+    -0.522,
+    -0.548
+   ],
+   "p": 0.034,
+   "pace": {
+    "n": 574,
+    "risk_pct": 2.0,
+    "pass_pct": 4.0,
+    "days": 177.2,
+    "accounts": 25.32,
+    "pf": 0.47,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-side tgt-1R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "1R",
+   "setups": 666,
+   "x0": {
+    "n": 665,
+    "pf": 0.87,
+    "mean_r": -0.069,
+    "win": 46.5,
+    "dd_r": -50.91,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -0.86
+   },
+   "x1": {
+    "n": 665,
+    "pf": 0.677,
+    "mean_r": -0.194,
+    "win": 46.5,
+    "dd_r": -130.3,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -2.38
+   },
+   "x2": {
+    "n": 665,
+    "pf": 0.525,
+    "mean_r": -0.318,
+    "win": 46.0,
+    "dd_r": -211.3,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -3.83
+   },
+   "x3": {
+    "n": 665,
+    "pf": 0.402,
+    "mean_r": -0.443,
+    "win": 45.9,
+    "dd_r": -292.75,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -5.15
+   },
+   "gross_r": -0.069,
+   "fee_r": 0.125,
+   "halves": [
+    -0.341,
+    -0.296
+   ],
+   "p": 0.237,
+   "pace": {
+    "n": 665,
+    "risk_pct": 2.0,
+    "pass_pct": 5.4,
+    "days": 240.3,
+    "accounts": 18.48,
+    "pf": 0.52,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-side tgt-2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "2R",
+   "setups": 666,
+   "x0": {
+    "n": 665,
+    "pf": 0.895,
+    "mean_r": -0.07,
+    "win": 32.0,
+    "dd_r": -53.87,
+    "tpd": 0.85,
+    "hold_h": 0.92,
+    "sharpe": -0.64
+   },
+   "x1": {
+    "n": 665,
+    "pf": 0.743,
+    "mean_r": -0.195,
+    "win": 32.0,
+    "dd_r": -134.87,
+    "tpd": 0.85,
+    "hold_h": 0.92,
+    "sharpe": -1.76
+   },
+   "x2": {
+    "n": 665,
+    "pf": 0.622,
+    "mean_r": -0.319,
+    "win": 31.6,
+    "dd_r": -215.87,
+    "tpd": 0.85,
+    "hold_h": 0.92,
+    "sharpe": -2.85
+   },
+   "x3": {
+    "n": 665,
+    "pf": 0.525,
+    "mean_r": -0.444,
+    "win": 31.0,
+    "dd_r": -296.92,
+    "tpd": 0.85,
+    "hold_h": 0.92,
+    "sharpe": -3.88
+   },
+   "gross_r": -0.07,
+   "fee_r": 0.125,
+   "halves": [
+    -0.374,
+    -0.264
+   ],
+   "p": 0.324,
+   "pace": {
+    "n": 665,
+    "risk_pct": 2.0,
+    "pass_pct": 14.0,
+    "days": 49.9,
+    "accounts": 7.12,
+    "pf": 0.62,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-side tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 666,
+   "x0": {
+    "n": 665,
+    "pf": 0.87,
+    "mean_r": -0.069,
+    "win": 46.5,
+    "dd_r": -50.91,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -0.86
+   },
+   "x1": {
+    "n": 665,
+    "pf": 0.677,
+    "mean_r": -0.194,
+    "win": 46.5,
+    "dd_r": -130.3,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -2.38
+   },
+   "x2": {
+    "n": 665,
+    "pf": 0.525,
+    "mean_r": -0.318,
+    "win": 46.0,
+    "dd_r": -211.3,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -3.83
+   },
+   "x3": {
+    "n": 665,
+    "pf": 0.402,
+    "mean_r": -0.443,
+    "win": 45.9,
+    "dd_r": -292.75,
+    "tpd": 0.85,
+    "hold_h": 0.44,
+    "sharpe": -5.15
+   },
+   "gross_r": -0.069,
+   "fee_r": 0.125,
+   "halves": [
+    -0.341,
+    -0.296
+   ],
+   "p": 0.204,
+   "pace": {
+    "n": 665,
+    "risk_pct": 2.0,
+    "pass_pct": 5.4,
+    "days": 240.3,
+    "accounts": 18.48,
+    "pf": 0.52,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-mid tgt-1R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 666,
+   "x0": {
+    "n": 650,
+    "pf": 0.658,
+    "mean_r": -0.206,
+    "win": 39.7,
+    "dd_r": -136.0,
+    "tpd": 0.84,
+    "hold_h": 0.1,
+    "sharpe": -2.56
+   },
+   "x1": {
+    "n": 650,
+    "pf": 0.413,
+    "mean_r": -0.442,
+    "win": 39.7,
+    "dd_r": -287.34,
+    "tpd": 0.84,
+    "hold_h": 0.1,
+    "sharpe": -5.23
+   },
+   "x2": {
+    "n": 650,
+    "pf": 0.249,
+    "mean_r": -0.678,
+    "win": 39.1,
+    "dd_r": -439.76,
+    "tpd": 0.84,
+    "hold_h": 0.1,
+    "sharpe": -7.45
+   },
+   "x3": {
+    "n": 650,
+    "pf": 0.138,
+    "mean_r": -0.914,
+    "win": 35.8,
+    "dd_r": -592.64,
+    "tpd": 0.84,
+    "hold_h": 0.1,
+    "sharpe": -9.21
+   },
+   "gross_r": -0.206,
+   "fee_r": 0.236,
+   "halves": [
+    -0.779,
+    -0.581
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 650,
+    "risk_pct": 2.0,
+    "pass_pct": 0.2,
+    "days": 4722.2,
+    "accounts": 555.56,
+    "pf": 0.25,
+    "tpd": 0.84
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-mid tgt-2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 666,
+   "x0": {
+    "n": 650,
+    "pf": 0.749,
+    "mean_r": -0.183,
+    "win": 27.2,
+    "dd_r": -138.0,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -1.67
+   },
+   "x1": {
+    "n": 650,
+    "pf": 0.536,
+    "mean_r": -0.419,
+    "win": 27.2,
+    "dd_r": -271.44,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -3.74
+   },
+   "x2": {
+    "n": 650,
+    "pf": 0.392,
+    "mean_r": -0.655,
+    "win": 27.2,
+    "dd_r": -424.07,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -5.62
+   },
+   "x3": {
+    "n": 650,
+    "pf": 0.289,
+    "mean_r": -0.891,
+    "win": 27.2,
+    "dd_r": -577.22,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -7.26
+   },
+   "gross_r": -0.183,
+   "fee_r": 0.236,
+   "halves": [
+    -0.813,
+    -0.501
+   ],
+   "p": 0.003,
+   "pace": {
+    "n": 650,
+    "risk_pct": 2.0,
+    "pass_pct": 6.2,
+    "days": 113.6,
+    "accounts": 16.23,
+    "pf": 0.39,
+    "tpd": 0.84
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m stop-mid tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 666,
+   "x0": {
+    "n": 650,
+    "pf": 0.749,
+    "mean_r": -0.183,
+    "win": 27.2,
+    "dd_r": -138.0,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -1.67
+   },
+   "x1": {
+    "n": 650,
+    "pf": 0.536,
+    "mean_r": -0.419,
+    "win": 27.2,
+    "dd_r": -271.44,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -3.74
+   },
+   "x2": {
+    "n": 650,
+    "pf": 0.392,
+    "mean_r": -0.655,
+    "win": 27.2,
+    "dd_r": -424.07,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -5.62
+   },
+   "x3": {
+    "n": 650,
+    "pf": 0.289,
+    "mean_r": -0.891,
+    "win": 27.2,
+    "dd_r": -577.22,
+    "tpd": 0.84,
+    "hold_h": 0.18,
+    "sharpe": -7.26
+   },
+   "gross_r": -0.183,
+   "fee_r": 0.236,
+   "halves": [
+    -0.813,
+    -0.501
+   ],
+   "p": 0.004,
+   "pace": {
+    "n": 650,
+    "risk_pct": 2.0,
+    "pass_pct": 6.2,
+    "days": 113.6,
+    "accounts": 16.23,
+    "pf": 0.39,
+    "tpd": 0.84
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-side tgt-1R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "1R",
+   "setups": 557,
+   "x0": {
+    "n": 557,
+    "pf": 1.022,
+    "mean_r": 0.01,
+    "win": 51.3,
+    "dd_r": -14.54,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": 0.12
+   },
+   "x1": {
+    "n": 557,
+    "pf": 0.863,
+    "mean_r": -0.067,
+    "win": 50.3,
+    "dd_r": -47.24,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -0.8
+   },
+   "x2": {
+    "n": 557,
+    "pf": 0.727,
+    "mean_r": -0.143,
+    "win": 49.7,
+    "dd_r": -87.14,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -1.71
+   },
+   "x3": {
+    "n": 557,
+    "pf": 0.611,
+    "mean_r": -0.22,
+    "win": 49.0,
+    "dd_r": -128.17,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -2.59
+   },
+   "gross_r": 0.01,
+   "fee_r": 0.076,
+   "halves": [
+    -0.186,
+    -0.098
+   ],
+   "p": 0.18,
+   "pace": {
+    "n": 557,
+    "risk_pct": 2.0,
+    "pass_pct": 11.8,
+    "days": 183.0,
+    "accounts": 8.51,
+    "pf": 0.73,
+    "tpd": 0.72
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-side tgt-2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "2R",
+   "setups": 557,
+   "x0": {
+    "n": 557,
+    "pf": 0.943,
+    "mean_r": -0.03,
+    "win": 41.3,
+    "dd_r": -34.84,
+    "tpd": 0.72,
+    "hold_h": 2.65,
+    "sharpe": -0.29
+   },
+   "x1": {
+    "n": 557,
+    "pf": 0.815,
+    "mean_r": -0.106,
+    "win": 40.2,
+    "dd_r": -71.26,
+    "tpd": 0.72,
+    "hold_h": 2.65,
+    "sharpe": -1.04
+   },
+   "x2": {
+    "n": 557,
+    "pf": 0.706,
+    "mean_r": -0.183,
+    "win": 39.3,
+    "dd_r": -110.05,
+    "tpd": 0.72,
+    "hold_h": 2.65,
+    "sharpe": -1.77
+   },
+   "x3": {
+    "n": 557,
+    "pf": 0.614,
+    "mean_r": -0.259,
+    "win": 37.7,
+    "dd_r": -151.46,
+    "tpd": 0.72,
+    "hold_h": 2.65,
+    "sharpe": -2.48
+   },
+   "gross_r": -0.03,
+   "fee_r": 0.076,
+   "halves": [
+    -0.264,
+    -0.097
+   ],
+   "p": 0.592,
+   "pace": {
+    "n": 557,
+    "risk_pct": 2.0,
+    "pass_pct": 19.7,
+    "days": 71.2,
+    "accounts": 5.09,
+    "pf": 0.71,
+    "tpd": 0.72
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-side tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 557,
+   "x0": {
+    "n": 557,
+    "pf": 1.022,
+    "mean_r": 0.01,
+    "win": 51.3,
+    "dd_r": -14.54,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": 0.12
+   },
+   "x1": {
+    "n": 557,
+    "pf": 0.863,
+    "mean_r": -0.067,
+    "win": 50.3,
+    "dd_r": -47.24,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -0.8
+   },
+   "x2": {
+    "n": 557,
+    "pf": 0.727,
+    "mean_r": -0.143,
+    "win": 49.7,
+    "dd_r": -87.14,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -1.71
+   },
+   "x3": {
+    "n": 557,
+    "pf": 0.611,
+    "mean_r": -0.22,
+    "win": 49.0,
+    "dd_r": -128.17,
+    "tpd": 0.72,
+    "hold_h": 1.69,
+    "sharpe": -2.59
+   },
+   "gross_r": 0.01,
+   "fee_r": 0.076,
+   "halves": [
+    -0.186,
+    -0.098
+   ],
+   "p": 0.185,
+   "pace": {
+    "n": 557,
+    "risk_pct": 2.0,
+    "pass_pct": 11.8,
+    "days": 183.0,
+    "accounts": 8.51,
+    "pf": 0.73,
+    "tpd": 0.72
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-mid tgt-1R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 557,
+   "x0": {
+    "n": 554,
+    "pf": 1.006,
+    "mean_r": 0.003,
+    "win": 50.2,
+    "dd_r": -21.02,
+    "tpd": 0.71,
+    "hold_h": 0.38,
+    "sharpe": 0.03
+   },
+   "x1": {
+    "n": 554,
+    "pf": 0.745,
+    "mean_r": -0.146,
+    "win": 50.2,
+    "dd_r": -86.61,
+    "tpd": 0.71,
+    "hold_h": 0.38,
+    "sharpe": -1.64
+   },
+   "x2": {
+    "n": 554,
+    "pf": 0.544,
+    "mean_r": -0.295,
+    "win": 50.2,
+    "dd_r": -166.85,
+    "tpd": 0.71,
+    "hold_h": 0.38,
+    "sharpe": -3.24
+   },
+   "x3": {
+    "n": 554,
+    "pf": 0.388,
+    "mean_r": -0.444,
+    "win": 48.7,
+    "dd_r": -247.09,
+    "tpd": 0.71,
+    "hold_h": 0.38,
+    "sharpe": -4.69
+   },
+   "gross_r": 0.003,
+   "fee_r": 0.149,
+   "halves": [
+    -0.35,
+    -0.237
+   ],
+   "p": 0.002,
+   "pace": {
+    "n": 554,
+    "risk_pct": 2.0,
+    "pass_pct": 8.2,
+    "days": 232.0,
+    "accounts": 12.21,
+    "pf": 0.54,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-mid tgt-2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 557,
+   "x0": {
+    "n": 554,
+    "pf": 0.981,
+    "mean_r": -0.012,
+    "win": 34.7,
+    "dd_r": -27.45,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -0.1
+   },
+   "x1": {
+    "n": 554,
+    "pf": 0.785,
+    "mean_r": -0.161,
+    "win": 33.9,
+    "dd_r": -98.48,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -1.32
+   },
+   "x2": {
+    "n": 554,
+    "pf": 0.635,
+    "mean_r": -0.31,
+    "win": 33.6,
+    "dd_r": -176.49,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -2.5
+   },
+   "x3": {
+    "n": 554,
+    "pf": 0.516,
+    "mean_r": -0.459,
+    "win": 33.4,
+    "dd_r": -256.5,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -3.63
+   },
+   "gross_r": -0.012,
+   "fee_r": 0.149,
+   "halves": [
+    -0.351,
+    -0.268
+   ],
+   "p": 0.007,
+   "pace": {
+    "n": 554,
+    "risk_pct": 2.0,
+    "pass_pct": 14.2,
+    "days": 63.5,
+    "accounts": 7.06,
+    "pf": 0.63,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m stop-mid tgt-candle height",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 557,
+   "x0": {
+    "n": 554,
+    "pf": 0.981,
+    "mean_r": -0.012,
+    "win": 34.7,
+    "dd_r": -27.45,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -0.1
+   },
+   "x1": {
+    "n": 554,
+    "pf": 0.785,
+    "mean_r": -0.161,
+    "win": 33.9,
+    "dd_r": -98.48,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -1.32
+   },
+   "x2": {
+    "n": 554,
+    "pf": 0.635,
+    "mean_r": -0.31,
+    "win": 33.6,
+    "dd_r": -176.49,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -2.5
+   },
+   "x3": {
+    "n": 554,
+    "pf": 0.516,
+    "mean_r": -0.459,
+    "win": 33.4,
+    "dd_r": -256.5,
+    "tpd": 0.71,
+    "hold_h": 0.89,
+    "sharpe": -3.63
+   },
+   "gross_r": -0.012,
+   "fee_r": 0.149,
+   "halves": [
+    -0.351,
+    -0.268
+   ],
+   "p": 0.004,
+   "pace": {
+    "n": 554,
+    "risk_pct": 2.0,
+    "pass_pct": 14.2,
+    "days": 63.5,
+    "accounts": 7.06,
+    "pf": 0.63,
+    "tpd": 0.71
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-side tgt-1R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "1R",
+   "setups": 683,
+   "x0": {
+    "n": 671,
+    "pf": 0.887,
+    "mean_r": -0.06,
+    "win": 46.9,
+    "dd_r": -55.17,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -0.74
+   },
+   "x1": {
+    "n": 671,
+    "pf": 0.589,
+    "mean_r": -0.262,
+    "win": 46.9,
+    "dd_r": -183.75,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -3.19
+   },
+   "x2": {
+    "n": 671,
+    "pf": 0.379,
+    "mean_r": -0.464,
+    "win": 46.9,
+    "dd_r": -315.87,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -5.42
+   },
+   "x3": {
+    "n": 671,
+    "pf": 0.231,
+    "mean_r": -0.666,
+    "win": 41.9,
+    "dd_r": -449.22,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -7.34
+   },
+   "gross_r": -0.06,
+   "fee_r": 0.202,
+   "halves": [
+    -0.505,
+    -0.424
+   ],
+   "p": 0.404,
+   "pace": {
+    "n": 671,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 751.4,
+    "accounts": 57.8,
+    "pf": 0.38,
+    "tpd": 0.86
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-side tgt-2R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "2R",
+   "setups": 683,
+   "x0": {
+    "n": 671,
+    "pf": 0.919,
+    "mean_r": -0.055,
+    "win": 31.4,
+    "dd_r": -65.21,
+    "tpd": 0.86,
+    "hold_h": 0.82,
+    "sharpe": -0.49
+   },
+   "x1": {
+    "n": 671,
+    "pf": 0.688,
+    "mean_r": -0.258,
+    "win": 31.4,
+    "dd_r": -186.33,
+    "tpd": 0.86,
+    "hold_h": 0.82,
+    "sharpe": -2.27
+   },
+   "x2": {
+    "n": 671,
+    "pf": 0.524,
+    "mean_r": -0.46,
+    "win": 31.4,
+    "dd_r": -311.91,
+    "tpd": 0.86,
+    "hold_h": 0.82,
+    "sharpe": -3.96
+   },
+   "x3": {
+    "n": 671,
+    "pf": 0.401,
+    "mean_r": -0.662,
+    "win": 31.4,
+    "dd_r": -446.94,
+    "tpd": 0.86,
+    "hold_h": 0.82,
+    "sharpe": -5.51
+   },
+   "gross_r": -0.055,
+   "fee_r": 0.202,
+   "halves": [
+    -0.499,
+    -0.421
+   ],
+   "p": 0.441,
+   "pace": {
+    "n": 671,
+    "risk_pct": 2.0,
+    "pass_pct": 7.1,
+    "days": 98.3,
+    "accounts": 14.04,
+    "pf": 0.52,
+    "tpd": 0.86
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-side tgt-candle height",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 683,
+   "x0": {
+    "n": 671,
+    "pf": 0.887,
+    "mean_r": -0.06,
+    "win": 46.9,
+    "dd_r": -55.17,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -0.74
+   },
+   "x1": {
+    "n": 671,
+    "pf": 0.589,
+    "mean_r": -0.262,
+    "win": 46.9,
+    "dd_r": -183.75,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -3.19
+   },
+   "x2": {
+    "n": 671,
+    "pf": 0.379,
+    "mean_r": -0.464,
+    "win": 46.9,
+    "dd_r": -315.87,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -5.42
+   },
+   "x3": {
+    "n": 671,
+    "pf": 0.231,
+    "mean_r": -0.666,
+    "win": 41.9,
+    "dd_r": -449.22,
+    "tpd": 0.86,
+    "hold_h": 0.42,
+    "sharpe": -7.34
+   },
+   "gross_r": -0.06,
+   "fee_r": 0.202,
+   "halves": [
+    -0.505,
+    -0.424
+   ],
+   "p": 0.393,
+   "pace": {
+    "n": 671,
+    "risk_pct": 2.0,
+    "pass_pct": 1.7,
+    "days": 751.4,
+    "accounts": 57.8,
+    "pf": 0.38,
+    "tpd": 0.86
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-mid tgt-1R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 683,
+   "x0": {
+    "n": 493,
+    "pf": 0.73,
+    "mean_r": -0.156,
+    "win": 42.2,
+    "dd_r": -87.0,
+    "tpd": 0.63,
+    "hold_h": 0.12,
+    "sharpe": -1.67
+   },
+   "x1": {
+    "n": 493,
+    "pf": 0.385,
+    "mean_r": -0.468,
+    "win": 42.2,
+    "dd_r": -235.64,
+    "tpd": 0.63,
+    "hold_h": 0.12,
+    "sharpe": -4.72
+   },
+   "x2": {
+    "n": 493,
+    "pf": 0.174,
+    "mean_r": -0.78,
+    "win": 42.2,
+    "dd_r": -387.0,
+    "tpd": 0.63,
+    "hold_h": 0.12,
+    "sharpe": -7.09
+   },
+   "x3": {
+    "n": 493,
+    "pf": 0.068,
+    "mean_r": -1.092,
+    "win": 24.7,
+    "dd_r": -538.63,
+    "tpd": 0.63,
+    "hold_h": 0.12,
+    "sharpe": -8.76
+   },
+   "gross_r": -0.156,
+   "fee_r": 0.312,
+   "halves": [
+    -0.881,
+    -0.69
+   ],
+   "p": 0.006,
+   "pace": {
+    "n": 493,
+    "risk_pct": 3.0,
+    "pass_pct": 0.5,
+    "days": 1304.3,
+    "accounts": 217.39,
+    "pf": 0.17,
+    "tpd": 0.63
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-mid tgt-2R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 683,
+   "x0": {
+    "n": 493,
+    "pf": 0.844,
+    "mean_r": -0.11,
+    "win": 29.6,
+    "dd_r": -69.17,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -0.85
+   },
+   "x1": {
+    "n": 493,
+    "pf": 0.542,
+    "mean_r": -0.422,
+    "win": 29.6,
+    "dd_r": -219.02,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -3.19
+   },
+   "x2": {
+    "n": 493,
+    "pf": 0.357,
+    "mean_r": -0.734,
+    "win": 29.6,
+    "dd_r": -369.68,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -5.26
+   },
+   "x3": {
+    "n": 493,
+    "pf": 0.231,
+    "mean_r": -1.046,
+    "win": 29.6,
+    "dd_r": -521.44,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -6.95
+   },
+   "gross_r": -0.11,
+   "fee_r": 0.312,
+   "halves": [
+    -0.791,
+    -0.682
+   ],
+   "p": 0.018,
+   "pace": {
+    "n": 493,
+    "risk_pct": 2.0,
+    "pass_pct": 3.3,
+    "days": 228.0,
+    "accounts": 30.4,
+    "pf": 0.36,
+    "tpd": 0.63
+   }
+  },
+  {
+   "cell": "NAS100 London 5m stop-mid tgt-candle height",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 5,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 683,
+   "x0": {
+    "n": 493,
+    "pf": 0.844,
+    "mean_r": -0.11,
+    "win": 29.6,
+    "dd_r": -69.17,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -0.85
+   },
+   "x1": {
+    "n": 493,
+    "pf": 0.542,
+    "mean_r": -0.422,
+    "win": 29.6,
+    "dd_r": -219.02,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -3.19
+   },
+   "x2": {
+    "n": 493,
+    "pf": 0.357,
+    "mean_r": -0.734,
+    "win": 29.6,
+    "dd_r": -369.68,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -5.26
+   },
+   "x3": {
+    "n": 493,
+    "pf": 0.231,
+    "mean_r": -1.046,
+    "win": 29.6,
+    "dd_r": -521.44,
+    "tpd": 0.63,
+    "hold_h": 0.23,
+    "sharpe": -6.95
+   },
+   "gross_r": -0.11,
+   "fee_r": 0.312,
+   "halves": [
+    -0.791,
+    -0.682
+   ],
+   "p": 0.02,
+   "pace": {
+    "n": 493,
+    "risk_pct": 2.0,
+    "pass_pct": 3.3,
+    "days": 228.0,
+    "accounts": 30.4,
+    "pf": 0.36,
+    "tpd": 0.63
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-side tgt-1R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "1R",
+   "setups": 583,
+   "x0": {
+    "n": 583,
+    "pf": 0.939,
+    "mean_r": -0.031,
+    "win": 48.4,
+    "dd_r": -29.31,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -0.36
+   },
+   "x1": {
+    "n": 583,
+    "pf": 0.726,
+    "mean_r": -0.16,
+    "win": 48.4,
+    "dd_r": -95.83,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -1.84
+   },
+   "x2": {
+    "n": 583,
+    "pf": 0.557,
+    "mean_r": -0.289,
+    "win": 48.4,
+    "dd_r": -170.25,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -3.24
+   },
+   "x3": {
+    "n": 583,
+    "pf": 0.42,
+    "mean_r": -0.417,
+    "win": 47.9,
+    "dd_r": -244.72,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -4.53
+   },
+   "gross_r": -0.031,
+   "fee_r": 0.129,
+   "halves": [
+    -0.346,
+    -0.23
+   ],
+   "p": 0.658,
+   "pace": {
+    "n": 583,
+    "risk_pct": 2.0,
+    "pass_pct": 4.7,
+    "days": 364.0,
+    "accounts": 21.41,
+    "pf": 0.56,
+    "tpd": 0.75
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-side tgt-2R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "2R",
+   "setups": 583,
+   "x0": {
+    "n": 583,
+    "pf": 0.915,
+    "mean_r": -0.058,
+    "win": 31.4,
+    "dd_r": -59.76,
+    "tpd": 0.75,
+    "hold_h": 1.95,
+    "sharpe": -0.48
+   },
+   "x1": {
+    "n": 583,
+    "pf": 0.759,
+    "mean_r": -0.187,
+    "win": 31.4,
+    "dd_r": -120.8,
+    "tpd": 0.75,
+    "hold_h": 1.95,
+    "sharpe": -1.54
+   },
+   "x2": {
+    "n": 583,
+    "pf": 0.636,
+    "mean_r": -0.315,
+    "win": 31.4,
+    "dd_r": -189.98,
+    "tpd": 0.75,
+    "hold_h": 1.95,
+    "sharpe": -2.57
+   },
+   "x3": {
+    "n": 583,
+    "pf": 0.536,
+    "mean_r": -0.444,
+    "win": 31.4,
+    "dd_r": -263.67,
+    "tpd": 0.75,
+    "hold_h": 1.95,
+    "sharpe": -3.54
+   },
+   "gross_r": -0.058,
+   "fee_r": 0.129,
+   "halves": [
+    -0.356,
+    -0.273
+   ],
+   "p": 0.767,
+   "pace": {
+    "n": 583,
+    "risk_pct": 2.0,
+    "pass_pct": 13.2,
+    "days": 68.3,
+    "accounts": 7.59,
+    "pf": 0.64,
+    "tpd": 0.75
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-side tgt-candle height",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 583,
+   "x0": {
+    "n": 583,
+    "pf": 0.939,
+    "mean_r": -0.031,
+    "win": 48.4,
+    "dd_r": -29.31,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -0.36
+   },
+   "x1": {
+    "n": 583,
+    "pf": 0.726,
+    "mean_r": -0.16,
+    "win": 48.4,
+    "dd_r": -95.83,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -1.84
+   },
+   "x2": {
+    "n": 583,
+    "pf": 0.557,
+    "mean_r": -0.289,
+    "win": 48.4,
+    "dd_r": -170.25,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -3.24
+   },
+   "x3": {
+    "n": 583,
+    "pf": 0.42,
+    "mean_r": -0.417,
+    "win": 47.9,
+    "dd_r": -244.72,
+    "tpd": 0.75,
+    "hold_h": 1.12,
+    "sharpe": -4.53
+   },
+   "gross_r": -0.031,
+   "fee_r": 0.129,
+   "halves": [
+    -0.346,
+    -0.23
+   ],
+   "p": 0.629,
+   "pace": {
+    "n": 583,
+    "risk_pct": 2.0,
+    "pass_pct": 4.7,
+    "days": 364.0,
+    "accounts": 21.41,
+    "pf": 0.56,
+    "tpd": 0.75
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-mid tgt-1R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 583,
+   "x0": {
+    "n": 549,
+    "pf": 0.954,
+    "mean_r": -0.024,
+    "win": 48.8,
+    "dd_r": -37.0,
+    "tpd": 0.7,
+    "hold_h": 0.3,
+    "sharpe": -0.27
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.591,
+    "mean_r": -0.259,
+    "win": 48.8,
+    "dd_r": -145.08,
+    "tpd": 0.7,
+    "hold_h": 0.3,
+    "sharpe": -2.85
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.345,
+    "mean_r": -0.495,
+    "win": 48.8,
+    "dd_r": -273.16,
+    "tpd": 0.7,
+    "hold_h": 0.3,
+    "sharpe": -5.13
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.184,
+    "mean_r": -0.73,
+    "win": 40.3,
+    "dd_r": -401.23,
+    "tpd": 0.7,
+    "hold_h": 0.3,
+    "sharpe": -7.0
+   },
+   "gross_r": -0.024,
+   "fee_r": 0.236,
+   "halves": [
+    -0.605,
+    -0.387
+   ],
+   "p": 0.015,
+   "pace": {
+    "n": 549,
+    "risk_pct": 2.0,
+    "pass_pct": 1.6,
+    "days": 705.1,
+    "accounts": 64.1,
+    "pf": 0.35,
+    "tpd": 0.7
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-mid tgt-2R",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 583,
+   "x0": {
+    "n": 549,
+    "pf": 0.984,
+    "mean_r": -0.011,
+    "win": 33.0,
+    "dd_r": -32.0,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -0.09
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.702,
+    "mean_r": -0.246,
+    "win": 33.0,
+    "dd_r": -140.43,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -1.95
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.511,
+    "mean_r": -0.482,
+    "win": 33.0,
+    "dd_r": -268.54,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -3.7
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.373,
+    "mean_r": -0.718,
+    "win": 33.0,
+    "dd_r": -396.8,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -5.28
+   },
+   "gross_r": -0.011,
+   "fee_r": 0.236,
+   "halves": [
+    -0.564,
+    -0.402
+   ],
+   "p": 0.062,
+   "pace": {
+    "n": 549,
+    "risk_pct": 2.0,
+    "pass_pct": 6.4,
+    "days": 140.6,
+    "accounts": 15.62,
+    "pf": 0.51,
+    "tpd": 0.7
+   }
+  },
+  {
+   "cell": "NAS100 London 15m stop-mid tgt-candle height",
+   "sym": "NAS100",
+   "session": "London",
+   "candle": 15,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 583,
+   "x0": {
+    "n": 549,
+    "pf": 0.984,
+    "mean_r": -0.011,
+    "win": 33.0,
+    "dd_r": -32.0,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -0.09
+   },
+   "x1": {
+    "n": 549,
+    "pf": 0.702,
+    "mean_r": -0.246,
+    "win": 33.0,
+    "dd_r": -140.43,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -1.95
+   },
+   "x2": {
+    "n": 549,
+    "pf": 0.511,
+    "mean_r": -0.482,
+    "win": 33.0,
+    "dd_r": -268.54,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -3.7
+   },
+   "x3": {
+    "n": 549,
+    "pf": 0.373,
+    "mean_r": -0.718,
+    "win": 33.0,
+    "dd_r": -396.8,
+    "tpd": 0.7,
+    "hold_h": 0.58,
+    "sharpe": -5.28
+   },
+   "gross_r": -0.011,
+   "fee_r": 0.236,
+   "halves": [
+    -0.564,
+    -0.402
+   ],
+   "p": 0.058,
+   "pace": {
+    "n": 549,
+    "risk_pct": 2.0,
+    "pass_pct": 6.4,
+    "days": 140.6,
+    "accounts": 15.62,
+    "pf": 0.51,
+    "tpd": 0.7
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-side tgt-1R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "1R",
+   "setups": 666,
+   "x0": {
+    "n": 666,
+    "pf": 0.974,
+    "mean_r": -0.013,
+    "win": 49.4,
+    "dd_r": -22.24,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -0.16
+   },
+   "x1": {
+    "n": 666,
+    "pf": 0.859,
+    "mean_r": -0.075,
+    "win": 49.2,
+    "dd_r": -49.48,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -0.93
+   },
+   "x2": {
+    "n": 666,
+    "pf": 0.757,
+    "mean_r": -0.136,
+    "win": 48.9,
+    "dd_r": -89.51,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -1.69
+   },
+   "x3": {
+    "n": 666,
+    "pf": 0.666,
+    "mean_r": -0.198,
+    "win": 48.6,
+    "dd_r": -130.33,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -2.44
+   },
+   "gross_r": -0.013,
+   "fee_r": 0.062,
+   "halves": [
+    -0.159,
+    -0.114
+   ],
+   "p": 0.192,
+   "pace": {
+    "n": 666,
+    "risk_pct": 2.0,
+    "pass_pct": 13.7,
+    "days": 120.3,
+    "accounts": 7.29,
+    "pf": 0.76,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-side tgt-2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "2R",
+   "setups": 666,
+   "x0": {
+    "n": 666,
+    "pf": 1.091,
+    "mean_r": 0.055,
+    "win": 37.8,
+    "dd_r": -19.0,
+    "tpd": 0.85,
+    "hold_h": 1.51,
+    "sharpe": 0.5
+   },
+   "x1": {
+    "n": 666,
+    "pf": 0.99,
+    "mean_r": -0.007,
+    "win": 37.5,
+    "dd_r": -24.04,
+    "tpd": 0.85,
+    "hold_h": 1.51,
+    "sharpe": -0.06
+   },
+   "x2": {
+    "n": 666,
+    "pf": 0.9,
+    "mean_r": -0.069,
+    "win": 37.2,
+    "dd_r": -45.01,
+    "tpd": 0.85,
+    "hold_h": 1.51,
+    "sharpe": -0.62
+   },
+   "x3": {
+    "n": 666,
+    "pf": 0.821,
+    "mean_r": -0.13,
+    "win": 36.8,
+    "dd_r": -85.84,
+    "tpd": 0.85,
+    "hold_h": 1.51,
+    "sharpe": -1.17
+   },
+   "gross_r": 0.055,
+   "fee_r": 0.062,
+   "halves": [
+    -0.044,
+    -0.093
+   ],
+   "p": 0.063,
+   "pace": {
+    "n": 666,
+    "risk_pct": 2.0,
+    "pass_pct": 22.9,
+    "days": 43.7,
+    "accounts": 4.37,
+    "pf": 0.9,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-side tgt-candle height",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 666,
+   "x0": {
+    "n": 666,
+    "pf": 0.974,
+    "mean_r": -0.013,
+    "win": 49.4,
+    "dd_r": -22.24,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -0.16
+   },
+   "x1": {
+    "n": 666,
+    "pf": 0.859,
+    "mean_r": -0.075,
+    "win": 49.2,
+    "dd_r": -49.48,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -0.93
+   },
+   "x2": {
+    "n": 666,
+    "pf": 0.757,
+    "mean_r": -0.136,
+    "win": 48.9,
+    "dd_r": -89.51,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -1.69
+   },
+   "x3": {
+    "n": 666,
+    "pf": 0.666,
+    "mean_r": -0.198,
+    "win": 48.6,
+    "dd_r": -130.33,
+    "tpd": 0.85,
+    "hold_h": 0.72,
+    "sharpe": -2.44
+   },
+   "gross_r": -0.013,
+   "fee_r": 0.062,
+   "halves": [
+    -0.159,
+    -0.114
+   ],
+   "p": 0.163,
+   "pace": {
+    "n": 666,
+    "risk_pct": 2.0,
+    "pass_pct": 13.7,
+    "days": 120.3,
+    "accounts": 7.29,
+    "pf": 0.76,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-mid tgt-1R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 666,
+   "x0": {
+    "n": 662,
+    "pf": 0.9,
+    "mean_r": -0.052,
+    "win": 47.3,
+    "dd_r": -49.59,
+    "tpd": 0.85,
+    "hold_h": 0.15,
+    "sharpe": -0.65
+   },
+   "x1": {
+    "n": 662,
+    "pf": 0.707,
+    "mean_r": -0.173,
+    "win": 47.3,
+    "dd_r": -118.8,
+    "tpd": 0.85,
+    "hold_h": 0.15,
+    "sharpe": -2.12
+   },
+   "x2": {
+    "n": 662,
+    "pf": 0.552,
+    "mean_r": -0.294,
+    "win": 47.3,
+    "dd_r": -195.8,
+    "tpd": 0.85,
+    "hold_h": 0.15,
+    "sharpe": -3.54
+   },
+   "x3": {
+    "n": 662,
+    "pf": 0.425,
+    "mean_r": -0.415,
+    "win": 46.8,
+    "dd_r": -274.84,
+    "tpd": 0.85,
+    "hold_h": 0.15,
+    "sharpe": -4.86
+   },
+   "gross_r": -0.052,
+   "fee_r": 0.121,
+   "halves": [
+    -0.32,
+    -0.268
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 662,
+    "risk_pct": 2.0,
+    "pass_pct": 4.7,
+    "days": 364.0,
+    "accounts": 21.41,
+    "pf": 0.55,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-mid tgt-2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 666,
+   "x0": {
+    "n": 662,
+    "pf": 1.023,
+    "mean_r": 0.015,
+    "win": 34.1,
+    "dd_r": -27.46,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": 0.13
+   },
+   "x1": {
+    "n": 662,
+    "pf": 0.857,
+    "mean_r": -0.106,
+    "win": 34.0,
+    "dd_r": -71.87,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -0.92
+   },
+   "x2": {
+    "n": 662,
+    "pf": 0.724,
+    "mean_r": -0.227,
+    "win": 33.8,
+    "dd_r": -148.45,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -1.95
+   },
+   "x3": {
+    "n": 662,
+    "pf": 0.615,
+    "mean_r": -0.348,
+    "win": 33.5,
+    "dd_r": -227.73,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -2.95
+   },
+   "gross_r": 0.015,
+   "fee_r": 0.121,
+   "halves": [
+    -0.203,
+    -0.251
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 662,
+    "risk_pct": 2.0,
+    "pass_pct": 12.8,
+    "days": 62.5,
+    "accounts": 7.81,
+    "pf": 0.72,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m stop-mid tgt-candle height",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 5,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 666,
+   "x0": {
+    "n": 662,
+    "pf": 1.023,
+    "mean_r": 0.015,
+    "win": 34.1,
+    "dd_r": -27.46,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": 0.13
+   },
+   "x1": {
+    "n": 662,
+    "pf": 0.857,
+    "mean_r": -0.106,
+    "win": 34.0,
+    "dd_r": -71.87,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -0.92
+   },
+   "x2": {
+    "n": 662,
+    "pf": 0.724,
+    "mean_r": -0.227,
+    "win": 33.8,
+    "dd_r": -148.45,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -1.95
+   },
+   "x3": {
+    "n": 662,
+    "pf": 0.615,
+    "mean_r": -0.348,
+    "win": 33.5,
+    "dd_r": -227.73,
+    "tpd": 0.85,
+    "hold_h": 0.33,
+    "sharpe": -2.95
+   },
+   "gross_r": 0.015,
+   "fee_r": 0.121,
+   "halves": [
+    -0.203,
+    -0.251
+   ],
+   "p": 0.0,
+   "pace": {
+    "n": 662,
+    "risk_pct": 2.0,
+    "pass_pct": 12.8,
+    "days": 62.5,
+    "accounts": 7.81,
+    "pf": 0.72,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-side tgt-1R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "1R",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.119,
+    "mean_r": 0.05,
+    "win": 53.4,
+    "dd_r": -14.1,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": 0.6
+   },
+   "x1": {
+    "n": 534,
+    "pf": 1.019,
+    "mean_r": 0.008,
+    "win": 53.2,
+    "dd_r": -17.25,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": 0.1
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.927,
+    "mean_r": -0.034,
+    "win": 51.7,
+    "dd_r": -27.58,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": -0.4
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.844,
+    "mean_r": -0.076,
+    "win": 51.5,
+    "dd_r": -45.38,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": -0.9
+   },
+   "gross_r": 0.05,
+   "fee_r": 0.042,
+   "halves": [
+    0.002,
+    -0.07
+   ],
+   "p": 0.067,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 22.1,
+    "days": 108.4,
+    "accounts": 4.52,
+    "pf": 0.93,
+    "tpd": 0.68
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-side tgt-2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "2R",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.101,
+    "mean_r": 0.05,
+    "win": 44.4,
+    "dd_r": -15.44,
+    "tpd": 0.68,
+    "hold_h": 2.99,
+    "sharpe": 0.47
+   },
+   "x1": {
+    "n": 534,
+    "pf": 1.016,
+    "mean_r": 0.008,
+    "win": 44.0,
+    "dd_r": -19.58,
+    "tpd": 0.68,
+    "hold_h": 2.99,
+    "sharpe": 0.08
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.937,
+    "mean_r": -0.034,
+    "win": 42.5,
+    "dd_r": -34.18,
+    "tpd": 0.68,
+    "hold_h": 2.99,
+    "sharpe": -0.32
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.866,
+    "mean_r": -0.076,
+    "win": 42.1,
+    "dd_r": -48.78,
+    "tpd": 0.68,
+    "hold_h": 2.99,
+    "sharpe": -0.72
+   },
+   "gross_r": 0.05,
+   "fee_r": 0.042,
+   "halves": [
+    0.009,
+    -0.078
+   ],
+   "p": 0.095,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 27.5,
+    "days": 65.4,
+    "accounts": 3.63,
+    "pf": 0.94,
+    "tpd": 0.68
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-side tgt-candle height",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "side",
+   "target": "candle height",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.119,
+    "mean_r": 0.05,
+    "win": 53.4,
+    "dd_r": -14.1,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": 0.6
+   },
+   "x1": {
+    "n": 534,
+    "pf": 1.019,
+    "mean_r": 0.008,
+    "win": 53.2,
+    "dd_r": -17.25,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": 0.1
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.927,
+    "mean_r": -0.034,
+    "win": 51.7,
+    "dd_r": -27.58,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": -0.4
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.844,
+    "mean_r": -0.076,
+    "win": 51.5,
+    "dd_r": -45.38,
+    "tpd": 0.68,
+    "hold_h": 1.86,
+    "sharpe": -0.9
+   },
+   "gross_r": 0.05,
+   "fee_r": 0.042,
+   "halves": [
+    0.002,
+    -0.07
+   ],
+   "p": 0.073,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 22.1,
+    "days": 108.4,
+    "accounts": 4.52,
+    "pf": 0.93,
+    "tpd": 0.68
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-mid tgt-1R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "1R",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.091,
+    "mean_r": 0.043,
+    "win": 52.2,
+    "dd_r": -14.68,
+    "tpd": 0.68,
+    "hold_h": 0.44,
+    "sharpe": 0.48
+   },
+   "x1": {
+    "n": 534,
+    "pf": 0.921,
+    "mean_r": -0.041,
+    "win": 52.1,
+    "dd_r": -28.25,
+    "tpd": 0.68,
+    "hold_h": 0.44,
+    "sharpe": -0.46
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.775,
+    "mean_r": -0.125,
+    "win": 52.1,
+    "dd_r": -69.62,
+    "tpd": 0.68,
+    "hold_h": 0.44,
+    "sharpe": -1.38
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.65,
+    "mean_r": -0.21,
+    "win": 51.9,
+    "dd_r": -112.98,
+    "tpd": 0.68,
+    "hold_h": 0.44,
+    "sharpe": -2.28
+   },
+   "gross_r": 0.043,
+   "fee_r": 0.084,
+   "halves": [
+    -0.118,
+    -0.132
+   ],
+   "p": 0.001,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 16.7,
+    "days": 143.4,
+    "accounts": 5.97,
+    "pf": 0.78,
+    "tpd": 0.68
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-mid tgt-2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "2R",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.035,
+    "mean_r": 0.022,
+    "win": 36.5,
+    "dd_r": -15.7,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": 0.18
+   },
+   "x1": {
+    "n": 534,
+    "pf": 0.909,
+    "mean_r": -0.062,
+    "win": 36.3,
+    "dd_r": -38.13,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -0.5
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.802,
+    "mean_r": -0.147,
+    "win": 35.0,
+    "dd_r": -81.16,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -1.17
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.71,
+    "mean_r": -0.231,
+    "win": 34.8,
+    "dd_r": -124.52,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -1.83
+   },
+   "gross_r": 0.022,
+   "fee_r": 0.084,
+   "halves": [
+    -0.128,
+    -0.165
+   ],
+   "p": 0.014,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 13.0,
+    "days": 69.3,
+    "accounts": 7.7,
+    "pf": 0.8,
+    "tpd": 0.68
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m stop-mid tgt-candle height",
+   "sym": "NAS100",
+   "session": "NY",
+   "candle": 15,
+   "stop": "mid",
+   "target": "candle height",
+   "setups": 534,
+   "x0": {
+    "n": 534,
+    "pf": 1.035,
+    "mean_r": 0.022,
+    "win": 36.5,
+    "dd_r": -15.7,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": 0.18
+   },
+   "x1": {
+    "n": 534,
+    "pf": 0.909,
+    "mean_r": -0.062,
+    "win": 36.3,
+    "dd_r": -38.13,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -0.5
+   },
+   "x2": {
+    "n": 534,
+    "pf": 0.802,
+    "mean_r": -0.147,
+    "win": 35.0,
+    "dd_r": -81.16,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -1.17
+   },
+   "x3": {
+    "n": 534,
+    "pf": 0.71,
+    "mean_r": -0.231,
+    "win": 34.8,
+    "dd_r": -124.52,
+    "tpd": 0.68,
+    "hold_h": 1.03,
+    "sharpe": -1.83
+   },
+   "gross_r": 0.022,
+   "fee_r": 0.084,
+   "halves": [
+    -0.128,
+    -0.165
+   ],
+   "p": 0.021,
+   "pace": {
+    "n": 534,
+    "risk_pct": 2.0,
+    "pass_pct": 13.0,
+    "days": 69.3,
+    "accounts": 7.7,
+    "pf": 0.8,
+    "tpd": 0.68
+   }
+  }
+ ],
+ "best_of_grid": {
+  "cell": "NAS100 NY 15m stop-side tgt-1R",
+  "real": -0.034,
+  "p": 0.235
+ }
+}

@@ -323,6 +323,28 @@ def once(arm: bool) -> None:
         held = sum(float(p["size"]) * (1 if p["side"] == "Buy" else -1) for p in B.positions(host))
         if abs(held - want) > 1e-6:
             print(f"  MISMATCH: exchange holds {held:+.3f} XAU, legs say {want:+.3f}")
+        # FLAT ON THE EXCHANGE, LEGS IN THE BOOK: the native backstop (or a hand
+        # close) took the position out. 2026-10-11 21:31 the backstop closed a
+        # 13.857 leg and the book carried it as open for nine hours - every exit
+        # refused, the leg blocked from re-entering, the evaluations marked to a
+        # phantom. Book each leg out at Bybit's own exit price.
+        if open_legs and held <= 1e-6:
+            rows = B.signed(host, "/v5/position/closed-pnl",
+                            {"category": "linear", "symbol": SYMBOL, "limit": 1})
+            rows = rows.get("result", {}).get("list", [])
+            fill = float(rows[0]["avgExitPrice"]) if rows else px
+            for name, v in s["legs"].items():
+                leg = v.get("open")
+                if not leg or pd.Timestamp(leg["entry_time"]) >= t:   # opened this pass
+                    continue
+                R = r_of(leg, fill)
+                s["closed_r"] += R
+                append(TRADES, {"leg": name, **leg, "exit_time": str(now()), "exit_px": fill,
+                                "why": "exchange", "r": round(R, 3), "armed": arm})
+                print(f"  BOOKED OUT {name[:30]}: closed on the exchange @ {fill:.2f}  {R:+.2f}R")
+                v["open"] = None
+            open_legs = [v["open"] for v in s["legs"].values() if v.get("open")]
+            want = round(sum(o["qty"] for o in open_legs), 3)
         if open_legs:
             r = B.set_backstop(host, min(o["stop"] for o in open_legs))
             if r and r.get("retCode") not in (0, 34040):

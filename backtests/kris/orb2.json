@@ -1,0 +1,1493 @@
+{
+ "cells": [
+  {
+   "cell": "XAUUSD London A first-candle 10R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "A first-candle 10R",
+   "x1": {
+    "n": 662,
+    "pf": 0.826,
+    "mean_r": -0.197,
+    "win": 11.8,
+    "dd_r": -186.15,
+    "tpd": 0.85,
+    "hold_h": 1.54,
+    "sharpe": -0.78
+   },
+   "x2": {
+    "n": 662,
+    "pf": 0.656,
+    "mean_r": -0.474,
+    "win": 11.8,
+    "dd_r": -358.11,
+    "tpd": 0.85,
+    "hold_h": 1.54,
+    "sharpe": -1.86
+   },
+   "x3": {
+    "n": 662,
+    "pf": 0.538,
+    "mean_r": -0.751,
+    "win": 11.8,
+    "dd_r": -531.95,
+    "tpd": 0.85,
+    "hold_h": 1.54,
+    "sharpe": -2.91
+   },
+   "gross_r": 0.08,
+   "fee_r": 0.277,
+   "halves": [
+    -0.742,
+    -0.238
+   ],
+   "p": 0.289,
+   "edge_vs_coin": 0.0435,
+   "pace": {
+    "n": 662,
+    "risk_pct": 2.0,
+    "pass_pct": 15.3,
+    "days": 13.1,
+    "accounts": 6.54,
+    "pf": 0.66,
+    "tpd": 0.85
+   }
+  },
+  {
+   "cell": "XAUUSD London B 15m, stop side, target range",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "B 15m, stop side, target range",
+   "x1": {
+    "n": 761,
+    "pf": 0.777,
+    "mean_r": -0.112,
+    "win": 54.8,
+    "dd_r": -90.6,
+    "tpd": 0.98,
+    "hold_h": 1.09,
+    "sharpe": -1.62
+   },
+   "x2": {
+    "n": 761,
+    "pf": 0.594,
+    "mean_r": -0.225,
+    "win": 54.8,
+    "dd_r": -174.08,
+    "tpd": 0.98,
+    "hold_h": 1.09,
+    "sharpe": -3.21
+   },
+   "x3": {
+    "n": 761,
+    "pf": 0.443,
+    "mean_r": -0.338,
+    "win": 54.1,
+    "dd_r": -258.69,
+    "tpd": 0.98,
+    "hold_h": 1.09,
+    "sharpe": -4.72
+   },
+   "gross_r": 0.001,
+   "fee_r": 0.113,
+   "halves": [
+    -0.261,
+    -0.188
+   ],
+   "p": 0.471,
+   "edge_vs_coin": 0.001,
+   "pace": {
+    "n": 761,
+    "risk_pct": 2.0,
+    "pass_pct": 10.6,
+    "days": 150.7,
+    "accounts": 9.42,
+    "pf": 0.59,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD London C 15m, stop mid, 2x stop",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "C 15m, stop mid, 2x stop",
+   "x1": {
+    "n": 759,
+    "pf": 0.685,
+    "mean_r": -0.258,
+    "win": 31.2,
+    "dd_r": -203.35,
+    "tpd": 0.97,
+    "hold_h": 0.93,
+    "sharpe": -2.45
+   },
+   "x2": {
+    "n": 759,
+    "pf": 0.523,
+    "mean_r": -0.453,
+    "win": 31.2,
+    "dd_r": -347.17,
+    "tpd": 0.97,
+    "hold_h": 0.93,
+    "sharpe": -4.24
+   },
+   "x3": {
+    "n": 759,
+    "pf": 0.401,
+    "mean_r": -0.647,
+    "win": 31.2,
+    "dd_r": -493.71,
+    "tpd": 0.97,
+    "hold_h": 0.93,
+    "sharpe": -5.92
+   },
+   "gross_r": -0.063,
+   "fee_r": 0.195,
+   "halves": [
+    -0.438,
+    -0.467
+   ],
+   "p": 0.925,
+   "edge_vs_coin": -0.064,
+   "pace": {
+    "n": 759,
+    "risk_pct": 2.0,
+    "pass_pct": 5.5,
+    "days": 109.3,
+    "accounts": 18.21,
+    "pf": 0.52,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "XAUUSD London D 15m, stop side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "D 15m, stop side, hold to close",
+   "x1": {
+    "n": 761,
+    "pf": 0.944,
+    "mean_r": -0.048,
+    "win": 22.7,
+    "dd_r": -121.53,
+    "tpd": 0.98,
+    "hold_h": 3.64,
+    "sharpe": -0.26
+   },
+   "x2": {
+    "n": 761,
+    "pf": 0.829,
+    "mean_r": -0.161,
+    "win": 22.5,
+    "dd_r": -182.86,
+    "tpd": 0.98,
+    "hold_h": 3.64,
+    "sharpe": -0.86
+   },
+   "x3": {
+    "n": 761,
+    "pf": 0.735,
+    "mean_r": -0.274,
+    "win": 22.1,
+    "dd_r": -254.53,
+    "tpd": 0.98,
+    "hold_h": 3.64,
+    "sharpe": -1.47
+   },
+   "gross_r": 0.065,
+   "fee_r": 0.113,
+   "halves": [
+    -0.304,
+    -0.016
+   ],
+   "p": 0.776,
+   "edge_vs_coin": -0.051,
+   "pace": {
+    "n": 761,
+    "risk_pct": 2.0,
+    "pass_pct": 27.7,
+    "days": 14.5,
+    "accounts": 3.62,
+    "pf": 0.83,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD London A+ in-play",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "A+ in-play",
+   "x1": {
+    "n": 103,
+    "pf": 1.116,
+    "mean_r": 0.126,
+    "win": 15.5,
+    "dd_r": -53.77,
+    "tpd": 0.14,
+    "hold_h": 1.81,
+    "sharpe": 0.18
+   },
+   "x2": {
+    "n": 103,
+    "pf": 0.893,
+    "mean_r": -0.141,
+    "win": 15.5,
+    "dd_r": -72.83,
+    "tpd": 0.14,
+    "hold_h": 1.81,
+    "sharpe": -0.2
+   },
+   "x3": {
+    "n": 103,
+    "pf": 0.738,
+    "mean_r": -0.408,
+    "win": 15.5,
+    "dd_r": -91.89,
+    "tpd": 0.14,
+    "hold_h": 1.81,
+    "sharpe": -0.56
+   },
+   "gross_r": 0.393,
+   "fee_r": 0.267,
+   "halves": [
+    -0.979,
+    1.126
+   ],
+   "p": 0.202,
+   "edge_vs_coin": 0.187,
+   "pace": {
+    "n": 103,
+    "risk_pct": 2.0,
+    "pass_pct": 21.1,
+    "days": 71.2,
+    "accounts": 4.74,
+    "pf": 0.89,
+    "tpd": 0.14
+   }
+  },
+  {
+   "cell": "XAUUSD London B+ in-play",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "B+ in-play",
+   "x1": {
+    "n": 106,
+    "pf": 1.148,
+    "mean_r": 0.061,
+    "win": 62.3,
+    "dd_r": -8.24,
+    "tpd": 0.14,
+    "hold_h": 1.3,
+    "sharpe": 0.34
+   },
+   "x2": {
+    "n": 106,
+    "pf": 0.908,
+    "mean_r": -0.042,
+    "win": 62.3,
+    "dd_r": -14.48,
+    "tpd": 0.14,
+    "hold_h": 1.3,
+    "sharpe": -0.23
+   },
+   "x3": {
+    "n": 106,
+    "pf": 0.708,
+    "mean_r": -0.144,
+    "win": 62.3,
+    "dd_r": -21.73,
+    "tpd": 0.14,
+    "hold_h": 1.3,
+    "sharpe": -0.77
+   },
+   "gross_r": 0.163,
+   "fee_r": 0.102,
+   "halves": [
+    -0.128,
+    0.085
+   ],
+   "p": 0.024,
+   "edge_vs_coin": 0.1795,
+   "pace": {
+    "n": 106,
+    "risk_pct": 2.0,
+    "pass_pct": 27.5,
+    "days": 400.6,
+    "accounts": 3.64,
+    "pf": 0.91,
+    "tpd": 0.14
+   }
+  },
+  {
+   "cell": "XAUUSD London C+ in-play",
+   "sym": "XAUUSD",
+   "session": "London",
+   "version": "C+ in-play",
+   "x1": {
+    "n": 106,
+    "pf": 1.276,
+    "mean_r": 0.175,
+    "win": 45.3,
+    "dd_r": -10.96,
+    "tpd": 0.14,
+    "hold_h": 1.11,
+    "sharpe": 0.59
+   },
+   "x2": {
+    "n": 106,
+    "pf": 0.991,
+    "mean_r": -0.007,
+    "win": 45.3,
+    "dd_r": -14.8,
+    "tpd": 0.14,
+    "hold_h": 1.11,
+    "sharpe": -0.02
+   },
+   "x3": {
+    "n": 106,
+    "pf": 0.772,
+    "mean_r": -0.189,
+    "win": 45.3,
+    "dd_r": -27.68,
+    "tpd": 0.14,
+    "hold_h": 1.11,
+    "sharpe": -0.63
+   },
+   "gross_r": 0.358,
+   "fee_r": 0.182,
+   "halves": [
+    0.024,
+    -0.053
+   ],
+   "p": 0.037,
+   "edge_vs_coin": 0.24,
+   "pace": {
+    "n": 106,
+    "risk_pct": 2.0,
+    "pass_pct": 26.3,
+    "days": 205.1,
+    "accounts": 3.8,
+    "pf": 0.99,
+    "tpd": 0.14
+   }
+  },
+  {
+   "cell": "XAUUSD NY A first-candle 10R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "A first-candle 10R",
+   "x1": {
+    "n": 749,
+    "pf": 0.84,
+    "mean_r": -0.152,
+    "win": 18.0,
+    "dd_r": -116.35,
+    "tpd": 0.96,
+    "hold_h": 1.51,
+    "sharpe": -0.78
+   },
+   "x2": {
+    "n": 749,
+    "pf": 0.705,
+    "mean_r": -0.322,
+    "win": 17.9,
+    "dd_r": -242.68,
+    "tpd": 0.96,
+    "hold_h": 1.51,
+    "sharpe": -1.64
+   },
+   "x3": {
+    "n": 749,
+    "pf": 0.602,
+    "mean_r": -0.492,
+    "win": 17.6,
+    "dd_r": -369.01,
+    "tpd": 0.96,
+    "hold_h": 1.51,
+    "sharpe": -2.49
+   },
+   "gross_r": 0.017,
+   "fee_r": 0.17,
+   "halves": [
+    -0.43,
+    -0.217
+   ],
+   "p": 0.6,
+   "edge_vs_coin": -0.02,
+   "pace": {
+    "n": 749,
+    "risk_pct": 2.0,
+    "pass_pct": 18.9,
+    "days": 15.8,
+    "accounts": 5.28,
+    "pf": 0.71,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "XAUUSD NY B 15m, stop side, target range",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "B 15m, stop side, target range",
+   "x1": {
+    "n": 757,
+    "pf": 0.842,
+    "mean_r": -0.069,
+    "win": 53.0,
+    "dd_r": -60.25,
+    "tpd": 0.97,
+    "hold_h": 1.67,
+    "sharpe": -1.07
+   },
+   "x2": {
+    "n": 757,
+    "pf": 0.72,
+    "mean_r": -0.13,
+    "win": 52.3,
+    "dd_r": -105.29,
+    "tpd": 0.97,
+    "hold_h": 1.67,
+    "sharpe": -2.01
+   },
+   "x3": {
+    "n": 757,
+    "pf": 0.613,
+    "mean_r": -0.192,
+    "win": 51.9,
+    "dd_r": -150.66,
+    "tpd": 0.97,
+    "hold_h": 1.67,
+    "sharpe": -2.93
+   },
+   "gross_r": -0.007,
+   "fee_r": 0.061,
+   "halves": [
+    -0.187,
+    -0.074
+   ],
+   "p": 0.388,
+   "edge_vs_coin": 0.0105,
+   "pace": {
+    "n": 757,
+    "risk_pct": 2.0,
+    "pass_pct": 10.1,
+    "days": 233.6,
+    "accounts": 9.94,
+    "pf": 0.72,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "XAUUSD NY C 15m, stop mid, 2x stop",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "C 15m, stop mid, 2x stop",
+   "x1": {
+    "n": 755,
+    "pf": 0.807,
+    "mean_r": -0.133,
+    "win": 34.6,
+    "dd_r": -117.07,
+    "tpd": 0.97,
+    "hold_h": 1.46,
+    "sharpe": -1.33
+   },
+   "x2": {
+    "n": 755,
+    "pf": 0.686,
+    "mean_r": -0.238,
+    "win": 34.2,
+    "dd_r": -189.92,
+    "tpd": 0.97,
+    "hold_h": 1.46,
+    "sharpe": -2.36
+   },
+   "x3": {
+    "n": 755,
+    "pf": 0.586,
+    "mean_r": -0.343,
+    "win": 33.8,
+    "dd_r": -264.04,
+    "tpd": 0.97,
+    "hold_h": 1.46,
+    "sharpe": -3.37
+   },
+   "gross_r": -0.028,
+   "fee_r": 0.105,
+   "halves": [
+    -0.298,
+    -0.178
+   ],
+   "p": 0.723,
+   "edge_vs_coin": -0.026,
+   "pace": {
+    "n": 755,
+    "risk_pct": 2.0,
+    "pass_pct": 15.4,
+    "days": 45.5,
+    "accounts": 6.51,
+    "pf": 0.69,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "XAUUSD NY D 15m, stop side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "D 15m, stop side, hold to close",
+   "x1": {
+    "n": 757,
+    "pf": 0.931,
+    "mean_r": -0.038,
+    "win": 38.7,
+    "dd_r": -55.07,
+    "tpd": 0.97,
+    "hold_h": 3.7,
+    "sharpe": -0.37
+   },
+   "x2": {
+    "n": 757,
+    "pf": 0.831,
+    "mean_r": -0.099,
+    "win": 37.6,
+    "dd_r": -82.34,
+    "tpd": 0.97,
+    "hold_h": 3.7,
+    "sharpe": -0.98
+   },
+   "x3": {
+    "n": 757,
+    "pf": 0.743,
+    "mean_r": -0.161,
+    "win": 36.7,
+    "dd_r": -127.79,
+    "tpd": 0.97,
+    "hold_h": 3.7,
+    "sharpe": -1.58
+   },
+   "gross_r": 0.024,
+   "fee_r": 0.061,
+   "halves": [
+    -0.194,
+    -0.005
+   ],
+   "p": 0.549,
+   "edge_vs_coin": -0.002,
+   "pace": {
+    "n": 757,
+    "risk_pct": 2.0,
+    "pass_pct": 23.2,
+    "days": 34.6,
+    "accounts": 4.32,
+    "pf": 0.83,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "XAUUSD NY A+ in-play",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "A+ in-play",
+   "x1": {
+    "n": 90,
+    "pf": 1.181,
+    "mean_r": 0.164,
+    "win": 20.0,
+    "dd_r": -21.18,
+    "tpd": 0.13,
+    "hold_h": 1.62,
+    "sharpe": 0.27
+   },
+   "x2": {
+    "n": 90,
+    "pf": 0.997,
+    "mean_r": -0.003,
+    "win": 20.0,
+    "dd_r": -27.15,
+    "tpd": 0.13,
+    "hold_h": 1.62,
+    "sharpe": -0.01
+   },
+   "x3": {
+    "n": 90,
+    "pf": 0.855,
+    "mean_r": -0.171,
+    "win": 20.0,
+    "dd_r": -37.56,
+    "tpd": 0.13,
+    "hold_h": 1.62,
+    "sharpe": -0.28
+   },
+   "gross_r": 0.331,
+   "fee_r": 0.167,
+   "halves": [
+    -0.067,
+    0.124
+   ],
+   "p": 0.446,
+   "edge_vs_coin": 0.0425,
+   "pace": {
+    "n": 90,
+    "risk_pct": 2.0,
+    "pass_pct": 28.2,
+    "days": 53.1,
+    "accounts": 3.54,
+    "pf": 1.0,
+    "tpd": 0.13
+   }
+  },
+  {
+   "cell": "XAUUSD NY B+ in-play",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "B+ in-play",
+   "x1": {
+    "n": 69,
+    "pf": 0.775,
+    "mean_r": -0.104,
+    "win": 52.2,
+    "dd_r": -10.73,
+    "tpd": 0.1,
+    "hold_h": 1.78,
+    "sharpe": -0.52
+   },
+   "x2": {
+    "n": 69,
+    "pf": 0.688,
+    "mean_r": -0.152,
+    "win": 52.2,
+    "dd_r": -13.62,
+    "tpd": 0.1,
+    "hold_h": 1.78,
+    "sharpe": -0.74
+   },
+   "x3": {
+    "n": 69,
+    "pf": 0.61,
+    "mean_r": -0.199,
+    "win": 52.2,
+    "dd_r": -16.52,
+    "tpd": 0.1,
+    "hold_h": 1.78,
+    "sharpe": -0.96
+   },
+   "gross_r": -0.057,
+   "fee_r": 0.047,
+   "halves": [
+    -0.207,
+    -0.059
+   ],
+   "p": 0.647,
+   "edge_vs_coin": -0.038,
+   "pace": {
+    "n": 69,
+    "risk_pct": 2.0,
+    "pass_pct": 9.3,
+    "days": 1625.7,
+    "accounts": 10.7,
+    "pf": 0.69,
+    "tpd": 0.1
+   }
+  },
+  {
+   "cell": "XAUUSD NY C+ in-play",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "version": "C+ in-play",
+   "x1": {
+    "n": 69,
+    "pf": 0.825,
+    "mean_r": -0.122,
+    "win": 34.8,
+    "dd_r": -15.61,
+    "tpd": 0.1,
+    "hold_h": 1.35,
+    "sharpe": -0.39
+   },
+   "x2": {
+    "n": 69,
+    "pf": 0.729,
+    "mean_r": -0.205,
+    "win": 34.8,
+    "dd_r": -20.13,
+    "tpd": 0.1,
+    "hold_h": 1.35,
+    "sharpe": -0.65
+   },
+   "x3": {
+    "n": 69,
+    "pf": 0.646,
+    "mean_r": -0.289,
+    "win": 34.8,
+    "dd_r": -24.64,
+    "tpd": 0.1,
+    "hold_h": 1.35,
+    "sharpe": -0.89
+   },
+   "gross_r": -0.039,
+   "fee_r": 0.083,
+   "halves": [
+    -0.285,
+    -0.074
+   ],
+   "p": 0.668,
+   "edge_vs_coin": -0.068,
+   "pace": {
+    "n": 69,
+    "risk_pct": 2.0,
+    "pass_pct": 10.9,
+    "days": 549.5,
+    "accounts": 9.16,
+    "pf": 0.73,
+    "tpd": 0.1
+   }
+  },
+  {
+   "cell": "NAS100 London A first-candle 10R",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "A first-candle 10R",
+   "x1": {
+    "n": 646,
+    "pf": 0.784,
+    "mean_r": -0.242,
+    "win": 10.2,
+    "dd_r": -165.25,
+    "tpd": 0.83,
+    "hold_h": 1.63,
+    "sharpe": -0.96
+   },
+   "x2": {
+    "n": 646,
+    "pf": 0.638,
+    "mean_r": -0.487,
+    "win": 10.2,
+    "dd_r": -319.37,
+    "tpd": 0.83,
+    "hold_h": 1.63,
+    "sharpe": -1.91
+   },
+   "x3": {
+    "n": 646,
+    "pf": 0.533,
+    "mean_r": -0.733,
+    "win": 10.2,
+    "dd_r": -474.67,
+    "tpd": 0.83,
+    "hold_h": 1.63,
+    "sharpe": -2.84
+   },
+   "gross_r": 0.003,
+   "fee_r": 0.245,
+   "halves": [
+    -0.469,
+    -0.505
+   ],
+   "p": 0.432,
+   "edge_vs_coin": 0.0135,
+   "pace": {
+    "n": 646,
+    "risk_pct": 2.0,
+    "pass_pct": 15.3,
+    "days": 13.0,
+    "accounts": 6.52,
+    "pf": 0.64,
+    "tpd": 0.83
+   }
+  },
+  {
+   "cell": "NAS100 London B 15m, stop side, target range",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "B 15m, stop side, target range",
+   "x1": {
+    "n": 765,
+    "pf": 0.734,
+    "mean_r": -0.139,
+    "win": 52.8,
+    "dd_r": -109.42,
+    "tpd": 0.98,
+    "hold_h": 1.21,
+    "sharpe": -1.99
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.574,
+    "mean_r": -0.243,
+    "win": 52.8,
+    "dd_r": -187.91,
+    "tpd": 0.98,
+    "hold_h": 1.21,
+    "sharpe": -3.45
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.44,
+    "mean_r": -0.348,
+    "win": 52.2,
+    "dd_r": -267.7,
+    "tpd": 0.98,
+    "hold_h": 1.21,
+    "sharpe": -4.85
+   },
+   "gross_r": -0.034,
+   "fee_r": 0.105,
+   "halves": [
+    -0.286,
+    -0.201
+   ],
+   "p": 0.813,
+   "edge_vs_coin": -0.0275,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 7.8,
+    "days": 191.1,
+    "accounts": 12.74,
+    "pf": 0.57,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London C 15m, stop mid, 2x stop",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "C 15m, stop mid, 2x stop",
+   "x1": {
+    "n": 756,
+    "pf": 0.728,
+    "mean_r": -0.217,
+    "win": 32.0,
+    "dd_r": -175.46,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -2.04
+   },
+   "x2": {
+    "n": 756,
+    "pf": 0.57,
+    "mean_r": -0.395,
+    "win": 32.0,
+    "dd_r": -303.31,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -3.66
+   },
+   "x3": {
+    "n": 756,
+    "pf": 0.448,
+    "mean_r": -0.573,
+    "win": 32.0,
+    "dd_r": -436.96,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -5.2
+   },
+   "gross_r": -0.04,
+   "fee_r": 0.178,
+   "halves": [
+    -0.46,
+    -0.332
+   ],
+   "p": 0.924,
+   "edge_vs_coin": -0.0635,
+   "pace": {
+    "n": 756,
+    "risk_pct": 2.0,
+    "pass_pct": 9.5,
+    "days": 63.2,
+    "accounts": 10.54,
+    "pf": 0.57,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 London D 15m, stop side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "D 15m, stop side, hold to close",
+   "x1": {
+    "n": 765,
+    "pf": 0.895,
+    "mean_r": -0.095,
+    "win": 18.0,
+    "dd_r": -88.02,
+    "tpd": 0.98,
+    "hold_h": 3.66,
+    "sharpe": -0.47
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.798,
+    "mean_r": -0.2,
+    "win": 18.0,
+    "dd_r": -161.69,
+    "tpd": 0.98,
+    "hold_h": 3.66,
+    "sharpe": -1.0
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.717,
+    "mean_r": -0.305,
+    "win": 17.8,
+    "dd_r": -239.41,
+    "tpd": 0.98,
+    "hold_h": 3.66,
+    "sharpe": -1.52
+   },
+   "gross_r": 0.01,
+   "fee_r": 0.105,
+   "halves": [
+    -0.187,
+    -0.213
+   ],
+   "p": 0.4,
+   "edge_vs_coin": 0.0165,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 27.0,
+    "days": 11.1,
+    "accounts": 3.7,
+    "pf": 0.8,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London A+ in-play",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "A+ in-play",
+   "x1": {
+    "n": 33,
+    "pf": 0.699,
+    "mean_r": -0.324,
+    "win": 9.1,
+    "dd_r": -18.3,
+    "tpd": 0.05,
+    "hold_h": 1.82,
+    "sharpe": -0.34
+   },
+   "x2": {
+    "n": 33,
+    "pf": 0.593,
+    "mean_r": -0.506,
+    "win": 9.1,
+    "dd_r": -21.92,
+    "tpd": 0.05,
+    "hold_h": 1.82,
+    "sharpe": -0.53
+   },
+   "x3": {
+    "n": 33,
+    "pf": 0.512,
+    "mean_r": -0.689,
+    "win": 9.1,
+    "dd_r": -26.34,
+    "tpd": 0.05,
+    "hold_h": 1.82,
+    "sharpe": -0.71
+   },
+   "gross_r": -0.141,
+   "fee_r": 0.182,
+   "halves": [
+    0.158,
+    -0.685
+   ],
+   "p": 0.871,
+   "edge_vs_coin": -0.465,
+   "pace": {
+    "n": 33,
+    "risk_pct": 2.0,
+    "pass_pct": 27.8,
+    "days": 374.4,
+    "accounts": 3.6,
+    "pf": 0.59,
+    "tpd": 0.05
+   }
+  },
+  {
+   "cell": "NAS100 London B+ in-play",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "B+ in-play",
+   "x1": {
+    "n": 38,
+    "pf": 1.127,
+    "mean_r": 0.053,
+    "win": 60.5,
+    "dd_r": -4.23,
+    "tpd": 0.06,
+    "hold_h": 1.28,
+    "sharpe": 0.19
+   },
+   "x2": {
+    "n": 38,
+    "pf": 0.982,
+    "mean_r": -0.008,
+    "win": 60.5,
+    "dd_r": -4.45,
+    "tpd": 0.06,
+    "hold_h": 1.28,
+    "sharpe": -0.03
+   },
+   "x3": {
+    "n": 38,
+    "pf": 0.852,
+    "mean_r": -0.069,
+    "win": 60.5,
+    "dd_r": -4.68,
+    "tpd": 0.06,
+    "hold_h": 1.28,
+    "sharpe": -0.25
+   },
+   "gross_r": 0.114,
+   "fee_r": 0.061,
+   "halves": [
+    0.185,
+    -0.051
+   ],
+   "p": 0.19,
+   "edge_vs_coin": 0.139,
+   "pace": {
+    "n": 38,
+    "risk_pct": 2.0,
+    "pass_pct": 26.5,
+    "days": 1007.9,
+    "accounts": 3.78,
+    "pf": 0.98,
+    "tpd": 0.06
+   }
+  },
+  {
+   "cell": "NAS100 London C+ in-play",
+   "sym": "NAS100",
+   "session": "London",
+   "version": "C+ in-play",
+   "x1": {
+    "n": 38,
+    "pf": 1.38,
+    "mean_r": 0.234,
+    "win": 44.7,
+    "dd_r": -4.4,
+    "tpd": 0.06,
+    "hold_h": 0.88,
+    "sharpe": 0.5
+   },
+   "x2": {
+    "n": 38,
+    "pf": 1.186,
+    "mean_r": 0.126,
+    "win": 44.7,
+    "dd_r": -4.8,
+    "tpd": 0.06,
+    "hold_h": 0.88,
+    "sharpe": 0.27
+   },
+   "x3": {
+    "n": 38,
+    "pf": 1.024,
+    "mean_r": 0.018,
+    "win": 44.7,
+    "dd_r": -6.22,
+    "tpd": 0.06,
+    "hold_h": 0.88,
+    "sharpe": 0.04
+   },
+   "gross_r": 0.342,
+   "fee_r": 0.108,
+   "halves": [
+    0.093,
+    0.134
+   ],
+   "p": 0.104,
+   "edge_vs_coin": 0.2765,
+   "pace": {
+    "n": 38,
+    "risk_pct": 2.0,
+    "pass_pct": 52.2,
+    "days": 392.6,
+    "accounts": 1.91,
+    "pf": 1.19,
+    "tpd": 0.06
+   }
+  },
+  {
+   "cell": "NAS100 NY A first-candle 10R",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "A first-candle 10R",
+   "x1": {
+    "n": 767,
+    "pf": 0.976,
+    "mean_r": -0.019,
+    "win": 24.6,
+    "dd_r": -45.33,
+    "tpd": 0.98,
+    "hold_h": 2.01,
+    "sharpe": -0.11
+   },
+   "x2": {
+    "n": 767,
+    "pf": 0.878,
+    "mean_r": -0.109,
+    "win": 24.4,
+    "dd_r": -94.71,
+    "tpd": 0.98,
+    "hold_h": 2.01,
+    "sharpe": -0.63
+   },
+   "x3": {
+    "n": 767,
+    "pf": 0.794,
+    "mean_r": -0.198,
+    "win": 24.0,
+    "dd_r": -161.31,
+    "tpd": 0.98,
+    "hold_h": 2.01,
+    "sharpe": -1.14
+   },
+   "gross_r": 0.07,
+   "fee_r": 0.089,
+   "halves": [
+    -0.148,
+    -0.07
+   ],
+   "p": 0.143,
+   "edge_vs_coin": 0.0645,
+   "pace": {
+    "n": 767,
+    "risk_pct": 2.0,
+    "pass_pct": 22.2,
+    "days": 13.5,
+    "accounts": 4.51,
+    "pf": 0.88,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY B 15m, stop side, target range",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "B 15m, stop side, target range",
+   "x1": {
+    "n": 762,
+    "pf": 1.033,
+    "mean_r": 0.013,
+    "win": 55.9,
+    "dd_r": -20.16,
+    "tpd": 0.97,
+    "hold_h": 2.05,
+    "sharpe": 0.21
+   },
+   "x2": {
+    "n": 762,
+    "pf": 0.947,
+    "mean_r": -0.022,
+    "win": 55.5,
+    "dd_r": -23.71,
+    "tpd": 0.97,
+    "hold_h": 2.05,
+    "sharpe": -0.34
+   },
+   "x3": {
+    "n": 762,
+    "pf": 0.868,
+    "mean_r": -0.057,
+    "win": 54.9,
+    "dd_r": -43.06,
+    "tpd": 0.97,
+    "hold_h": 2.05,
+    "sharpe": -0.88
+   },
+   "gross_r": 0.048,
+   "fee_r": 0.035,
+   "halves": [
+    -0.017,
+    -0.026
+   ],
+   "p": 0.066,
+   "edge_vs_coin": 0.0455,
+   "pace": {
+    "n": 762,
+    "risk_pct": 2.0,
+    "pass_pct": 35.9,
+    "days": 75.3,
+    "accounts": 2.79,
+    "pf": 0.95,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 NY C 15m, stop mid, 2x stop",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "C 15m, stop mid, 2x stop",
+   "x1": {
+    "n": 762,
+    "pf": 0.986,
+    "mean_r": -0.009,
+    "win": 37.8,
+    "dd_r": -34.29,
+    "tpd": 0.97,
+    "hold_h": 1.69,
+    "sharpe": -0.09
+   },
+   "x2": {
+    "n": 762,
+    "pf": 0.894,
+    "mean_r": -0.071,
+    "win": 37.3,
+    "dd_r": -52.99,
+    "tpd": 0.97,
+    "hold_h": 1.69,
+    "sharpe": -0.7
+   },
+   "x3": {
+    "n": 762,
+    "pf": 0.813,
+    "mean_r": -0.133,
+    "win": 36.9,
+    "dd_r": -100.12,
+    "tpd": 0.97,
+    "hold_h": 1.69,
+    "sharpe": -1.3
+   },
+   "gross_r": 0.053,
+   "fee_r": 0.062,
+   "halves": [
+    -0.079,
+    -0.063
+   ],
+   "p": 0.114,
+   "edge_vs_coin": 0.052,
+   "pace": {
+    "n": 762,
+    "risk_pct": 2.0,
+    "pass_pct": 26.7,
+    "days": 29.9,
+    "accounts": 3.74,
+    "pf": 0.89,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 NY D 15m, stop side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "D 15m, stop side, hold to close",
+   "x1": {
+    "n": 762,
+    "pf": 1.031,
+    "mean_r": 0.015,
+    "win": 43.4,
+    "dd_r": -29.26,
+    "tpd": 0.97,
+    "hold_h": 3.99,
+    "sharpe": 0.16
+   },
+   "x2": {
+    "n": 762,
+    "pf": 0.962,
+    "mean_r": -0.019,
+    "win": 42.7,
+    "dd_r": -32.02,
+    "tpd": 0.97,
+    "hold_h": 3.99,
+    "sharpe": -0.2
+   },
+   "x3": {
+    "n": 762,
+    "pf": 0.899,
+    "mean_r": -0.054,
+    "win": 41.9,
+    "dd_r": -43.35,
+    "tpd": 0.97,
+    "hold_h": 3.99,
+    "sharpe": -0.57
+   },
+   "gross_r": 0.05,
+   "fee_r": 0.035,
+   "halves": [
+    0.007,
+    -0.046
+   ],
+   "p": 0.058,
+   "edge_vs_coin": 0.0625,
+   "pace": {
+    "n": 762,
+    "risk_pct": 2.0,
+    "pass_pct": 20.3,
+    "days": 39.5,
+    "accounts": 4.94,
+    "pf": 0.96,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 NY A+ in-play",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "A+ in-play",
+   "x1": {
+    "n": 17,
+    "pf": 0.881,
+    "mean_r": -0.103,
+    "win": 17.6,
+    "dd_r": -10.58,
+    "tpd": 0.03,
+    "hold_h": 1.45,
+    "sharpe": -0.09
+   },
+   "x2": {
+    "n": 17,
+    "pf": 0.821,
+    "mean_r": -0.163,
+    "win": 17.6,
+    "dd_r": -11.16,
+    "tpd": 0.03,
+    "hold_h": 1.45,
+    "sharpe": -0.15
+   },
+   "x3": {
+    "n": 17,
+    "pf": 0.767,
+    "mean_r": -0.222,
+    "win": 17.6,
+    "dd_r": -11.74,
+    "tpd": 0.03,
+    "hold_h": 1.45,
+    "sharpe": -0.21
+   },
+   "gross_r": -0.044,
+   "fee_r": 0.059,
+   "halves": [
+    -1.074,
+    -0.041
+   ],
+   "p": 0.724,
+   "edge_vs_coin": -0.3505,
+   "pace": {
+    "n": 17,
+    "risk_pct": 2.0,
+    "pass_pct": 3.0,
+    "days": 383.3,
+    "accounts": 33.33,
+    "pf": 0.82,
+    "tpd": 0.03
+   }
+  },
+  {
+   "cell": "NAS100 NY B+ in-play",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "B+ in-play",
+   "x1": {
+    "n": 14,
+    "pf": 1.765,
+    "mean_r": 0.224,
+    "win": 71.4,
+    "dd_r": -1.56,
+    "tpd": 0.03,
+    "hold_h": 2.09,
+    "sharpe": 0.58
+   },
+   "x2": {
+    "n": 14,
+    "pf": 1.68,
+    "mean_r": 0.204,
+    "win": 71.4,
+    "dd_r": -1.67,
+    "tpd": 0.03,
+    "hold_h": 2.09,
+    "sharpe": 0.53
+   },
+   "x3": {
+    "n": 14,
+    "pf": 1.598,
+    "mean_r": 0.184,
+    "win": 71.4,
+    "dd_r": -1.77,
+    "tpd": 0.03,
+    "hold_h": 2.09,
+    "sharpe": 0.48
+   },
+   "gross_r": 0.244,
+   "fee_r": 0.02,
+   "halves": [
+    0.775,
+    0.109
+   ],
+   "p": 0.286,
+   "edge_vs_coin": 0.1325,
+   "pace": {
+    "n": 14,
+    "risk_pct": 2.0,
+    "pass_pct": 11.2,
+    "days": 3212.7,
+    "accounts": 8.94,
+    "pf": 1.68,
+    "tpd": 0.03
+   }
+  },
+  {
+   "cell": "NAS100 NY C+ in-play",
+   "sym": "NAS100",
+   "session": "NY",
+   "version": "C+ in-play",
+   "x1": {
+    "n": 14,
+    "pf": 1.102,
+    "mean_r": 0.061,
+    "win": 42.9,
+    "dd_r": -4.24,
+    "tpd": 0.03,
+    "hold_h": 1.82,
+    "sharpe": 0.1
+   },
+   "x2": {
+    "n": 14,
+    "pf": 1.04,
+    "mean_r": 0.025,
+    "win": 42.9,
+    "dd_r": -4.49,
+    "tpd": 0.03,
+    "hold_h": 1.82,
+    "sharpe": 0.04
+   },
+   "x3": {
+    "n": 14,
+    "pf": 0.982,
+    "mean_r": -0.012,
+    "win": 42.9,
+    "dd_r": -4.73,
+    "tpd": 0.03,
+    "hold_h": 1.82,
+    "sharpe": -0.02
+   },
+   "gross_r": 0.097,
+   "fee_r": 0.036,
+   "halves": [
+    -0.092,
+    0.044
+   ],
+   "p": 0.359,
+   "edge_vs_coin": 0.114,
+   "pace": {
+    "n": 14,
+    "risk_pct": 2.0,
+    "pass_pct": 51.3,
+    "days": 410.3,
+    "accounts": 1.95,
+    "pf": 1.04,
+    "tpd": 0.03
+   }
+  }
+ ],
+ "best_of_grid": {
+  "cell": "NAS100 NY B+ in-play",
+  "real": 0.204,
+  "p": 0.854
+ }
+}

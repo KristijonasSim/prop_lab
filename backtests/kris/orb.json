@@ -1,0 +1,3309 @@
+{
+ "cells": [
+  {
+   "cell": "XAUUSD London 5m OR15 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.847,
+    "mean_r": -0.112,
+    "win": 33.9,
+    "dd_r": -105.95,
+    "tpd": 0.99,
+    "hold_h": 2.29,
+    "sharpe": -1.06
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.722,
+    "mean_r": -0.224,
+    "win": 33.9,
+    "dd_r": -178.7,
+    "tpd": 0.99,
+    "hold_h": 2.29,
+    "sharpe": -2.12
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.617,
+    "mean_r": -0.336,
+    "win": 33.9,
+    "dd_r": -263.74,
+    "tpd": 0.99,
+    "hold_h": 2.29,
+    "sharpe": -3.16
+   },
+   "gross_r": 0.001,
+   "long_share": 0.52,
+   "halves": [
+    -0.262,
+    -0.186
+   ],
+   "p": 0.536,
+   "null_mean": -0.22,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 20.1,
+    "days": 39.7,
+    "accounts": 4.97,
+    "pf": 0.72,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m OR15 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 770,
+    "pf": 0.675,
+    "mean_r": -0.267,
+    "win": 30.9,
+    "dd_r": -211.72,
+    "tpd": 0.99,
+    "hold_h": 0.93,
+    "sharpe": -2.56
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.516,
+    "mean_r": -0.461,
+    "win": 30.9,
+    "dd_r": -358.39,
+    "tpd": 0.99,
+    "hold_h": 0.93,
+    "sharpe": -4.36
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.396,
+    "mean_r": -0.654,
+    "win": 30.9,
+    "dd_r": -506.54,
+    "tpd": 0.99,
+    "hold_h": 0.93,
+    "sharpe": -6.05
+   },
+   "gross_r": -0.073,
+   "long_share": 0.52,
+   "halves": [
+    -0.441,
+    -0.48
+   ],
+   "p": 0.961,
+   "null_mean": -0.386,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 5.4,
+    "days": 92.6,
+    "accounts": 18.52,
+    "pf": 0.52,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m OR15 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 772,
+    "pf": 0.93,
+    "mean_r": -0.06,
+    "win": 22.5,
+    "dd_r": -128.89,
+    "tpd": 0.99,
+    "hold_h": 3.62,
+    "sharpe": -0.33
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.818,
+    "mean_r": -0.172,
+    "win": 22.3,
+    "dd_r": -190.91,
+    "tpd": 0.99,
+    "hold_h": 3.62,
+    "sharpe": -0.94
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.725,
+    "mean_r": -0.284,
+    "win": 21.9,
+    "dd_r": -263.26,
+    "tpd": 0.99,
+    "hold_h": 3.62,
+    "sharpe": -1.54
+   },
+   "gross_r": 0.053,
+   "long_share": 0.52,
+   "halves": [
+    -0.314,
+    -0.03
+   ],
+   "p": 0.785,
+   "null_mean": -0.115,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 27.4,
+    "days": 14.6,
+    "accounts": 3.65,
+    "pf": 0.82,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m OR30 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.971,
+    "mean_r": -0.019,
+    "win": 37.7,
+    "dd_r": -49.32,
+    "tpd": 0.99,
+    "hold_h": 3.27,
+    "sharpe": -0.18
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.855,
+    "mean_r": -0.104,
+    "win": 37.7,
+    "dd_r": -106.26,
+    "tpd": 0.99,
+    "hold_h": 3.27,
+    "sharpe": -1.0
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.754,
+    "mean_r": -0.188,
+    "win": 37.3,
+    "dd_r": -163.2,
+    "tpd": 0.99,
+    "hold_h": 3.27,
+    "sharpe": -1.82
+   },
+   "gross_r": 0.066,
+   "long_share": 0.54,
+   "halves": [
+    -0.108,
+    -0.099
+   ],
+   "p": 0.042,
+   "null_mean": -0.175,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 22.1,
+    "days": 36.1,
+    "accounts": 4.52,
+    "pf": 0.85,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m OR30 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.746,
+    "mean_r": -0.198,
+    "win": 32.0,
+    "dd_r": -161.94,
+    "tpd": 0.99,
+    "hold_h": 1.41,
+    "sharpe": -1.9
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.605,
+    "mean_r": -0.348,
+    "win": 32.0,
+    "dd_r": -272.62,
+    "tpd": 0.99,
+    "hold_h": 1.41,
+    "sharpe": -3.3
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.493,
+    "mean_r": -0.497,
+    "win": 31.9,
+    "dd_r": -387.21,
+    "tpd": 0.99,
+    "hold_h": 1.41,
+    "sharpe": -4.66
+   },
+   "gross_r": -0.048,
+   "long_share": 0.54,
+   "halves": [
+    -0.353,
+    -0.342
+   ],
+   "p": 0.638,
+   "null_mean": -0.331,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 9.7,
+    "days": 72.2,
+    "accounts": 10.31,
+    "pf": 0.61,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 5m OR30 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 772,
+    "pf": 0.985,
+    "mean_r": -0.011,
+    "win": 30.1,
+    "dd_r": -74.02,
+    "tpd": 0.99,
+    "hold_h": 4.28,
+    "sharpe": -0.08
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.88,
+    "mean_r": -0.096,
+    "win": 29.5,
+    "dd_r": -123.14,
+    "tpd": 0.99,
+    "hold_h": 4.28,
+    "sharpe": -0.65
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.791,
+    "mean_r": -0.18,
+    "win": 29.0,
+    "dd_r": -177.9,
+    "tpd": 0.99,
+    "hold_h": 4.28,
+    "sharpe": -1.23
+   },
+   "gross_r": 0.074,
+   "long_share": 0.54,
+   "halves": [
+    -0.178,
+    -0.013
+   ],
+   "p": 0.045,
+   "null_mean": -0.189,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 26.6,
+    "days": 15.0,
+    "accounts": 3.76,
+    "pf": 0.88,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR15 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.868,
+    "mean_r": -0.094,
+    "win": 34.3,
+    "dd_r": -86.86,
+    "tpd": 0.99,
+    "hold_h": 2.76,
+    "sharpe": -0.9
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.749,
+    "mean_r": -0.194,
+    "win": 34.2,
+    "dd_r": -156.89,
+    "tpd": 0.99,
+    "hold_h": 2.76,
+    "sharpe": -1.87
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.65,
+    "mean_r": -0.295,
+    "win": 34.2,
+    "dd_r": -232.15,
+    "tpd": 0.99,
+    "hold_h": 2.76,
+    "sharpe": -2.81
+   },
+   "gross_r": 0.007,
+   "long_share": 0.51,
+   "halves": [
+    -0.187,
+    -0.202
+   ],
+   "p": 0.52,
+   "null_mean": -0.192,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 21.1,
+    "days": 37.9,
+    "accounts": 4.73,
+    "pf": 0.75,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR15 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 771,
+    "pf": 0.776,
+    "mean_r": -0.173,
+    "win": 33.2,
+    "dd_r": -141.8,
+    "tpd": 0.99,
+    "hold_h": 1.38,
+    "sharpe": -1.64
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.617,
+    "mean_r": -0.338,
+    "win": 33.2,
+    "dd_r": -265.27,
+    "tpd": 0.99,
+    "hold_h": 1.38,
+    "sharpe": -3.17
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.492,
+    "mean_r": -0.504,
+    "win": 33.2,
+    "dd_r": -391.73,
+    "tpd": 0.99,
+    "hold_h": 1.38,
+    "sharpe": -4.64
+   },
+   "gross_r": -0.008,
+   "long_share": 0.51,
+   "halves": [
+    -0.326,
+    -0.351
+   ],
+   "p": 0.788,
+   "null_mean": -0.304,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 12.5,
+    "days": 55.9,
+    "accounts": 7.98,
+    "pf": 0.62,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR15 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 772,
+    "pf": 0.914,
+    "mean_r": -0.07,
+    "win": 24.7,
+    "dd_r": -104.57,
+    "tpd": 0.99,
+    "hold_h": 3.92,
+    "sharpe": -0.43
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.808,
+    "mean_r": -0.17,
+    "win": 24.6,
+    "dd_r": -172.03,
+    "tpd": 0.99,
+    "hold_h": 3.92,
+    "sharpe": -1.04
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.72,
+    "mean_r": -0.271,
+    "win": 24.0,
+    "dd_r": -239.5,
+    "tpd": 0.99,
+    "hold_h": 3.92,
+    "sharpe": -1.65
+   },
+   "gross_r": 0.031,
+   "long_share": 0.51,
+   "halves": [
+    -0.264,
+    -0.076
+   ],
+   "p": 0.85,
+   "null_mean": -0.105,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 26.4,
+    "days": 15.1,
+    "accounts": 3.78,
+    "pf": 0.81,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR30 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.953,
+    "mean_r": -0.031,
+    "win": 37.2,
+    "dd_r": -56.72,
+    "tpd": 0.99,
+    "hold_h": 3.44,
+    "sharpe": -0.3
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.843,
+    "mean_r": -0.109,
+    "win": 36.9,
+    "dd_r": -105.99,
+    "tpd": 0.99,
+    "hold_h": 3.44,
+    "sharpe": -1.08
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.748,
+    "mean_r": -0.188,
+    "win": 36.8,
+    "dd_r": -158.94,
+    "tpd": 0.99,
+    "hold_h": 3.44,
+    "sharpe": -1.85
+   },
+   "gross_r": 0.048,
+   "long_share": 0.54,
+   "halves": [
+    -0.108,
+    -0.11
+   ],
+   "p": 0.15,
+   "null_mean": -0.151,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 21.3,
+    "days": 37.5,
+    "accounts": 4.69,
+    "pf": 0.84,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR30 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 772,
+    "pf": 0.781,
+    "mean_r": -0.166,
+    "win": 32.5,
+    "dd_r": -138.68,
+    "tpd": 0.99,
+    "hold_h": 1.75,
+    "sharpe": -1.59
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.647,
+    "mean_r": -0.3,
+    "win": 32.5,
+    "dd_r": -236.81,
+    "tpd": 0.99,
+    "hold_h": 1.75,
+    "sharpe": -2.85
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.538,
+    "mean_r": -0.433,
+    "win": 32.5,
+    "dd_r": -338.03,
+    "tpd": 0.99,
+    "hold_h": 1.75,
+    "sharpe": -4.08
+   },
+   "gross_r": -0.032,
+   "long_share": 0.54,
+   "halves": [
+    -0.287,
+    -0.312
+   ],
+   "p": 0.666,
+   "null_mean": -0.28,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 10.2,
+    "days": 58.5,
+    "accounts": 9.76,
+    "pf": 0.65,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 15m OR30 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 772,
+    "pf": 1.027,
+    "mean_r": 0.019,
+    "win": 31.2,
+    "dd_r": -43.03,
+    "tpd": 0.99,
+    "hold_h": 4.33,
+    "sharpe": 0.13
+   },
+   "x2": {
+    "n": 772,
+    "pf": 0.922,
+    "mean_r": -0.06,
+    "win": 30.7,
+    "dd_r": -90.9,
+    "tpd": 0.99,
+    "hold_h": 4.33,
+    "sharpe": -0.41
+   },
+   "x3": {
+    "n": 772,
+    "pf": 0.831,
+    "mean_r": -0.138,
+    "win": 30.4,
+    "dd_r": -142.07,
+    "tpd": 0.99,
+    "hold_h": 4.33,
+    "sharpe": -0.94
+   },
+   "gross_r": 0.097,
+   "long_share": 0.54,
+   "halves": [
+    -0.086,
+    -0.033
+   ],
+   "p": 0.117,
+   "null_mean": -0.123,
+   "pace": {
+    "n": 772,
+    "risk_pct": 2.0,
+    "pass_pct": 27.5,
+    "days": 14.5,
+    "accounts": 3.63,
+    "pf": 0.92,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "XAUUSD London 1h OR60 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 765,
+    "pf": 0.941,
+    "mean_r": -0.031,
+    "win": 41.2,
+    "dd_r": -45.1,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -0.35
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.85,
+    "mean_r": -0.083,
+    "win": 40.1,
+    "dd_r": -80.47,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -0.95
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.768,
+    "mean_r": -0.135,
+    "win": 39.1,
+    "dd_r": -116.72,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -1.55
+   },
+   "gross_r": 0.022,
+   "long_share": 0.58,
+   "halves": [
+    -0.131,
+    -0.035
+   ],
+   "p": 0.446,
+   "null_mean": -0.089,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 20.1,
+    "days": 49.7,
+    "accounts": 4.97,
+    "pf": 0.85,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD London 1h OR60 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 765,
+    "pf": 0.786,
+    "mean_r": -0.144,
+    "win": 34.8,
+    "dd_r": -127.21,
+    "tpd": 0.98,
+    "hold_h": 2.21,
+    "sharpe": -1.49
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.685,
+    "mean_r": -0.23,
+    "win": 34.2,
+    "dd_r": -190.01,
+    "tpd": 0.98,
+    "hold_h": 2.21,
+    "sharpe": -2.37
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.598,
+    "mean_r": -0.317,
+    "win": 33.6,
+    "dd_r": -253.48,
+    "tpd": 0.98,
+    "hold_h": 2.21,
+    "sharpe": -3.23
+   },
+   "gross_r": -0.058,
+   "long_share": 0.58,
+   "halves": [
+    -0.228,
+    -0.233
+   ],
+   "p": 0.853,
+   "null_mean": -0.187,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 17.2,
+    "days": 46.5,
+    "accounts": 5.81,
+    "pf": 0.68,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD London 1h OR60 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 765,
+    "pf": 0.848,
+    "mean_r": -0.083,
+    "win": 38.0,
+    "dd_r": -80.02,
+    "tpd": 0.98,
+    "hold_h": 3.79,
+    "sharpe": -0.87
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.768,
+    "mean_r": -0.136,
+    "win": 37.0,
+    "dd_r": -116.87,
+    "tpd": 0.98,
+    "hold_h": 3.79,
+    "sharpe": -1.4
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.697,
+    "mean_r": -0.188,
+    "win": 35.9,
+    "dd_r": -153.73,
+    "tpd": 0.98,
+    "hold_h": 3.79,
+    "sharpe": -1.94
+   },
+   "gross_r": -0.031,
+   "long_share": 0.58,
+   "halves": [
+    -0.203,
+    -0.068
+   ],
+   "p": 0.795,
+   "null_mean": -0.104,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 21.6,
+    "days": 41.7,
+    "accounts": 4.63,
+    "pf": 0.77,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR15 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 767,
+    "pf": 0.893,
+    "mean_r": -0.056,
+    "win": 40.5,
+    "dd_r": -62.27,
+    "tpd": 0.98,
+    "hold_h": 3.02,
+    "sharpe": -0.66
+   },
+   "x2": {
+    "n": 767,
+    "pf": 0.792,
+    "mean_r": -0.118,
+    "win": 39.5,
+    "dd_r": -102.54,
+    "tpd": 0.98,
+    "hold_h": 3.02,
+    "sharpe": -1.37
+   },
+   "x3": {
+    "n": 767,
+    "pf": 0.704,
+    "mean_r": -0.179,
+    "win": 38.3,
+    "dd_r": -146.04,
+    "tpd": 0.98,
+    "hold_h": 3.02,
+    "sharpe": -2.07
+   },
+   "gross_r": 0.005,
+   "long_share": 0.54,
+   "halves": [
+    -0.213,
+    -0.022
+   ],
+   "p": 0.541,
+   "null_mean": -0.114,
+   "pace": {
+    "n": 767,
+    "risk_pct": 2.0,
+    "pass_pct": 19.9,
+    "days": 50.4,
+    "accounts": 5.04,
+    "pf": 0.79,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR15 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 765,
+    "pf": 0.805,
+    "mean_r": -0.134,
+    "win": 34.8,
+    "dd_r": -119.29,
+    "tpd": 0.98,
+    "hold_h": 1.46,
+    "sharpe": -1.35
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.684,
+    "mean_r": -0.239,
+    "win": 34.4,
+    "dd_r": -193.03,
+    "tpd": 0.98,
+    "hold_h": 1.46,
+    "sharpe": -2.39
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.584,
+    "mean_r": -0.343,
+    "win": 33.6,
+    "dd_r": -268.03,
+    "tpd": 0.98,
+    "hold_h": 1.46,
+    "sharpe": -3.41
+   },
+   "gross_r": -0.029,
+   "long_share": 0.54,
+   "halves": [
+    -0.299,
+    -0.178
+   ],
+   "p": 0.729,
+   "null_mean": -0.215,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 14.3,
+    "days": 49.1,
+    "accounts": 7.01,
+    "pf": 0.68,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR15 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 767,
+    "pf": 0.932,
+    "mean_r": -0.037,
+    "win": 39.1,
+    "dd_r": -55.35,
+    "tpd": 0.98,
+    "hold_h": 3.68,
+    "sharpe": -0.37
+   },
+   "x2": {
+    "n": 767,
+    "pf": 0.831,
+    "mean_r": -0.098,
+    "win": 38.1,
+    "dd_r": -82.65,
+    "tpd": 0.98,
+    "hold_h": 3.68,
+    "sharpe": -0.98
+   },
+   "x3": {
+    "n": 767,
+    "pf": 0.743,
+    "mean_r": -0.159,
+    "win": 36.8,
+    "dd_r": -128.32,
+    "tpd": 0.98,
+    "hold_h": 3.68,
+    "sharpe": -1.58
+   },
+   "gross_r": 0.024,
+   "long_share": 0.54,
+   "halves": [
+    -0.193,
+    -0.003
+   ],
+   "p": 0.48,
+   "null_mean": -0.1,
+   "pace": {
+    "n": 767,
+    "risk_pct": 2.0,
+    "pass_pct": 23.5,
+    "days": 34.0,
+    "accounts": 4.25,
+    "pf": 0.83,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR30 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 751,
+    "pf": 0.992,
+    "mean_r": -0.003,
+    "win": 43.5,
+    "dd_r": -37.33,
+    "tpd": 0.96,
+    "hold_h": 3.74,
+    "sharpe": -0.04
+   },
+   "x2": {
+    "n": 751,
+    "pf": 0.884,
+    "mean_r": -0.05,
+    "win": 42.2,
+    "dd_r": -52.4,
+    "tpd": 0.96,
+    "hold_h": 3.74,
+    "sharpe": -0.67
+   },
+   "x3": {
+    "n": 751,
+    "pf": 0.789,
+    "mean_r": -0.097,
+    "win": 40.7,
+    "dd_r": -83.86,
+    "tpd": 0.96,
+    "hold_h": 3.74,
+    "sharpe": -1.29
+   },
+   "gross_r": 0.044,
+   "long_share": 0.54,
+   "halves": [
+    -0.131,
+    0.032
+   ],
+   "p": 0.325,
+   "null_mean": -0.065,
+   "pace": {
+    "n": 751,
+    "risk_pct": 2.0,
+    "pass_pct": 23.7,
+    "days": 63.3,
+    "accounts": 4.22,
+    "pf": 0.88,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR30 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 751,
+    "pf": 0.847,
+    "mean_r": -0.092,
+    "win": 36.8,
+    "dd_r": -75.13,
+    "tpd": 0.96,
+    "hold_h": 2.13,
+    "sharpe": -0.99
+   },
+   "x2": {
+    "n": 751,
+    "pf": 0.733,
+    "mean_r": -0.176,
+    "win": 36.0,
+    "dd_r": -137.34,
+    "tpd": 0.96,
+    "hold_h": 2.13,
+    "sharpe": -1.87
+   },
+   "x3": {
+    "n": 751,
+    "pf": 0.636,
+    "mean_r": -0.259,
+    "win": 34.9,
+    "dd_r": -199.56,
+    "tpd": 0.96,
+    "hold_h": 2.13,
+    "sharpe": -2.74
+   },
+   "gross_r": -0.009,
+   "long_share": 0.54,
+   "halves": [
+    -0.197,
+    -0.154
+   ],
+   "p": 0.61,
+   "null_mean": -0.164,
+   "pace": {
+    "n": 751,
+    "risk_pct": 2.0,
+    "pass_pct": 18.1,
+    "days": 55.2,
+    "accounts": 5.52,
+    "pf": 0.73,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "XAUUSD NY 5m OR30 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 751,
+    "pf": 0.936,
+    "mean_r": -0.026,
+    "win": 43.1,
+    "dd_r": -39.95,
+    "tpd": 0.96,
+    "hold_h": 4.11,
+    "sharpe": -0.35
+   },
+   "x2": {
+    "n": 751,
+    "pf": 0.832,
+    "mean_r": -0.073,
+    "win": 41.8,
+    "dd_r": -66.33,
+    "tpd": 0.96,
+    "hold_h": 4.11,
+    "sharpe": -0.97
+   },
+   "x3": {
+    "n": 751,
+    "pf": 0.74,
+    "mean_r": -0.119,
+    "win": 40.2,
+    "dd_r": -100.85,
+    "tpd": 0.96,
+    "hold_h": 4.11,
+    "sharpe": -1.58
+   },
+   "gross_r": 0.021,
+   "long_share": 0.54,
+   "halves": [
+    -0.144,
+    -0.0
+   ],
+   "p": 0.562,
+   "null_mean": -0.066,
+   "pace": {
+    "n": 751,
+    "risk_pct": 2.0,
+    "pass_pct": 18.7,
+    "days": 69.7,
+    "accounts": 5.36,
+    "pf": 0.83,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR15 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 766,
+    "pf": 0.941,
+    "mean_r": -0.028,
+    "win": 41.9,
+    "dd_r": -40.28,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -0.34
+   },
+   "x2": {
+    "n": 766,
+    "pf": 0.835,
+    "mean_r": -0.083,
+    "win": 41.0,
+    "dd_r": -72.95,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -1.02
+   },
+   "x3": {
+    "n": 766,
+    "pf": 0.743,
+    "mean_r": -0.138,
+    "win": 39.7,
+    "dd_r": -113.81,
+    "tpd": 0.98,
+    "hold_h": 3.43,
+    "sharpe": -1.7
+   },
+   "gross_r": 0.027,
+   "long_share": 0.53,
+   "halves": [
+    -0.152,
+    -0.014
+   ],
+   "p": 0.44,
+   "null_mean": -0.088,
+   "pace": {
+    "n": 766,
+    "risk_pct": 2.0,
+    "pass_pct": 23.1,
+    "days": 60.7,
+    "accounts": 4.34,
+    "pf": 0.84,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR15 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 766,
+    "pf": 0.824,
+    "mean_r": -0.111,
+    "win": 36.6,
+    "dd_r": -95.53,
+    "tpd": 0.98,
+    "hold_h": 1.99,
+    "sharpe": -1.18
+   },
+   "x2": {
+    "n": 766,
+    "pf": 0.707,
+    "mean_r": -0.202,
+    "win": 36.0,
+    "dd_r": -161.33,
+    "tpd": 0.98,
+    "hold_h": 1.99,
+    "sharpe": -2.13
+   },
+   "x3": {
+    "n": 766,
+    "pf": 0.609,
+    "mean_r": -0.293,
+    "win": 35.2,
+    "dd_r": -230.31,
+    "tpd": 0.98,
+    "hold_h": 1.99,
+    "sharpe": -3.07
+   },
+   "gross_r": -0.02,
+   "long_share": 0.53,
+   "halves": [
+    -0.263,
+    -0.142
+   ],
+   "p": 0.322,
+   "null_mean": -0.221,
+   "pace": {
+    "n": 766,
+    "risk_pct": 2.0,
+    "pass_pct": 14.7,
+    "days": 61.1,
+    "accounts": 6.79,
+    "pf": 0.71,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR15 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 766,
+    "pf": 0.909,
+    "mean_r": -0.043,
+    "win": 41.1,
+    "dd_r": -48.36,
+    "tpd": 0.98,
+    "hold_h": 3.91,
+    "sharpe": -0.5
+   },
+   "x2": {
+    "n": 766,
+    "pf": 0.807,
+    "mean_r": -0.098,
+    "win": 40.2,
+    "dd_r": -86.59,
+    "tpd": 0.98,
+    "hold_h": 3.91,
+    "sharpe": -1.13
+   },
+   "x3": {
+    "n": 766,
+    "pf": 0.719,
+    "mean_r": -0.153,
+    "win": 38.8,
+    "dd_r": -127.96,
+    "tpd": 0.98,
+    "hold_h": 3.91,
+    "sharpe": -1.76
+   },
+   "gross_r": 0.012,
+   "long_share": 0.53,
+   "halves": [
+    -0.161,
+    -0.036
+   ],
+   "p": 0.654,
+   "null_mean": -0.085,
+   "pace": {
+    "n": 766,
+    "risk_pct": 2.0,
+    "pass_pct": 23.6,
+    "days": 55.1,
+    "accounts": 4.24,
+    "pf": 0.81,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR30 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 740,
+    "pf": 0.989,
+    "mean_r": -0.004,
+    "win": 45.1,
+    "dd_r": -29.44,
+    "tpd": 0.95,
+    "hold_h": 3.92,
+    "sharpe": -0.06
+   },
+   "x2": {
+    "n": 740,
+    "pf": 0.874,
+    "mean_r": -0.048,
+    "win": 43.1,
+    "dd_r": -45.15,
+    "tpd": 0.95,
+    "hold_h": 3.92,
+    "sharpe": -0.7
+   },
+   "x3": {
+    "n": 740,
+    "pf": 0.774,
+    "mean_r": -0.092,
+    "win": 39.9,
+    "dd_r": -77.16,
+    "tpd": 0.95,
+    "hold_h": 3.92,
+    "sharpe": -1.34
+   },
+   "gross_r": 0.04,
+   "long_share": 0.54,
+   "halves": [
+    -0.112,
+    0.016
+   ],
+   "p": 0.289,
+   "null_mean": -0.067,
+   "pace": {
+    "n": 740,
+    "risk_pct": 2.0,
+    "pass_pct": 26.5,
+    "days": 82.9,
+    "accounts": 3.77,
+    "pf": 0.87,
+    "tpd": 0.95
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR30 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 740,
+    "pf": 0.767,
+    "mean_r": -0.132,
+    "win": 37.7,
+    "dd_r": -102.45,
+    "tpd": 0.95,
+    "hold_h": 2.55,
+    "sharpe": -1.53
+   },
+   "x2": {
+    "n": 740,
+    "pf": 0.663,
+    "mean_r": -0.208,
+    "win": 36.2,
+    "dd_r": -158.09,
+    "tpd": 0.95,
+    "hold_h": 2.55,
+    "sharpe": -2.38
+   },
+   "x3": {
+    "n": 740,
+    "pf": 0.576,
+    "mean_r": -0.284,
+    "win": 34.3,
+    "dd_r": -213.73,
+    "tpd": 0.95,
+    "hold_h": 2.55,
+    "sharpe": -3.22
+   },
+   "gross_r": -0.057,
+   "long_share": 0.54,
+   "halves": [
+    -0.237,
+    -0.179
+   ],
+   "p": 0.602,
+   "null_mean": -0.198,
+   "pace": {
+    "n": 740,
+    "risk_pct": 2.0,
+    "pass_pct": 12.0,
+    "days": 83.4,
+    "accounts": 8.34,
+    "pf": 0.66,
+    "tpd": 0.95
+   }
+  },
+  {
+   "cell": "XAUUSD NY 15m OR30 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 740,
+    "pf": 0.924,
+    "mean_r": -0.027,
+    "win": 44.9,
+    "dd_r": -34.35,
+    "tpd": 0.95,
+    "hold_h": 4.15,
+    "sharpe": -0.41
+   },
+   "x2": {
+    "n": 740,
+    "pf": 0.814,
+    "mean_r": -0.071,
+    "win": 42.8,
+    "dd_r": -62.0,
+    "tpd": 0.95,
+    "hold_h": 4.15,
+    "sharpe": -1.06
+   },
+   "x3": {
+    "n": 740,
+    "pf": 0.718,
+    "mean_r": -0.115,
+    "win": 39.5,
+    "dd_r": -94.0,
+    "tpd": 0.95,
+    "hold_h": 4.15,
+    "sharpe": -1.72
+   },
+   "gross_r": 0.017,
+   "long_share": 0.54,
+   "halves": [
+    -0.131,
+    -0.011
+   ],
+   "p": 0.515,
+   "null_mean": -0.071,
+   "pace": {
+    "n": 740,
+    "risk_pct": 2.0,
+    "pass_pct": 19.6,
+    "days": 97.0,
+    "accounts": 5.11,
+    "pf": 0.81,
+    "tpd": 0.95
+   }
+  },
+  {
+   "cell": "XAUUSD NY 1h OR60 P1 other side, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 577,
+    "pf": 0.91,
+    "mean_r": -0.018,
+    "win": 45.6,
+    "dd_r": -19.85,
+    "tpd": 0.74,
+    "hold_h": 3.35,
+    "sharpe": -0.4
+   },
+   "x2": {
+    "n": 577,
+    "pf": 0.773,
+    "mean_r": -0.049,
+    "win": 43.3,
+    "dd_r": -32.69,
+    "tpd": 0.74,
+    "hold_h": 3.35,
+    "sharpe": -1.09
+   },
+   "x3": {
+    "n": 577,
+    "pf": 0.659,
+    "mean_r": -0.08,
+    "win": 39.0,
+    "dd_r": -48.64,
+    "tpd": 0.74,
+    "hold_h": 3.35,
+    "sharpe": -1.77
+   },
+   "gross_r": 0.013,
+   "long_share": 0.54,
+   "halves": [
+    -0.081,
+    -0.018
+   ],
+   "p": 0.219,
+   "null_mean": -0.066,
+   "pace": {
+    "n": 577,
+    "risk_pct": 2.0,
+    "pass_pct": 0.3,
+    "days": 2857.1,
+    "accounts": 357.14,
+    "pf": 0.77,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "XAUUSD NY 1h OR60 P2 mid, 2R",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 577,
+    "pf": 0.83,
+    "mean_r": -0.057,
+    "win": 44.0,
+    "dd_r": -43.8,
+    "tpd": 0.74,
+    "hold_h": 2.97,
+    "sharpe": -0.84
+   },
+   "x2": {
+    "n": 577,
+    "pf": 0.701,
+    "mean_r": -0.11,
+    "win": 41.8,
+    "dd_r": -70.88,
+    "tpd": 0.74,
+    "hold_h": 2.97,
+    "sharpe": -1.62
+   },
+   "x3": {
+    "n": 577,
+    "pf": 0.593,
+    "mean_r": -0.163,
+    "win": 37.6,
+    "dd_r": -100.02,
+    "tpd": 0.74,
+    "hold_h": 2.97,
+    "sharpe": -2.37
+   },
+   "gross_r": -0.004,
+   "long_share": 0.54,
+   "halves": [
+    -0.158,
+    -0.062
+   ],
+   "p": 0.362,
+   "null_mean": -0.123,
+   "pace": {
+    "n": 577,
+    "risk_pct": 2.0,
+    "pass_pct": 12.2,
+    "days": 212.8,
+    "accounts": 8.18,
+    "pf": 0.7,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "XAUUSD NY 1h OR60 P3 other side, hold to close",
+   "sym": "XAUUSD",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 577,
+    "pf": 0.885,
+    "mean_r": -0.023,
+    "win": 45.6,
+    "dd_r": -19.85,
+    "tpd": 0.74,
+    "hold_h": 3.38,
+    "sharpe": -0.52
+   },
+   "x2": {
+    "n": 577,
+    "pf": 0.751,
+    "mean_r": -0.054,
+    "win": 43.3,
+    "dd_r": -34.17,
+    "tpd": 0.74,
+    "hold_h": 3.38,
+    "sharpe": -1.22
+   },
+   "x3": {
+    "n": 577,
+    "pf": 0.638,
+    "mean_r": -0.085,
+    "win": 39.0,
+    "dd_r": -51.42,
+    "tpd": 0.74,
+    "hold_h": 3.38,
+    "sharpe": -1.92
+   },
+   "gross_r": 0.008,
+   "long_share": 0.54,
+   "halves": [
+    -0.091,
+    -0.017
+   ],
+   "p": 0.268,
+   "null_mean": -0.067,
+   "pace": {
+    "n": 577,
+    "risk_pct": 2.0,
+    "pass_pct": 0.1,
+    "days": 12222.2,
+    "accounts": 1111.11,
+    "pf": 0.75,
+    "tpd": 0.74
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR15 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 771,
+    "pf": 0.687,
+    "mean_r": -0.259,
+    "win": 32.6,
+    "dd_r": -202.7,
+    "tpd": 0.99,
+    "hold_h": 2.44,
+    "sharpe": -2.44
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.502,
+    "mean_r": -0.488,
+    "win": 32.6,
+    "dd_r": -379.08,
+    "tpd": 0.99,
+    "hold_h": 2.44,
+    "sharpe": -4.51
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.368,
+    "mean_r": -0.718,
+    "win": 32.4,
+    "dd_r": -555.46,
+    "tpd": 0.99,
+    "hold_h": 2.44,
+    "sharpe": -6.4
+   },
+   "gross_r": -0.029,
+   "long_share": 0.55,
+   "halves": [
+    -0.577,
+    -0.4
+   ],
+   "p": 0.896,
+   "null_mean": -0.433,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 11.5,
+    "days": 69.6,
+    "accounts": 8.7,
+    "pf": 0.5,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR15 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 762,
+    "pf": 0.542,
+    "mean_r": -0.431,
+    "win": 32.0,
+    "dd_r": -333.04,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -4.01
+   },
+   "x2": {
+    "n": 762,
+    "pf": 0.318,
+    "mean_r": -0.821,
+    "win": 31.6,
+    "dd_r": -628.3,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -7.2
+   },
+   "x3": {
+    "n": 762,
+    "pf": 0.181,
+    "mean_r": -1.211,
+    "win": 29.3,
+    "dd_r": -923.56,
+    "tpd": 0.97,
+    "hold_h": 1.0,
+    "sharpe": -9.77
+   },
+   "gross_r": -0.042,
+   "long_share": 0.55,
+   "halves": [
+    -0.905,
+    -0.738
+   ],
+   "p": 0.937,
+   "null_mean": -0.755,
+   "pace": {
+    "n": 762,
+    "risk_pct": 2.0,
+    "pass_pct": 3.0,
+    "days": 166.1,
+    "accounts": 33.22,
+    "pf": 0.32,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR15 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 771,
+    "pf": 0.778,
+    "mean_r": -0.223,
+    "win": 18.2,
+    "dd_r": -180.2,
+    "tpd": 0.99,
+    "hold_h": 3.64,
+    "sharpe": -1.12
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.622,
+    "mean_r": -0.453,
+    "win": 17.6,
+    "dd_r": -351.86,
+    "tpd": 0.99,
+    "hold_h": 3.64,
+    "sharpe": -2.26
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.509,
+    "mean_r": -0.682,
+    "win": 17.4,
+    "dd_r": -525.11,
+    "tpd": 0.99,
+    "hold_h": 3.64,
+    "sharpe": -3.38
+   },
+   "gross_r": 0.007,
+   "long_share": 0.55,
+   "halves": [
+    -0.456,
+    -0.449
+   ],
+   "p": 0.436,
+   "null_mean": -0.464,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 15.2,
+    "days": 13.1,
+    "accounts": 6.56,
+    "pf": 0.62,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR30 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 771,
+    "pf": 0.786,
+    "mean_r": -0.162,
+    "win": 34.6,
+    "dd_r": -127.03,
+    "tpd": 0.99,
+    "hold_h": 3.25,
+    "sharpe": -1.55
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.612,
+    "mean_r": -0.339,
+    "win": 34.2,
+    "dd_r": -263.44,
+    "tpd": 0.99,
+    "hold_h": 3.25,
+    "sharpe": -3.2
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.479,
+    "mean_r": -0.517,
+    "win": 34.0,
+    "dd_r": -399.86,
+    "tpd": 0.99,
+    "hold_h": 3.25,
+    "sharpe": -4.76
+   },
+   "gross_r": 0.015,
+   "long_share": 0.56,
+   "halves": [
+    -0.412,
+    -0.267
+   ],
+   "p": 0.53,
+   "null_mean": -0.336,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 13.1,
+    "days": 60.9,
+    "accounts": 7.61,
+    "pf": 0.61,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR30 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 770,
+    "pf": 0.612,
+    "mean_r": -0.346,
+    "win": 32.5,
+    "dd_r": -268.34,
+    "tpd": 0.98,
+    "hold_h": 1.54,
+    "sharpe": -3.22
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.403,
+    "mean_r": -0.662,
+    "win": 32.3,
+    "dd_r": -511.03,
+    "tpd": 0.98,
+    "hold_h": 1.54,
+    "sharpe": -5.88
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.265,
+    "mean_r": -0.977,
+    "win": 30.8,
+    "dd_r": -753.94,
+    "tpd": 0.98,
+    "hold_h": 1.54,
+    "sharpe": -8.13
+   },
+   "gross_r": -0.03,
+   "long_share": 0.56,
+   "halves": [
+    -0.785,
+    -0.538
+   ],
+   "p": 0.754,
+   "null_mean": -0.633,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 3.8,
+    "days": 130.5,
+    "accounts": 26.11,
+    "pf": 0.4,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 5m OR30 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 771,
+    "pf": 0.867,
+    "mean_r": -0.118,
+    "win": 23.5,
+    "dd_r": -94.14,
+    "tpd": 0.99,
+    "hold_h": 4.19,
+    "sharpe": -0.67
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.711,
+    "mean_r": -0.295,
+    "win": 22.6,
+    "dd_r": -228.37,
+    "tpd": 0.99,
+    "hold_h": 4.19,
+    "sharpe": -1.67
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.594,
+    "mean_r": -0.472,
+    "win": 21.9,
+    "dd_r": -362.8,
+    "tpd": 0.99,
+    "hold_h": 4.19,
+    "sharpe": -2.66
+   },
+   "gross_r": 0.059,
+   "long_share": 0.56,
+   "halves": [
+    -0.255,
+    -0.335
+   ],
+   "p": 0.098,
+   "null_mean": -0.376,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 17.6,
+    "days": 17.0,
+    "accounts": 5.68,
+    "pf": 0.71,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR15 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 770,
+    "pf": 0.686,
+    "mean_r": -0.256,
+    "win": 32.1,
+    "dd_r": -200.64,
+    "tpd": 0.98,
+    "hold_h": 2.87,
+    "sharpe": -2.44
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.516,
+    "mean_r": -0.464,
+    "win": 31.9,
+    "dd_r": -359.98,
+    "tpd": 0.98,
+    "hold_h": 2.87,
+    "sharpe": -4.31
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.391,
+    "mean_r": -0.671,
+    "win": 31.8,
+    "dd_r": -519.31,
+    "tpd": 0.98,
+    "hold_h": 2.87,
+    "sharpe": -6.03
+   },
+   "gross_r": -0.048,
+   "long_share": 0.56,
+   "halves": [
+    -0.542,
+    -0.385
+   ],
+   "p": 0.825,
+   "null_mean": -0.421,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 8.5,
+    "days": 70.7,
+    "accounts": 11.78,
+    "pf": 0.52,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR15 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 761,
+    "pf": 0.592,
+    "mean_r": -0.37,
+    "win": 32.2,
+    "dd_r": -284.67,
+    "tpd": 0.97,
+    "hold_h": 1.52,
+    "sharpe": -3.42
+   },
+   "x2": {
+    "n": 761,
+    "pf": 0.381,
+    "mean_r": -0.702,
+    "win": 32.2,
+    "dd_r": -537.18,
+    "tpd": 0.97,
+    "hold_h": 1.52,
+    "sharpe": -6.15
+   },
+   "x3": {
+    "n": 761,
+    "pf": 0.244,
+    "mean_r": -1.035,
+    "win": 30.6,
+    "dd_r": -789.7,
+    "tpd": 0.97,
+    "hold_h": 1.52,
+    "sharpe": -8.4
+   },
+   "gross_r": -0.037,
+   "long_share": 0.56,
+   "halves": [
+    -0.798,
+    -0.607
+   ],
+   "p": 0.782,
+   "null_mean": -0.668,
+   "pace": {
+    "n": 761,
+    "risk_pct": 2.0,
+    "pass_pct": 3.2,
+    "days": 156.7,
+    "accounts": 31.35,
+    "pf": 0.38,
+    "tpd": 0.97
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR15 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 770,
+    "pf": 0.801,
+    "mean_r": -0.19,
+    "win": 20.1,
+    "dd_r": -160.16,
+    "tpd": 0.98,
+    "hold_h": 3.9,
+    "sharpe": -1.0
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.646,
+    "mean_r": -0.397,
+    "win": 19.9,
+    "dd_r": -308.47,
+    "tpd": 0.98,
+    "hold_h": 3.9,
+    "sharpe": -2.08
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.532,
+    "mean_r": -0.605,
+    "win": 19.5,
+    "dd_r": -465.02,
+    "tpd": 0.98,
+    "hold_h": 3.9,
+    "sharpe": -3.15
+   },
+   "gross_r": 0.018,
+   "long_share": 0.56,
+   "halves": [
+    -0.39,
+    -0.404
+   ],
+   "p": 0.346,
+   "null_mean": -0.426,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 15.6,
+    "days": 19.2,
+    "accounts": 6.41,
+    "pf": 0.65,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR30 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 770,
+    "pf": 0.8,
+    "mean_r": -0.148,
+    "win": 34.8,
+    "dd_r": -128.92,
+    "tpd": 0.98,
+    "hold_h": 3.44,
+    "sharpe": -1.43
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.632,
+    "mean_r": -0.312,
+    "win": 34.3,
+    "dd_r": -243.57,
+    "tpd": 0.98,
+    "hold_h": 3.44,
+    "sharpe": -2.97
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.501,
+    "mean_r": -0.476,
+    "win": 33.8,
+    "dd_r": -369.38,
+    "tpd": 0.98,
+    "hold_h": 3.44,
+    "sharpe": -4.45
+   },
+   "gross_r": 0.016,
+   "long_share": 0.56,
+   "halves": [
+    -0.393,
+    -0.231
+   ],
+   "p": 0.399,
+   "null_mean": -0.322,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 13.3,
+    "days": 52.6,
+    "accounts": 7.51,
+    "pf": 0.63,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR30 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 768,
+    "pf": 0.716,
+    "mean_r": -0.236,
+    "win": 34.8,
+    "dd_r": -184.92,
+    "tpd": 0.98,
+    "hold_h": 1.93,
+    "sharpe": -2.18
+   },
+   "x2": {
+    "n": 768,
+    "pf": 0.494,
+    "mean_r": -0.515,
+    "win": 34.5,
+    "dd_r": -398.35,
+    "tpd": 0.98,
+    "hold_h": 1.93,
+    "sharpe": -4.58
+   },
+   "x3": {
+    "n": 768,
+    "pf": 0.34,
+    "mean_r": -0.793,
+    "win": 33.9,
+    "dd_r": -611.78,
+    "tpd": 0.98,
+    "hold_h": 1.93,
+    "sharpe": -6.69
+   },
+   "gross_r": 0.042,
+   "long_share": 0.56,
+   "halves": [
+    -0.595,
+    -0.434
+   ],
+   "p": 0.349,
+   "null_mean": -0.533,
+   "pace": {
+    "n": 768,
+    "risk_pct": 2.0,
+    "pass_pct": 6.1,
+    "days": 98.2,
+    "accounts": 16.37,
+    "pf": 0.49,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 15m OR30 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 770,
+    "pf": 0.904,
+    "mean_r": -0.081,
+    "win": 25.3,
+    "dd_r": -70.89,
+    "tpd": 0.98,
+    "hold_h": 4.27,
+    "sharpe": -0.47
+   },
+   "x2": {
+    "n": 770,
+    "pf": 0.746,
+    "mean_r": -0.245,
+    "win": 24.4,
+    "dd_r": -189.61,
+    "tpd": 0.98,
+    "hold_h": 4.27,
+    "sharpe": -1.43
+   },
+   "x3": {
+    "n": 770,
+    "pf": 0.625,
+    "mean_r": -0.409,
+    "win": 23.8,
+    "dd_r": -314.36,
+    "tpd": 0.98,
+    "hold_h": 4.27,
+    "sharpe": -2.38
+   },
+   "gross_r": 0.083,
+   "long_share": 0.56,
+   "halves": [
+    -0.217,
+    -0.273
+   ],
+   "p": 0.036,
+   "null_mean": -0.347,
+   "pace": {
+    "n": 770,
+    "risk_pct": 2.0,
+    "pass_pct": 17.8,
+    "days": 16.9,
+    "accounts": 5.62,
+    "pf": 0.75,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 1h OR60 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 764,
+    "pf": 0.745,
+    "mean_r": -0.168,
+    "win": 34.4,
+    "dd_r": -129.92,
+    "tpd": 0.98,
+    "hold_h": 3.22,
+    "sharpe": -1.8
+   },
+   "x2": {
+    "n": 764,
+    "pf": 0.618,
+    "mean_r": -0.279,
+    "win": 33.6,
+    "dd_r": -213.26,
+    "tpd": 0.98,
+    "hold_h": 3.22,
+    "sharpe": -2.96
+   },
+   "x3": {
+    "n": 764,
+    "pf": 0.515,
+    "mean_r": -0.39,
+    "win": 32.2,
+    "dd_r": -297.8,
+    "tpd": 0.98,
+    "hold_h": 3.22,
+    "sharpe": -4.09
+   },
+   "gross_r": -0.056,
+   "long_share": 0.56,
+   "halves": [
+    -0.292,
+    -0.265
+   ],
+   "p": 0.937,
+   "null_mean": -0.215,
+   "pace": {
+    "n": 764,
+    "risk_pct": 2.0,
+    "pass_pct": 10.4,
+    "days": 67.3,
+    "accounts": 9.62,
+    "pf": 0.62,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 1h OR60 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 763,
+    "pf": 0.733,
+    "mean_r": -0.199,
+    "win": 34.1,
+    "dd_r": -157.01,
+    "tpd": 0.98,
+    "hold_h": 2.36,
+    "sharpe": -1.95
+   },
+   "x2": {
+    "n": 763,
+    "pf": 0.561,
+    "mean_r": -0.38,
+    "win": 33.6,
+    "dd_r": -291.84,
+    "tpd": 0.98,
+    "hold_h": 2.36,
+    "sharpe": -3.66
+   },
+   "x3": {
+    "n": 763,
+    "pf": 0.432,
+    "mean_r": -0.562,
+    "win": 32.4,
+    "dd_r": -430.11,
+    "tpd": 0.98,
+    "hold_h": 2.36,
+    "sharpe": -5.25
+   },
+   "gross_r": -0.017,
+   "long_share": 0.56,
+   "halves": [
+    -0.394,
+    -0.367
+   ],
+   "p": 0.801,
+   "null_mean": -0.341,
+   "pace": {
+    "n": 763,
+    "risk_pct": 2.0,
+    "pass_pct": 7.9,
+    "days": 75.6,
+    "accounts": 12.59,
+    "pf": 0.56,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 London 1h OR60 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "London",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 764,
+    "pf": 0.802,
+    "mean_r": -0.137,
+    "win": 31.0,
+    "dd_r": -104.9,
+    "tpd": 0.98,
+    "hold_h": 3.62,
+    "sharpe": -1.08
+   },
+   "x2": {
+    "n": 764,
+    "pf": 0.679,
+    "mean_r": -0.248,
+    "win": 29.8,
+    "dd_r": -189.44,
+    "tpd": 0.98,
+    "hold_h": 3.62,
+    "sharpe": -1.96
+   },
+   "x3": {
+    "n": 764,
+    "pf": 0.579,
+    "mean_r": -0.359,
+    "win": 28.0,
+    "dd_r": -273.99,
+    "tpd": 0.98,
+    "hold_h": 3.62,
+    "sharpe": -2.82
+   },
+   "gross_r": -0.026,
+   "long_share": 0.56,
+   "halves": [
+    -0.242,
+    -0.254
+   ],
+   "p": 0.897,
+   "null_mean": -0.189,
+   "pace": {
+    "n": 764,
+    "risk_pct": 2.0,
+    "pass_pct": 14.2,
+    "days": 35.1,
+    "accounts": 7.03,
+    "pf": 0.68,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR15 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 771,
+    "pf": 0.975,
+    "mean_r": -0.013,
+    "win": 44.4,
+    "dd_r": -30.91,
+    "tpd": 0.99,
+    "hold_h": 3.46,
+    "sharpe": -0.15
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.837,
+    "mean_r": -0.089,
+    "win": 42.7,
+    "dd_r": -68.69,
+    "tpd": 0.99,
+    "hold_h": 3.46,
+    "sharpe": -1.05
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.721,
+    "mean_r": -0.166,
+    "win": 41.2,
+    "dd_r": -127.69,
+    "tpd": 0.99,
+    "hold_h": 3.46,
+    "sharpe": -1.94
+   },
+   "gross_r": 0.064,
+   "long_share": 0.51,
+   "halves": [
+    -0.071,
+    -0.108
+   ],
+   "p": 0.015,
+   "null_mean": -0.161,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 18.8,
+    "days": 47.9,
+    "accounts": 5.32,
+    "pf": 0.84,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR15 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 771,
+    "pf": 0.884,
+    "mean_r": -0.078,
+    "win": 37.5,
+    "dd_r": -59.4,
+    "tpd": 0.99,
+    "hold_h": 1.69,
+    "sharpe": -0.78
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.719,
+    "mean_r": -0.214,
+    "win": 36.7,
+    "dd_r": -164.02,
+    "tpd": 0.99,
+    "hold_h": 1.69,
+    "sharpe": -2.1
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.588,
+    "mean_r": -0.35,
+    "win": 36.2,
+    "dd_r": -268.64,
+    "tpd": 0.99,
+    "hold_h": 1.69,
+    "sharpe": -3.38
+   },
+   "gross_r": 0.057,
+   "long_share": 0.51,
+   "halves": [
+    -0.23,
+    -0.199
+   ],
+   "p": 0.086,
+   "null_mean": -0.27,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 17.4,
+    "days": 40.2,
+    "accounts": 5.74,
+    "pf": 0.72,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR15 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 771,
+    "pf": 0.962,
+    "mean_r": -0.02,
+    "win": 42.5,
+    "dd_r": -34.85,
+    "tpd": 0.99,
+    "hold_h": 3.97,
+    "sharpe": -0.21
+   },
+   "x2": {
+    "n": 771,
+    "pf": 0.829,
+    "mean_r": -0.096,
+    "win": 40.9,
+    "dd_r": -74.18,
+    "tpd": 0.99,
+    "hold_h": 3.97,
+    "sharpe": -1.01
+   },
+   "x3": {
+    "n": 771,
+    "pf": 0.717,
+    "mean_r": -0.173,
+    "win": 39.3,
+    "dd_r": -133.18,
+    "tpd": 0.99,
+    "hold_h": 3.97,
+    "sharpe": -1.81
+   },
+   "gross_r": 0.057,
+   "long_share": 0.51,
+   "halves": [
+    -0.076,
+    -0.116
+   ],
+   "p": 0.053,
+   "null_mean": -0.162,
+   "pace": {
+    "n": 771,
+    "risk_pct": 2.0,
+    "pass_pct": 16.1,
+    "days": 49.8,
+    "accounts": 6.23,
+    "pf": 0.83,
+    "tpd": 0.99
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR30 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 763,
+    "pf": 0.936,
+    "mean_r": -0.026,
+    "win": 46.7,
+    "dd_r": -30.81,
+    "tpd": 0.98,
+    "hold_h": 4.07,
+    "sharpe": -0.37
+   },
+   "x2": {
+    "n": 763,
+    "pf": 0.799,
+    "mean_r": -0.087,
+    "win": 43.8,
+    "dd_r": -67.18,
+    "tpd": 0.98,
+    "hold_h": 4.07,
+    "sharpe": -1.24
+   },
+   "x3": {
+    "n": 763,
+    "pf": 0.684,
+    "mean_r": -0.149,
+    "win": 42.1,
+    "dd_r": -113.77,
+    "tpd": 0.98,
+    "hold_h": 4.07,
+    "sharpe": -2.1
+   },
+   "gross_r": 0.036,
+   "long_share": 0.53,
+   "halves": [
+    -0.076,
+    -0.099
+   ],
+   "p": 0.14,
+   "null_mean": -0.121,
+   "pace": {
+    "n": 763,
+    "risk_pct": 2.0,
+    "pass_pct": 16.2,
+    "days": 117.6,
+    "accounts": 6.19,
+    "pf": 0.8,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR30 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 763,
+    "pf": 0.865,
+    "mean_r": -0.083,
+    "win": 38.9,
+    "dd_r": -75.23,
+    "tpd": 0.98,
+    "hold_h": 2.38,
+    "sharpe": -0.88
+   },
+   "x2": {
+    "n": 763,
+    "pf": 0.717,
+    "mean_r": -0.195,
+    "win": 37.4,
+    "dd_r": -153.53,
+    "tpd": 0.98,
+    "hold_h": 2.38,
+    "sharpe": -2.04
+   },
+   "x3": {
+    "n": 763,
+    "pf": 0.596,
+    "mean_r": -0.307,
+    "win": 36.4,
+    "dd_r": -234.79,
+    "tpd": 0.98,
+    "hold_h": 2.38,
+    "sharpe": -3.18
+   },
+   "gross_r": 0.029,
+   "long_share": 0.53,
+   "halves": [
+    -0.206,
+    -0.184
+   ],
+   "p": 0.156,
+   "null_mean": -0.235,
+   "pace": {
+    "n": 763,
+    "risk_pct": 2.0,
+    "pass_pct": 14.3,
+    "days": 62.8,
+    "accounts": 6.98,
+    "pf": 0.72,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 5m OR30 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "5m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 763,
+    "pf": 0.96,
+    "mean_r": -0.016,
+    "win": 46.1,
+    "dd_r": -34.1,
+    "tpd": 0.98,
+    "hold_h": 4.28,
+    "sharpe": -0.21
+   },
+   "x2": {
+    "n": 763,
+    "pf": 0.823,
+    "mean_r": -0.078,
+    "win": 43.3,
+    "dd_r": -63.33,
+    "tpd": 0.98,
+    "hold_h": 4.28,
+    "sharpe": -1.01
+   },
+   "x3": {
+    "n": 763,
+    "pf": 0.708,
+    "mean_r": -0.139,
+    "win": 41.5,
+    "dd_r": -106.44,
+    "tpd": 0.98,
+    "hold_h": 4.28,
+    "sharpe": -1.81
+   },
+   "gross_r": 0.045,
+   "long_share": 0.53,
+   "halves": [
+    -0.043,
+    -0.113
+   ],
+   "p": 0.08,
+   "null_mean": -0.123,
+   "pace": {
+    "n": 763,
+    "risk_pct": 2.0,
+    "pass_pct": 17.7,
+    "days": 70.6,
+    "accounts": 5.65,
+    "pf": 0.82,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR15 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 765,
+    "pf": 0.973,
+    "mean_r": -0.012,
+    "win": 46.7,
+    "dd_r": -19.21,
+    "tpd": 0.98,
+    "hold_h": 3.74,
+    "sharpe": -0.16
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.833,
+    "mean_r": -0.083,
+    "win": 44.6,
+    "dd_r": -63.06,
+    "tpd": 0.98,
+    "hold_h": 3.74,
+    "sharpe": -1.05
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.714,
+    "mean_r": -0.153,
+    "win": 43.0,
+    "dd_r": -116.81,
+    "tpd": 0.98,
+    "hold_h": 3.74,
+    "sharpe": -1.93
+   },
+   "gross_r": 0.058,
+   "long_share": 0.53,
+   "halves": [
+    -0.083,
+    -0.082
+   ],
+   "p": 0.015,
+   "null_mean": -0.158,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 12.6,
+    "days": 99.3,
+    "accounts": 7.94,
+    "pf": 0.83,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR15 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 765,
+    "pf": 0.908,
+    "mean_r": -0.057,
+    "win": 40.0,
+    "dd_r": -43.11,
+    "tpd": 0.98,
+    "hold_h": 2.25,
+    "sharpe": -0.59
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.747,
+    "mean_r": -0.177,
+    "win": 38.6,
+    "dd_r": -134.8,
+    "tpd": 0.98,
+    "hold_h": 2.25,
+    "sharpe": -1.8
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.617,
+    "mean_r": -0.297,
+    "win": 37.6,
+    "dd_r": -226.49,
+    "tpd": 0.98,
+    "hold_h": 2.25,
+    "sharpe": -2.98
+   },
+   "gross_r": 0.063,
+   "long_share": 0.53,
+   "halves": [
+    -0.185,
+    -0.168
+   ],
+   "p": 0.056,
+   "null_mean": -0.243,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 18.0,
+    "days": 44.5,
+    "accounts": 5.56,
+    "pf": 0.75,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR15 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 15,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 765,
+    "pf": 0.929,
+    "mean_r": -0.033,
+    "win": 45.5,
+    "dd_r": -31.25,
+    "tpd": 0.98,
+    "hold_h": 4.06,
+    "sharpe": -0.39
+   },
+   "x2": {
+    "n": 765,
+    "pf": 0.795,
+    "mean_r": -0.103,
+    "win": 43.3,
+    "dd_r": -78.63,
+    "tpd": 0.98,
+    "hold_h": 4.06,
+    "sharpe": -1.23
+   },
+   "x3": {
+    "n": 765,
+    "pf": 0.683,
+    "mean_r": -0.173,
+    "win": 41.6,
+    "dd_r": -132.38,
+    "tpd": 0.98,
+    "hold_h": 4.06,
+    "sharpe": -2.05
+   },
+   "gross_r": 0.038,
+   "long_share": 0.53,
+   "halves": [
+    -0.094,
+    -0.112
+   ],
+   "p": 0.044,
+   "null_mean": -0.167,
+   "pace": {
+    "n": 765,
+    "risk_pct": 2.0,
+    "pass_pct": 13.4,
+    "days": 74.6,
+    "accounts": 7.46,
+    "pf": 0.8,
+    "tpd": 0.98
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR30 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 748,
+    "pf": 0.921,
+    "mean_r": -0.03,
+    "win": 48.3,
+    "dd_r": -30.98,
+    "tpd": 0.96,
+    "hold_h": 4.05,
+    "sharpe": -0.45
+   },
+   "x2": {
+    "n": 748,
+    "pf": 0.784,
+    "mean_r": -0.088,
+    "win": 44.4,
+    "dd_r": -67.57,
+    "tpd": 0.96,
+    "hold_h": 4.05,
+    "sharpe": -1.31
+   },
+   "x3": {
+    "n": 748,
+    "pf": 0.669,
+    "mean_r": -0.146,
+    "win": 42.4,
+    "dd_r": -108.98,
+    "tpd": 0.96,
+    "hold_h": 4.05,
+    "sharpe": -2.17
+   },
+   "gross_r": 0.028,
+   "long_share": 0.53,
+   "halves": [
+    -0.073,
+    -0.102
+   ],
+   "p": 0.18,
+   "null_mean": -0.116,
+   "pace": {
+    "n": 748,
+    "risk_pct": 2.0,
+    "pass_pct": 15.0,
+    "days": 146.2,
+    "accounts": 6.64,
+    "pf": 0.78,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR30 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 748,
+    "pf": 0.902,
+    "mean_r": -0.055,
+    "win": 41.8,
+    "dd_r": -53.12,
+    "tpd": 0.96,
+    "hold_h": 2.7,
+    "sharpe": -0.6
+   },
+   "x2": {
+    "n": 748,
+    "pf": 0.75,
+    "mean_r": -0.157,
+    "win": 39.2,
+    "dd_r": -123.84,
+    "tpd": 0.96,
+    "hold_h": 2.7,
+    "sharpe": -1.71
+   },
+   "x3": {
+    "n": 748,
+    "pf": 0.626,
+    "mean_r": -0.259,
+    "win": 38.0,
+    "dd_r": -196.42,
+    "tpd": 0.96,
+    "hold_h": 2.7,
+    "sharpe": -2.78
+   },
+   "gross_r": 0.047,
+   "long_share": 0.53,
+   "halves": [
+    -0.126,
+    -0.188
+   ],
+   "p": 0.187,
+   "null_mean": -0.192,
+   "pace": {
+    "n": 748,
+    "risk_pct": 2.0,
+    "pass_pct": 15.9,
+    "days": 59.8,
+    "accounts": 6.3,
+    "pf": 0.75,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "NAS100 NY 15m OR30 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "15m",
+   "or": 30,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 748,
+    "pf": 0.967,
+    "mean_r": -0.013,
+    "win": 48.1,
+    "dd_r": -28.88,
+    "tpd": 0.96,
+    "hold_h": 4.18,
+    "sharpe": -0.17
+   },
+   "x2": {
+    "n": 748,
+    "pf": 0.827,
+    "mean_r": -0.071,
+    "win": 44.3,
+    "dd_r": -56.27,
+    "tpd": 0.96,
+    "hold_h": 4.18,
+    "sharpe": -0.97
+   },
+   "x3": {
+    "n": 748,
+    "pf": 0.708,
+    "mean_r": -0.129,
+    "win": 42.2,
+    "dd_r": -97.64,
+    "tpd": 0.96,
+    "hold_h": 4.18,
+    "sharpe": -1.75
+   },
+   "gross_r": 0.045,
+   "long_share": 0.53,
+   "halves": [
+    -0.039,
+    -0.102
+   ],
+   "p": 0.087,
+   "null_mean": -0.112,
+   "pace": {
+    "n": 748,
+    "risk_pct": 2.0,
+    "pass_pct": 19.7,
+    "days": 81.2,
+    "accounts": 5.07,
+    "pf": 0.83,
+    "tpd": 0.96
+   }
+  },
+  {
+   "cell": "NAS100 NY 1h OR60 P1 other side, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P1 other side, 2R",
+   "x1": {
+    "n": 618,
+    "pf": 0.811,
+    "mean_r": -0.045,
+    "win": 47.7,
+    "dd_r": -28.96,
+    "tpd": 0.79,
+    "hold_h": 3.17,
+    "sharpe": -0.93
+   },
+   "x2": {
+    "n": 618,
+    "pf": 0.666,
+    "mean_r": -0.088,
+    "win": 42.2,
+    "dd_r": -54.85,
+    "tpd": 0.79,
+    "hold_h": 3.17,
+    "sharpe": -1.81
+   },
+   "x3": {
+    "n": 618,
+    "pf": 0.548,
+    "mean_r": -0.132,
+    "win": 39.2,
+    "dd_r": -81.03,
+    "tpd": 0.79,
+    "hold_h": 3.17,
+    "sharpe": -2.66
+   },
+   "gross_r": -0.002,
+   "long_share": 0.58,
+   "halves": [
+    -0.07,
+    -0.107
+   ],
+   "p": 0.498,
+   "null_mean": -0.089,
+   "pace": {
+    "n": 618,
+    "risk_pct": 2.0,
+    "pass_pct": 6.2,
+    "days": 506.4,
+    "accounts": 16.08,
+    "pf": 0.67,
+    "tpd": 0.79
+   }
+  },
+  {
+   "cell": "NAS100 NY 1h OR60 P2 mid, 2R",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P2 mid, 2R",
+   "x1": {
+    "n": 618,
+    "pf": 0.843,
+    "mean_r": -0.06,
+    "win": 46.0,
+    "dd_r": -43.96,
+    "tpd": 0.79,
+    "hold_h": 2.74,
+    "sharpe": -0.83
+   },
+   "x2": {
+    "n": 618,
+    "pf": 0.684,
+    "mean_r": -0.134,
+    "win": 41.4,
+    "dd_r": -83.62,
+    "tpd": 0.79,
+    "hold_h": 2.74,
+    "sharpe": -1.84
+   },
+   "x3": {
+    "n": 618,
+    "pf": 0.557,
+    "mean_r": -0.208,
+    "win": 38.5,
+    "dd_r": -128.24,
+    "tpd": 0.79,
+    "hold_h": 2.74,
+    "sharpe": -2.82
+   },
+   "gross_r": 0.014,
+   "long_share": 0.58,
+   "halves": [
+    -0.077,
+    -0.192
+   ],
+   "p": 0.361,
+   "null_mean": -0.145,
+   "pace": {
+    "n": 618,
+    "risk_pct": 2.0,
+    "pass_pct": 10.8,
+    "days": 189.8,
+    "accounts": 9.26,
+    "pf": 0.68,
+    "tpd": 0.79
+   }
+  },
+  {
+   "cell": "NAS100 NY 1h OR60 P3 other side, hold to close",
+   "sym": "NAS100",
+   "session": "NY",
+   "tf": "1h",
+   "or": 60,
+   "pattern": "P3 other side, hold to close",
+   "x1": {
+    "n": 618,
+    "pf": 0.798,
+    "mean_r": -0.049,
+    "win": 47.6,
+    "dd_r": -31.0,
+    "tpd": 0.79,
+    "hold_h": 3.18,
+    "sharpe": -1.01
+   },
+   "x2": {
+    "n": 618,
+    "pf": 0.655,
+    "mean_r": -0.092,
+    "win": 42.1,
+    "dd_r": -56.88,
+    "tpd": 0.79,
+    "hold_h": 3.18,
+    "sharpe": -1.88
+   },
+   "x3": {
+    "n": 618,
+    "pf": 0.539,
+    "mean_r": -0.135,
+    "win": 39.0,
+    "dd_r": -83.07,
+    "tpd": 0.79,
+    "hold_h": 3.18,
+    "sharpe": -2.73
+   },
+   "gross_r": -0.005,
+   "long_share": 0.58,
+   "halves": [
+    -0.069,
+    -0.115
+   ],
+   "p": 0.482,
+   "null_mean": -0.092,
+   "pace": {
+    "n": 618,
+    "risk_pct": 2.0,
+    "pass_pct": 6.2,
+    "days": 506.4,
+    "accounts": 16.08,
+    "pf": 0.65,
+    "tpd": 0.79
+   }
+  }
+ ],
+ "best_of_grid": {
+  "cell": "XAUUSD NY 15m OR30 P1 other side, 2R",
+  "real": -0.048,
+  "p": 0.953
+ }
+}
